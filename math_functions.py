@@ -3,11 +3,7 @@ learningRate = 0.1
 
 
 def relU(x):  # Rectified linear activation function
-    if x > 0:
-        return x
-    else:
-        return 0
-
+    return max(x,0)
 
 def calculate(incoming_energy, weight, bias=0):  # simple calculate function to find the activation energy of a new node
     return (incoming_energy * weight + bias)
