@@ -12,24 +12,24 @@ class Graph:
 class Node:
     # Each Node. Very useful. node.activationEnergy will be changed a lot.
 
-    def __init__(self, name, energy=0):
+    def __init__(self, name, energy=0, bias=0):
         self.name = name
         self.activationEnergy = energy
         self.connections = []
+        self.bias = bias
 
-    def new_connection(self, name, destination, weight, bias):
-        name = Connection(name, destination, weight, bias)
+    def new_connection(self, name, destination, weight):
+        name = Connection(name, destination, weight)
         self.connections.append(name)
 
 
 class Connection:
     # Connections for a node. Very useful. Much math will be done with connections.
 
-    def __init__(self, origin, destination, weight, bias):
+    def __init__(self, origin, destination, weight):
         self.origin = origin
         self.destination = destination
         self.weight = weight
-        self.bias = bias
 
     def return_name(self):
         return str(self.origin.name + " to " + self.destination.name)
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     mygraph.add_node(HI.name)
     mygraph.add_node(CA.name)
 
-    HI.new_connection(HI, CA, 0.2, 0)
+    HI.new_connection(HI, CA, 0.2)
 
     print(f"Hawaii's connections: ")
     for connection in HI.connections:
