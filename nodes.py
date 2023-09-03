@@ -6,6 +6,7 @@ class Graph:
     def __init__(self, name):
         self.name = name
         self.nodes = []
+        # I should change this to account for # of variables when I scale it
         self.layers = [
         [], [], [], []
         ]

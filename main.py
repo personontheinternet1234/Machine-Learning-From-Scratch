@@ -3,14 +3,12 @@ import numpy as np
 import math
 from matplotlib import pyplot as plt
 
-
 """
 This program uses the nodes structure to practice basic backpropagation.
 Made from scratch (No tutorials, no pytorch).
 Version: 0.1
 Author: Isaac Park Verbrugge
 """
-
 
 actualDataSet = [
     [0,0],
