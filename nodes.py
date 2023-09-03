@@ -1,3 +1,5 @@
+import numpy as np
+
 class Graph:
     # Overall graph. Not sure when I'm going to use this. Useful mainly just to list all the nodes.
 
