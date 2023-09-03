@@ -6,16 +6,21 @@ class Graph:
     def __init__(self, name):
         self.name = name
         self.nodes = []
+        self.layers = [
+        [], [], [], []
+        ]
 
     def add_node(self, name):
         self.nodes.append(name)
-
+        self.layers[name.layer].append(name)
 
 class Node:
     # Each Node. Very useful. node.activationEnergy will be changed a lot.
 
-    def __init__(self, name, energy=0, bias=0):
+    def __init__(self, name, graph, layer, energy=0, bias=0):
         self.name = name
+        self.graph = graph
+        self.layer = layer
         self.activationEnergy = energy
         self.connections = []
         self.bias = bias
@@ -40,11 +45,11 @@ class Connection:
 if __name__ == "__main__":
     # testing info:
     mygraph = Graph("mygraph")
-    HI = Node("HI")
-    CA = Node("CA")
+    HI = Node("HI", mygraph, 0)
+    CA = Node("CA", mygraph, 0)
 
-    mygraph.add_node(HI.name)
-    mygraph.add_node(CA.name)
+    mygraph.add_node(HI)
+    mygraph.add_node(CA)
 
     HI.new_connection(HI, CA, 0.2)
 
@@ -53,4 +58,11 @@ if __name__ == "__main__":
         print(connection.return_name(), sep=", ", end="")
     print("\n")
 
-    print(f"Nodes in graph: {mygraph.nodes}")
+    for layer in range(len(mygraph.layers)):
+        print(f"layer {layer}: ")
+        for node in range(len(mygraph.layers[layer])):
+            print(f"{mygraph.layers[layer][node].name}")
+
+    print(f"Nodes in graph: ")
+    for node in mygraph.nodes:
+        print(node.name)

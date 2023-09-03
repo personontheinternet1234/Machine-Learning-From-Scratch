@@ -3,6 +3,7 @@ import numpy as np
 import math
 from matplotlib import pyplot as plt
 
+
 """
 This program uses the nodes structure to practice basic backpropagation.
 Made from scratch (No tutorials, no pytorch).
@@ -17,8 +18,12 @@ actualDataSet = [
     [1,0]
 ]
 
+
 def softplus(x):  # SoftPlus activation function
     return math.log(1 + math.e**x)
+
+def softmax():
+    output_node.activationEnergy
 
 def forward(input):
     input_node.activationEnergy = input
@@ -54,17 +59,18 @@ def convert(dataset):
     return [data[:, 0], data[:, 1]]
 
 #########################################
+
 # graph
 mygraph = nodes.Graph("mygraph")
 
 # Nodes
-input_node = nodes.Node("input")
+input_node = nodes.Node("input", mygraph, 0)
 
-top_relu = nodes.Node("top_relu", bias=-1.43)
+top_relu = nodes.Node("top_relu", mygraph, 1, bias=-1.43)
 
-bottom_relu = nodes.Node("bottom_relu", bias=0.57)
+bottom_relu = nodes.Node("bottom_relu", mygraph, 1, bias=0.57)
 
-output_node = nodes.Node("output", bias=0)
+output_node = nodes.Node("output", mygraph, 2, bias=0)
 
 # connections
 input_node.new_connection(input_node, top_relu, weight=3.34)
@@ -79,6 +85,7 @@ mygraph.add_node(input_node)
 mygraph.add_node(top_relu)
 mygraph.add_node(bottom_relu)
 mygraph.add_node(output_node)
+
 #########################################
 
 # prompts user for iterations and learning rate
