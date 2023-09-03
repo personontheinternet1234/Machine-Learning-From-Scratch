@@ -44,3 +44,15 @@ for node in mygraph.nodes:
 print(f"Nodes in graph: ")
 for node in mygraph.nodes:
     print(node.name + " Energy: " + str(node.activationEnergy) + " Bias: " + str(node.bias))
+
+def forward(input):
+    input_node.activationEnergy = input
+
+    top_relu.activationEnergy = input_node.activationEnergy * input_node.connections[0].weight + top_relu.bias
+    bottom_relu.activationEnergy = input_node.activationEnergy * input_node.connections[1].weight + bottom_relu.bias
+
+    output_node.activationEnergy = (top_relu.activationEnergy * top_relu.connections[0].weight) + (bottom_relu.activationEnergy * bottom_relu.connections[0].weight)
+
+    return output_node.activationEnergy
+
+print(forward(2))
