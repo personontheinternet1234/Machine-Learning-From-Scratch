@@ -1,5 +1,6 @@
 import nodes
 import numpy as np
+import math
 from matplotlib import pyplot as plt
 
 actualDataSet = [
@@ -8,8 +9,8 @@ actualDataSet = [
     [1,0]
 ]
 
-def relU(x):  # Rectified linear activation function
-    return max(0,x)
+def logE(x):  # Rectified linear activation function
+    return math.log(1 + math.e**x)
 
 # graph
 mygraph = nodes.Graph("mygraph")
@@ -17,19 +18,19 @@ mygraph = nodes.Graph("mygraph")
 # Nodes
 input_node = nodes.Node("input")
 
-top_relu = nodes.Node("top_relu", bias=0)
+top_relu = nodes.Node("top_relu", bias=-1.43)
 
-bottom_relu = nodes.Node("bottom_relu", bias=0)
+bottom_relu = nodes.Node("bottom_relu", bias=0.57)
 
 output_node = nodes.Node("output", bias=0)
 
 # connections
-input_node.new_connection(input_node, top_relu, weight=round(np.random.normal(loc = 0.0, scale = 1.0, size = None), 4))
-input_node.new_connection(input_node, bottom_relu, weight=round(np.random.normal(loc = 0.0, scale = 1.0, size = None), 4))
+input_node.new_connection(input_node, top_relu, weight=3.34)
+input_node.new_connection(input_node, bottom_relu, weight=-3.53)
 
-top_relu.new_connection(top_relu, output_node, weight=round(np.random.normal(loc = 0.0, scale = 1.0, size = None), 4))
+top_relu.new_connection(top_relu, output_node, weight=-1.22)
 
-bottom_relu.new_connection(bottom_relu, output_node, weight=round(np.random.normal(loc = 0.0, scale = 1.0, size = None), 4))
+bottom_relu.new_connection(bottom_relu, output_node, weight=-2.30)
 
 #adding to graph
 mygraph.add_node(input_node)
@@ -40,8 +41,8 @@ mygraph.add_node(output_node)
 def forward(input):
     input_node.activationEnergy = input
 
-    top_relu.activationEnergy = relU(input_node.activationEnergy * input_node.connections[0].weight + top_relu.bias)
-    bottom_relu.activationEnergy = relU(input_node.activationEnergy * input_node.connections[1].weight + bottom_relu.bias)
+    top_relu.activationEnergy = logE(input_node.activationEnergy * input_node.connections[0].weight + top_relu.bias)
+    bottom_relu.activationEnergy = logE(input_node.activationEnergy * input_node.connections[1].weight + bottom_relu.bias)
 
     output_node.activationEnergy = (top_relu.activationEnergy * top_relu.connections[0].weight) + (bottom_relu.activationEnergy * bottom_relu.connections[0].weight) + output_node.bias
 
@@ -59,7 +60,7 @@ def new_value(actualDataSet, oldWeight):  # gradient descent function for a give
 
     sum = 0
     for point in actualDataSet:
-        sum += -2 * (forward(point[0]) - point[1])
+        sum += -2 * (point[1] - forward(point[0]))
     print("SSR (should approach 0): " + str(SSR(actualDataSet)))
 
     # returns next weight or bias the connection should have
@@ -93,12 +94,11 @@ for i in range(epochs):
 
 plt.plot(convert(actualDataSet)[0], convert(actualDataSet)[1])
 
-
-x = []
-y = []
+predictedx = []
+predictedy = []
 for i in range(100):
-    x.append(i/100)
-    y.append(forward(i/100))
-plt.plot(x, y)
+    predictedx.append(i/100)
+    predictedy.append(forward(i/100))
+plt.plot(predictedx, predictedy)
 
 plt.show()
