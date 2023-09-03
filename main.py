@@ -22,8 +22,16 @@ actualDataSet = [
 def softplus(x):  # SoftPlus activation function
     return math.log(1 + math.e**x)
 
-def softmax():
-    output_node.activationEnergy
+def softmax(outputEnergies):
+    denom = 0
+    for i in outputEnergies:
+        denom += math.e ** i
+
+    softOutputEnergies = []
+    for i in outputEnergies:
+        softOutputEnergies.append((math.e**i)/denom)
+
+    return softOutputEnergies
 
 def forward(input):
     input_node.activationEnergy = input
@@ -93,7 +101,7 @@ epochs = 0
 learningRate = 0
 while epochs <= 0:
     epochs = int(input("How many epochs: "))
-while learningRate <= 0:
+while learningRate <= 0 or learningRate >= 1:
     learningRate = float(input("Learning Rate: "))
 
 # training last bias.
@@ -113,3 +121,5 @@ for i in range(100):
 plt.plot(predictedx, predictedy)
 
 plt.show()
+
+print(softmax([1.43,-0.4,0.23]))

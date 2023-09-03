@@ -41,7 +41,6 @@ class Connection:
     def return_name(self):
         return str(self.origin.name + " to " + self.destination.name)
 
-
 if __name__ == "__main__":
     # testing info:
     mygraph = Graph("mygraph")
