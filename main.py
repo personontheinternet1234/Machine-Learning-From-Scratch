@@ -5,3 +5,9 @@ import nodes
 # Classes Uppercase Letters
 # functions_underscored
 
+actualDataSet = [
+    [0,0],
+    [0.5,1],
+    [1,0]
+]
+
