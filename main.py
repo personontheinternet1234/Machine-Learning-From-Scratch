@@ -9,7 +9,7 @@ actualDataSet = [
     [1,0]
 ]
 
-def logE(x):  # Rectified linear activation function
+def softplus(x):  # SoftPlus activation function
     return math.log(1 + math.e**x)
 
 # graph
