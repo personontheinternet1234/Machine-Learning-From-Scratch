@@ -53,6 +53,6 @@ def forward(input):
 
     output_node.activationEnergy = (top_relu.activationEnergy * top_relu.connections[0].weight) + (bottom_relu.activationEnergy * bottom_relu.connections[0].weight)
 
-    return output_node.activationEnergy
+    return round(output_node.activationEnergy, 4)
 
 print(forward(2))
