@@ -38,9 +38,9 @@ mygraph.add_node(output_node)
 
 for node in mygraph.nodes:
     for connection in node.connections:
-        print(connection.return_name(), sep=", ", end=" ")
-    print("\n")
+        print(connection.return_name() + " weight: " + str(connection.weight), end=" ")
+    print("")
 
 print(f"Nodes in graph: ")
 for node in mygraph.nodes:
-    print(node.name)
+    print(node.name + " Energy: " + str(node.activationEnergy) + " Bias: " + str(node.bias))
