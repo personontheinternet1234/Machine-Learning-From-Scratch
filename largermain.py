@@ -20,26 +20,42 @@ actualDataSet = [
 def softplus(x):  # SoftPlus activation function
     return math.log(1 + math.e**x)
 
-def softmax(outputEnergies):
+def softmax(outputNodes):
     denom = 0
-    for i in outputEnergies:
-        denom += math.e ** i
+    for i in outputNodes:
+        denom += math.e ** outputNodes[i].activationEnergy
 
     softOutputEnergies = []
-    for i in outputEnergies:
-        softOutputEnergies.append((math.e**i)/denom)
+    for i in outputNodes:
+        softOutputEnergies.append((math.e**outputNodes[i].activationEnergy)/denom)
 
     return softOutputEnergies
 
 def createGraph(graph_name, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes):
     graph_name = nodes.Graph(graph_name)
 
+    #node creation
     for i in range(len(number_input_nodes)):
-        graph_name.nodes.append(nodes.Node(i, graph_name, 0, energy=0))
+        graph_name.nodes.append(nodes.Node(i, graph_name, 0, energy=0, bias=0))
 
     for l in range(len(number_hidden_layers)):
         for n in range(len(number_nodes_per_layer)):
-            graph_name.nodes.append(nodes.Node(n, graph_name, l))
+            graph_name.nodes.append(nodes.Node(n, graph_name, l, energy=0, bias=0))
+
+    for o in range(len(number_output_nodes)):
+        graph_name.nodes.append(nodes.Node(o, graph_name, l + 1, energy=0, bias=0))
+
+    #connections
+    for i in range(len(number_input_nodes)):
+        graph_name.nodes.append(nodes.Node(i, graph_name, 0, energy=0, bias=0))
+
+    for l in range(len(number_hidden_layers)):
+        for n in range(len(number_nodes_per_layer)):
+            graph_name.nodes.append(nodes.Node(n, graph_name, l, energy=0, bias=0))
+
+    for o in range(len(number_output_nodes)):
+        graph_name.nodes.append(nodes.Node(o, graph_name, l + 1, energy=0, bias=0))
+
 
 def forward(input):
     # input = [1,2,3...784]
@@ -49,6 +65,34 @@ def forward(input):
     output_node.activationEnergy = (top_relu.activationEnergy * top_relu.connections[0].weight) + (bottom_relu.activationEnergy * bottom_relu.connections[0].weight) + output_node.bias
 
     return round(output_node.activationEnergy, 4)
+
+def backward():
+    # usage: node1-2 = add_backprop(node1-2.upstreamValue())
+    def multiply_backprop(upstream_gradient, downstream_nodes, target_node):
+        product = upstream_gradient
+        for node in downstream_nodes:
+            product *= node.activationEnergy
+        product /= target_node.activationEnergy
+
+        return product
+    def max_backprop(upstream_gradient, downstream_nodes, target_node):
+        largest = downstream_nodes[0].activationEnergy
+        for node in downstream_nodes:
+            if node.activationEnergy >= largest:
+                largest = node.activationEnergy
+
+        if target_node.activationEnergy == largest:
+            return upstream_gradient
+        else:
+            return 0
+    def copy_backprop(upstream_gradients):  # upstream_gradients is a list tho... Idk where imma use copy_backprop
+        sum = 0
+        for i in upstream_gradients:
+            sum += i
+        return sum
+    def add_backprop(upstream_gradient):
+        return(upstream_gradient)
+
 
 def SSR(actualDataSet):  # sum of squared values function
     sum = 0

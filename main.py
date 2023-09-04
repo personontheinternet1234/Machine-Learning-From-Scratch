@@ -117,10 +117,10 @@ def train(i):
             predictedx.append(i / 100)
             predictedy.append(forward(i / 100))
         plt.cla()
-        plt.plot(predictedx, predictedy, label="Predicted pts")
+        plt.plot(predictedx, predictedy)
 
         # plotting actual data set x and y
-        plt.plot(convert(actualDataSet)[0], convert(actualDataSet)[1], marker="o", label="Actual Data pts")
+        plt.plot(convert(actualDataSet)[0], convert(actualDataSet)[1], marker="o")
 
         plt.xlim(0,1)
         plt.ylim(-1.5,1)
@@ -130,7 +130,6 @@ def train(i):
 what_epoch = 0
 ani = FuncAnimation(plt.gcf(), train, interval=100)
 
-plt.legend()
 plt.show()
 
 print(softmax([1.43,-0.4,0.23]))
