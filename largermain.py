@@ -32,7 +32,7 @@ def softmax(outputEnergies):
     return softOutputEnergies
 
 def forward(input):
-    input_node.activationEnergy = input
+    # input = [1,2,3...784]
 
     top_relu.activationEnergy = softplus(input_node.activationEnergy * input_node.connections[0].weight + top_relu.bias)
     bottom_relu.activationEnergy = softplus(input_node.activationEnergy * input_node.connections[1].weight + bottom_relu.bias)

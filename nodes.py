@@ -30,6 +30,7 @@ class Node:
         name = Connection(name, destination, weight)
         self.connections.append(name)
 
+        destination.connections.append(name)
 
 class Connection:
     # Connections for a node. Very useful. Much math will be done with connections.
@@ -55,6 +56,11 @@ if __name__ == "__main__":
 
     print(f"Hawaii's connections: ")
     for connection in HI.connections:
+        print(connection.return_name(), sep=", ", end="")
+    print("\n")
+
+    print(f"CA's connections: ")
+    for connection in CA.connections:
         print(connection.return_name(), sep=", ", end="")
     print("\n")
 

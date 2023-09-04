@@ -17,7 +17,6 @@ actualDataSet = [
     [1,0]
 ]
 
-
 def softplus(x):  # SoftPlus activation function
     return math.log(1 + math.e**x)
 
@@ -38,7 +37,7 @@ def forward(input):
     top_relu.activationEnergy = softplus(input_node.activationEnergy * input_node.connections[0].weight + top_relu.bias)
     bottom_relu.activationEnergy = softplus(input_node.activationEnergy * input_node.connections[1].weight + bottom_relu.bias)
 
-    output_node.activationEnergy = (top_relu.activationEnergy * top_relu.connections[0].weight) + (bottom_relu.activationEnergy * bottom_relu.connections[0].weight) + output_node.bias
+    output_node.activationEnergy = (top_relu.activationEnergy * top_relu.connections[1].weight) + (bottom_relu.activationEnergy * bottom_relu.connections[1].weight) + output_node.bias
 
     return round(output_node.activationEnergy, 4)
 
@@ -130,7 +129,6 @@ def train(i):
 
 what_epoch = 0
 ani = FuncAnimation(plt.gcf(), train, interval=100)
-
 
 plt.legend()
 plt.show()
