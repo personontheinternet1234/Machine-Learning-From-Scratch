@@ -31,7 +31,11 @@ def softmax(outputNodes):
 
     return softOutputEnergies
 
-def createGraph(graph_name, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes):
+def softmax_derivative():
+    # TODO
+    ...
+
+def create_graph(graph_name, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes):
     graph_name = nodes.Graph(graph_name)
 
     #node creation
