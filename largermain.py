@@ -2,7 +2,6 @@ import nodes
 import numpy as np
 import math
 from matplotlib import pyplot as plt
-from matplotlib.animation import FuncAnimation
 
 """
 This program uses the nodes structure to practice basic backpropagation.
@@ -104,35 +103,21 @@ while learningRate <= 0 or learningRate >= 1:
     learningRate = float(input("Learning Rate: "))
 
 # training last bias.
-def train(i):
-    global what_epoch
+for i in range(epochs):
+    output_node.bias = new_value(actualDataSet, output_node.bias)
+    print("new bias: " + str(output_node.bias))
 
-    if what_epoch < epochs:
-        output_node.bias = new_value(actualDataSet, output_node.bias)
-        print("new bias: " + str(output_node.bias))
+# plotting actual data set x and y
+plt.plot(convert(actualDataSet)[0], convert(actualDataSet)[1])
 
-        # plotting machine's data set x and y
-        predictedx = []
-        predictedy = []
-        for i in range(100):
-            predictedx.append(i / 100)
-            predictedy.append(forward(i / 100))
-        plt.cla()
-        plt.plot(predictedx, predictedy, label="Predicted pts")
+# plotting machine's data set x and y
+predictedx = []
+predictedy = []
+for i in range(100):
+    predictedx.append(i/100)
+    predictedy.append(forward(i/100))
+plt.plot(predictedx, predictedy)
 
-        # plotting actual data set x and y
-        plt.plot(convert(actualDataSet)[0], convert(actualDataSet)[1], marker="o", label="Actual Data pts")
-
-        plt.xlim(0,1)
-        plt.ylim(-1.5,1)
-
-        what_epoch += 1
-
-what_epoch = 0
-ani = FuncAnimation(plt.gcf(), train, interval=100)
-
-
-plt.legend()
 plt.show()
 
 print(softmax([1.43,-0.4,0.23]))
