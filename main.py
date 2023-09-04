@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 """
-This program uses the nodes structure to practice basic backpropagation.
+This program uses the nodes structure to practice basic backpropagation, adjusting a final bias to fit a curve to a set of data points.
 Made from scratch (No tutorials, no pytorch).
 Version: 0.1
 Author: Isaac Park Verbrugge
