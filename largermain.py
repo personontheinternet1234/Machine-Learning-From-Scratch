@@ -31,9 +31,18 @@ def softmax(outputEnergies):
 
     return softOutputEnergies
 
+def createGraph(graph_name, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes):
+    graph_name = nodes.Graph(graph_name)
+
+    for i in range(len(number_input_nodes)):
+        graph_name.nodes.append(nodes.Node(i, graph_name, 0, energy=0))
+
+    for l in range(len(number_hidden_layers)):
+        for n in range(len(number_nodes_per_layer)):
+            graph_name.nodes.append(nodes.Node(n, graph_name, l))
+
 def forward(input):
     # input = [1,2,3...784]
-
     top_relu.activationEnergy = softplus(input_node.activationEnergy * input_node.connections[0].weight + top_relu.bias)
     bottom_relu.activationEnergy = softplus(input_node.activationEnergy * input_node.connections[1].weight + bottom_relu.bias)
 
@@ -46,6 +55,7 @@ def SSR(actualDataSet):  # sum of squared values function
     for point in actualDataSet:
         sum += (forward(point[0]) - point[1]) ** 2 # for each x value
     return sum
+
 
 def new_value(actualDataSet, oldWeight):  # gradient descent function for a given connection's weight.
     # take derivitive of sum of squared values with respect to w4:
