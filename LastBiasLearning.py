@@ -37,7 +37,7 @@ def forward(input):
     top_relu.activationEnergy = softplus(input_node.activationEnergy * input_node.connections[0].weight + top_relu.bias)
     bottom_relu.activationEnergy = softplus(input_node.activationEnergy * input_node.connections[1].weight + bottom_relu.bias)
 
-    output_node.activationEnergy = (top_relu.activationEnergy * top_relu.connections[1].weight) + (bottom_relu.activationEnergy * bottom_relu.connections[1].weight) + output_node.bias
+    output_node.activationEnergy = (top_relu.activationEnergy * top_relu.connections[0].weight) + (bottom_relu.activationEnergy * bottom_relu.connections[0].weight) + output_node.bias
 
     return round(output_node.activationEnergy, 4)
 
@@ -70,6 +70,11 @@ def convert(dataset):
 mygraph = nodes.Graph("mygraph")
 
 # Nodes
+
+# layer matrix sizing
+for iterator in range(1):
+    mygraph.layers.append([])
+
 input_node = nodes.Node("input", mygraph, 0)
 
 top_relu = nodes.Node("top_relu", mygraph, 1, bias=-1.43)

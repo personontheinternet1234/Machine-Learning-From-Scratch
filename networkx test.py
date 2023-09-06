@@ -58,8 +58,8 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
     for l in range(number_hidden_layers):
         current_layer = l + 1
         for n in range(number_nodes_per_layer):
-            graph.layers[current_layer].append(nodes.Node(i + n + 1, graph, current_layer, energy=0, bias=0))
-            G.add_node(i + n + 1, pos=(current_layer, n))
+            graph.layers[current_layer].append(nodes.Node(l + i + n + 1, graph, current_layer, energy=0, bias=0))
+            G.add_node(l + i + n + 1, pos=(current_layer, n))
 
     print(graph.layers)
 
