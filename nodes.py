@@ -7,9 +7,7 @@ class Graph:
         self.name = name
         self.nodes = []
         # I should change this to account for # of variables when I scale it
-        self.layers = [
-        [], [], [], []
-        ]
+        self.layers = np.array([],[],[])
 
     def add_node(self, name):
         self.nodes.append(name)
@@ -42,33 +40,3 @@ class Connection:
 
     def return_name(self):
         return str(self.origin.name + " to " + self.destination.name)
-
-if __name__ == "__main__":
-    # testing info:
-    mygraph = Graph("mygraph")
-    HI = Node("HI", mygraph, 0)
-    CA = Node("CA", mygraph, 0)
-
-    mygraph.add_node(HI)
-    mygraph.add_node(CA)
-
-    HI.new_connection(HI, CA, 0.2)
-
-    print(f"Hawaii's connections: ")
-    for connection in HI.connections:
-        print(connection.return_name(), sep=", ", end="")
-    print("\n")
-
-    print(f"CA's connections: ")
-    for connection in CA.connections:
-        print(connection.return_name(), sep=", ", end="")
-    print("\n")
-
-    for layer in range(len(mygraph.layers)):
-        print(f"layer {layer}: ")
-        for node in range(len(mygraph.layers[layer])):
-            print(f"{mygraph.layers[layer][node].name}")
-
-    print(f"Nodes in graph: ")
-    for node in mygraph.nodes:
-        print(node.name)
