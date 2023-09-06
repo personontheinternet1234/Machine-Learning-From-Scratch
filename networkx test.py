@@ -44,6 +44,7 @@ def softmax_derivative():
 
 G = nx.Graph()
 def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes):
+    name = 0
 
     # layer matrix sizing
     for iterator in range(number_hidden_layers):
@@ -51,23 +52,29 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
 
     # input node creation
     for i in range(number_input_nodes):
-        graph.layers[0].append(nodes.Node(i, graph, 0, energy=0, bias=0))
-        G.add_node(i, pos=(0, i))
+        graph.layers[0].append(nodes.Node(name, graph, 0, energy=0, bias=0))
+        G.add_node(name, pos=(0, i))
+
+        name += 1
 
     # hidden node creation
     for l in range(number_hidden_layers):
         current_layer = l + 1
         for n in range(number_nodes_per_layer):
-            graph.layers[current_layer].append(nodes.Node(l + i + n + 1, graph, current_layer, energy=0, bias=0))
-            G.add_node(l + i + n + 1, pos=(current_layer, n))
+            graph.layers[current_layer].append(nodes.Node(name, graph, current_layer, energy=0, bias=0))
+            G.add_node(name, pos=(current_layer, n))
+
+            name += 1
 
     print(graph.layers)
 
     # output node creation
     for o in range(number_output_nodes):
         last_layer = len(graph.layers) - 1
-        graph.layers[last_layer].append(nodes.Node(i + n + 2 + o, graph, last_layer, energy=0, bias=0))
-        G.add_node(i + n + 2 + o, pos=(last_layer, o))
+        graph.layers[last_layer].append(nodes.Node(name, graph, last_layer, energy=0, bias=0))
+        G.add_node(name, pos=(last_layer, o))
+
+        name += 1
 
     # connections
     for i in range(len(graph.layers) - 1):
@@ -136,7 +143,7 @@ def convert(dataset):
 
 mygraph = nodes.Graph("mygraph")
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-create_graph(mygraph, 4, 1, 4, 4)
+create_graph(mygraph, 10, 4, 16, 10)
 
 # print(mygraph.layers)
 # for layer in range(len(mygraph.layers)):
@@ -144,7 +151,6 @@ create_graph(mygraph, 4, 1, 4, 4)
 #         for connection in node.connections:
 #             print("layer" + str(layer) + " " + str(connection.origin.name) + " layer" +
 #                   str(connection.destination.layer) + " " + str(connection.destination.name))
-
 
 pos=nx.get_node_attributes(G,'pos')
 nx.draw(G, pos, with_labels=True)
