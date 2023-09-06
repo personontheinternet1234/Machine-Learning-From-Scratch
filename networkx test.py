@@ -9,9 +9,11 @@ from matplotlib import pyplot as plt
 """
 This program uses the nodes structure to practice basic backpropagation.
 Made from scratch (No tutorials, no pytorch).
+(NetworkX is NOT used for node structure, only to show the neural net as a visual element)
 Version: 0.1
 Author: Isaac Park Verbrugge
 """
+
 
 actualDataSet = [
     [0,0],
@@ -59,6 +61,8 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
             graph.layers[current_layer].append(nodes.Node(i + n + 1, graph, current_layer, energy=0, bias=0))
             G.add_node(i + n + 1, pos=(current_layer, n))
 
+    print(graph.layers)
+
     # output node creation
     for o in range(number_output_nodes):
         last_layer = len(graph.layers) - 1
@@ -67,10 +71,6 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
 
     # connections
     for i in range(len(graph.layers) - 1):
-
-        # print("try#: " + str(i) + str(graph.layers[i]))
-        # print(graph.layers[i + 1])
-
         for originnode in graph.layers[i]:
             for destinationnode in graph.layers[i + 1]:
                 originnode.new_connection(originnode, destinationnode, np.random.normal(0, 5))
@@ -135,14 +135,15 @@ def convert(dataset):
     return [data[:, 0], data[:, 1]]
 
 mygraph = nodes.Graph("mygraph")
-create_graph(mygraph, 1, 1, 2, 2)
+# graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
+create_graph(mygraph, 1, 4, 1, 1)
 
 # print(mygraph.layers)
-for layer in range(len(mygraph.layers)):
-    for node in mygraph.layers[layer]:
-        for connection in node.connections:
-            print("layer" + str(layer) + " " + str(connection.origin.name) + " layer" +
-                  str(connection.destination.layer) + " " + str(connection.destination.name))
+# for layer in range(len(mygraph.layers)):
+#     for node in mygraph.layers[layer]:
+#         for connection in node.connections:
+#             print("layer" + str(layer) + " " + str(connection.origin.name) + " layer" +
+#                   str(connection.destination.layer) + " " + str(connection.destination.name))
 
 
 pos=nx.get_node_attributes(G,'pos')
