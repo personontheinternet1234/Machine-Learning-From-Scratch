@@ -136,7 +136,7 @@ def convert(dataset):
 
 mygraph = nodes.Graph("mygraph")
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-create_graph(mygraph, 1, 4, 1, 1)
+create_graph(mygraph, 4, 1, 4, 4)
 
 # print(mygraph.layers)
 # for layer in range(len(mygraph.layers)):
