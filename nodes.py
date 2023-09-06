@@ -7,7 +7,9 @@ class Graph:
         self.name = name
         self.nodes = []
         # I should change this to account for # of variables when I scale it
-        self.layers = np.array([],[],[])
+        self.layers = [
+            [], []
+        ]
 
     def add_node(self, name):
         self.nodes.append(name)

@@ -36,23 +36,22 @@ def softmax_derivative():
     ...
 
 def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes):
-    graph = nodes.Graph(graph)
-
-    # input node creation
-    for i in range(len(number_input_nodes)):
-        graph.layers[0].append(nodes.Node(i, graph, 0, energy=0, bias=0))
 
     # layer matrix sizing
     for iterator in range(number_hidden_layers):
         graph.layers.append([])
 
+    # input node creation
+    for i in range(number_input_nodes):
+        graph.layers[0].append(nodes.Node(i, graph, 0, energy=0, bias=0))
+
     # hidden node creation
-    for l in range(len(number_hidden_layers)):
-        for n in range(len(number_nodes_per_layer)):
+    for l in range(number_hidden_layers):
+        for n in range(number_nodes_per_layer):
             graph.layers[l + 1].append(nodes.Node(n, graph, l + 1, energy=0, bias=0))
 
     # output node creation
-    for o in range(len(number_output_nodes)):
+    for o in range(number_output_nodes):
         graph.layers[len(graph.layers) - 1].append(nodes.Node(o, graph, len(graph.layers) - 1, energy=0, bias=0))
 
     #connections
@@ -115,3 +114,7 @@ def convert(dataset):
     data = np.array(dataset)
     return [data[:, 0], data[:, 1]]
 
+mygraph = nodes.Graph("mygraph")
+create_graph(mygraph, 1, 2, 4, 1)
+
+print(mygraph.layers)
