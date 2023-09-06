@@ -15,6 +15,7 @@ class Graph:
         self.nodes.append(name)
         self.layers[name.layer].append(name)
 
+
 class Node:
     # Each Node. Very useful. node.activationEnergy will be changed a lot.
 

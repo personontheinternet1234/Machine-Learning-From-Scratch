@@ -16,6 +16,7 @@ actualDataSet = [
     [1,0]
 ]
 
+# Connection = edge
 
 def softplus(x):  # SoftPlus activation function
     return math.log(1 + math.e**x)
@@ -59,6 +60,9 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
         for originnode in graph.layers[i]:
             for destinationnode in graph.layers[i + 1]:
                 originnode.new_connection(originnode, destinationnode, np.random.normal(0, 5))
+
+    for i in range(len(graph.layers)):
+        graph.layers[i] = np.array(graph.layers[i])
 
 def backward():
     # usage: node1-2 = add_backprop(node1-2.upstreamValue())
@@ -117,4 +121,4 @@ def convert(dataset):
 mygraph = nodes.Graph("mygraph")
 create_graph(mygraph, 1, 2, 4, 1)
 
-# print(mygraph.layers)
+print(mygraph.layers)
