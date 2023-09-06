@@ -10,6 +10,12 @@ class Graph:
         self.layers = [
             [], []
         ]
+        self.layers_activations = [
+            [], []
+        ]
+        self.layers_bias = [
+            [], []
+        ]
 
     def add_node(self, name):
         self.nodes.append(name)

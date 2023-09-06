@@ -56,12 +56,16 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
     # layer matrix sizing
     for iterator in range(number_hidden_layers):
         graph.layers.append([])
+        graph.layers_activations.append([])
+        graph.layers_bias.append([])
 
     # input node creation
     for i in range(number_input_nodes):
         graph.layers[0].append(nodes.Node(name, graph, 0, energy=0, bias=0))
-        G.add_node(name, pos=(0, i))
+        graph.layers_activations.append(graph.layers[0][i].activationEnergy)
+        graph.layers_activations.append(graph.layers[0][i].bias)
 
+        G.add_node(name, pos=(0, i))
         name += 1
 
     # hidden node creation
@@ -69,8 +73,10 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
         current_layer = l + 1
         for n in range(number_nodes_per_layer):
             graph.layers[current_layer].append(nodes.Node(name, graph, current_layer, energy=0, bias=0))
-            G.add_node(name, pos=(current_layer, n))
+            graph.layers_activations.append(graph.layers[current_layer][n].activationEnergy)
+            graph.layers_activations.append(graph.layers[current_layer][n].bias)
 
+            G.add_node(name, pos=(current_layer, n))
             name += 1
 
     print(graph.layers)
@@ -79,8 +85,10 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
     for o in range(number_output_nodes):
         last_layer = len(graph.layers) - 1
         graph.layers[last_layer].append(nodes.Node(name, graph, last_layer, energy=0, bias=0))
-        G.add_node(name, pos=(last_layer, o))
+        graph.layers_activations.append(graph.layers[last_layer][o].activationEnergy)
+        graph.layers_activations.append(graph.layers[last_layer][o].bias)
 
+        G.add_node(name, pos=(last_layer, o))
         name += 1
 
     # connections
