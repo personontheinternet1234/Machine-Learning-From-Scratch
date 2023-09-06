@@ -41,9 +41,16 @@ def softmax_derivative():
     # TODO
     ...
 
+def SSR(actualDataSet):  # sum of squared values function
+    sum = 0
+    for point in actualDataSet:
+        ...
+        #sum += (forward(point[0]) - point[1]) ** 2 # for each x value
+    return sum
+
 
 G = nx.Graph()
-def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes):
+def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes):  # graph creation
     name = 0
 
     # layer matrix sizing
@@ -87,6 +94,13 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
     for i in range(len(graph.layers)):
         graph.layers[i] = np.array(graph.layers[i])
 
+def forward(graph):  # forward pass
+    for l in graph.layers:
+        for node in graph.layers[l]:
+            ...
+
+
+
 def backward():
     # usage: node1-2 = add_backprop(node1-2.upstreamValue())
     def multiply_backprop(upstream_gradient, downstream_nodes, target_node):
@@ -114,15 +128,6 @@ def backward():
     def add_backprop(upstream_gradient):
         return(upstream_gradient)
 
-
-def SSR(actualDataSet):  # sum of squared values function
-    sum = 0
-    for point in actualDataSet:
-        ...
-        #sum += (forward(point[0]) - point[1]) ** 2 # for each x value
-    return sum
-
-
 def new_value(actualDataSet, oldWeight):  # gradient descent function for a given connection's weight.
     # take derivitive of sum of squared values with respect to w4:
     # sum of each data point: 2 * (observed - predicted) * -1
@@ -143,7 +148,7 @@ def convert(dataset):
 
 mygraph = nodes.Graph("mygraph")
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-create_graph(mygraph, 10, 4, 16, 10)
+create_graph(mygraph, 1, 2, 2, 1)
 
 # print(mygraph.layers)
 # for layer in range(len(mygraph.layers)):
