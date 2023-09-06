@@ -31,7 +31,7 @@ class Node:
         name = Connection(name, destination, weight)
         self.connections.append(name)
 
-        destination.connections.append(name)
+        # destination.connections.append(name)
 
 class Connection:
     # Connections for a node. Very useful. Much math will be done with connections.
@@ -42,4 +42,4 @@ class Connection:
         self.weight = weight
 
     def return_name(self):
-        return str(self.origin.name + " to " + self.destination.name)
+        return str(self.origin.name) + " to " + str(self.destination.name)

@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 import nodes
 import numpy as np
 import math
@@ -55,12 +57,13 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
     for o in range(number_output_nodes):
         graph.layers[len(graph.layers) - 1].append(nodes.Node(o, graph, len(graph.layers) - 1, energy=0, bias=0))
 
-    #connections
+    # connections
     for i in range(len(graph.layers) - 1):
         for originnode in graph.layers[i]:
             for destinationnode in graph.layers[i + 1]:
                 originnode.new_connection(originnode, destinationnode, np.random.normal(0, 5))
 
+    # np stuff for np.matmult()
     for i in range(len(graph.layers)):
         graph.layers[i] = np.array(graph.layers[i])
 
@@ -119,6 +122,11 @@ def convert(dataset):
     return [data[:, 0], data[:, 1]]
 
 mygraph = nodes.Graph("mygraph")
-create_graph(mygraph, 1, 2, 4, 1)
+create_graph(mygraph, 1, 1, 2, 2)
 
-print(mygraph.layers)
+# print(mygraph.layers)
+for layer in range(len(mygraph.layers)):
+    for node in mygraph.layers[layer]:
+        for connection in node.connections:
+            print("layer" + str(layer) + " " + str(connection.origin.name) + " layer" +
+                  str(connection.destination.layer) + " " + str(connection.destination.name))
