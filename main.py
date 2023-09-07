@@ -112,39 +112,74 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
         graph.layers_bias[i] = np.array(graph.layers_bias[i])
 
 def forward(graph, inputs):  # forward pass
+    def inputstep(inputs):
+        # flips inputs so instead of being 1 x n it will be n x 1
+        inputs = np.array(inputs).reshape((len(inputs), 1))
 
-    # flips inputs so instead of being 1 x n it will be n x 1
-    inputs = np.array(inputs).reshape((len(inputs), 1))
+        # sets activationEnergies of each object in inputs if we need them for backprop
+        for node in range(len(graph.layers[0])):
+            graph.layers[0][node].activationEnergy = inputs[node][0]
 
-    # sets activationEnergies of each object in inputs if we need them for backprop
-    for node in range(len(graph.layers[0])):
-        graph.layers[0][node].activationEnergy = inputs[node][0]
+        # sets the matrix in graphs representing inputs to the n x 1 inputs we found earlier
+        graph.layers_activations[0] = inputs
 
-    # sets this matrix in graphs representing inputs to the n x 1 inputs we found earlier
-    graph.layers_activations[0] = inputs
+        # input layer to next layer calc
+        layerweights_initial = []
+        for node in graph.layers[0]:
+            layerweights_initial += [node.connections_weights]
+        layerweights_initial = flipmatrix(layerweights_initial)
 
-    # input to next nodes calculations
-    layerweights_initial = []
-    for node in graph.layers[0]:
-        layerweights_initial += [node.connections_weights]
-    weights_layer_0to1 = flipmatrix(layerweights_initial)
+        # weight step
+        result = np.matmul(layerweights_initial, graph.layers_activations[0])
 
-    # weight step
-    result = np.matmul(weights_layer_0to1, graph.layers_activations[0])
+        # bias step
+        result = result + graph.layers_bias[1].reshape((len(graph.layers_bias[1]), 1))
 
-    # bias step
-    result = result + graph.layers_bias[1].reshape((len(graph.layers_bias[1]), 1))
+        # sigmoid step
+        result = sigmoid(result)
 
-    # sigmoid step
-    result = sigmoid(result)
+        return result
+    def layerstep(result):
+        for l in range(len(graph.layers) - 2):  # -2: 1 disregarded bc of input, 1 disregarded bc output
+            current_layer = l + 1
+
+            # sets activationEnergies of each object in each layer if we need them for backprop
+            for node in range(len(graph.layers[current_layer])):
+                graph.layers[current_layer][node].activationEnergy = result[node][0]
+
+            # sets the matrix in graphs representing energies of the current layer to the n x 1 results of the last calc
+            graph.layers_activations[current_layer] = result
+
+            # current layer to next layer calc
+            layerweights = []
+            for node in graph.layers[current_layer]:  # nodes starting after [0] (inputs)
+                layerweights += [node.connections_weights]
+            layerweights = flipmatrix(layerweights)
+
+            # weight step
+            result = np.matmul(layerweights, graph.layers_activations[current_layer])
+
+            # bias step
+            result = result + graph.layers_bias[current_layer].reshape((len(graph.layers_bias[current_layer]), 1))
+
+            # sigmoid step
+            result = sigmoid(result)
+
+            return result
+    def last_step(result):
+        last_layer = len(graph.layers) - 1
+        # sets activationEnergies of each object in each layer if we need them for backprop
+        for node in range(len(graph.layers[last_layer])):
+            graph.layers[last_layer][node].activationEnergy = result[node][0]
+
+        # sets the matrix in graphs representing energies of the current layer to the n x 1 results of the last calcs
+        graph.layers_activations[last_layer] = result
+
+        return result
 
 
-    # for l in range(len(graph.layers) - 2):  # -2, 1 disregarded bc of input, 1 disregarded bc output
-    #     layerweights = []
-    #     for node in graph.layers[l + 1]:
-    #         layerweights += [node.connections_weights]
-    #     weights_layer_0to1 = flipmatrix(weights_layer_0to1)
-    #     result = np.matmul(weights_layer_0to1, graph.layers_activations[0])
+    # this is kinda crazy. Put 'em all into functions so it'd be nicer to read. Hope it still works!
+    return last_step(layerstep(inputstep(inputs)))
 
 
 def backward():
@@ -206,14 +241,14 @@ def flipmatrix(in_matrix):
 
 mygraph = nodes.Graph("mygraph")
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-create_graph(mygraph, 2, 2, 2, 1)
+create_graph(mygraph, 2, 2, 2, 2)
 # print(mygraph.layers)
 # for layer in range(len(mygraph.layers)):
 #     for node in mygraph.layers[layer]:
 #         for connection in node.connections:
 #             print("layer" + str(layer) + " " + str(connection.origin.name) + " layer" +
 #                   str(connection.destination.layer) + " " + str(connection.destination.name))
-forward(mygraph, [0, 1])
+print(forward(mygraph, [0, 1]))
 
 pos=nx.get_node_attributes(G,'pos')
 nx.draw(G, pos, with_labels=True)
