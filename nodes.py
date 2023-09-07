@@ -33,9 +33,17 @@ class Node:
         self.connections = []
         self.bias = bias
 
+        self.connections_weights = []
+
     def new_connection(self, name, destination, weight):
         name = Connection(name, destination, weight)
         self.connections.append(name)
+
+        # makes a list per every starting node, with every outgoing node as parts of that list
+        # logically, this will end up as a matrix of n x k (we want k x n)
+        # n vertically (n lists, where n is the # of coming from), k horizontally (where k is where going to)
+        self.connections_weights.append(name.weight)
+
 
         # destination.connections.append(name)
 
@@ -49,3 +57,21 @@ class Connection:
 
     def return_name(self):
         return str(self.origin.name) + " to " + str(self.destination.name)
+
+def forward(graph):  # forward pass
+    new_list = []
+    for node in graph.layers[0]:
+        new_list += node.connections_weights
+    new_list = np.array(new_list)
+    return np.matmul(graph.layers_activations[0], new_list)
+
+if __name__ == "__main__":
+    mygraph = Graph("mygraph")
+    HI = Node("hi", mygraph, 0)
+    CA = Node("ca", mygraph, 1)
+    AZ = Node("az", mygraph, 1)
+
+    HI.new_connection(HI, CA, 1.0)
+    HI.new_connection(HI, AZ, 1.0)
+
+    print(forward(mygraph))

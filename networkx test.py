@@ -63,7 +63,7 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
     for i in range(number_input_nodes):
         graph.layers[0].append(nodes.Node(name, graph, 0, energy=0, bias=0))
         graph.layers_activations.append(graph.layers[0][i].activationEnergy)
-        graph.layers_activations.append(graph.layers[0][i].bias)
+        graph.layers_bias.append(graph.layers[0][i].bias)
 
         G.add_node(name, pos=(0, i))
         name += 1
@@ -74,19 +74,17 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
         for n in range(number_nodes_per_layer):
             graph.layers[current_layer].append(nodes.Node(name, graph, current_layer, energy=0, bias=0))
             graph.layers_activations.append(graph.layers[current_layer][n].activationEnergy)
-            graph.layers_activations.append(graph.layers[current_layer][n].bias)
+            graph.layers_bias.append(graph.layers[current_layer][n].bias)
 
             G.add_node(name, pos=(current_layer, n))
             name += 1
-
-    print(graph.layers)
 
     # output node creation
     for o in range(number_output_nodes):
         last_layer = len(graph.layers) - 1
         graph.layers[last_layer].append(nodes.Node(name, graph, last_layer, energy=0, bias=0))
         graph.layers_activations.append(graph.layers[last_layer][o].activationEnergy)
-        graph.layers_activations.append(graph.layers[last_layer][o].bias)
+        graph.layers_bias.append(graph.layers[last_layer][o].bias)
 
         G.add_node(name, pos=(last_layer, o))
         name += 1
@@ -96,17 +94,23 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
         for originnode in graph.layers[i]:
             for destinationnode in graph.layers[i + 1]:
                 originnode.new_connection(originnode, destinationnode, np.random.normal(0, 5))
+
                 G.add_edge(int(originnode.name),int(destinationnode.name))
 
     # np stuff for np.matmult()
     for i in range(len(graph.layers)):
         graph.layers[i] = np.array(graph.layers[i])
+        graph.layers_activations[i] = np.array(graph.layers_activations[i])
+        graph.layers_bias[i] = np.array(graph.layers_bias[i])
 
 def forward(graph):  # forward pass
-    for l in graph.layers:
-        for node in graph.layers[l]:
-            ...
-
+    weights_layer_0to1 = []
+    for node in graph.layers[0]:
+        weights_layer_0to1 += [node.connections_weights]
+    print(weights_layer_0to1)
+    weights_layer_0to1 = flipmatrix(weights_layer_0to1)
+    print(weights_layer_0to1)
+    np.matmul(weights_layer_0to1, graph.layers_activations[0])
 
 
 def backward():
@@ -154,9 +158,21 @@ def convert(dataset):
     data = np.array(dataset)
     return [data[:, 0], data[:, 1]]
 
+# Function for flipping dimensions of a matrix (This was unironically quite tough to make because my laptop died and I
+# had to do it in my head.
+def flipmatrix(in_matrix):
+    out_matrix = []
+
+    for i in in_matrix[0]:
+        out_matrix.append([i])
+    for i in range(len(in_matrix) - 1):
+        for x in range(len(in_matrix[i + 1])):
+            out_matrix[x].append(in_matrix[i + 1][x])
+    return np.array(out_matrix)
+
 mygraph = nodes.Graph("mygraph")
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-create_graph(mygraph, 1, 2, 2, 1)
+create_graph(mygraph, 2, 2, 2, 1)
 
 # print(mygraph.layers)
 # for layer in range(len(mygraph.layers)):
@@ -169,3 +185,5 @@ pos=nx.get_node_attributes(G,'pos')
 nx.draw(G, pos, with_labels=True)
 
 plt.show()
+
+forward(mygraph)
