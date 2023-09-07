@@ -39,10 +39,11 @@ def softmax(outputNodes):
     return softOutputEnergies
 
 def sigmoid(x):  # Sigmoid function, built for use with matrices
-    y = x # y becomes a np matrix of the same size
-    for row in range(len(x)):
-        for position in range(len(x[row])):
-            y[row][position] = 1 / (1 + math.exp(-x[row][position]))
+    y = np.multiply(x, -1)
+    y = np.exp(y)
+    y = np.add(y, 1)
+    y = np.power(y, -1)
+
     return y
 
 def softmax_derivative():
