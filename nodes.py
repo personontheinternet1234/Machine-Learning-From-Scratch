@@ -31,21 +31,22 @@ class Node:
         self.layer = layer
         self.activationEnergy = energy
         self.connections = []
+        self.back_connections = []
         self.bias = bias
 
         self.connections_weights = []
 
-    def new_connection(self, name, destination, weight):
-        name = Connection(name, destination, weight)
-        self.connections.append(name)
+    def new_connection(self, origin, destination, weight):
+        forward_connection = Connection(origin, destination, weight)
+        self.connections.append(forward_connection)
 
         # makes a list per every starting node, with every outgoing node as parts of that list
         # logically, this will end up as a matrix of n x k (we want k x n)
         # n vertically (n lists, where n is the # of coming from), k horizontally (where k is where going to)
-        self.connections_weights.append(name.weight)
+        self.connections_weights.append(forward_connection.weight)
 
-
-        # destination.connections.append(name)
+        back_connection = BackConnection(destination, origin, weight)
+        destination.back_connections.append(back_connection)
 
 class Connection:
     # Connections for a node. Very useful. Much math will be done with connections.
@@ -58,12 +59,16 @@ class Connection:
     def return_name(self):
         return str(self.origin.name) + " to " + str(self.destination.name)
 
-def forward(graph):  # forward pass
-    new_list = []
-    for node in graph.layers[0]:
-        new_list += node.connections_weights
-    new_list = np.array(new_list)
-    return np.matmul(graph.layers_activations[0], new_list)
+class BackConnection:
+    # Back Connections for backprop
+
+    def __init__(self, origin, destination, weight):
+        self.origin = origin
+        self.destination = destination
+        self.weight = weight
+
+    def return_name(self):
+        return str(self.origin.name) + " to " + str(self.destination.name)
 
 if __name__ == "__main__":
     mygraph = Graph("mygraph")
@@ -73,5 +78,3 @@ if __name__ == "__main__":
 
     HI.new_connection(HI, CA, 1.0)
     HI.new_connection(HI, AZ, 1.0)
-
-    print(forward(mygraph))

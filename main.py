@@ -210,6 +210,8 @@ def backward():
     def add_backprop(upstream_gradient):
         return(upstream_gradient)
 
+
+
 def new_value(actualDataSet, oldWeight):  # gradient descent function for a given connection's weight.
     # take derivitive of sum of squared values with respect to w4:
     # sum of each data point: 2 * (observed - predicted) * -1
@@ -242,14 +244,22 @@ def flipmatrix(in_matrix):
 
 mygraph = nodes.Graph("mygraph")
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-create_graph(mygraph, 2, 2, 2, 2)
+create_graph(mygraph, 1, 1, 1, 1)
+
 # print(mygraph.layers)
-# for layer in range(len(mygraph.layers)):
-#     for node in mygraph.layers[layer]:
-#         for connection in node.connections:
-#             print("layer" + str(layer) + " " + str(connection.origin.name) + " layer" +
-#                   str(connection.destination.layer) + " " + str(connection.destination.name))
-print(forward(mygraph, [0, 1]))
+for layer in range(len(mygraph.layers)):
+    for node in mygraph.layers[layer]:
+        for connection in node.connections:
+            print("layer" + str(layer) + " " + str(connection.origin.name) + " to layer" +
+                  str(connection.destination.layer) + " " + str(connection.destination.name))
+print()
+for layer in range(len(mygraph.layers)):
+    for node in mygraph.layers[layer]:
+        for back_connection in node.back_connections:
+            print("layer" + str(layer) + " " + str(back_connection.origin.name) + " to layer" +
+                  str(back_connection.destination.layer) + " " + str(back_connection.destination.name))
+
+print(forward(mygraph, [0]))
 
 pos=nx.get_node_attributes(G,'pos')
 nx.draw(G, pos, with_labels=True)
