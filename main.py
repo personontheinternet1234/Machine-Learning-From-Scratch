@@ -21,8 +21,6 @@ actualDataSet = [
     [1,0]
 ]
 
-# Connection = edge
-
 
 def softplus(x):  # SoftPlus activation function (NOT USING IT, DIDN'T BUILD IT FOR MATRICES)
     return math.log(1 + math.e**x)
@@ -81,7 +79,7 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
     for l in range(number_hidden_layers):
         current_layer = l + 1
         for n in range(number_nodes_per_layer):
-            graph.layers[current_layer].append(nodes.Node(name, graph, current_layer, energy=0, bias=1))
+            graph.layers[current_layer].append(nodes.Node(name, graph, current_layer, energy=0, bias=0))
             graph.layers_activations[current_layer].append(graph.layers[current_layer][n].activationEnergy)
             graph.layers_bias[current_layer].append(graph.layers[current_layer][n].bias)
 
@@ -161,7 +159,7 @@ def forward(graph, inputs):  # forward pass
             result = np.matmul(layerweights, graph.layers_activations[current_layer])
 
             # bias step
-            result = result + graph.layers_bias[current_layer].reshape((len(graph.layers_bias[current_layer]), 1))
+            result = result + graph.layers_bias[current_layer + 1].reshape((len(graph.layers_bias[current_layer + 1]), 1))
 
             # sigmoid step
             result = sigmoid(result)
@@ -244,22 +242,22 @@ def flipmatrix(in_matrix):
 
 mygraph = nodes.Graph("mygraph")
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-create_graph(mygraph, 1, 1, 1, 1)
+create_graph(mygraph, 2, 1, 2, 5)
 
 # print(mygraph.layers)
-for layer in range(len(mygraph.layers)):
-    for node in mygraph.layers[layer]:
-        for connection in node.connections:
-            print("layer" + str(layer) + " " + str(connection.origin.name) + " to layer" +
-                  str(connection.destination.layer) + " " + str(connection.destination.name))
-print()
-for layer in range(len(mygraph.layers)):
-    for node in mygraph.layers[layer]:
-        for back_connection in node.back_connections:
-            print("layer" + str(layer) + " " + str(back_connection.origin.name) + " to layer" +
-                  str(back_connection.destination.layer) + " " + str(back_connection.destination.name))
+# for layer in range(len(mygraph.layers)):
+#     for node in mygraph.layers[layer]:
+#         for connection in node.connections:
+#             print("layer" + str(layer) + " " + str(connection.origin.name) + " to layer" +
+#                   str(connection.destination.layer) + " " + str(connection.destination.name))
+# print()
+# for layer in range(len(mygraph.layers)):
+#     for node in mygraph.layers[layer]:
+#         for back_connection in node.back_connections:
+#             print("layer" + str(layer) + " " + str(back_connection.origin.name) + " to layer" +
+#                   str(back_connection.destination.layer) + " " + str(back_connection.destination.name))
 
-print(forward(mygraph, [0]))
+print(forward(mygraph, [0, 1]))
 
 pos=nx.get_node_attributes(G,'pos')
 nx.draw(G, pos, with_labels=True)
