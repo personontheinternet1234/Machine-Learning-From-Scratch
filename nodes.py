@@ -6,7 +6,8 @@ class Graph:
     def __init__(self, name):
         self.name = name
         self.nodes = []
-        # I should change this to account for # of variables when I scale it
+
+        # Don't worry! Self.layers and its friends now scale for the # of layers we've got!!
         self.layers = [
             [], []
         ]
@@ -45,7 +46,7 @@ class Node:
         # n vertically (n lists, where n is the # of coming from), k horizontally (where k is where going to)
         self.connections_weights.append(forward_connection.weight)
 
-        back_connection = BackConnection(destination, origin, weight)
+        back_connection = BackConnection(destination, origin)
         destination.back_connections.append(back_connection)
 
 class Connection:
@@ -62,10 +63,10 @@ class Connection:
 class BackConnection:
     # Back Connections for backprop
 
-    def __init__(self, origin, destination, weight):
+    def __init__(self, origin, destination, gradient=0):
         self.origin = origin
         self.destination = destination
-        self.weight = weight
+        self.gradient = gradient
 
     def return_name(self):
         return str(self.origin.name) + " to " + str(self.destination.name)
