@@ -25,6 +25,7 @@ actualDataSet = [
 def softplus(x):  # SoftPlus activation function (NOT USING IT, DIDN'T BUILD IT FOR MATRICES)
     return math.log(1 + math.e**x)
 
+
 def softmax(outputNodes):
     denom = 0
     for i in outputNodes:
@@ -36,6 +37,7 @@ def softmax(outputNodes):
 
     return softOutputEnergies
 
+
 def sigmoid(x):  # Sigmoid function, built for use with matrices
     y = np.multiply(x, -1)
     y = np.exp(y)
@@ -44,9 +46,11 @@ def sigmoid(x):  # Sigmoid function, built for use with matrices
 
     return y
 
+
 def softmax_derivative():
     # TODO
     ...
+
 
 def SSR(actualDataSet):  # sum of squared values function
     sum = 0
@@ -57,6 +61,8 @@ def SSR(actualDataSet):  # sum of squared values function
 
 
 G = nx.Graph()
+
+
 def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes):  # graph creation
     name = 0
 
@@ -110,7 +116,9 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
         graph.layers_activations[i] = np.array(graph.layers_activations[i], dtype=object)
         graph.layers_bias[i] = np.array(graph.layers_bias[i])
 
+
 def forward(graph, inputs):  # forward pass
+
     def inputstep(inputs):
         # flips inputs so instead of being 1 x n it will be n x 1
         inputs = np.array(inputs).reshape((len(inputs), 1))
@@ -138,6 +146,7 @@ def forward(graph, inputs):  # forward pass
         result = sigmoid(result)
 
         return result
+
     def layerstep(result):
         for l in range(len(graph.layers) - 2):  # -2: 1 disregarded bc of input, 1 disregarded bc output
             current_layer = l + 1
@@ -165,6 +174,7 @@ def forward(graph, inputs):  # forward pass
             result = sigmoid(result)
 
             return result
+
     def last_step(result):
         last_layer = len(graph.layers) - 1
         # sets activationEnergies of each object in each layer if we need them for backprop
@@ -175,7 +185,6 @@ def forward(graph, inputs):  # forward pass
         graph.layers_activations[last_layer] = result
 
         return result
-
 
     # this is kinda crazy. Put 'em all into functions so it'd be nicer to read. Hope it still works!
     return last_step(layerstep(inputstep(inputs)))
@@ -209,7 +218,6 @@ def backward():
         return(upstream_gradient)
 
 
-
 def new_value(actualDataSet, oldWeight):  # gradient descent function for a given connection's weight.
     # take derivitive of sum of squared values with respect to w4:
     # sum of each data point: 2 * (observed - predicted) * -1
@@ -223,10 +231,12 @@ def new_value(actualDataSet, oldWeight):  # gradient descent function for a give
     # returns next weight or bias the connection should have
     #return round(oldWeight - (sum * learningRate), 4)
 
+
 # Just to convert my weird usage of actualDataSet being a matrix.
 def convert(dataset):
     data = np.array(dataset)
     return [data[:, 0], data[:, 1]]
+
 
 # Function for flipping dimensions of a matrix (This was unironically quite tough to make because my laptop died and I
 # had to do it in my head.
@@ -239,6 +249,7 @@ def flipmatrix(in_matrix):
         for x in range(len(in_matrix[i + 1])):
             out_matrix[x].append(in_matrix[i + 1][x])
     return np.array(out_matrix)
+
 
 mygraph = nodes.Graph("mygraph")
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
