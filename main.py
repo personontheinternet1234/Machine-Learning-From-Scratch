@@ -26,16 +26,14 @@ def softplus(x):  # SoftPlus activation function (NOT USING IT, DIDN'T BUILD IT 
     return math.log(1 + math.e**x)
 
 
-def softmax(outputNodes):
+def softmax(outputnodesactivations):
     denom = 0
-    for i in outputNodes:
-        denom += math.e ** outputNodes[i].activationEnergy
+    eoutputnodesactivations = np.exp(outputnodesactivations)
+    for i in eoutputnodesactivations:
+        denom += i
 
-    softOutputEnergies = []
-    for i in outputNodes:
-        softOutputEnergies.append((math.e**outputNodes[i].activationEnergy)/denom)
-
-    return softOutputEnergies
+    smaxoutput = np.divide(eoutputnodesactivations, denom)
+    return smaxoutput
 
 
 def sigmoid(x):  # Sigmoid function, built for use with matrices
@@ -47,9 +45,21 @@ def sigmoid(x):  # Sigmoid function, built for use with matrices
     return y
 
 
-def softmax_derivative():
-    # TODO
-    ...
+def singlesigmoid(x):
+    y = 1 / (1 + math.exp(-1 * x))
+    return y
+
+
+def softmax_derivative(x, y):
+    if ... == ...:
+        return sigmoid_derivative(x)
+    else:
+        return -1 * singlesigmoid(x) * singlesigmoid(y)
+
+
+def sigmoid_derivative(x):
+    y = singlesigmoid(x) * (1 - singlesigmoid(x))
+    return y
 
 
 def SSR(actualDataSet):  # sum of squared values function
@@ -173,11 +183,13 @@ def forward(graph, inputs):  # forward pass
             # sigmoid step
             result = sigmoid(result)
 
-            return result
+        return result
 
     def last_step(result):
         last_layer = len(graph.layers) - 1
         # sets activationEnergies of each object in each layer if we need them for backprop
+
+        #TODO: Layer function only happens once...
         for node in range(len(graph.layers[last_layer])):
             graph.layers[last_layer][node].activationEnergy = result[node][0]
 
@@ -253,7 +265,7 @@ def flipmatrix(in_matrix):
 
 mygraph = nodes.Graph("mygraph")
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-create_graph(mygraph, 2, 1, 2, 5)
+create_graph(mygraph, 2, 2, 2, 5)
 
 # print(mygraph.layers)
 # for layer in range(len(mygraph.layers)):
@@ -273,3 +285,5 @@ print(forward(mygraph, [0, 1]))
 pos=nx.get_node_attributes(G,'pos')
 nx.draw(G, pos, with_labels=True)
 plt.show()
+
+print(softmax([1.43, -0.4, 0.23]))
