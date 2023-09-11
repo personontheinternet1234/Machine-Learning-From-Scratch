@@ -39,6 +39,7 @@ def softmax(outputnodesactivations):
 def crossentropy(scalar_softmax_output):
     centropyoutput = -1 * math.log(scalar_softmax_output)
     return centropyoutput
+    # Usage: crossentropy(forward(mygraph, inputs))[ActuallyCorrectNodeIndex][0]
 
 def sigmoid(x):  # Sigmoid function, built for use with matrices
     y = np.multiply(x, -1)
@@ -271,6 +272,12 @@ mygraph = nodes.Graph("mygraph")
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
 create_graph(mygraph, 2, 2, 2, 2)
 
+
+
+pos=nx.get_node_attributes(G,'pos')
+nx.draw(G, pos, with_labels=True)
+plt.show()
+
 # print(mygraph.layers)
 # for layer in range(len(mygraph.layers)):
 #     for node in mygraph.layers[layer]:
@@ -286,12 +293,12 @@ create_graph(mygraph, 2, 2, 2, 2)
 
 # print(forward(mygraph, [1,2]))
 
-pos=nx.get_node_attributes(G,'pos')
-nx.draw(G, pos, with_labels=True)
-plt.show()
+# setosa = softmax([[1.04], [0.0], [0.14]])
+# versicolor = softmax([[0.09], [0.86], [0.1]])
+# virginica = softmax([[0], [0], [1]])
+# # total error
+# print(crossentropy(setosa[0][0]) + crossentropy(virginica[2][0]) + crossentropy(versicolor[1][0]))
 
-setosa = softmax([[1.04], [0.0], [0.14]])
-versicolor = softmax([[0.09], [0.86], [0.1]])
-virginica = softmax([[0], [0], [1]])
-# total error
-print(crossentropy(setosa[0][0]) + crossentropy(virginica[2][0]) + crossentropy(versicolor[1][0]))
+# print(f" output when node 0 should light up {forward(mygraph, [1,0])}" )
+# print(f" output when node 1 should light up {forward(mygraph, [0,1])}" )
+# print(f" total loss {crossentropy(forward(mygraph, [1,0])[0][0]) + crossentropy(forward(mygraph, [0,1])[1][0])} ")
