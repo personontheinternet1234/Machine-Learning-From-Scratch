@@ -29,12 +29,16 @@ def softplus(x):  # SoftPlus activation function (NOT USING IT, DIDN'T BUILD IT 
 def softmax(outputnodesactivations):
     denom = 0
     eoutputnodesactivations = np.exp(outputnodesactivations)
+
     for i in eoutputnodesactivations:
-        denom += i
+        denom += i[0]
 
     smaxoutput = np.divide(eoutputnodesactivations, denom)
     return smaxoutput
 
+def crossentropy(scalar_softmax_output):
+    centropyoutput = -1 * math.log(scalar_softmax_output)
+    return centropyoutput
 
 def sigmoid(x):  # Sigmoid function, built for use with matrices
     y = np.multiply(x, -1)
@@ -50,11 +54,11 @@ def singlesigmoid(x):
     return y
 
 
-def softmax_derivative(x, y):
+def softmax_derivative(softmax_of_output_node, soft_max_compared_node):
     if ... == ...:
-        return sigmoid_derivative(x)
+        return softmax_of_output_node * (1 - softmax_of_output_node)
     else:
-        return -1 * singlesigmoid(x) * singlesigmoid(y)
+        return -1 * softmax_of_output_node * soft_max_compared_node
 
 
 def sigmoid_derivative(x):
@@ -265,7 +269,7 @@ def flipmatrix(in_matrix):
 
 mygraph = nodes.Graph("mygraph")
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-create_graph(mygraph, 2, 2, 2, 5)
+create_graph(mygraph, 2, 2, 2, 2)
 
 # print(mygraph.layers)
 # for layer in range(len(mygraph.layers)):
@@ -280,10 +284,14 @@ create_graph(mygraph, 2, 2, 2, 5)
 #             print("layer" + str(layer) + " " + str(back_connection.origin.name) + " to layer" +
 #                   str(back_connection.destination.layer) + " " + str(back_connection.destination.name))
 
-print(forward(mygraph, [0, 1]))
+# print(forward(mygraph, [1,2]))
 
 pos=nx.get_node_attributes(G,'pos')
 nx.draw(G, pos, with_labels=True)
 plt.show()
 
-print(softmax([1.43, -0.4, 0.23]))
+setosa = softmax([[1.04], [0.0], [0.14]])
+versicolor = softmax([[0.09], [0.86], [0.1]])
+virginica = softmax([[0], [0], [1]])
+# total error
+print(crossentropy(setosa[0][0]) + crossentropy(virginica[2][0]) + crossentropy(versicolor[1][0]))
