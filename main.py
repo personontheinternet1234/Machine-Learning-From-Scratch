@@ -14,16 +14,17 @@ Version: 0.1
 Author: Isaac Park Verbrugge
 """
 
-
+# [inputnodevalues,outputnodeindexwewant]
 actualDataSet = [
-    [0,0],
-    [0.5,1],
-    [1,0]
+    [[1,0],0],
+    [[0,1],1],
 ]
 
 
-def softplus(x):  # SoftPlus activation function (NOT USING IT, DIDN'T BUILD IT FOR MATRICES)
-    return math.log(1 + math.e**x)
+# Just to convert my weird usage of actualDataSet being a matrix.
+def convert(dataset):
+    data = np.array(dataset)
+    return [data[:, 0], data[:, 1]]
 
 
 def softmax(outputnodesactivations):
@@ -36,10 +37,12 @@ def softmax(outputnodesactivations):
     smaxoutput = np.divide(eoutputnodesactivations, denom)
     return smaxoutput
 
+
 def crossentropy(scalar_softmax_output):
     centropyoutput = -1 * math.log(scalar_softmax_output)
     return centropyoutput
-    # Usage: crossentropy(forward(mygraph, inputs))[ActuallyCorrectNodeIndex][0]
+    # Usage: crossentropy(softmax(forward(mygraph, inputs))[ActuallyCorrectNodeIndex][0])
+
 
 def sigmoid(x):  # Sigmoid function, built for use with matrices
     y = np.multiply(x, -1)
@@ -65,14 +68,6 @@ def softmax_derivative(softmax_of_output_node, soft_max_compared_node):
 def sigmoid_derivative(x):
     y = singlesigmoid(x) * (1 - singlesigmoid(x))
     return y
-
-
-def SSR(actualDataSet):  # sum of squared values function
-    sum = 0
-    for point in actualDataSet:
-        ...
-        #sum += (forward(point[0]) - point[1]) ** 2 # for each x value
-    return sum
 
 
 G = nx.Graph()
@@ -188,6 +183,8 @@ def forward(graph, inputs):  # forward pass
             # sigmoid step
             result = sigmoid(result)
 
+
+
         return result
 
     def last_step(result):
@@ -235,26 +232,6 @@ def backward():
         return(upstream_gradient)
 
 
-def new_value(actualDataSet, oldWeight):  # gradient descent function for a given connection's weight.
-    # take derivitive of sum of squared values with respect to w4:
-    # sum of each data point: 2 * (observed - predicted) * -1
-
-    sum = 0
-    for point in actualDataSet:
-        ...
-        #sum += -2 * (point[1] - forward(point[0]))
-    print("SSR (should approach 0): " + str(SSR(actualDataSet)))
-
-    # returns next weight or bias the connection should have
-    #return round(oldWeight - (sum * learningRate), 4)
-
-
-# Just to convert my weird usage of actualDataSet being a matrix.
-def convert(dataset):
-    data = np.array(dataset)
-    return [data[:, 0], data[:, 1]]
-
-
 # Function for flipping dimensions of a matrix (This was unironically quite tough to make because my laptop died and I
 # had to do it in my head.
 def flipmatrix(in_matrix):
@@ -270,13 +247,17 @@ def flipmatrix(in_matrix):
 
 mygraph = nodes.Graph("mygraph")
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-create_graph(mygraph, 2, 2, 2, 2)
-
-
-
+create_graph(mygraph, 2, 1, 2, 2)
 pos=nx.get_node_attributes(G,'pos')
 nx.draw(G, pos, with_labels=True)
 plt.show()
+
+
+totalce = 0
+for data in actualDataSet:
+    totalce += crossentropy(softmax(forward(mygraph, data[0]))[data[1]][0])
+print(totalce)
+
 
 # print(mygraph.layers)
 # for layer in range(len(mygraph.layers)):
@@ -291,14 +272,8 @@ plt.show()
 #             print("layer" + str(layer) + " " + str(back_connection.origin.name) + " to layer" +
 #                   str(back_connection.destination.layer) + " " + str(back_connection.destination.name))
 
-# print(forward(mygraph, [1,2]))
-
 # setosa = softmax([[1.04], [0.0], [0.14]])
 # versicolor = softmax([[0.09], [0.86], [0.1]])
 # virginica = softmax([[0], [0], [1]])
 # # total error
 # print(crossentropy(setosa[0][0]) + crossentropy(virginica[2][0]) + crossentropy(versicolor[1][0]))
-
-# print(f" output when node 0 should light up {forward(mygraph, [1,0])}" )
-# print(f" output when node 1 should light up {forward(mygraph, [0,1])}" )
-# print(f" total loss {crossentropy(forward(mygraph, [1,0])[0][0]) + crossentropy(forward(mygraph, [0,1])[1][0])} ")
