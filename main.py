@@ -280,10 +280,8 @@ create_graph(mygraph, 2, 2, 2, 5)
 #             print("layer" + str(layer) + " " + str(back_connection.origin.name) + " to layer" +
 #                   str(back_connection.destination.layer) + " " + str(back_connection.destination.name))
 
-print(forward(mygraph, [0, 1]))
-
 pos=nx.get_node_attributes(G,'pos')
 nx.draw(G, pos, with_labels=True)
 plt.show()
 
-print(softmax([1.43, -0.4, 0.23]))
+print(softmax(forward(mygraph, [0, 1])))
