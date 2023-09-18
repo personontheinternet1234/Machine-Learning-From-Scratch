@@ -43,13 +43,20 @@ class Node:
         forward_connection = Connection(origin, destination, weight)
         self.connections.append(forward_connection)
 
+        back_connection = BackConnection(destination, origin)
+        destination.back_connections.append(back_connection)
+
+    def fix_connections_weights(self):
         # makes a list per every starting node, with every outgoing node as parts of that list
         # logically, this will end up as a matrix of n x k (we want k x n)
         # n vertically (n lists, where n is the # of coming from), k horizontally (where k is where going to)
-        self.connections_weights.append(forward_connection.weight)
+        for connection in range(len(self.connections)):
+            try:
+                self.connections_weights[connection] = self.connections[connection].weight
+            except:
+                self.connections_weights.append(self.connections[connection].weight)
 
-        back_connection = BackConnection(destination, origin)
-        destination.back_connections.append(back_connection)
+
 
 class Connection:
     # Connections for a node. Very useful. Much math will be done with connections.

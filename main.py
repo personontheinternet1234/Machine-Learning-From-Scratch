@@ -34,14 +34,18 @@ def softmax(outputnodesactivations):
     for i in eoutputnodesactivations:
         denom += i[0]
 
-    smaxoutput = np.divide(eoutputnodesactivations, denom)
-    return smaxoutput
+    smaxoutputs = np.divide(eoutputnodesactivations, denom)
+    return smaxoutputs
 
 
-def crossentropy(smaxoutput, correct_output):
-    centropyoutput = -1 * math.log(smaxoutput[correct_output][0])
+def crossentropy(smaxoutputs, correct_output):
+    centropyoutput = -1 * math.log(smaxoutputs[correct_output][0])
     return centropyoutput
     # Usage: crossentropy( softmax(forward(mygraph, inputs) )[ActuallyCorrectNodeIndex][0])
+
+def singlecrossentropy(smaxoutput):
+    centropyoutput = -1 * math.log(smaxoutput)
+    return centropyoutput
 
 def sigmoid(x):  # Sigmoid function, built for use with matrices
     y = np.multiply(x, -1)
@@ -55,11 +59,6 @@ def sigmoid(x):  # Sigmoid function, built for use with matrices
 def singlesigmoid(x):
     y = 1 / (1 + math.exp(-1 * x))
     return y
-
-
-def singlecrossentropy(smaxoutput):
-    centropyoutput = -1 * math.log(smaxoutput)
-    return centropyoutput
 
 
 def derivativelossrespecttosomething(correct_guy, centropyoutput, outputs):
@@ -101,13 +100,11 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
     for iterator in range(number_hidden_layers):
         graph.layers.append([])
         graph.layers_activations.append([])
-        graph.layers_bias.append([])
 
     # input node creation
     for i in range(number_input_nodes):
         graph.layers[0].append(nodes.Node(name, graph, 0, energy=0, bias=0))
         graph.layers_activations[0].append(graph.layers[0][i].activationEnergy)
-        graph.layers_bias[0].append(graph.layers[0][i].bias)
 
         G.add_node(name, pos=(0, i))
         name += 1
@@ -118,7 +115,6 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
         for n in range(number_nodes_per_layer):
             graph.layers[current_layer].append(nodes.Node(name, graph, current_layer, energy=0, bias=0))
             graph.layers_activations[current_layer].append(graph.layers[current_layer][n].activationEnergy)
-            graph.layers_bias[current_layer].append(graph.layers[current_layer][n].bias)
 
             G.add_node(name, pos=(current_layer, n))
             name += 1
@@ -128,7 +124,6 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
         last_layer = len(graph.layers) - 1
         graph.layers[last_layer].append(nodes.Node(name, graph, last_layer, energy=0, bias=0))
         graph.layers_activations[last_layer].append(graph.layers[last_layer][o].activationEnergy)
-        graph.layers_bias[last_layer].append(graph.layers[last_layer][o].bias)
 
         G.add_node(name, pos=(last_layer, o))
         name += 1
@@ -140,12 +135,12 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
                 originnode.new_connection(originnode, destinationnode, np.random.normal(0, 5))
 
                 G.add_edge(int(originnode.name),int(destinationnode.name))
+            originnode.fix_connections_weights()
 
     # np stuff for np.matmult()
     for i in range(len(graph.layers)):
         graph.layers[i] = np.array(graph.layers[i])
         graph.layers_activations[i] = np.array(graph.layers_activations[i], dtype=object)
-        graph.layers_bias[i] = np.array(graph.layers_bias[i])
 
 
 def forward(graph, inputs):  # forward pass
@@ -167,11 +162,16 @@ def forward(graph, inputs):  # forward pass
             layerweights_initial += [node.connections_weights]
         layerweights_initial = flipmatrix(layerweights_initial)
 
+        bias_initialplusone = []
+        for node in graph.layers[1]:
+            bias_initialplusone.append([node.bias])
+        bias_initialplusone = np.array(bias_initialplusone)
+
         # weight step
         result = np.matmul(layerweights_initial, graph.layers_activations[0])
 
         # bias step
-        result = result + graph.layers_bias[1].reshape((len(graph.layers_bias[1]), 1))
+        result = result + bias_initialplusone
 
         # sigmoid step
         result = sigmoid(result)
@@ -189,17 +189,28 @@ def forward(graph, inputs):  # forward pass
             # sets the matrix in graphs representing energies of the current layer to the n x 1 results of the last calc
             graph.layers_activations[current_layer] = result
 
+            # sets nodes energies to result
+            for node in range(len(graph.layers[current_layer])):
+                graph.layers[current_layer][node].energy = result[node][0]
+
             # current layer to next layer calc
             layerweights = []
             for node in graph.layers[current_layer]:  # nodes starting after [0] (inputs)
                 layerweights += [node.connections_weights]
+            print(layerweights)
             layerweights = flipmatrix(layerweights)
+            print(layerweights)
+
+            bias_plusone = []
+            for node in graph.layers[current_layer + 1]:
+                bias_plusone += [node.bias]
+            bias_plusone = np.array(bias_plusone)
 
             # weight step
             result = np.matmul(layerweights, graph.layers_activations[current_layer])
 
             # bias step
-            result = result + graph.layers_bias[current_layer + 1].reshape((len(graph.layers_bias[current_layer + 1]), 1))
+            result = result + bias_plusone
 
             # sigmoid step
             result = sigmoid(result)
@@ -217,6 +228,10 @@ def forward(graph, inputs):  # forward pass
 
         # sets the matrix in graphs representing energies of the current layer to the n x 1 results of the last calcs
         graph.layers_activations[last_layer] = result
+
+        # sets nodes energies to the result
+        for node in range(len(graph.layers[last_layer])):
+            graph.layers[last_layer][node].energy = result[node][0]
 
         return result
 
@@ -252,6 +267,16 @@ def backward():
         return(upstream_gradient)
 
 
+def weightupdate(graph, new_weight, connection_in_question):
+    connection_in_question.weight = new_weight
+
+
+
+def biasupdate(graph, new_bias, node_in_question):
+    ...
+
+
+
 # Function for flipping dimensions of a matrix (This was unironically quite tough to make because my laptop died and I
 # had to do it in my head.
 def flipmatrix(in_matrix):
@@ -265,36 +290,14 @@ def flipmatrix(in_matrix):
     return np.array(out_matrix)
 
 
+
 mygraph = nodes.Graph("mygraph")
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
 create_graph(mygraph, 2, 1, 3, 2)
 
 forward(mygraph, [0,1])
-
-# totalce = 0
-# for data in actualDataSet:
-#     totalce += crossentropy(softmax(forward(mygraph, data[0]))[data[1]][0])
-# print(totalce)
-
-
-# print(mygraph.layers)
-# for layer in range(len(mygraph.layers)):
-#     for node in mygraph.layers[layer]:
-#         for connection in node.connections:
-#             print("layer" + str(layer) + " " + str(connection.origin.name) + " to layer" +
-#                   str(connection.destination.layer) + " " + str(connection.destination.name))
-# print()
-# for layer in range(len(mygraph.layers)):
-#     for node in mygraph.layers[layer]:
-#         for back_connection in node.back_connections:
-#             print("layer" + str(layer) + " " + str(back_connection.origin.name) + " to layer" +
-#                   str(back_connection.destination.layer) + " " + str(back_connection.destination.name))
-
 pos=nx.get_node_attributes(G,'pos')
 nx.draw(G, pos, with_labels=True)
 plt.show()
-# setosa = softmax([[1.04], [0.0], [0.14]])
-# versicolor = softmax([[0.09], [0.86], [0.1]])
-# virginica = softmax([[0], [0], [1]])
-# # total error
-# print(crossentropy(setosa[0][0]) + crossentropy(virginica[2][0]) + crossentropy(versicolor[1][0]))
+
+# print(derivativelossrespecttosomething(0, crossentropy(softmax([[3.8], [1.6], [4]]), 0), [[3.8], [1.6], [4]]))

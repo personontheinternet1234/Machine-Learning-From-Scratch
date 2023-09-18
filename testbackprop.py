@@ -135,6 +135,7 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
                 originnode.new_connection(originnode, destinationnode, np.random.normal(0, 5))
 
                 G.add_edge(int(originnode.name),int(destinationnode.name))
+            originnode.fix_connections_weights()
 
     # np stuff for np.matmult()
     for i in range(len(graph.layers)):
@@ -196,7 +197,9 @@ def forward(graph, inputs):  # forward pass
             layerweights = []
             for node in graph.layers[current_layer]:  # nodes starting after [0] (inputs)
                 layerweights += [node.connections_weights]
+            print(layerweights)
             layerweights = flipmatrix(layerweights)
+            print(layerweights)
 
             bias_plusone = []
             for node in graph.layers[current_layer + 1]:
@@ -266,7 +269,7 @@ def backward():
 
 def weightupdate(graph, new_weight, connection_in_question):
     connection_in_question.weight = new_weight
-    connection_in_question.destination
+
 
 
 def biasupdate(graph, new_bias, node_in_question):
@@ -292,10 +295,9 @@ mygraph = nodes.Graph("mygraph")
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
 create_graph(mygraph, 2, 1, 3, 2)
 
+forward(mygraph, [0,1])
 pos=nx.get_node_attributes(G,'pos')
 nx.draw(G, pos, with_labels=True)
 plt.show()
-
-forward(mygraph, [0,1])
 
 # print(derivativelossrespecttosomething(0, crossentropy(softmax([[3.8], [1.6], [4]]), 0), [[3.8], [1.6], [4]]))
