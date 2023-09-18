@@ -14,6 +14,8 @@ class Graph:
         self.layers_activations = [
             [], []
         ]
+
+        #deprecated
         self.layers_bias = [
             [], []
         ]

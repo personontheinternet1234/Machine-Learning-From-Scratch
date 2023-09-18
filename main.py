@@ -267,10 +267,9 @@ def flipmatrix(in_matrix):
 
 mygraph = nodes.Graph("mygraph")
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-create_graph(mygraph, 2, 4, 2, 2)
+create_graph(mygraph, 2, 1, 3, 2)
 
-print(softmax(forward(mygraph, [1, 0])))
-print(crossentropy(softmax(forward(mygraph, [1, 0])), 0))
+forward(mygraph, [0,1])
 
 # totalce = 0
 # for data in actualDataSet:
