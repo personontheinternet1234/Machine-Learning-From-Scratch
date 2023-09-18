@@ -34,14 +34,18 @@ def softmax(outputnodesactivations):
     for i in eoutputnodesactivations:
         denom += i[0]
 
-    smaxoutput = np.divide(eoutputnodesactivations, denom)
-    return smaxoutput
+    smaxoutputs = np.divide(eoutputnodesactivations, denom)
+    return smaxoutputs
 
 
-def crossentropy(smaxoutput, correct_output):
-    centropyoutput = -1 * math.log(smaxoutput[correct_output][0])
+def crossentropy(smaxoutputs, correct_output):
+    centropyoutput = -1 * math.log(smaxoutputs[correct_output][0])
     return centropyoutput
     # Usage: crossentropy( softmax(forward(mygraph, inputs) )[ActuallyCorrectNodeIndex][0])
+
+def singlecrossentropy(smaxoutput):
+    centropyoutput = -1 * math.log(smaxoutput)
+    return centropyoutput
 
 def sigmoid(x):  # Sigmoid function, built for use with matrices
     y = np.multiply(x, -1)
@@ -55,11 +59,6 @@ def sigmoid(x):  # Sigmoid function, built for use with matrices
 def singlesigmoid(x):
     y = 1 / (1 + math.exp(-1 * x))
     return y
-
-
-def singlecrossentropy(smaxoutput):
-    centropyoutput = -1 * math.log(smaxoutput)
-    return centropyoutput
 
 
 def derivativelossrespecttosomething(correct_guy, centropyoutput, outputs):
@@ -267,35 +266,16 @@ def flipmatrix(in_matrix):
 
 mygraph = nodes.Graph("mygraph")
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-create_graph(mygraph, 2, 1, 2, 2)
+create_graph(mygraph, 2, 1, 3, 2)
 
-print(softmax(forward(mygraph, [1, 0])))
-print(crossentropy(softmax(forward(mygraph, [1, 0])), 0))
+# print(forward([0.5, 3.9]))
+# print(softmax(forward([0.5, 3.9])))
+# print(crossentropy(softmax(forward([0.5, 3.9])), 0))
+#
+# pos=nx.get_node_attributes(G,'pos')
+# nx.draw(G, pos, with_labels=True)
+# plt.show()
+# print(f"softmax: {softmax([[3.8], [1.6], [4]])}")
+# print(f"crossentropy: {crossentropy(softmax([[3.8], [1.6], [4]]), 0)}")
 
-# totalce = 0
-# for data in actualDataSet:
-#     totalce += crossentropy(softmax(forward(mygraph, data[0]))[data[1]][0])
-# print(totalce)
-
-
-# print(mygraph.layers)
-# for layer in range(len(mygraph.layers)):
-#     for node in mygraph.layers[layer]:
-#         for connection in node.connections:
-#             print("layer" + str(layer) + " " + str(connection.origin.name) + " to layer" +
-#                   str(connection.destination.layer) + " " + str(connection.destination.name))
-# print()
-# for layer in range(len(mygraph.layers)):
-#     for node in mygraph.layers[layer]:
-#         for back_connection in node.back_connections:
-#             print("layer" + str(layer) + " " + str(back_connection.origin.name) + " to layer" +
-#                   str(back_connection.destination.layer) + " " + str(back_connection.destination.name))
-
-pos=nx.get_node_attributes(G,'pos')
-nx.draw(G, pos, with_labels=True)
-plt.show()
-# setosa = softmax([[1.04], [0.0], [0.14]])
-# versicolor = softmax([[0.09], [0.86], [0.1]])
-# virginica = softmax([[0], [0], [1]])
-# # total error
-# print(crossentropy(setosa[0][0]) + crossentropy(virginica[2][0]) + crossentropy(versicolor[1][0]))
+print(derivativelossrespecttosomething(0, crossentropy(softmax([[3.8], [1.6], [4]]), 0), [[3.8], [1.6], [4]]))
