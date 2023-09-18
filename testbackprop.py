@@ -188,6 +188,10 @@ def forward(graph, inputs):  # forward pass
             # sets the matrix in graphs representing energies of the current layer to the n x 1 results of the last calc
             graph.layers_activations[current_layer] = result
 
+            # sets nodes energies to result
+            for node in range(len(graph.layers[current_layer])):
+                graph.layers[current_layer][node].energy = result[node][0]
+
             # current layer to next layer calc
             layerweights = []
             for node in graph.layers[current_layer]:  # nodes starting after [0] (inputs)
@@ -198,9 +202,6 @@ def forward(graph, inputs):  # forward pass
             for node in graph.layers[current_layer + 1]:
                 bias_plusone += [node.bias]
             bias_plusone = np.array(bias_plusone)
-
-            print(result)
-            print(graph.layers_activations[0])
 
             # weight step
             result = np.matmul(layerweights, graph.layers_activations[current_layer])
@@ -224,6 +225,10 @@ def forward(graph, inputs):  # forward pass
 
         # sets the matrix in graphs representing energies of the current layer to the n x 1 results of the last calcs
         graph.layers_activations[last_layer] = result
+
+        # sets nodes energies to the result
+        for node in range(len(graph.layers[last_layer])):
+            graph.layers[last_layer][node].energy = result[node][0]
 
         return result
 
