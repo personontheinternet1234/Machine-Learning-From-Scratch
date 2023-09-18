@@ -16,9 +16,9 @@ class Graph:
         ]
 
         #deprecated
-        self.layers_bias = [
-            [], []
-        ]
+        # self.layers_bias = [
+        #     [], []
+        # ]
 
     def add_node(self, name):
         self.nodes.append(name)
@@ -34,17 +34,18 @@ class Node:
         self.layer = layer
         self.activationEnergy = energy
         self.connections = []
-        self.back_connections = []
+        self.backconnections = []
         self.bias = bias
 
         self.connections_weights = []
+        self.backconnections_gradients = []
 
     def new_connection(self, origin, destination, weight):
         forward_connection = Connection(origin, destination, weight)
         self.connections.append(forward_connection)
 
         back_connection = BackConnection(destination, origin)
-        destination.back_connections.append(back_connection)
+        destination.backconnections.append(back_connection)
 
     def fix_connections_weights(self):
         # makes a list per every starting node, with every outgoing node as parts of that list

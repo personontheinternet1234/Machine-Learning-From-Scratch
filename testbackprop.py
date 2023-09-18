@@ -156,12 +156,13 @@ def forward(graph, inputs):  # forward pass
         # sets the matrix in graphs representing inputs to the n x 1 inputs we found earlier
         graph.layers_activations[0] = inputs
 
-        # input layer to next layer calc
+        # makes a np matrix of all the weights we're going to need
         layerweights_initial = []
         for node in graph.layers[0]:
             layerweights_initial += [node.connections_weights]
         layerweights_initial = flipmatrix(layerweights_initial)
 
+        # makes a np matrix of all the biases we're going to need
         bias_initialplusone = []
         for node in graph.layers[1]:
             bias_initialplusone.append([node.bias])
@@ -193,14 +194,13 @@ def forward(graph, inputs):  # forward pass
             for node in range(len(graph.layers[current_layer])):
                 graph.layers[current_layer][node].energy = result[node][0]
 
-            # current layer to next layer calc
+            # makes a np matrix of all the weights we're going to need
             layerweights = []
             for node in graph.layers[current_layer]:  # nodes starting after [0] (inputs)
                 layerweights += [node.connections_weights]
-            print(layerweights)
             layerweights = flipmatrix(layerweights)
-            print(layerweights)
 
+            # makes a np matrix of all the biases we're going to need
             bias_plusone = []
             for node in graph.layers[current_layer + 1]:
                 bias_plusone += [node.bias]
@@ -269,12 +269,11 @@ def backward():
 
 def weightupdate(graph, new_weight, connection_in_question):
     connection_in_question.weight = new_weight
-
+    connection_in_question.origin.fix_connections_weights()
 
 
 def biasupdate(graph, new_bias, node_in_question):
-    ...
-
+    node_in_question.bias = new_bias
 
 
 # Function for flipping dimensions of a matrix (This was unironically quite tough to make because my laptop died and I
