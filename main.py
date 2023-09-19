@@ -46,8 +46,8 @@ def crossentropy(smaxoutputs, correct_output):
 
 def softplus(x):
     y = np.exp(x)
-    y = np.add(x, 1)
-    y = np.log(x)
+    y = np.add(y, 1)
+    y = np.log(y)
     return y
 
 def sigmoid(x):  # Sigmoid function, built for use with matrices
@@ -319,12 +319,15 @@ def testgraphcreate():
 
 
 testgraphcreate()
+
+biasupdate(mygraph.layers[2][0], 1)
+biasupdate(mygraph.layers[2][1], 1)
+
 calculatedoutputs = forward(mygraph, [1,1])
 print(calculatedoutputs)
+print(crossentropy(softmax(calculatedoutputs), 0))
 print(derivativelossrespecttosomething(0, crossentropy(softmax(calculatedoutputs), 0), calculatedoutputs))
 
 pos=nx.get_node_attributes(G,'pos')
 nx.draw(G, pos, with_labels=True)
 plt.show()
-
-
