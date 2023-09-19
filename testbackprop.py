@@ -68,19 +68,15 @@ def derivativelossrespecttosomething(correct_guy, centropyoutput, outputs):
     denom = 0
     for output in outputs:
         denom -= math.exp(output[0])
-    print(f"denom: {denom}")
 
     for output in outputs:
-        print(f"the same? {singlecrossentropy(output[0])}, {centropyoutput}")
         if output[0] == outputs[correct_guy][0]:  # if the output is the one that it should be
             num = 0
             for o in outputs:
                 num += math.exp(o[0])
             num -= math.exp(output[0])
             results.append(num / denom)
-            print(f"num when ce: {num}")
         else:
-            print(f"num: {math.exp(output[0])}")
             results.append(math.exp(output[0]) / denom)
     return results
 
@@ -174,7 +170,7 @@ def forward(graph, inputs):  # forward pass
         # bias step
         result = result + bias_initialplusone
 
-        # sigmoid step
+        # Relu step
         result = sigmoid(result)
 
         return result
@@ -203,7 +199,7 @@ def forward(graph, inputs):  # forward pass
             # makes a np matrix of all the biases we're going to need
             bias_plusone = []
             for node in graph.layers[current_layer + 1]:
-                bias_plusone += [node.bias]
+                bias_plusone.append([node.bias])
             bias_plusone = np.array(bias_plusone)
 
             # weight step
@@ -212,10 +208,8 @@ def forward(graph, inputs):  # forward pass
             # bias step
             result = result + bias_plusone
 
-            # sigmoid step
+            # Relu step
             result = sigmoid(result)
-
-
 
         return result
 
@@ -235,7 +229,7 @@ def forward(graph, inputs):  # forward pass
 
         return result
 
-    # this is kinda crazy. Put 'em all into functions so it'd be nicer to read. Hope it still works!
+    # this is kinda crazy. Put 'em all into functions, so it'd be nicer to read. Hope it still works!
     return last_step(layerstep(inputstep(inputs)))
 
 
@@ -267,12 +261,12 @@ def backward():
         return(upstream_gradient)
 
 
-def weightupdate(graph, new_weight, connection_in_question):
+def weightupdate(new_weight, connection_in_question):
     connection_in_question.weight = new_weight
     connection_in_question.origin.fix_connections_weights()
 
 
-def biasupdate(graph, new_bias, node_in_question):
+def biasupdate(new_bias, node_in_question):
     node_in_question.bias = new_bias
 
 
@@ -289,10 +283,34 @@ def flipmatrix(in_matrix):
     return np.array(out_matrix)
 
 
-
 mygraph = nodes.Graph("mygraph")
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
 create_graph(mygraph, 2, 1, 3, 2)
+
+weightupdate(mygraph.layers[0][0].connections[0], )
+weightupdate(mygraph.layers[0][0].connections[1], )
+weightupdate(mygraph.layers[0][0].connections[2], )
+
+weightupdate(mygraph.layers[0][1].connections[0])
+weightupdate(mygraph.layers[0][1].connections[1], )
+weightupdate(mygraph.layers[0][1].connections[2], )
+
+biasupdate(mygraph.layers[1][0].bias, )
+biasupdate(mygraph.layers[1][1].bias, )
+biasupdate(mygraph.layers[1][2].bias, )
+
+weightupdate(mygraph.layers[1][0].connections[0], )
+weightupdate(mygraph.layers[1][0].connections[1], )
+
+weightupdate(mygraph.layers[1][1].connections[0], )
+weightupdate(mygraph.layers[1][1].connections[1], )
+
+weightupdate(mygraph.layers[1][2].connections[0], )
+weightupdate(mygraph.layers[1][2].connections[1], )
+
+biasupdate(mygraph.layers[2][0].bias, )
+biasupdate(mygraph.layers[2][1].bias, )
+biasupdate(mygraph.layers[2][2].bias, )
 
 forward(mygraph, [0,1])
 pos=nx.get_node_attributes(G,'pos')

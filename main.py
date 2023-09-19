@@ -56,6 +56,10 @@ def sigmoid(x):  # Sigmoid function, built for use with matrices
     return y
 
 
+def relu(x):  # Sigmoid function, built for use with matrices
+    return x * (x > 0)
+
+
 def singlesigmoid(x):
     y = 1 / (1 + math.exp(-1 * x))
     return y
@@ -68,19 +72,15 @@ def derivativelossrespecttosomething(correct_guy, centropyoutput, outputs):
     denom = 0
     for output in outputs:
         denom -= math.exp(output[0])
-    print(f"denom: {denom}")
 
     for output in outputs:
-        print(f"the same? {singlecrossentropy(output[0])}, {centropyoutput}")
         if output[0] == outputs[correct_guy][0]:  # if the output is the one that it should be
             num = 0
             for o in outputs:
                 num += math.exp(o[0])
             num -= math.exp(output[0])
             results.append(num / denom)
-            print(f"num when ce: {num}")
         else:
-            print(f"num: {math.exp(output[0])}")
             results.append(math.exp(output[0]) / denom)
     return results
 
@@ -174,7 +174,7 @@ def forward(graph, inputs):  # forward pass
         # bias step
         result = result + bias_initialplusone
 
-        # sigmoid step
+        # Relu step
         result = sigmoid(result)
 
         return result
@@ -203,7 +203,7 @@ def forward(graph, inputs):  # forward pass
             # makes a np matrix of all the biases we're going to need
             bias_plusone = []
             for node in graph.layers[current_layer + 1]:
-                bias_plusone += [node.bias]
+                bias_plusone.append([node.bias])
             bias_plusone = np.array(bias_plusone)
 
             # weight step
@@ -212,10 +212,8 @@ def forward(graph, inputs):  # forward pass
             # bias step
             result = result + bias_plusone
 
-            # sigmoid step
+            # Relu step
             result = sigmoid(result)
-
-
 
         return result
 
@@ -235,7 +233,7 @@ def forward(graph, inputs):  # forward pass
 
         return result
 
-    # this is kinda crazy. Put 'em all into functions so it'd be nicer to read. Hope it still works!
+    # this is kinda crazy. Put 'em all into functions, so it'd be nicer to read. Hope it still works!
     return last_step(layerstep(inputstep(inputs)))
 
 
@@ -294,7 +292,7 @@ mygraph = nodes.Graph("mygraph")
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
 create_graph(mygraph, 2, 1, 3, 2)
 
-forward(mygraph, [0,1])
+print(forward(mygraph, [0,1]))
 pos=nx.get_node_attributes(G,'pos')
 nx.draw(G, pos, with_labels=True)
 plt.show()
