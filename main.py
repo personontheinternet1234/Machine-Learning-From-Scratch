@@ -265,12 +265,12 @@ def backward():
         return(upstream_gradient)
 
 
-def weightupdate(graph, new_weight, connection_in_question):
+def weightupdate(connection_in_question, new_weight):
     connection_in_question.weight = new_weight
     connection_in_question.origin.fix_connections_weights()
 
 
-def biasupdate(graph, new_bias, node_in_question):
+def biasupdate(node_in_question, new_bias):
     node_in_question.bias = new_bias
 
 
@@ -287,12 +287,43 @@ def flipmatrix(in_matrix):
     return np.array(out_matrix)
 
 
-
 mygraph = nodes.Graph("mygraph")
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
 create_graph(mygraph, 2, 1, 3, 2)
 
-print(forward(mygraph, [0,1]))
+# Node 1
+weightupdate(mygraph.layers[0][0].connections[0], 1)
+weightupdate(mygraph.layers[0][0].connections[1], 1)
+weightupdate(mygraph.layers[0][0].connections[2], 1)
+
+# Node 2
+weightupdate(mygraph.layers[0][1].connections[0], 1)
+weightupdate(mygraph.layers[0][1].connections[1], 1)
+weightupdate(mygraph.layers[0][1].connections[2], 1)
+
+# Node 3
+biasupdate(mygraph.layers[1][0], 0)
+weightupdate(mygraph.layers[1][0].connections[0], 1)
+weightupdate(mygraph.layers[1][0].connections[1], 1)
+
+# Node 4
+biasupdate(mygraph.layers[1][1], 0)
+weightupdate(mygraph.layers[1][1].connections[0], 1)
+weightupdate(mygraph.layers[1][1].connections[1], 1)
+
+# Node 5
+biasupdate(mygraph.layers[1][2], 0)
+weightupdate(mygraph.layers[1][2].connections[0], 1)
+weightupdate(mygraph.layers[1][2].connections[1], 1)
+
+# Node 6
+biasupdate(mygraph.layers[2][0], 0)
+
+# Node 7
+biasupdate(mygraph.layers[2][1], 0)
+
+print(forward(mygraph, [1,1]))
+
 pos=nx.get_node_attributes(G,'pos')
 nx.draw(G, pos, with_labels=True)
 plt.show()
