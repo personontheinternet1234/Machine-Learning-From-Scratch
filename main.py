@@ -43,9 +43,12 @@ def crossentropy(smaxoutputs, correct_output):
     return centropyoutput
     # Usage: crossentropy( softmax(forward(mygraph, inputs) )[ActuallyCorrectNodeIndex][0])
 
-def singlecrossentropy(smaxoutput):
-    centropyoutput = -1 * math.log(smaxoutput)
-    return centropyoutput
+
+def softplus(x):
+    y = np.exp(x)
+    y = np.add(x, 1)
+    y = np.log(x)
+    return y
 
 def sigmoid(x):  # Sigmoid function, built for use with matrices
     y = np.multiply(x, -1)
@@ -56,13 +59,8 @@ def sigmoid(x):  # Sigmoid function, built for use with matrices
     return y
 
 
-def relu(x):  # Sigmoid function, built for use with matrices
+def relu(x):  # Relu function, built for use with matrices
     return x * (x > 0)
-
-
-def singlesigmoid(x):
-    y = 1 / (1 + math.exp(-1 * x))
-    return y
 
 
 def derivativelossrespecttosomething(correct_guy, centropyoutput, outputs):
@@ -83,11 +81,6 @@ def derivativelossrespecttosomething(correct_guy, centropyoutput, outputs):
         else:
             results.append(math.exp(output[0]) / denom)
     return results
-
-
-def sigmoid_derivative(x):
-    y = singlesigmoid(x) * (1 - singlesigmoid(x))
-    return y
 
 
 G = nx.Graph()
@@ -174,8 +167,8 @@ def forward(graph, inputs):  # forward pass
         # bias step
         result = result + bias_initialplusone
 
-        # Relu step
-        result = relu(result)
+        # softplus step
+        result = softplus(result)
 
         return result
 
@@ -212,8 +205,8 @@ def forward(graph, inputs):  # forward pass
             # bias step
             result = result + bias_plusone
 
-            # Relu step
-            result = relu(result)
+            # softplus step
+            result = softplus(result)
 
         return result
 
@@ -288,44 +281,50 @@ def flipmatrix(in_matrix):
 
 
 mygraph = nodes.Graph("mygraph")
-# graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-create_graph(mygraph, 2, 1, 3, 2)
 
-# Node 1
-weightupdate(mygraph.layers[0][0].connections[0], 1)
-weightupdate(mygraph.layers[0][0].connections[1], 1)
-weightupdate(mygraph.layers[0][0].connections[2], 1)
+def testgraphcreate():
+    # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
+    create_graph(mygraph, 2, 1, 3, 2)
 
-# Node 2
-weightupdate(mygraph.layers[0][1].connections[0], 1)
-weightupdate(mygraph.layers[0][1].connections[1], 1)
-weightupdate(mygraph.layers[0][1].connections[2], 1)
+    # Node 1
+    weightupdate(mygraph.layers[0][0].connections[0], 1)
+    weightupdate(mygraph.layers[0][0].connections[1], 1)
+    weightupdate(mygraph.layers[0][0].connections[2], 1)
 
-# Node 3
-biasupdate(mygraph.layers[1][0], 0)
-weightupdate(mygraph.layers[1][0].connections[0], 1)
-weightupdate(mygraph.layers[1][0].connections[1], 1)
+    # Node 2
+    weightupdate(mygraph.layers[0][1].connections[0], 1)
+    weightupdate(mygraph.layers[0][1].connections[1], 1)
+    weightupdate(mygraph.layers[0][1].connections[2], 1)
 
-# Node 4
-biasupdate(mygraph.layers[1][1], 0)
-weightupdate(mygraph.layers[1][1].connections[0], 1)
-weightupdate(mygraph.layers[1][1].connections[1], 1)
+    # Node 3
+    biasupdate(mygraph.layers[1][0], 0)
+    weightupdate(mygraph.layers[1][0].connections[0], 1)
+    weightupdate(mygraph.layers[1][0].connections[1], 1)
 
-# Node 5
-biasupdate(mygraph.layers[1][2], 0)
-weightupdate(mygraph.layers[1][2].connections[0], 1)
-weightupdate(mygraph.layers[1][2].connections[1], 1)
+    # Node 4
+    biasupdate(mygraph.layers[1][1], 0)
+    weightupdate(mygraph.layers[1][1].connections[0], 1)
+    weightupdate(mygraph.layers[1][1].connections[1], 1)
 
-# Node 6
-biasupdate(mygraph.layers[2][0], 0)
+    # Node 5
+    biasupdate(mygraph.layers[1][2], 0)
+    weightupdate(mygraph.layers[1][2].connections[0], 1)
+    weightupdate(mygraph.layers[1][2].connections[1], 1)
 
-# Node 7
-biasupdate(mygraph.layers[2][1], 0)
+    # Node 6
+    biasupdate(mygraph.layers[2][0], 0)
 
-print(forward(mygraph, [1,1]))
+    # Node 7
+    biasupdate(mygraph.layers[2][1], 0)
+
+
+testgraphcreate()
+calculatedoutputs = forward(mygraph, [1,1])
+print(calculatedoutputs)
+print(derivativelossrespecttosomething(0, crossentropy(softmax(calculatedoutputs), 0), calculatedoutputs))
 
 pos=nx.get_node_attributes(G,'pos')
 nx.draw(G, pos, with_labels=True)
 plt.show()
 
-# print(derivativelossrespecttosomething(0, crossentropy(softmax([[3.8], [1.6], [4]]), 0), [[3.8], [1.6], [4]]))
+
