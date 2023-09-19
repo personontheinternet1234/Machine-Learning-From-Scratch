@@ -175,7 +175,7 @@ def forward(graph, inputs):  # forward pass
         result = result + bias_initialplusone
 
         # Relu step
-        result = sigmoid(result)
+        result = relu(result)
 
         return result
 
@@ -213,7 +213,7 @@ def forward(graph, inputs):  # forward pass
             result = result + bias_plusone
 
             # Relu step
-            result = sigmoid(result)
+            result = relu(result)
 
         return result
 

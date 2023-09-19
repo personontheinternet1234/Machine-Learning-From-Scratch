@@ -56,6 +56,10 @@ def sigmoid(x):  # Sigmoid function, built for use with matrices
     return y
 
 
+def relu(x):  # Sigmoid function, built for use with matrices
+    return x * (x > 0)
+
+
 def singlesigmoid(x):
     y = 1 / (1 + math.exp(-1 * x))
     return y
@@ -171,7 +175,7 @@ def forward(graph, inputs):  # forward pass
         result = result + bias_initialplusone
 
         # Relu step
-        result = sigmoid(result)
+        result = relu(result)
 
         return result
 
@@ -209,7 +213,7 @@ def forward(graph, inputs):  # forward pass
             result = result + bias_plusone
 
             # Relu step
-            result = sigmoid(result)
+            result = relu(result)
 
         return result
 
@@ -261,12 +265,12 @@ def backward():
         return(upstream_gradient)
 
 
-def weightupdate(new_weight, connection_in_question):
+def weightupdate(connection_in_question, new_weight):
     connection_in_question.weight = new_weight
     connection_in_question.origin.fix_connections_weights()
 
 
-def biasupdate(new_bias, node_in_question):
+def biasupdate(node_in_question, new_bias):
     node_in_question.bias = new_bias
 
 
@@ -287,32 +291,39 @@ mygraph = nodes.Graph("mygraph")
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
 create_graph(mygraph, 2, 1, 3, 2)
 
-weightupdate(mygraph.layers[0][0].connections[0], )
-weightupdate(mygraph.layers[0][0].connections[1], )
-weightupdate(mygraph.layers[0][0].connections[2], )
+# Node 1
+weightupdate(mygraph.layers[0][0].connections[0], 1)
+weightupdate(mygraph.layers[0][0].connections[1], 1)
+weightupdate(mygraph.layers[0][0].connections[2], 1)
 
-weightupdate(mygraph.layers[0][1].connections[0])
-weightupdate(mygraph.layers[0][1].connections[1], )
-weightupdate(mygraph.layers[0][1].connections[2], )
+# Node 2
+weightupdate(mygraph.layers[0][1].connections[0], 1)
+weightupdate(mygraph.layers[0][1].connections[1], 1)
+weightupdate(mygraph.layers[0][1].connections[2], 1)
 
-biasupdate(mygraph.layers[1][0].bias, )
-biasupdate(mygraph.layers[1][1].bias, )
-biasupdate(mygraph.layers[1][2].bias, )
+# Node 3
+biasupdate(mygraph.layers[1][0], 0)
+weightupdate(mygraph.layers[1][0].connections[0], 1)
+weightupdate(mygraph.layers[1][0].connections[1], 1)
 
-weightupdate(mygraph.layers[1][0].connections[0], )
-weightupdate(mygraph.layers[1][0].connections[1], )
+# Node 4
+biasupdate(mygraph.layers[1][1], 0)
+weightupdate(mygraph.layers[1][1].connections[0], 1)
+weightupdate(mygraph.layers[1][1].connections[1], 1)
 
-weightupdate(mygraph.layers[1][1].connections[0], )
-weightupdate(mygraph.layers[1][1].connections[1], )
+# Node 5
+biasupdate(mygraph.layers[1][2], 0)
+weightupdate(mygraph.layers[1][2].connections[0], 1)
+weightupdate(mygraph.layers[1][2].connections[1], 1)
 
-weightupdate(mygraph.layers[1][2].connections[0], )
-weightupdate(mygraph.layers[1][2].connections[1], )
+# Node 6
+biasupdate(mygraph.layers[2][0], 0)
 
-biasupdate(mygraph.layers[2][0].bias, )
-biasupdate(mygraph.layers[2][1].bias, )
-biasupdate(mygraph.layers[2][2].bias, )
+# Node 7
+biasupdate(mygraph.layers[2][1], 0)
 
-forward(mygraph, [0,1])
+print(forward(mygraph, [1,1]))
+
 pos=nx.get_node_attributes(G,'pos')
 nx.draw(G, pos, with_labels=True)
 plt.show()
