@@ -14,85 +14,41 @@ Version: 0.1
 Author: Isaac Park Verbrugge
 """
 
-# [inputnodevalues,outputnodeindexwewant]
-actualDataSet = [
-    [[1,0],0],
-    [[0,1],1],
-]
+
+G = nx.Graph()
 
 
-# Just to convert my weird usage of actualDataSet being a matrix.
-def convert(dataset):
+def convert(dataset):  # Just to convert my weird usage of actualDataSet being a matrix.
     data = np.array(dataset)
     return [data[:, 0], data[:, 1]]
 
 
-def softmax(outputnodesactivations):
-    denom = 0
-    eoutputnodesactivations = np.exp(outputnodesactivations)
-
-    for i in eoutputnodesactivations:
-        denom += i[0]
-
-    smaxoutputs = np.divide(eoutputnodesactivations, denom)
-    return smaxoutputs
-
-
-def crossentropy(smaxoutputs, correct_output):
-    centropyoutput = -1 * math.log(smaxoutputs[correct_output][0])
-    return centropyoutput
-    # Usage: crossentropy( softmax(forward(mygraph, inputs) )[ActuallyCorrectNodeIndex][0])
-
-
 def ssr(outputs, correctoutputs):
+    correctoutputs = np.array(correctoutputs)
+    correctoutputs = correctoutputs.reshape((len(correctoutputs), 1))
     result = np.subtract(outputs, correctoutputs)
     result = np.power(result, 2)
     result = np.sum(result)
     return result
-    # Usage: crossentropy( softmax(forward(mygraph, inputs) )[ActuallyCorrectNodeIndex][0])
 
 
-def softplus(x):
-    y = np.exp(x)
-    y = np.add(y, 1)
-    y = np.log(y)
-    return y
+def derivative_ssr(outputs, correctoutputs):
+    correctoutputs = np.array(correctoutputs)
+    correctoutputs = correctoutputs.reshape((len(correctoutputs), 1))
+    result = np.subtract(outputs, correctoutputs)
+    result = np.multiply(result, -2)
+    result = np.sum(result)
 
-
-def sigmoid(x):  # Sigmoid function, built for use with matrices
-    y = np.multiply(x, -1)
-    y = np.exp(y)
-    y = np.add(y, 1)
-    y = np.power(y, -1)
-
-    return y
+    return result
 
 
 def relu(x):  # Relu function, built for use with matrices
     return x * (x > 0)
 
 
-def derivativecerespecttosomething(correct_guy, centropyoutput, outputs):
-    # usage: derivativelossrespecttosomething(correct index, crossentropy(softmax(output node energies), correct index), output node energies)
-    results = []
+def derivative_relu(scalar_passed_to_relu):
+    return 1 if (scalar_passed_to_relu > 0) else 0
 
-    denom = 0
-    for output in outputs:
-        denom -= math.exp(output[0])
-
-    for output in outputs:
-        if output[0] == outputs[correct_guy][0]:  # if the output is the one that it should be
-            num = 0
-            for o in outputs:
-                num += math.exp(o[0])
-            num -= math.exp(output[0])
-            results.append(num / denom)
-        else:
-            results.append(math.exp(output[0]) / denom)
-    return results
-
-
-G = nx.Graph()
 
 
 def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes):  # graph creation
@@ -162,7 +118,7 @@ def forward(graph, inputs):  # forward pass
         layerweights_initial = []
         for node in graph.layers[0]:
             layerweights_initial += [node.connections_weights]
-        layerweights_initial = flipmatrix(layerweights_initial)
+        layerweights_initial = flipMatrix(layerweights_initial)
 
         # makes a np matrix of all the biases we're going to need
         bias_initialplusone = []
@@ -200,7 +156,7 @@ def forward(graph, inputs):  # forward pass
             layerweights = []
             for node in graph.layers[current_layer]:  # nodes starting after [0] (inputs)
                 layerweights += [node.connections_weights]
-            layerweights = flipmatrix(layerweights)
+            layerweights = flipMatrix(layerweights)
 
             # makes a np matrix of all the biases we're going to need
             bias_plusone = []
@@ -267,18 +223,16 @@ def backward():
         return(upstream_gradient)
 
 
-def weightupdate(connection_in_question, new_weight):
+def weightUpdate(connection_in_question, new_weight):
     connection_in_question.weight = new_weight
     connection_in_question.origin.fix_connections_weights()
 
 
-def biasupdate(node_in_question, new_bias):
+def biasUpdate(node_in_question, new_bias):
     node_in_question.bias = new_bias
 
 
-# Function for flipping dimensions of a matrix (This was unironically quite tough to make because my laptop died and I
-# had to do it in my head.
-def flipmatrix(in_matrix):
+def flipMatrix(in_matrix):  # Function for flipping dimensions of a matrix
     out_matrix = []
 
     for i in in_matrix[0]:
@@ -293,49 +247,54 @@ mygraph = nodes.Graph("mygraph")
 
 def testgraphcreate():
     # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-    create_graph(mygraph, 2, 1, 3, 2)
+    create_graph(mygraph, 2, 1, 2, 2)
 
     # Node 1
-    weightupdate(mygraph.layers[0][0].connections[0], 1)
-    weightupdate(mygraph.layers[0][0].connections[1], 1)
-    weightupdate(mygraph.layers[0][0].connections[2], 1)
-
+    weightUpdate(mygraph.layers[0][0].connections[0], 1)
+    weightUpdate(mygraph.layers[0][0].connections[1], 1)
     # Node 2
-    weightupdate(mygraph.layers[0][1].connections[0], 1)
-    weightupdate(mygraph.layers[0][1].connections[1], 1)
-    weightupdate(mygraph.layers[0][1].connections[2], 1)
+    weightUpdate(mygraph.layers[0][1].connections[0], 1)
+    weightUpdate(mygraph.layers[0][1].connections[1], 1)
 
     # Node 3
-    biasupdate(mygraph.layers[1][0], 0)
-    weightupdate(mygraph.layers[1][0].connections[0], 1)
-    weightupdate(mygraph.layers[1][0].connections[1], 1)
-
+    biasUpdate(mygraph.layers[1][0], 0)
+    weightUpdate(mygraph.layers[1][0].connections[0], 1)
+    weightUpdate(mygraph.layers[1][0].connections[1], 1)
     # Node 4
-    biasupdate(mygraph.layers[1][1], 0)
-    weightupdate(mygraph.layers[1][1].connections[0], 1)
-    weightupdate(mygraph.layers[1][1].connections[1], 1)
-
-    # Node 5
-    biasupdate(mygraph.layers[1][2], 0)
-    weightupdate(mygraph.layers[1][2].connections[0], 1)
-    weightupdate(mygraph.layers[1][2].connections[1], 1)
+    biasUpdate(mygraph.layers[1][1], 0)
+    weightUpdate(mygraph.layers[1][1].connections[0], 1)
+    weightUpdate(mygraph.layers[1][1].connections[1], 1)
 
     # Node 6
-    biasupdate(mygraph.layers[2][0], 0)
-
+    biasUpdate(mygraph.layers[2][0], 0)
     # Node 7
-    biasupdate(mygraph.layers[2][1], 0)
+    biasUpdate(mygraph.layers[2][1], 0)
 
-# testgraphcreate()
+testgraphcreate()
 
-create_graph(mygraph, 2, 1, 2, 2)
+data = [
+    [ [0,0],[0,0] ], [ [1,1],[1,1] ]
+]
 
-calculatedoutputs = forward(mygraph, [1,1])
+calculatedoutputs = forward(mygraph, data[1][0])
 print(calculatedoutputs)
-print(crossentropy(softmax(calculatedoutputs), 0))
+print(f"error: {ssr(calculatedoutputs, data[1][1])}")
 
-# print(derivativecerespecttosomething(0, crossentropy(softmax(calculatedoutputs), 0), calculatedoutputs))
 
-pos=nx.get_node_attributes(G,'pos')
-nx.draw(G, pos, with_labels=True)
-plt.show()
+upstream = derivative_ssr(calculatedoutputs, data[1][1])
+resultnode0 = mygraph.layers[2][0]
+resultnode1 = mygraph.layers[2][1]
+
+playnode = mygraph.layers[1][0]
+
+g_reluresult0 = derivative_relu(playnode.activationEnergy * playnode.connections_weights[0] + resultnode0.bias) * upstream
+g_biasresult0 = 1 * g_reluresult0
+g_weight0 = playnode.activationEnergy * g_biasresult0
+
+g_reluresult1 = derivative_relu(playnode.activationEnergy * playnode.connections_weights[1] + resultnode1.bias) * upstream
+g_biasresult1 = 1 * g_reluresult1
+g_weight1 = playnode.activationEnergy * g_biasresult1
+
+# pos=nx.get_node_attributes(G,'pos')
+# nx.draw(G, pos, with_labels=True)
+# plt.show()
