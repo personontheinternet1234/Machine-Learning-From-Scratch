@@ -1,5 +1,3 @@
-import numpy as np
-
 class Graph:
     # Overall graph. Not sure when I'm going to use this. Useful mainly just to list all the nodes.
 
@@ -14,11 +12,6 @@ class Graph:
         self.layers_activations = [
             [], []
         ]
-
-        #deprecated
-        # self.layers_bias = [
-        #     [], []
-        # ]
 
     def add_node(self, name):
         self.nodes.append(name)

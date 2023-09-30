@@ -3,24 +3,17 @@ import matplotlib.pyplot as plt
 
 import nodes
 import numpy as np
-import math
 from matplotlib import pyplot as plt
 
 """
 This program uses the nodes structure to practice basic backpropagation.
 Made from scratch (No tutorials, no pytorch).
 (NetworkX is NOT used for node structure, only to show the neural net as a visual element)
-Version: 0.1
-Author: Isaac Park Verbrugge
+Version: 0.2
+Author: Isaac Park Verbrugge, Christian Host-Madsen
 """
 
-
 G = nx.Graph()
-
-
-def convert(dataset):  # Just to convert my weird usage of actualDataSet being a matrix.
-    data = np.array(dataset)
-    return [data[:, 0], data[:, 1]]
 
 
 def ssr(outputs, correctoutputs):
@@ -37,8 +30,6 @@ def derivative_ssr(outputs, correctoutputs):
     correctoutputs = correctoutputs.reshape((len(correctoutputs), 1))
     result = np.subtract(outputs, correctoutputs)
     result = np.multiply(result, -2)
-    result = np.sum(result)
-
     return result
 
 
@@ -50,12 +41,11 @@ def derivative_relu(scalar_passed_to_relu):
     return 1 if (scalar_passed_to_relu > 0) else 0
 
 
-
 def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes):  # graph creation
     name = 0
 
     # layer matrix sizing
-    for iterator in range(number_hidden_layers):
+    for i in range(number_hidden_layers):
         graph.layers.append([])
         graph.layers_activations.append([])
 
@@ -244,6 +234,7 @@ def flipMatrix(in_matrix):  # Function for flipping dimensions of a matrix
 
 
 mygraph = nodes.Graph("mygraph")
+
 
 def testgraphcreate():
     # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
