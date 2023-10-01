@@ -1,5 +1,4 @@
 import networkx as nx
-import matplotlib.pyplot as plt
 
 import nodes
 import numpy as np
@@ -14,7 +13,7 @@ Author: Isaac Park Verbrugge, Christian Host-Madsen
 """
 
 G = nx.Graph()
-step_size = 0.0001
+learning_rate = 0.0001
 
 
 def softmax(outputnodesactivations):
@@ -45,12 +44,12 @@ def derivative_ssr(outputs, correctoutputs):
     return result
 
 
-def relu(x):  # Relu function, built for use with matrices
-    return x * (x > 0)
+def relu(x):  # Leaky Relu function, with a slope of 0.1 for neg values built for use with matrices
+    return np.maximum(0.1 * x, x)
 
 
-def derivative_relu(scalar_passed_to_relu):
-    return 1 if (scalar_passed_to_relu > 0) else 0
+def derivative_relu(scalar_passed_to_relu):  # derivative of our leaky relu
+    return 1 if (scalar_passed_to_relu > 0) else 0.1
 
 
 def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes):  # graph creation
@@ -93,7 +92,7 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
     for i in range(len(graph.layers) - 1):
         for originnode in graph.layers[i]:
             for destinationnode in graph.layers[i + 1]:
-                originnode.new_connection(originnode, destinationnode, np.abs(np.random.normal(0, 5)))
+                originnode.new_connection(originnode, destinationnode, np.random.normal(0, 5))
 
                 G.add_edge(int(originnode.name),int(destinationnode.name))
             originnode.fix_connections_weights()
@@ -222,7 +221,7 @@ def flipMatrix(in_matrix):  # Function for flipping dimensions of a matrix
 
 
 def newValue(old_value, gradient):
-    return old_value + (step_size * gradient)
+    return old_value + (learning_rate * gradient)
 
 
 def backward(graph, output_vector, correct_vector):
@@ -327,25 +326,34 @@ def testgraphset():
 
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
 create_graph(mygraph, 2, 1, 2, 2)
-# testgraphset()
 
 data = [
     [ [0,0],[0,0] ], [ [1,0],[5,0] ]
 ]
+epochs = 50
 
-for i in range(10000):
-    calculatedoutputs = forward(mygraph, data[1][0])
+# training step
+for i in range(epochs):
+    for point in data:
+        for i in range(1000):
+            calculatedoutputs = forward(mygraph, point[0])
 
-    # for mylayer in mygraph.layers:
-    #     for mynode in mylayer:
-    #         print(mynode.bias, sep="", end=" ")
-    #         print(mynode.connections_weights)
-    #     print("")
+            backward(mygraph, calculatedoutputs, point[1])
 
-    backward(mygraph, calculatedoutputs, data[1][1])
-    print(calculatedoutputs)
-    print(softmax(calculatedoutputs))
-    print(f"error: {ssr(calculatedoutputs, data[1][1])}")
+# MSE step
+error = 0
+for point in data:
+    calculatedoutputs = forward(mygraph, point[0])
+    error += ssr(calculatedoutputs, point[1])
+error /= len(data)
+print(f"MSE: {error}")
+
+# Unknown value test
+user_test = []
+for i in range(len(mygraph.layers[0])):
+    activation = int(input(f"activation for node {i}: "))
+    user_test.append([activation])
+print(forward(mygraph, user_test))
 
 pos=nx.get_node_attributes(G,'pos')
 nx.draw(G, pos, with_labels=True)
