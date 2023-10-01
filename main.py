@@ -252,6 +252,7 @@ def backward(graph, output_vector, correct_vector):
         nonlocal g_upstream
 
         for layer in range(len(graph.layers) - 2, 0, -1):
+            print(layer)
             g_local = []
             for nodeindex in range(len(graph.layers[layer])):  # weight backprop
                 node = graph.layers[layer][nodeindex]
@@ -328,43 +329,46 @@ def testgraphset():
 
 
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-create_graph(mygraph, 2, 1, 2, 2)
+create_graph(mygraph, 2, 5, 5, 2)
 
 data = [
     [ [1,0],[1,0] ], [ [0,1],[0,1] ]
 ]
-epochs = 50000
 
-# training step
-for i in range(epochs):
-    for point in data:
-        calculatedoutputs = forward(mygraph, point[0])
-        backward(mygraph, calculatedoutputs, point[1])
-
-        # for mylayer in mygraph.layers:
-        #     for mynode in mylayer:
-        #         print(mynode.bias, end=" ")
-        #         for myconnection in mynode.connections_weights:
-        #             print(myconnection, sep="", end="~")
-        #         print(end="\n\n")
-
-# MSE step
-error = 0
-for point in data:
-    calculatedoutputs = forward(mygraph, point[0])
-    error += ssr(calculatedoutputs, point[1])
-error /= len(data)
-print(f"MSE: {error}")
-
-# Unknown value test
-user_test = []
-for i in range(len(mygraph.layers[0])):
-    activation = int(input(f"activation for node {i}: "))
-    user_test.append([activation])
-print(forward(mygraph, user_test))
-
-
-
+calculatedoutputs = forward(mygraph, data[0][0])
+backward(mygraph, calculatedoutputs, data[0][1])
+# epochs = 50000
+#
+# # training step
+# for i in range(epochs):
+#     for point in data:
+#         calculatedoutputs = forward(mygraph, point[0])
+#         backward(mygraph, calculatedoutputs, point[1])
+#
+#         # for mylayer in mygraph.layers:
+#         #     for mynode in mylayer:
+#         #         print(mynode.bias, end=" ")
+#         #         for myconnection in mynode.connections_weights:
+#         #             print(myconnection, sep="", end="~")
+#         #         print(end="\n\n")
+#
+# # MSE step
+# error = 0
+# for point in data:
+#     calculatedoutputs = forward(mygraph, point[0])
+#     error += ssr(calculatedoutputs, point[1])
+# error /= len(data)
+# print(f"MSE: {error}")
+#
+# # Unknown value test
+# user_test = []
+# for i in range(len(mygraph.layers[0])):
+#     activation = int(input(f"activation for node {i}: "))
+#     user_test.append([activation])
+# print(forward(mygraph, user_test))
+#
+#
+#
 pos=nx.get_node_attributes(G,'pos')
 nx.draw(G, pos, with_labels=True)
 plt.show()
