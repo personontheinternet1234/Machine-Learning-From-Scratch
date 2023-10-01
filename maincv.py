@@ -14,7 +14,7 @@ Version: 0.2
 Author: Isaac Park Verbrugge, Christian Host-Madsen
 """
 
-learning_rate = 0.0001
+learning_rate = 0.001
 
 
 def softmax(outputnodesactivations):

@@ -13,7 +13,7 @@ Author: Isaac Park Verbrugge, Christian Host-Madsen
 """
 
 G = nx.Graph()
-learning_rate = 0.0001
+learning_rate = 0.001
 
 
 def softmax(outputnodesactivations):
@@ -226,7 +226,7 @@ def newValue(old_value, gradient):
 
 def backward(graph, output_vector, correct_vector):
     g_upstream = derivative_ssr(output_vector, correct_vector)
-    # print(g_upstream)
+    print(output_vector)
 
     def last_back():
         nonlocal g_upstream
@@ -326,7 +326,7 @@ def testgraphset():
 
 
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-create_graph(mygraph, 2, 1, 2, 2)
+create_graph(mygraph, 2, 2, 5, 2)
 
 data = [
     [ [1,0],[1,0] ], [ [0,1],[0,1] ]
@@ -339,6 +339,13 @@ for i in range(epochs):
         for i in range(1000):
             calculatedoutputs = forward(mygraph, point[0])
             backward(mygraph, calculatedoutputs, point[1])
+
+            # for mylayer in mygraph.layers:
+            #     for mynode in mylayer:
+            #         print(mynode.bias, end=" ")
+            #         for myconnection in mynode.connections_weights:
+            #             print(myconnection, sep="", end="~")
+            #         print(end="\n\n")
 
 # MSE step
 error = 0
