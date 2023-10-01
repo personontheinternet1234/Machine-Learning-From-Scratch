@@ -1,8 +1,10 @@
-import networkx as nx
+import cv2
 
 import nodes
 import numpy as np
 from matplotlib import pyplot as plt
+
+from tensorflow import keras  # for MNIST dataset
 
 """
 This program uses the nodes structure to practice basic backpropagation.
@@ -12,7 +14,6 @@ Version: 0.2
 Author: Isaac Park Verbrugge, Christian Host-Madsen
 """
 
-G = nx.Graph()
 learning_rate = 0.0001
 
 
@@ -66,7 +67,6 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
         graph.layers[0].append(nodes.Node(name, graph, 0, energy=0, bias=0))
         graph.layers_activations[0].append(graph.layers[0][i].activationEnergy)
 
-        G.add_node(name, pos=(0, i))
         name += 1
 
     # hidden node creation
@@ -76,7 +76,6 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
             graph.layers[current_layer].append(nodes.Node(name, graph, current_layer, energy=0, bias=0))
             graph.layers_activations[current_layer].append(graph.layers[current_layer][n].activationEnergy)
 
-            G.add_node(name, pos=(current_layer, n))
             name += 1
 
     # output node creation
@@ -85,7 +84,6 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
         graph.layers[last_layer].append(nodes.Node(name, graph, last_layer, energy=0, bias=0))
         graph.layers_activations[last_layer].append(graph.layers[last_layer][o].activationEnergy)
 
-        G.add_node(name, pos=(last_layer, o))
         name += 1
 
     # connections
@@ -94,7 +92,6 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
             for destinationnode in graph.layers[i + 1]:
                 originnode.new_connection(originnode, destinationnode, np.random.normal(0, 5))
 
-                G.add_edge(int(originnode.name),int(destinationnode.name))
             originnode.fix_connections_weights()
 
     # np stuff for np.matmult()
@@ -325,11 +322,33 @@ def testgraphset():
 
 
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-create_graph(mygraph, 2, 1, 2, 2)
+create_graph(mygraph, 784, 2, 10, 10)
 
-data = [
-    [ [0,0],[0,0] ], [ [1,0],[5,0] ]
-]
+(train_X, train_y), (test_X, test_y) = keras.datasets.mnist.load_data()
+
+# fig, axs = plt.subplots(3, 3, figsize=(10, 10))
+# plt.gray()
+# for i, ax in enumerate(axs.flat):
+#     ax.imshow(train_X[i])
+#     ax.axis('off')
+#     ax.set_title('Number {}'.format(train_y[i]))
+#
+# plt.show()
+
+
+data = []
+for i in range(10):
+    data.append([])
+    data[i].append(train_X[i].flatten().tolist())
+
+    node_values = []
+    for h in range(10):
+        if h != train_y[i]:
+            node_values.append(0)
+        else:
+            node_values.append(1)
+    data[i].append(node_values)
+
 epochs = 50
 
 # training step
@@ -337,7 +356,6 @@ for i in range(epochs):
     for point in data:
         for i in range(1000):
             calculatedoutputs = forward(mygraph, point[0])
-
             backward(mygraph, calculatedoutputs, point[1])
 
 # MSE step
@@ -348,13 +366,9 @@ for point in data:
 error /= len(data)
 print(f"MSE: {error}")
 
-# Unknown value test
-user_test = []
-for i in range(len(mygraph.layers[0])):
-    activation = int(input(f"activation for node {i}: "))
-    user_test.append([activation])
-print(forward(mygraph, user_test))
-
-pos=nx.get_node_attributes(G,'pos')
-nx.draw(G, pos, with_labels=True)
-plt.show()
+# # Unknown value test
+# user_test = []
+# for i in range(len(mygraph.layers[0])):
+#     activation = int(input(f"activation for node {i}: "))
+#     user_test.append([activation])
+# print(forward(mygraph, user_test))

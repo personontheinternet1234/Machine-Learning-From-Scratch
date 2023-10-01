@@ -337,7 +337,6 @@ for i in range(epochs):
     for point in data:
         for i in range(1000):
             calculatedoutputs = forward(mygraph, point[0])
-
             backward(mygraph, calculatedoutputs, point[1])
 
 # MSE step
