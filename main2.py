@@ -17,6 +17,17 @@ G = nx.Graph()
 step_size = 0.0001
 
 
+def softmax(outputnodesactivations):
+    denom = 0
+    eoutputnodesactivations = np.exp(outputnodesactivations)
+
+    for i in eoutputnodesactivations:
+        denom += i[0]
+
+    smaxoutputs = np.divide(eoutputnodesactivations, denom)
+    return smaxoutputs
+
+
 def ssr(outputs, correctoutputs):
     correctoutputs = np.array(correctoutputs)
     correctoutputs = correctoutputs.reshape((len(correctoutputs), 1))
@@ -283,7 +294,6 @@ def backward(graph, output_vector, correct_vector):
 
                 weightUpdate(connection, newValue(connection.weight, g_weight))
 
-
     last_back()
     layer_back()
     input_weights_back()
@@ -320,7 +330,7 @@ create_graph(mygraph, 2, 1, 2, 2)
 # testgraphset()
 
 data = [
-    [ [0,0],[0,0] ], [ [1,1],[1,1] ]
+    [ [0,0],[0,0] ], [ [1,0],[5,0] ]
 ]
 
 for i in range(10000):
@@ -334,9 +344,9 @@ for i in range(10000):
 
     backward(mygraph, calculatedoutputs, data[1][1])
     print(calculatedoutputs)
+    print(softmax(calculatedoutputs))
     print(f"error: {ssr(calculatedoutputs, data[1][1])}")
 
-
-# pos=nx.get_node_attributes(G,'pos')
-# nx.draw(G, pos, with_labels=True)
-# plt.show()
+pos=nx.get_node_attributes(G,'pos')
+nx.draw(G, pos, with_labels=True)
+plt.show()
