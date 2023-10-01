@@ -14,7 +14,7 @@ Author: Isaac Park Verbrugge, Christian Host-Madsen
 """
 
 G = nx.Graph()
-step_size = 0.01
+step_size = 0.0001
 
 
 def ssr(outputs, correctoutputs):
@@ -82,7 +82,7 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
     for i in range(len(graph.layers) - 1):
         for originnode in graph.layers[i]:
             for destinationnode in graph.layers[i + 1]:
-                originnode.new_connection(originnode, destinationnode, np.random.normal(0, 5))
+                originnode.new_connection(originnode, destinationnode, np.abs(np.random.normal(0, 5)))
 
                 G.add_edge(int(originnode.name),int(destinationnode.name))
             originnode.fix_connections_weights()
@@ -273,24 +273,15 @@ def backward(graph, output_vector, correct_vector):
     def input_weights_back():
         nonlocal g_upstream
 
-        inputlayer = 0
-        g_local = []
-        for nodeindex in range(len(graph.layers[inputlayer])):  # weight backprop
-            node = graph.layers[inputlayer][nodeindex]
+        for nodeindex in range(len(graph.layers[0])):  # weight backprop
+            node = graph.layers[0][nodeindex]
 
-            node_g_weight_sum = 0
             for connectionindex in range(len(node.connections)):
                 connection = node.connections[connectionindex]
 
                 g_weight = node.activationEnergy * g_upstream[connectionindex][0]
 
                 weightUpdate(connection, newValue(connection.weight, g_weight))
-
-                node_g_weight_sum += g_weight
-
-            g_local.append([node_g_weight_sum])
-
-        g_upstream = np.array(g_local)
 
 
     last_back()
@@ -326,20 +317,20 @@ def testgraphset():
 
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
 create_graph(mygraph, 2, 1, 2, 2)
-testgraphset()
+# testgraphset()
 
 data = [
     [ [0,0],[0,0] ], [ [1,1],[1,1] ]
 ]
 
-for i in range(10):
+for i in range(10000):
     calculatedoutputs = forward(mygraph, data[1][0])
 
-    for layer in mygraph.layers:
-        for node in layer:
-            print(node.bias, sep="", end=" ")
-            print(node.connections_weights)
-        print("")
+    # for mylayer in mygraph.layers:
+    #     for mynode in mylayer:
+    #         print(mynode.bias, sep="", end=" ")
+    #         print(mynode.connections_weights)
+    #     print("")
 
     backward(mygraph, calculatedoutputs, data[1][1])
     print(calculatedoutputs)
