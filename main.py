@@ -92,7 +92,7 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
     for i in range(len(graph.layers) - 1):
         for originnode in graph.layers[i]:
             for destinationnode in graph.layers[i + 1]:
-                originnode.new_connection(originnode, destinationnode, np.random.normal(0, 5))
+                originnode.new_connection(originnode, destinationnode, np.random.normal(0, 1))
 
                 G.add_edge(int(originnode.name),int(destinationnode.name))
             originnode.fix_connections_weights()

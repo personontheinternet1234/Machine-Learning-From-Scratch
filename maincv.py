@@ -90,7 +90,7 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
     for i in range(len(graph.layers) - 1):
         for originnode in graph.layers[i]:
             for destinationnode in graph.layers[i + 1]:
-                originnode.new_connection(originnode, destinationnode, np.random.normal(0, 5))
+                originnode.new_connection(originnode, destinationnode, np.random.normal(0, 1))
 
             originnode.fix_connections_weights()
 
@@ -351,20 +351,22 @@ for i in range(10):
 
 epochs = 50
 
-# training step
-for i in range(epochs):
-    for point in data:
-        for i in range(1000):
-            calculatedoutputs = forward(mygraph, point[0])
-            backward(mygraph, calculatedoutputs, point[1])
+print(forward(mygraph, data[0][0]))
 
-# MSE step
-error = 0
-for point in data:
-    calculatedoutputs = forward(mygraph, point[0])
-    error += ssr(calculatedoutputs, point[1])
-error /= len(data)
-print(f"MSE: {error}")
+# # training step
+# for i in range(epochs):
+#     for point in data:
+#         for i in range(1000):
+#             calculatedoutputs = forward(mygraph, point[0])
+#             backward(mygraph, calculatedoutputs, point[1])
+#
+# # MSE step
+# error = 0
+# for point in data:
+#     calculatedoutputs = forward(mygraph, point[0])
+#     error += ssr(calculatedoutputs, point[1])
+# error /= len(data)
+# print(f"MSE: {error}")
 
 # # Unknown value test
 # user_test = []
