@@ -14,7 +14,7 @@ Author: Isaac Park Verbrugge, Christian Host-Madsen
 """
 
 G = nx.Graph()
-
+step_size = 0.01
 
 def ssr(outputs, correctoutputs):
     correctoutputs = np.array(correctoutputs)
@@ -48,6 +48,7 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
     for i in range(number_hidden_layers):
         graph.layers.append([])
         graph.layers_activations.append([])
+        graph.layers_sums.append([])
 
     # input node creation
     for i in range(number_input_nodes):
@@ -89,6 +90,7 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
     for i in range(len(graph.layers)):
         graph.layers[i] = np.array(graph.layers[i])
         graph.layers_activations[i] = np.array(graph.layers_activations[i], dtype=object)
+        graph.layers_sums[i] = np.array(graph.layers_sums[i], dtype=object)
 
 
 def forward(graph, inputs):  # forward pass
@@ -118,6 +120,7 @@ def forward(graph, inputs):  # forward pass
 
         # weight step
         result = np.matmul(layerweights_initial, graph.layers_activations[0])
+        graph.layers_sums[1] = result
 
         # bias step
         result = result + bias_initialplusone
@@ -156,6 +159,7 @@ def forward(graph, inputs):  # forward pass
 
             # weight step
             result = np.matmul(layerweights, graph.layers_activations[current_layer])
+            graph.layers_sums[current_layer + 1] = result
 
             # bias step
             result = result + bias_plusone
@@ -233,6 +237,11 @@ def flipMatrix(in_matrix):  # Function for flipping dimensions of a matrix
     return np.array(out_matrix)
 
 
+def newValue(old_value, gradient):
+    global step_size
+    return old_value - step_size * gradient
+
+
 mygraph = nodes.Graph("mygraph")
 
 
@@ -271,20 +280,55 @@ calculatedoutputs = forward(mygraph, data[1][0])
 print(calculatedoutputs)
 print(f"error: {ssr(calculatedoutputs, data[1][1])}")
 
+last_layer = len(mygraph.layers) - 1
+g_upstream = derivative_ssr(calculatedoutputs, data[1][1])
 
-upstream = derivative_ssr(calculatedoutputs, data[1][1])
-resultnode0 = mygraph.layers[2][0]
-resultnode1 = mygraph.layers[2][1]
+g_local = []
+for nodeindex in range(len(mygraph.layers[last_layer])):  # output bias backprop
+    node = mygraph.layers[last_layer][nodeindex]
 
-playnode = mygraph.layers[1][0]
+    g_relu = derivative_relu(mygraph.layers_sums[last_layer][nodeindex] + node.bias) * g_upstream[nodeindex][0]
+    g_bias = 1 * g_relu
 
-g_reluresult0 = derivative_relu(playnode.activationEnergy * playnode.connections_weights[0] + resultnode0.bias) * upstream
-g_biasresult0 = 1 * g_reluresult0
-g_weight0 = playnode.activationEnergy * g_biasresult0
+    biasUpdate(node, newValue(node.bias, g_bias))
 
-g_reluresult1 = derivative_relu(playnode.activationEnergy * playnode.connections_weights[1] + resultnode1.bias) * upstream
-g_biasresult1 = 1 * g_reluresult1
-g_weight1 = playnode.activationEnergy * g_biasresult1
+    g_local.append([g_bias])
+
+g_upstream = np.array(g_local)
+
+for layer in range(len(mygraph.layers) - 2, 0, -1):
+
+    g_local = []
+    for nodeindex in range(len(mygraph.layers[layer])):  # weight backprop
+        node = mygraph.layers[layer][nodeindex]
+
+        node_g_weight_sum = 0
+        for connectionindex in range(len(node.connections)):
+            connection = node.connections[connectionindex]
+
+            g_weight = node.activationEnergy * g_upstream[connectionindex][0]
+
+            weightUpdate(connection, newValue(connection.weight, g_weight))
+
+            node_g_weight_sum += g_weight
+
+        g_local.append([node_g_weight_sum])
+
+    g_upstream = np.array(g_local)
+
+    g_local = []
+    for nodeindex in range(len(mygraph.layers[layer])):
+        node = mygraph.layers[layer][nodeindex]
+
+        g_relu = derivative_relu(mygraph.layers_sums[layer][nodeindex] + node.bias) * g_upstream[nodeindex][0]
+        g_bias = 1 * g_relu
+
+        biasUpdate(node, newValue(node.bias, g_bias))
+
+        g_local.append([g_bias])
+
+    g_upstream = np.array(g_local)
+
 
 # pos=nx.get_node_attributes(G,'pos')
 # nx.draw(G, pos, with_labels=True)

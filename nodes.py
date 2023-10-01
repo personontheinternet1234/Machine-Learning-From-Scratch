@@ -9,6 +9,9 @@ class Graph:
         self.layers = [
             [], []
         ]
+        self.layers_sums = [
+            [], []
+        ]
         self.layers_activations = [
             [], []
         ]
