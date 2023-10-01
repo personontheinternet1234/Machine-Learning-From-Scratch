@@ -3,6 +3,7 @@ import cv2
 import nodes
 import numpy as np
 from matplotlib import pyplot as plt
+import math
 
 from tensorflow import keras  # for MNIST dataset
 
@@ -90,7 +91,8 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
     for i in range(len(graph.layers) - 1):
         for originnode in graph.layers[i]:
             for destinationnode in graph.layers[i + 1]:
-                originnode.new_connection(originnode, destinationnode, np.random.normal(0, 2 / len(graph.layers[i])))
+                originnode.new_connection(originnode, destinationnode,
+                                          np.random.normal(0, 1) * math.sqrt(2 / len(graph.layers[i])))  # Xavier Initialization
 
             originnode.fix_connections_weights()
 
@@ -350,14 +352,13 @@ for i in range(10):
             node_values.append(1)
     data[i].append(node_values)
 
-epochs = 10
+epochs = 10000
 
 # training step
 for i in range(epochs):
     for point in data:
-        for i in range(1000):
-            calculatedoutputs = forward(mygraph, point[0])
-            backward(mygraph, calculatedoutputs, point[1])
+        calculatedoutputs = forward(mygraph, point[0])
+        backward(mygraph, calculatedoutputs, point[1])
 
 # MSE step
 error = 0

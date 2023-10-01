@@ -3,6 +3,7 @@ import networkx as nx
 import nodes
 import numpy as np
 from matplotlib import pyplot as plt
+import math
 
 """
 This program uses the nodes structure to practice basic backpropagation.
@@ -92,7 +93,8 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
     for i in range(len(graph.layers) - 1):
         for originnode in graph.layers[i]:
             for destinationnode in graph.layers[i + 1]:
-                originnode.new_connection(originnode, destinationnode, np.random.normal(0, 2 / len(graph.layers[i])))  # He Initialization
+                originnode.new_connection(originnode, destinationnode,
+                                          np.random.normal(0, 1) * math.sqrt(2/len(graph.layers[i])))  # Xavier Initialization
 
                 G.add_edge(int(originnode.name),int(destinationnode.name))
             originnode.fix_connections_weights()
@@ -326,26 +328,25 @@ def testgraphset():
 
 
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-create_graph(mygraph, 2, 2, 5, 2)
+create_graph(mygraph, 2, 1, 2, 2)
 
 data = [
     [ [1,0],[1,0] ], [ [0,1],[0,1] ]
 ]
-epochs = 10
+epochs = 50000
 
 # training step
 for i in range(epochs):
     for point in data:
-        for i in range(1000):
-            calculatedoutputs = forward(mygraph, point[0])
-            backward(mygraph, calculatedoutputs, point[1])
+        calculatedoutputs = forward(mygraph, point[0])
+        backward(mygraph, calculatedoutputs, point[1])
 
-            # for mylayer in mygraph.layers:
-            #     for mynode in mylayer:
-            #         print(mynode.bias, end=" ")
-            #         for myconnection in mynode.connections_weights:
-            #             print(myconnection, sep="", end="~")
-            #         print(end="\n\n")
+        # for mylayer in mygraph.layers:
+        #     for mynode in mylayer:
+        #         print(mynode.bias, end=" ")
+        #         for myconnection in mynode.connections_weights:
+        #             print(myconnection, sep="", end="~")
+        #         print(end="\n\n")
 
 # MSE step
 error = 0
