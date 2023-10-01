@@ -30,7 +30,7 @@ def softmax(outputnodesactivations):
 def ssr(outputs, correctoutputs):
     correctoutputs = np.array(correctoutputs)
     correctoutputs = correctoutputs.reshape((len(correctoutputs), 1))
-    result = np.subtract(outputs, correctoutputs)
+    result = np.subtract(correctoutputs, outputs)
     result = np.power(result, 2)
     result = np.sum(result)
     return result
@@ -39,7 +39,7 @@ def ssr(outputs, correctoutputs):
 def derivative_ssr(outputs, correctoutputs):
     correctoutputs = np.array(correctoutputs)
     correctoutputs = correctoutputs.reshape((len(correctoutputs), 1))
-    result = np.subtract(outputs, correctoutputs)
+    result = np.subtract(correctoutputs, outputs)
     result = np.multiply(result, -2)
     return result
 
@@ -92,7 +92,7 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
     for i in range(len(graph.layers) - 1):
         for originnode in graph.layers[i]:
             for destinationnode in graph.layers[i + 1]:
-                originnode.new_connection(originnode, destinationnode, np.random.normal(0, 1))
+                originnode.new_connection(originnode, destinationnode, np.random.normal(0, 2 / len(graph.layers[i])))  # He Initialization
 
                 G.add_edge(int(originnode.name),int(destinationnode.name))
             originnode.fix_connections_weights()
@@ -221,11 +221,12 @@ def flipMatrix(in_matrix):  # Function for flipping dimensions of a matrix
 
 
 def newValue(old_value, gradient):
-    return old_value + (learning_rate * gradient)
+    return old_value - (learning_rate * gradient)
 
 
 def backward(graph, output_vector, correct_vector):
     g_upstream = derivative_ssr(output_vector, correct_vector)
+    # print(g_upstream)
 
     def last_back():
         nonlocal g_upstream
@@ -328,9 +329,9 @@ def testgraphset():
 create_graph(mygraph, 2, 1, 2, 2)
 
 data = [
-    [ [0,0],[0,0] ], [ [1,0],[5,0] ]
+    [ [1,0],[1,0] ], [ [0,1],[0,1] ]
 ]
-epochs = 50
+epochs = 10
 
 # training step
 for i in range(epochs):
@@ -353,6 +354,8 @@ for i in range(len(mygraph.layers[0])):
     activation = int(input(f"activation for node {i}: "))
     user_test.append([activation])
 print(forward(mygraph, user_test))
+
+
 
 pos=nx.get_node_attributes(G,'pos')
 nx.draw(G, pos, with_labels=True)

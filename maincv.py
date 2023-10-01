@@ -31,7 +31,7 @@ def softmax(outputnodesactivations):
 def ssr(outputs, correctoutputs):
     correctoutputs = np.array(correctoutputs)
     correctoutputs = correctoutputs.reshape((len(correctoutputs), 1))
-    result = np.subtract(outputs, correctoutputs)
+    result = np.subtract(correctoutputs, outputs)
     result = np.power(result, 2)
     result = np.sum(result)
     return result
@@ -40,7 +40,7 @@ def ssr(outputs, correctoutputs):
 def derivative_ssr(outputs, correctoutputs):
     correctoutputs = np.array(correctoutputs)
     correctoutputs = correctoutputs.reshape((len(correctoutputs), 1))
-    result = np.subtract(outputs, correctoutputs)
+    result = np.subtract(correctoutputs, outputs)
     result = np.multiply(result, -2)
     return result
 
@@ -90,7 +90,7 @@ def create_graph(graph, number_input_nodes, number_hidden_layers, number_nodes_p
     for i in range(len(graph.layers) - 1):
         for originnode in graph.layers[i]:
             for destinationnode in graph.layers[i + 1]:
-                originnode.new_connection(originnode, destinationnode, np.random.normal(0, 1))
+                originnode.new_connection(originnode, destinationnode, np.random.normal(0, 2 / len(graph.layers[i])))
 
             originnode.fix_connections_weights()
 
@@ -218,11 +218,12 @@ def flipMatrix(in_matrix):  # Function for flipping dimensions of a matrix
 
 
 def newValue(old_value, gradient):
-    return old_value + (learning_rate * gradient)
+    return old_value - (learning_rate * gradient)
 
 
 def backward(graph, output_vector, correct_vector):
     g_upstream = derivative_ssr(output_vector, correct_vector)
+    print(g_upstream)
 
     def last_back():
         nonlocal g_upstream
@@ -349,24 +350,22 @@ for i in range(10):
             node_values.append(1)
     data[i].append(node_values)
 
-epochs = 50
+epochs = 10
 
-print(forward(mygraph, data[0][0]))
+# training step
+for i in range(epochs):
+    for point in data:
+        for i in range(1000):
+            calculatedoutputs = forward(mygraph, point[0])
+            backward(mygraph, calculatedoutputs, point[1])
 
-# # training step
-# for i in range(epochs):
-#     for point in data:
-#         for i in range(1000):
-#             calculatedoutputs = forward(mygraph, point[0])
-#             backward(mygraph, calculatedoutputs, point[1])
-#
-# # MSE step
-# error = 0
-# for point in data:
-#     calculatedoutputs = forward(mygraph, point[0])
-#     error += ssr(calculatedoutputs, point[1])
-# error /= len(data)
-# print(f"MSE: {error}")
+# MSE step
+error = 0
+for point in data:
+    calculatedoutputs = forward(mygraph, point[0])
+    error += ssr(calculatedoutputs, point[1])
+error /= len(data)
+print(f"MSE: {error}")
 
 # # Unknown value test
 # user_test = []
