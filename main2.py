@@ -16,6 +16,7 @@ Author: Isaac Park Verbrugge, Christian Host-Madsen
 G = nx.Graph()
 step_size = 0.01
 
+
 def ssr(outputs, correctoutputs):
     correctoutputs = np.array(correctoutputs)
     correctoutputs = correctoutputs.reshape((len(correctoutputs), 1))
@@ -189,34 +190,6 @@ def forward(graph, inputs):  # forward pass
     return last_step(layerstep(inputstep(inputs)))
 
 
-def backward():
-    # usage: node1-2 = add_backprop(node1-2.upstreamValue())
-    def multiply_backprop(upstream_gradient, downstream_nodes, target_node):
-        product = upstream_gradient
-        for node in downstream_nodes:
-            product *= node.activationEnergy
-        product /= target_node.activationEnergy
-
-        return product
-    def max_backprop(upstream_gradient, downstream_nodes, target_node):
-        largest = downstream_nodes[0].activationEnergy
-        for node in downstream_nodes:
-            if node.activationEnergy >= largest:
-                largest = node.activationEnergy
-
-        if target_node.activationEnergy == largest:
-            return upstream_gradient
-        else:
-            return 0
-    def copy_backprop(upstream_gradients):  # upstream_gradients is a list tho... Idk where imma use copy_backprop
-        sum = 0
-        for i in upstream_gradients:
-            sum += i
-        return sum
-    def add_backprop(upstream_gradient):
-        return(upstream_gradient)
-
-
 def weightUpdate(connection_in_question, new_weight):
     connection_in_question.weight = new_weight
     connection_in_question.origin.fix_connections_weights()
@@ -238,17 +211,97 @@ def flipMatrix(in_matrix):  # Function for flipping dimensions of a matrix
 
 
 def newValue(old_value, gradient):
-    global step_size
-    return old_value - step_size * gradient
+    return old_value + (step_size * gradient)
+
+
+def backward(graph, output_vector, correct_vector):
+    g_upstream = derivative_ssr(output_vector, correct_vector)
+
+    def last_back():
+        nonlocal g_upstream
+        last_layer = len(graph.layers) - 1
+
+        g_local = []
+        for nodeindex in range(len(graph.layers[last_layer])):  # output bias backprop
+            node = graph.layers[last_layer][nodeindex]
+
+            g_relu = derivative_relu(graph.layers_sums[last_layer][nodeindex] + node.bias) * g_upstream[nodeindex][0]
+            g_bias = 1 * g_relu
+
+            biasUpdate(node, newValue(node.bias, g_bias))
+
+            g_local.append([g_bias])
+
+        g_upstream = np.array(g_local)
+        return g_upstream
+
+    def layer_back():
+        nonlocal g_upstream
+
+        for layer in range(len(graph.layers) - 2, 0, -1):
+            g_local = []
+            for nodeindex in range(len(graph.layers[layer])):  # weight backprop
+                node = graph.layers[layer][nodeindex]
+
+                node_g_weight_sum = 0
+                for connectionindex in range(len(node.connections)):
+                    connection = node.connections[connectionindex]
+
+                    g_weight = node.activationEnergy * g_upstream[connectionindex][0]
+
+                    weightUpdate(connection, newValue(connection.weight, g_weight))
+
+                    node_g_weight_sum += g_weight
+
+                g_local.append([node_g_weight_sum])
+
+            g_upstream = np.array(g_local)
+
+            g_local = []
+            for nodeindex in range(len(graph.layers[layer])):
+                node = graph.layers[layer][nodeindex]
+
+                g_relu = derivative_relu(graph.layers_sums[layer][nodeindex] + node.bias) * g_upstream[nodeindex][0]
+                g_bias = 1 * g_relu
+
+                biasUpdate(node, newValue(node.bias, g_bias))
+
+                g_local.append([g_bias])
+
+            g_upstream = np.array(g_local)
+
+    def input_weights_back():
+        nonlocal g_upstream
+
+        inputlayer = 0
+        g_local = []
+        for nodeindex in range(len(graph.layers[inputlayer])):  # weight backprop
+            node = graph.layers[inputlayer][nodeindex]
+
+            node_g_weight_sum = 0
+            for connectionindex in range(len(node.connections)):
+                connection = node.connections[connectionindex]
+
+                g_weight = node.activationEnergy * g_upstream[connectionindex][0]
+
+                weightUpdate(connection, newValue(connection.weight, g_weight))
+
+                node_g_weight_sum += g_weight
+
+            g_local.append([node_g_weight_sum])
+
+        g_upstream = np.array(g_local)
+
+
+    last_back()
+    layer_back()
+    input_weights_back()
 
 
 mygraph = nodes.Graph("mygraph")
 
 
-def testgraphcreate():
-    # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-    create_graph(mygraph, 2, 1, 2, 2)
-
+def testgraphset():
     # Node 1
     weightUpdate(mygraph.layers[0][0].connections[0], 1)
     weightUpdate(mygraph.layers[0][0].connections[1], 1)
@@ -270,64 +323,27 @@ def testgraphcreate():
     # Node 7
     biasUpdate(mygraph.layers[2][1], 0)
 
-testgraphcreate()
+
+# graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
+create_graph(mygraph, 2, 1, 2, 2)
+testgraphset()
 
 data = [
     [ [0,0],[0,0] ], [ [1,1],[1,1] ]
 ]
 
-calculatedoutputs = forward(mygraph, data[1][0])
-print(calculatedoutputs)
-print(f"error: {ssr(calculatedoutputs, data[1][1])}")
+for i in range(10):
+    calculatedoutputs = forward(mygraph, data[1][0])
 
-last_layer = len(mygraph.layers) - 1
-g_upstream = derivative_ssr(calculatedoutputs, data[1][1])
+    for layer in mygraph.layers:
+        for node in layer:
+            print(node.bias, sep="", end=" ")
+            print(node.connections_weights)
+        print("")
 
-g_local = []
-for nodeindex in range(len(mygraph.layers[last_layer])):  # output bias backprop
-    node = mygraph.layers[last_layer][nodeindex]
-
-    g_relu = derivative_relu(mygraph.layers_sums[last_layer][nodeindex] + node.bias) * g_upstream[nodeindex][0]
-    g_bias = 1 * g_relu
-
-    biasUpdate(node, newValue(node.bias, g_bias))
-
-    g_local.append([g_bias])
-
-g_upstream = np.array(g_local)
-
-for layer in range(len(mygraph.layers) - 2, 0, -1):
-
-    g_local = []
-    for nodeindex in range(len(mygraph.layers[layer])):  # weight backprop
-        node = mygraph.layers[layer][nodeindex]
-
-        node_g_weight_sum = 0
-        for connectionindex in range(len(node.connections)):
-            connection = node.connections[connectionindex]
-
-            g_weight = node.activationEnergy * g_upstream[connectionindex][0]
-
-            weightUpdate(connection, newValue(connection.weight, g_weight))
-
-            node_g_weight_sum += g_weight
-
-        g_local.append([node_g_weight_sum])
-
-    g_upstream = np.array(g_local)
-
-    g_local = []
-    for nodeindex in range(len(mygraph.layers[layer])):
-        node = mygraph.layers[layer][nodeindex]
-
-        g_relu = derivative_relu(mygraph.layers_sums[layer][nodeindex] + node.bias) * g_upstream[nodeindex][0]
-        g_bias = 1 * g_relu
-
-        biasUpdate(node, newValue(node.bias, g_bias))
-
-        g_local.append([g_bias])
-
-    g_upstream = np.array(g_local)
+    backward(mygraph, calculatedoutputs, data[1][1])
+    print(calculatedoutputs)
+    print(f"error: {ssr(calculatedoutputs, data[1][1])}")
 
 
 # pos=nx.get_node_attributes(G,'pos')
