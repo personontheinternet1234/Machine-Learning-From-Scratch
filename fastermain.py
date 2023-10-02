@@ -8,12 +8,12 @@ actual_outputs = ["0", "1"]
 
 
 def sigmoid(values):
-    output = 1 / (1 + np.exp(values))
+    output = 1 / (1 + np.exp(-1 * values))
     return output
 
 
 def sigmoid_prime(values):
-    output = 1 / (1 + np.exp(values)) * (1 - 1 / (1 + np.exp(values)))
+    output = 1 / (1 + np.exp(-1 * values)) * (1 - 1 / (1 + np.exp(-1 * values)))
     return output
 
 
@@ -68,12 +68,9 @@ for i in range(epochs):
     a2 = sigmoid(np.matmul(w1, a1) + b2)
 
     # calculate gradients
-    print("A")
-    print(sigmoid_prime(5))
+
     # second layer
-    d_a2 =
-    for j in range(len(a1)):
-        sigmoid_prime() * np.ones(hidden_1_size, 1)
+    d_a2 = -2 * np.subtract(c, a2)
     d_b2 = sigmoid_prime(d_a2)
     d_w1 = np.multiply(np.resize(d_b2, (hidden_1_size, output_size)).T, np.resize(a1.T, (output_size, hidden_1_size)))
 
