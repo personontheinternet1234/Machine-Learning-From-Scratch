@@ -258,18 +258,20 @@ def backward(graph, output_vector, correct_vector):
             for nodeindex in range(len(graph.layers[layer])):  # weight backprop
                 node = graph.layers[layer][nodeindex]
 
-                node_g_weight_sum = 0
+                node_g_activation_path_sum = 0
                 for connectionindex in range(len(node.connections)):
                     connection = node.connections[connectionindex]
                     # print(connection)
 
                     g_weight = node.activationEnergy * g_upstream[connectionindex][0]
 
+                    g_activation = connection.weight * g_upstream[connectionindex][0]
+
                     weightUpdate(connection, newValue(connection.weight, g_weight))
 
-                    node_g_weight_sum += g_weight
+                    node_g_activation_path_sum += g_activation
 
-                g_local.append([node_g_weight_sum])
+                g_local.append([node_g_activation_path_sum])
             # print(g_local)
 
             g_upstream = np.array(g_local)
@@ -409,3 +411,9 @@ while True:
 pos=nx.get_node_attributes(G,'pos')
 nx.draw(G, pos, with_labels=True)
 plt.show()
+
+
+
+
+
+
