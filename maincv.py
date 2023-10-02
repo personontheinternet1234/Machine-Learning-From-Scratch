@@ -4,6 +4,7 @@ import nodes
 import numpy as np
 from matplotlib import pyplot as plt
 import math
+from tqdm import tqdm
 
 from tensorflow import keras  # for MNIST dataset
 
@@ -225,7 +226,6 @@ def newValue(old_value, gradient):
 
 def backward(graph, output_vector, correct_vector):
     g_upstream = derivative_ssr(output_vector, correct_vector)
-    print(g_upstream)
 
     def last_back():
         nonlocal g_upstream
@@ -334,38 +334,38 @@ def testgraphset():
 
 
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-create_graph(mygraph, 784, 1, 4, 10)
+create_graph(mygraph, 784, 3, 16, 10)
 
-(train_X, train_y), (test_X, test_y) = keras.datasets.mnist.load_data()
+(train_x, train_y), (test_x, test_y) = keras.datasets.mnist.load_data()
 
-# fig, axs = plt.subplots(3, 3, figsize=(10, 10))
-# plt.gray()
-# for i, ax in enumerate(axs.flat):
-#     ax.imshow(train_X[i])
-#     ax.axis('off')
-#     ax.set_title('Number {}'.format(train_y[i]))
-#
-# plt.show()
+fig, axs = plt.subplots(3, 3, figsize=(10, 10))
+plt.gray()
+for i, ax in enumerate(axs.flat):
+    ax.imshow(train_x[i])
+    ax.axis('off')
+    ax.set_title('Number {}'.format(train_y[i]))
 
+plt.show()
 
 data = []
-for i in range(10):
+
+for i in range(100):
     data.append([])
-    data[i].append(train_X[i].flatten().tolist())
+    data[i].append(train_x[i].flatten().tolist())
 
     node_values = []
     for h in range(10):
-        if h != train_y[i]:
-            node_values.append(0)
-        else:
+        if h == train_y[i]:
             node_values.append(1)
+        else:
+            node_values.append(0)
     data[i].append(node_values)
 
-epochs = 1000
+epochs = 100
 
 # training step
 for i in range(epochs):
-    for point in data:
+    for point in tqdm(data, desc =f"Epoch #{i + 1}"):
         calculatedoutputs = forward(mygraph, point[0])
         backward(mygraph, calculatedoutputs, point[1])
 
@@ -377,9 +377,12 @@ for point in data:
 error /= len(data)
 print(f"MSE: {error}")
 
-# # Unknown value test
-# user_test = []
-# for i in range(len(mygraph.layers[0])):
-#     activation = int(input(f"activation for node {i}: "))
-#     user_test.append([activation])
-# print(forward(mygraph, user_test))
+# Unknown value test
+while True:
+    user_input = int(input(f"Image to test: "))
+    print(f"Should be {train_y[user_input]}")
+    user_test = train_x[user_input].flatten().tolist()
+    outputs = forward(mygraph, user_test)
+
+    print(f"Actually resulted in {np.nanargmax(np.where(outputs == outputs.max(), outputs, np.nan))}")
+    print(outputs)

@@ -337,12 +337,12 @@ def testgraphset():
     biasUpdate(mygraph.layers[2][1], 0)
 
 
-create_graph(mygraph, 2, 1, 4, 3)  # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
+create_graph(mygraph, 2, 3, 4, 3)  # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
 
 # testgraphset()
 
 data = [
-    [[1, 0], [1, 0, 0]], [[1, 1], [0.2, 1, 0.2]], [[0, 1], [0, 0, 1]], [[0.1, 1.2], [0, 0.1, 1]], [[0.2, 0.8], [0.1, 0.3, 1]], [[0.5, 0.5], [0.5, 1, 0.5]], [[0.7, 0], [0.7, 0, 0]], [[0.6, 0.1], [0.6, 0, 0.1]], [[10, 1], [1, 0, 0.01]]
+    [[1, 0], [1, 0, 0]], [[1, 1], [0.2, 1, 0.2]], [[0, 1], [0, 0, 1]], [[0.1, 1.2], [0, 0.1, 1]], [[0.2, 0.8], [0.1, 0.3, 1]], [[0.5, 0.5], [0.5, 1, 0.5]], [[0.45, 0.65], [0.22, 1, 0.33]], [[0.7, 0], [0.7, 0, 0]], [[0.6, 0.1], [0.6, 0, 0.1]], [[10, 1], [1, 0, 0.01]]
 ]
 
 # weightx = np.linspace(-2,2)
@@ -384,7 +384,7 @@ def training(epoch):
     plt.plot(epochx, errory)
 
 
-epochs = 1000
+epochs = 500
 errory = []
 epochx = []
 ani = FuncAnimation(plt.gcf(), training, interval=0, frames=epochs, repeat=0)
