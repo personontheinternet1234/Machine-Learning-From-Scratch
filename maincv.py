@@ -325,7 +325,7 @@ def testgraphset():
 
 
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-create_graph(mygraph, 784, 2, 10, 10)
+create_graph(mygraph, 784, 1, 4, 10)
 
 (train_X, train_y), (test_X, test_y) = keras.datasets.mnist.load_data()
 
