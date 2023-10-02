@@ -333,7 +333,7 @@ def testgraphset():
 
 
 # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-create_graph(mygraph, 784, 3, 16, 10)
+create_graph(mygraph, 784, 2, 10, 10)
 
 (train_x, train_y), (test_x, test_y) = keras.datasets.mnist.load_data()
 
@@ -348,7 +348,7 @@ create_graph(mygraph, 784, 3, 16, 10)
 
 data = []
 
-for i in range(100):
+for i in range(10):
     data.append([])
     data[i].append(train_x[i].flatten().tolist())
 
@@ -363,8 +363,8 @@ for i in range(100):
 epochs = 100
 
 # training step
-for i in range(epochs):
-    for point in tqdm(data, desc =f"Epoch #{i + 1}"):
+for i in tqdm(range(epochs), desc =f"Epoch #{i + 1}"):
+    for point in data:
         calculatedoutputs = forward(mygraph, point[0])
         backward(mygraph, calculatedoutputs, point[1])
 
