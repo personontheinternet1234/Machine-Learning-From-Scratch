@@ -11,7 +11,6 @@ from tensorflow import keras  # for MNIST dataset
 """
 This program uses the nodes structure to practice basic backpropagation.
 Made from scratch (No tutorials, no pytorch).
-(NetworkX is NOT used for node structure, only to show the neural net as a visual element)
 Version: 0.2
 Author: Isaac Park Verbrugge, Christian Host-Madsen
 """
