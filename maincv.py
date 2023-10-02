@@ -337,14 +337,14 @@ create_graph(mygraph, 784, 3, 16, 10)
 
 (train_x, train_y), (test_x, test_y) = keras.datasets.mnist.load_data()
 
-fig, axs = plt.subplots(3, 3, figsize=(10, 10))
-plt.gray()
-for i, ax in enumerate(axs.flat):
-    ax.imshow(train_x[i])
-    ax.axis('off')
-    ax.set_title('Number {}'.format(train_y[i]))
+# fig, axs = plt.subplots(3, 3, figsize=(10, 10))
+# plt.gray()
+# for i, ax in enumerate(axs.flat):
+#     ax.imshow(train_x[i])
+#     ax.axis('off')
+#     ax.set_title('Number {}'.format(train_y[i]))
 
-plt.show()
+# plt.show()
 
 data = []
 
