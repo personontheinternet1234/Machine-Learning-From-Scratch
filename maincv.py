@@ -15,7 +15,7 @@ Version: 0.2
 Author: Isaac Park Verbrugge, Christian Host-Madsen
 """
 
-learning_rate = 0.001
+learning_rate = 0.0001
 
 
 def softmax(outputnodesactivations):
@@ -229,6 +229,7 @@ def backward(graph, output_vector, correct_vector):
 
     def last_back():
         nonlocal g_upstream
+        g_upstream = np.minimum(1, g_upstream)  # gradient clipping
         last_layer = len(graph.layers) - 1
 
         g_local = []
@@ -243,10 +244,10 @@ def backward(graph, output_vector, correct_vector):
             g_local.append([g_bias])
 
         g_upstream = np.array(g_local)
-        return g_upstream
 
     def layer_back():
         nonlocal g_upstream
+        g_upstream = np.minimum(1, g_upstream)  # gradient clipping
 
         for layer in range(len(graph.layers) - 2, 0, -1):
             g_local = []
@@ -256,6 +257,7 @@ def backward(graph, output_vector, correct_vector):
                 node_g_weight_sum = 0
                 for connectionindex in range(len(node.connections)):
                     connection = node.connections[connectionindex]
+                    # print(connection)
 
                     g_weight = node.activationEnergy * g_upstream[connectionindex][0]
 
@@ -264,6 +266,7 @@ def backward(graph, output_vector, correct_vector):
                     node_g_weight_sum += g_weight
 
                 g_local.append([node_g_weight_sum])
+            # print(g_local)
 
             g_upstream = np.array(g_local)
 
@@ -282,6 +285,7 @@ def backward(graph, output_vector, correct_vector):
 
     def input_weights_back():
         nonlocal g_upstream
+        g_upstream = np.minimum(1, g_upstream)  # gradient clipping
 
         for nodeindex in range(len(graph.layers[0])):  # weight backprop
             node = graph.layers[0][nodeindex]
@@ -290,6 +294,9 @@ def backward(graph, output_vector, correct_vector):
                 connection = node.connections[connectionindex]
 
                 g_weight = node.activationEnergy * g_upstream[connectionindex][0]
+
+                # if connectionindex == 0 and nodeindex == 0:
+                #     print(g_weight)
 
                 weightUpdate(connection, newValue(connection.weight, g_weight))
 
@@ -352,7 +359,7 @@ for i in range(10):
             node_values.append(1)
     data[i].append(node_values)
 
-epochs = 10000
+epochs = 1000
 
 # training step
 for i in range(epochs):

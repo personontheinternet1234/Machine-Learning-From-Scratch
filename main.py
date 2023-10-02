@@ -3,6 +3,7 @@ import networkx as nx
 import nodes
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.animation import FuncAnimation
 import math
 
 """
@@ -228,10 +229,11 @@ def newValue(old_value, gradient):
 
 def backward(graph, output_vector, correct_vector):
     g_upstream = derivative_ssr(output_vector, correct_vector)
-    print(g_upstream)
+    # print(g_upstream)
 
     def last_back():
         nonlocal g_upstream
+        g_upstream = np.minimum(1, g_upstream)  # gradient clipping
         last_layer = len(graph.layers) - 1
 
         g_local = []
@@ -246,10 +248,10 @@ def backward(graph, output_vector, correct_vector):
             g_local.append([g_bias])
 
         g_upstream = np.array(g_local)
-        return g_upstream
 
     def layer_back():
         nonlocal g_upstream
+        g_upstream = np.minimum(1, g_upstream)  # gradient clipping
 
         for layer in range(len(graph.layers) - 2, 0, -1):
             g_local = []
@@ -287,6 +289,7 @@ def backward(graph, output_vector, correct_vector):
 
     def input_weights_back():
         nonlocal g_upstream
+        g_upstream = np.minimum(1, g_upstream)  # gradient clipping
 
         for nodeindex in range(len(graph.layers[0])):  # weight backprop
             node = graph.layers[0][nodeindex]
@@ -295,6 +298,9 @@ def backward(graph, output_vector, correct_vector):
                 connection = node.connections[connectionindex]
 
                 g_weight = node.activationEnergy * g_upstream[connectionindex][0]
+
+                # if connectionindex == 0 and nodeindex == 0:
+                #     print(g_weight)
 
                 weightUpdate(connection, newValue(connection.weight, g_weight))
 
@@ -328,29 +334,60 @@ def testgraphset():
     # Node 7
     biasUpdate(mygraph.layers[2][1], 0)
 
-# graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
-create_graph(mygraph, 2, 1, 2, 2)
+
+create_graph(mygraph, 2, 1, 4, 3)  # graph, number_input_nodes, number_hidden_layers, number_nodes_per_layer, number_output_nodes
 
 # testgraphset()
 
 data = [
-    [[1, 0], [1, 0]], [[1, 1], [0.5, 0.5]], [[0, 1], [0, 1]]
+    [[1, 0], [1, 0, 0]], [[1, 1], [0.2, 1, 0.2]], [[0, 1], [0, 0, 1]], [[0.1, 1.2], [0, 0.1, 1]], [[0.2, 0.8], [0.1, 0.3, 1]], [[0.5, 0.5], [0.5, 1, 0.5]], [[0.7, 0], [0.7, 0, 0]], [[0.6, 0.1], [0.6, 0, 0.1]], [[10, 1], [1, 0, 0.01]]
 ]
 
-epochs = 10000
+# weightx = np.linspace(-2,2)
+# error2y = []
+# for i in weightx:
+#     weightUpdate(mygraph.layers[0][0].connections[0], i)
+#     error = 0
+#     for point in data:
+#         calculatedoutputs = forward(mygraph, point[0])
+#         error += ssr(calculatedoutputs, point[1])
+#     error /= len(data)
+#     error2y.append(error)
+# plt.plot(weightx, error2y)
+# plt.show()
+# weightUpdate(mygraph.layers[0][0].connections[0], 0)
 
-# training step
-for i in range(epochs):
+def training(epoch):
     for point in data:
         calculatedoutputs = forward(mygraph, point[0])
         backward(mygraph, calculatedoutputs, point[1])
 
-        # for mylayer in mygraph.layers:
-        #     for mynode in mylayer:
-        #         print(mynode.bias, end=" ")
-        #         for myconnection in mynode.connections_weights:
-        #             print(myconnection, sep="", end="~")
-        #         print(end="\n\n")
+    error = 0
+    for point in data:
+        calculatedoutputs = forward(mygraph, point[0])
+        error += ssr(calculatedoutputs, point[1])
+    error /= len(data)
+
+    # for mylayer in mygraph.layers:
+    #     for mynode in mylayer:
+    #         print(mynode.bias, end=" ")
+    #         for myconnection in mynode.connections_weights:
+    #             print(myconnection, sep="", end="~")
+    #         print(end="\n\n")
+
+    epochx.append(epoch)
+    errory.append(error)
+
+    plt.cla()
+    plt.plot(epochx, errory)
+
+
+epochs = 1000
+errory = []
+epochx = []
+ani = FuncAnimation(plt.gcf(), training, interval=0, frames=epochs, repeat=0)
+
+plt.show()
 
 # MSE step
 error = 0
@@ -367,6 +404,7 @@ while True:
         activation = float(input(f"activation for node {i}: "))
         user_test.append([activation])
     print(forward(mygraph, user_test))
+
 
 pos=nx.get_node_attributes(G,'pos')
 nx.draw(G, pos, with_labels=True)
