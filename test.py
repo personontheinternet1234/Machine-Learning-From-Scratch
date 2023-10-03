@@ -32,6 +32,8 @@ result = np.add(array1, array2)
 
 hlayers = 3  # Replace 5 with the number of times you want to iterate
 
-for i in range(1, hlayers + 1):
-    # Your code here
-    print(i)  # This is just an example; replace it with your actual code
+for layer in range(hlayers, -1, -1):  # start at last hidden layer,
+    print(layer)
+
+for layer in range(1):  # start at last hidden layer,
+    print(layer)
