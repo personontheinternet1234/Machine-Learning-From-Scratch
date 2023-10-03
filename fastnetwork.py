@@ -3,9 +3,12 @@ import random
 from tqdm import tqdm
 
 
-# NeuralNet.py
-# Isaac Verbrugge & Christian Host-Madsen
-# (program info)
+"""
+This program uses the nodes structure to practice basic backpropagation.
+Made from scratch (No tutorials, no pytorch).
+Version: 1.0
+Author: Isaac Park Verbrugge, Christian Host-Madsen
+"""
 
 # function definitions
 
@@ -106,7 +109,7 @@ output_size = 2
 # learning presets
 learn = True  # add this functionality, add ability to choose original weights and biases
 epochs = 10000
-learning_rate = 0.01
+learning_rate = 0.0001
 
 # training data
 input_training = [
@@ -156,18 +159,18 @@ def backward(graph, correct_outputs):
     # error with respect to last layer
     d_activation_list.insert(0, -2 * np.subtract(correct_outputs, activation_list[len(activation_list) - 1]))
 
-    # gradient of biases
-    d_bias_list.insert(0, relu_prime(np.matmul(weights_list[len(weights_list) - 1], activation_list[len(activation_list) - 2]) + bias_list[len(bias_list) - 1]) *
-                       d_activation_list[0])
+    # # gradient of biases
+    # d_bias_list.insert(0, relu_prime(np.matmul(weights_list[len(weights_list) - 1], activation_list[len(activation_list) - 2]) + bias_list[len(bias_list) - 1]) *
+    #                    d_activation_list[0])
 
-    # gradient of weights
-    d_weights_list.insert(0, np.multiply(np.resize(d_bias_list[len(d_bias_list) - 1], (len(activation_list[len(activation_list) - 2]),
-                        len(activation_list[len(activation_list) - 1]))).T, np.resize(activation_list[len(activation_list) - 2].T, (len(activation_list[len(activation_list) - 1]), len(activation_list[len(activation_list) - 2])))))
-    # gradient of activations before last layer
-    d_activation_list.insert(0, np.reshape(np.sum(np.multiply(np.resize(d_bias_list[0], (len(activation_list[len(activation_list) - 2]),
-                            len(activation_list[len(activation_list) - 1]))), weights_list[len(weights_list) - 1].T), axis=1), (len(activation_list[len(activation_list) - 2]), 1)))
+    # # gradient of weights
+    # d_weights_list.insert(0, np.multiply(np.resize(d_bias_list[len(d_bias_list) - 1], (len(activation_list[len(activation_list) - 2]),
+    #                     len(activation_list[len(activation_list) - 1]))).T, np.resize(activation_list[len(activation_list) - 2].T, (len(activation_list[len(activation_list) - 1]), len(activation_list[len(activation_list) - 2])))))
+    # # gradient of activations before last layer
+    # d_activation_list.insert(0, np.reshape(np.sum(np.multiply(np.resize(d_bias_list[0], (len(activation_list[len(activation_list) - 2]),
+    #                         len(activation_list[len(activation_list) - 1]))), weights_list[len(weights_list) - 1].T), axis=1), (len(activation_list[len(activation_list) - 2]), 1)))
 
-    for layer in range(graph.hidden_layers, 0, -1):  # start at last hidden layer, go back until layer = 0
+    for layer in range(graph.hidden_layers + 1, 0, -1):  # start at last hidden layer, go back until layer = 0
         # gradient of biases
         d_bias_list.insert(0, relu_prime(
             np.matmul(weights_list[layer - 1], activation_list[layer - 1]) + bias_list[layer - 1]) *
@@ -182,15 +185,17 @@ def backward(graph, correct_outputs):
                                 len(activation_list[layer]))), weights_list[layer - 1].T), axis=1), (len(activation_list[layer - 1]), 1)))
 
     for weight_index in range(len(mygraph.layers_weights)):
+        mygraph.layers_d_weights[weight_index] = np.where(mygraph.layers_d_weights[weight_index] > 1, 1, mygraph.layers_d_weights[weight_index])
         mygraph.layers_weights[weight_index] = np.subtract(mygraph.layers_weights[weight_index], learning_rate * d_weights_list[weight_index])
     for bias_index in range(len(mygraph.layers_bias)):
+        mygraph.layers_d_bias[weight_index] = np.where(mygraph.layers_d_bias[weight_index] > 1, 1, mygraph.layers_d_bias[weight_index])
         mygraph.layers_bias[bias_index] = np.subtract(mygraph.layers_bias[bias_index], learning_rate * d_bias_list[bias_index])
 
     graph.layers_activations = []
 
 
 mygraph = Graph()
-create_graph(mygraph, 2, 5, 5, 2)
+create_graph(mygraph, 2, 1, 3, 2)
 
 for i in range(epochs):
     # choose from training set
@@ -200,10 +205,12 @@ for i in range(epochs):
 
     forward(mygraph, input_choice)
     backward(mygraph, output_choice)
+    
+    if i % 100 == 0:
+        correct_outputs = np.reshape(np.array(output_choice), (len(output_choice), 1))
+        print(f"Error: {np.sum(np.subtract(correct_outputs, forward(mygraph, input_choice)) ** 2)}")
+        mygraph.layers_activations = []  # clear activations
 
-correct_outputs = np.reshape(np.array(output_choice), (len(output_choice), 1))
-print(f"Error: {np.sum(np.subtract(output_choice, forward(mygraph, input_choice)) ** 2)}")
-mygraph.layers_activations = []  # clear activations
 
 # return optimized weights and biases
 print(mygraph.layers_weights)
