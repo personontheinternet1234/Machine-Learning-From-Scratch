@@ -27,6 +27,19 @@ class Graph:
 
         ]
 
+        # one for inputs, one for outputs
+        self.layers_d_activations = [
+
+        ]
+        # don't need one for inputs
+        self.layers_d_weights = [
+
+        ]
+        # one for outputs
+        self.layers_d_bias = [
+
+        ]
+
 
 def create_graph(graph, input_nodes, hidden_layers, hidden_layers_nodes, output_nodes):
     graph.hidden_layers = hidden_layers
@@ -120,9 +133,8 @@ w1 = np.random.randn(output_size, hidden_1_size)
 b2 = np.zeros((output_size, 1))
 
 
-def forward(graph, inputs, correct_outputs):
+def forward(graph, inputs):
     inputs = np.reshape(np.array(inputs), (len(inputs), 1))
-    correct_outputs = np.reshape(np.array(correct_outputs), (len(correct_outputs), 1))
 
     graph.layers_activations.append(inputs)
     result = np.matmul(graph.layers_weights[0], graph.layers_activations[0])
@@ -152,9 +164,10 @@ for i in range(epochs):
     input_choice = input_training[training_index_choice]
     output_choice = output_training[training_index_choice]
 
-    forward(mygraph, input_choice, output_choice)
+    forward(mygraph, input_choice)
     print(mygraph.layers_activations)
-    backward()
+    print(len(mygraph.layers_activations[len(mygraph.layers_activations) - 2]))
+    backward(mygraph, output_choice)
 
     # error report every few epochs
     #     if i % return_rate == 0:
@@ -164,19 +177,29 @@ for i in range(epochs):
     #         print(f"Error: {error} ({round(i / epochs * 100)}%)")
 
 
-# # training loop
-# for i in range(epochs):
-#     # choose from training set
-#     training_choice = random.randint(0, len(input_training) - 1)
-#
-#     # reformat inputs and outputs
-#     a0 = np.reshape(np.array(input_training[training_choice]), (len(input_training[training_choice]), 1))
-#     c = np.reshape(np.array(output_training[training_choice]), (len(output_training[training_choice]), 1))
-#
-#     # calculate outputs
-#     a1 = sigmoid(np.matmul(w0, a0) + b1)
-#     a2 = sigmoid(np.matmul(w1, a1) + b2)
-#
+def backward(graph, correct_outputs):
+    correct_outputs = np.reshape(np.array(correct_outputs), (len(correct_outputs), 1))
+    activation_list = graph.layers_activations
+    weights_list = graph.layers_weights
+    bias_list = graph.layers_bias
+
+    d_activation_list = graph.layers_d_activations
+    d_weights_list = graph.layers_d_weights
+    d_bias_list = graph.layers_d_bias
+
+    # error with respect to last layer
+    d_activation_list.insert(0, -2 * np.subtract(correct_outputs, activation_list[len(activation_list) - 1]))
+
+    # gradient of biases
+    d_bias_list.insert(0, sigmoid_prime(np.matmul(weights_list[len(weights_list) - 1], activation_list[len(activation_list) - 2]) + bias_list[len(bias_list) - 1]) *
+                       d_activation_list[len(d_activation_list) - 1])
+
+    # gradient of weights
+    d_weights_list.insert(0, np.multiply(np.resize(d_bias_list[len(d_bias_list) - 1], (len(activation_list[len(activation_list) - 2]),
+                        len(activation_list[len(activation_list) - 1]))).T, np.resize(activation_list[len(activation_list) - 2].T, (len(activation_list[len(activation_list) - 2]), len(activation_list[len(activation_list) - 1])))))
+
+    for l in graph.hidden_layers
+
 #     # calculate gradients
 #
 #     # second layer
