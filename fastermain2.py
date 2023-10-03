@@ -11,19 +11,21 @@ from tqdm import tqdm
 
 
 class Graph:
-    def __init__(self):
-        # one for inputs, one for outputs
-        self.layers_activations = np.array([
-            [], []
-        ])
-        # don't need one for inputs
-        self.layers_weights = np.array([
+    def __init__(self, total_layers):
+        self.total_layers = total_layers
 
-        ])
+        # one for inputs, one for outputs
+        self.layers_activations = [
+
+        ]
+        # don't need one for inputs
+        self.layers_weights = [
+
+        ]
         # one for outputs
-        self.layers_bias = np.array([
-            []
-        ])
+        self.layers_bias = [
+
+        ]
 
 
 def sigmoid(values):
@@ -105,84 +107,93 @@ def create_graph(graph, input_nodes, hidden_layers, hidden_layers_nodes, output_
     graph.layers_weights.append(np.random.randn(hidden_layers_nodes, input_nodes) * np.sqrt(2 / input_nodes))
 
     for layer in range(hidden_layers):
-        graph.layers_activations.append([])
-        graph.layers_bias.append([])
-        for n in range(hidden_layers_nodes):
-            graph.layers_bias[layer].append(0)
+        # Creating list(s) per layer to hold our activation vectors.
+        # graph.layers_activations.append(np.array([]))
+
+        # Creating a bias vector for each layer
+        graph.layers_bias.append(np.zeros((hidden_layers_nodes, 1)))
 
         # weights for hidden layers
         graph.layers_weights.append(np.random.randn(hidden_layers_nodes, hidden_layers_nodes) * np.sqrt(2 / hidden_layers_nodes))
 
     # weights for last hidden layer to outputs
-    graph.layers_weights.append(
-        np.random.randn(hidden_layers_nodes, output_nodes) * np.sqrt(2 / hidden_layers_nodes))
+    graph.layers_weights.append(np.random.randn(hidden_layers_nodes, output_nodes) * np.sqrt(2 / hidden_layers_nodes))
+
+    # biases for last layer
+    graph.layers_bias.append(np.zeros((output_nodes, 1)))
 
 
-# training loop
-for i in range(epochs):
-    # choose from training set
-    training_choice = random.randint(0, len(input_training) - 1)
+mygraph = Graph(5)
+create_graph(mygraph, 2, 3, 3, 4)
+print(mygraph.layers_activations)
+print(mygraph.layers_weights)
+print(mygraph.layers_bias)
 
-    # reformat inputs and outputs
-    a0 = np.reshape(np.array(input_training[training_choice]), (len(input_training[training_choice]), 1))
-    c = np.reshape(np.array(output_training[training_choice]), (len(output_training[training_choice]), 1))
-
-    # calculate outputs
-    a1 = sigmoid(np.matmul(w0, a0) + b1)
-    a2 = sigmoid(np.matmul(w1, a1) + b2)
-
-    # calculate gradients
-
-    # second layer
-    d_a2 = -2 * np.subtract(c, a2)
-    d_b2 = sigmoid_prime(np.matmul(w1, a1) + b2) * d_a2
-    d_w1 = np.multiply(np.resize(d_b2, (hidden_1_size, output_size)).T, np.resize(a1.T, (output_size, hidden_1_size)))
-
-    # first layer
-    d_a1 = np.reshape(np.sum(np.multiply(np.resize(d_b2, (hidden_1_size, output_size)), w1.T), axis=1),
-                      (hidden_1_size, 1))
-    d_b1 = sigmoid_prime(np.matmul(w0, a0) + b1) * d_a1
-    d_w0 = np.multiply(np.resize(d_b1, (input_size, hidden_1_size)).T, np.resize(a0.T, (hidden_1_size, input_size)))
-
-    # optimize weights and biases
-
-    w0 = np.subtract(w0, learning_rate * d_w0)
-    b1 = np.subtract(b1, learning_rate * d_b1)
-    w1 = np.subtract(w1, learning_rate * d_w1)
-    b2 = np.subtract(b2, learning_rate * d_b2)
-
-    # error report every few epochs
-
-    if i % return_rate == 0:
-        error = 0
-        for j in range(len(a2)):
-            error += (c[j] - a2[j]) ** 2
-        print(f"Error: {error} ({round(i / epochs * 100)}%)")
-
-# return optimized weights and biases
-print("")
-print("w0:")
-print(w0)
-print("b1:")
-print(b1)
-print("w1:")
-print(w1)
-print("b2:")
-print(b2)
-
-# allow user to test optimized network
-while True:
-    print("")
-    inputs = []
-    for i in range(input_size):
-        inputs.append(float(input("a(0)" + str(i) + ": ")))  # gets inputs
-
-    # forward pass
-    a0 = np.reshape(inputs, (len(inputs), 1))
-    a2 = forward_pass(a0, w0, b1, w1, b2)
-
-    # result
-    print("")
-    print(a2)
-    output_index = np.nanargmax(np.where(a2 == a2.max(), a2, np.nan))
-    print(f"Predicted: {user_outputs[output_index]}")
+# # training loop
+# for i in range(epochs):
+#     # choose from training set
+#     training_choice = random.randint(0, len(input_training) - 1)
+#
+#     # reformat inputs and outputs
+#     a0 = np.reshape(np.array(input_training[training_choice]), (len(input_training[training_choice]), 1))
+#     c = np.reshape(np.array(output_training[training_choice]), (len(output_training[training_choice]), 1))
+#
+#     # calculate outputs
+#     a1 = sigmoid(np.matmul(w0, a0) + b1)
+#     a2 = sigmoid(np.matmul(w1, a1) + b2)
+#
+#     # calculate gradients
+#
+#     # second layer
+#     d_a2 = -2 * np.subtract(c, a2)
+#     d_b2 = sigmoid_prime(np.matmul(w1, a1) + b2) * d_a2
+#     d_w1 = np.multiply(np.resize(d_b2, (hidden_1_size, output_size)).T, np.resize(a1.T, (output_size, hidden_1_size)))
+#
+#     # first layer
+#     d_a1 = np.reshape(np.sum(np.multiply(np.resize(d_b2, (hidden_1_size, output_size)), w1.T), axis=1),
+#                       (hidden_1_size, 1))
+#     d_b1 = sigmoid_prime(np.matmul(w0, a0) + b1) * d_a1
+#     d_w0 = np.multiply(np.resize(d_b1, (input_size, hidden_1_size)).T, np.resize(a0.T, (hidden_1_size, input_size)))
+#
+#     # optimize weights and biases
+#
+#     w0 = np.subtract(w0, learning_rate * d_w0)
+#     b1 = np.subtract(b1, learning_rate * d_b1)
+#     w1 = np.subtract(w1, learning_rate * d_w1)
+#     b2 = np.subtract(b2, learning_rate * d_b2)
+#
+#     # error report every few epochs
+#
+#     if i % return_rate == 0:
+#         error = 0
+#         for j in range(len(a2)):
+#             error += (c[j] - a2[j]) ** 2
+#         print(f"Error: {error} ({round(i / epochs * 100)}%)")
+#
+# # return optimized weights and biases
+# print("")
+# print("w0:")
+# print(w0)
+# print("b1:")
+# print(b1)
+# print("w1:")
+# print(w1)
+# print("b2:")
+# print(b2)
+#
+# # allow user to test optimized network
+# while True:
+#     print("")
+#     inputs = []
+#     for i in range(input_size):
+#         inputs.append(float(input("a(0)" + str(i) + ": ")))  # gets inputs
+#
+#     # forward pass
+#     a0 = np.reshape(inputs, (len(inputs), 1))
+#     a2 = forward_pass(a0, w0, b1, w1, b2)
+#
+#     # result
+#     print("")
+#     print(a2)
+#     output_index = np.nanargmax(np.where(a2 == a2.max(), a2, np.nan))
+#     print(f"Predicted: {user_outputs[output_index]}")
