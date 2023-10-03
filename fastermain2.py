@@ -150,7 +150,7 @@ def forward(graph, inputs):
 
 
 def backward(graph, correct_outputs):
-    correct_outputs = np.reshape(correct_outputs, (len(correct_outputs), 1))
+    correct_outputs = np.reshape(np.array(correct_outputs), (len(correct_outputs), 1))
     activation_list = graph.layers_activations
     weights_list = graph.layers_weights
     bias_list = graph.layers_bias
@@ -169,26 +169,15 @@ def backward(graph, correct_outputs):
     # gradient of weights
     d_weights_list.insert(0, np.multiply(np.resize(d_bias_list[len(d_bias_list) - 1], (len(activation_list[len(activation_list) - 2]),
                         len(activation_list[len(activation_list) - 1]))).T, np.resize(activation_list[len(activation_list) - 2].T, (len(activation_list[len(activation_list) - 1]), len(activation_list[len(activation_list) - 2])))))
-    # print(d_bias_list)
-    # print(weights_list[len(weights_list) - 1].T)
-    # print(np.matmul(weights_list[len(weights_list) - 1].T, d_bias_list))
-    # x = np.multiply(np.resize(d_bias_list[0], (len(activation_list[len(activation_list) - 2]), len(activation_list[len(activation_list) - 1]))), weights_list[len(weights_list) - 1]).T
-    # # x2 = np.multiply(np.resize(d_b2, (hidden_1_size, output_size)), w1.T)
-
     # gradient of activations before last layer
-    # d_activation_list.insert(0, np.reshape(np.sum(np.multiply(np.resize(d_bias_list[len(d_bias_list) - 1], (len(activation_list[len(activation_list) - 2]),
-    #                         len(activation_list[len(activation_list) - 1]))), weights_list[len(weights_list) - 1]).T, axis=1), (len(activation_list[len(activation_list) - 2]), 1)))
-    d_activation_list.insert(0, np.matmul(weights_list[len(weights_list) - 1].T, d_bias_list[0]))
+    d_activation_list.insert(0, np.reshape(np.sum(np.multiply(np.resize(d_bias_list[0], (len(activation_list[len(activation_list) - 2]),
+                            len(activation_list[len(activation_list) - 1]))), weights_list[len(weights_list) - 1].T), axis=1), (len(activation_list[len(activation_list) - 2]), 1)))
 
-    for layer in range(graph.hidden_layers, -1, -1):  # start at last hidden layer, go back until layer = 0
-        print(sigmoid_prime(np.matmul(weights_list[layer - 1], activation_list[layer - 1])))
-        print(d_activation_list)
-        print(bias_list)
-        print(np.multiply(sigmoid_prime(np.matmul(weights_list[layer - 1], activation_list[layer - 1])), d_activation_list[0]))
+    for layer in range(graph.hidden_layers, 0, -1):  # start at last hidden layer, go back until layer = 0
         # gradient of biases
-        d_bias_list.insert(0, np.multiply(sigmoid_prime(
-            np.matmul(weights_list[layer - 1], activation_list[layer - 1]) + bias_list[layer - 1]),
-                    d_activation_list[0]))
+        d_bias_list.insert(0, sigmoid_prime(
+            np.matmul(weights_list[layer - 1], activation_list[layer - 1]) + bias_list[layer - 1]) *
+                    d_activation_list[0])
 
         # gradient of weights
         d_weights_list.insert(0, np.multiply(np.resize(d_bias_list[0], (len(activation_list[layer - 1]),
@@ -196,8 +185,9 @@ def backward(graph, correct_outputs):
 
         # gradient of activation from before last layer
         d_activation_list.insert(0, np.reshape(np.sum(np.multiply(np.resize(d_bias_list[0], (len(activation_list[layer - 1]),
-                                len(activation_list[layer]))), weights_list[layer]).T, axis=1), (len(activation_list[layer - 1]), 1)))
-    print(d_activation_list)
+                                len(activation_list[layer]))), weights_list[layer - 1].T), axis=1), (len(activation_list[layer - 1]), 1)))
+
+    print(d_weights_list)
 
 
 mygraph = Graph()
@@ -221,46 +211,6 @@ for i in range(epochs):
     #             error += (c[j] - a2[j]) ** 2
     #         print(f"Error: {error} ({round(i / epochs * 100)}%)")
 
-
-def backward(graph, correct_outputs):
-    correct_outputs = np.reshape(np.array(correct_outputs), (len(correct_outputs), 1))
-    activation_list = graph.layers_activations
-    weights_list = graph.layers_weights
-    bias_list = graph.layers_bias
-
-    d_activation_list = graph.layers_d_activations
-    d_weights_list = graph.layers_d_weights
-    d_bias_list = graph.layers_d_bias
-
-    # error with respect to last layer
-    d_activation_list.insert(0, -2 * np.subtract(correct_outputs, activation_list[len(activation_list) - 1]))
-
-    # gradient of biases
-    d_bias_list.insert(0, sigmoid_prime(np.matmul(weights_list[len(weights_list) - 1], activation_list[len(activation_list) - 2]) + bias_list[len(bias_list) - 1]) *
-                       d_activation_list[0])
-
-    # gradient of weights
-    d_weights_list.insert(0, np.multiply(np.resize(d_bias_list[len(d_bias_list) - 1], (len(activation_list[len(activation_list) - 2]),
-                        len(activation_list[len(activation_list) - 1]))).T, np.resize(activation_list[len(activation_list) - 2].T, (len(activation_list[len(activation_list) - 1]), len(activation_list[len(activation_list) - 2])))))
-
-    # gradient of activations before last layer
-    d_activation_list.insert(0, np.reshape(np.sum(np.multiply(np.resize(d_bias_list[len(d_bias_list) - 1], (len(activation_list[len(activation_list) - 2]),
-                            len(activation_list[len(activation_list) - 1]))), weights_list[len(weights_list) - 1]).T, axis=1), (len(activation_list[len(activation_list) - 2]), 1)))
-
-    for layer in range(graph.hidden_layers, -1, -1):  # start at last hidden layer, go back until layer = 0
-        # gradient of biases
-        d_bias_list.insert(0, sigmoid_prime(
-            np.matmul(weights_list[layer], activation_list[layer - 1]) + bias_list[layer]) *
-                    d_activation_list[0])
-
-        # gradient of weights
-        d_weights_list.insert(0, np.multiply(np.resize(d_bias_list[0], (len(activation_list[layer - 1]),
-                        len(activation_list[layer]))).T, np.resize(activation_list[layer - 1].T, (len(activation_list[layer]), len(activation_list[layer - 1])))))
-
-        # gradient of activation from before last layer
-        d_activation_list.insert(0, np.reshape(np.sum(np.multiply(np.resize(d_bias_list[0], (len(activation_list[layer - 1]),
-                                len(activation_list[layer]))), weights_list[layer]).T, axis=1), (len(activation_list[layer - 1]), 1)))
-    print(d_activation_list)
 
 #     # calculate gradients
 #

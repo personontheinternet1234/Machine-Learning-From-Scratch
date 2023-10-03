@@ -171,17 +171,13 @@ def backward(graph, correct_outputs):
                         len(activation_list[len(activation_list) - 1]))).T, np.resize(activation_list[len(activation_list) - 2].T, (len(activation_list[len(activation_list) - 1]), len(activation_list[len(activation_list) - 2])))))
 
     # gradient of activations before last layer
-    print(np.resize(d_bias_list[0], (len(activation_list[len(activation_list) - 2]),
-                            len(activation_list[len(activation_list) - 1]))))
-    print(weights_list[len(weights_list) - 1].T)
     d_activation_list.insert(0, np.reshape(np.sum(np.multiply(np.resize(d_bias_list[0], (len(activation_list[len(activation_list) - 2]),
-                            len(activation_list[len(activation_list) - 1]))), weights_list[len(weights_list) - 1]).T, axis=1), (len(activation_list[len(activation_list) - 2]), 1)))
-    # d_a1 = np.reshape(     np.sum(    np.multiply(    np.resize(d_b2, (hidden_1_size, output_size)),      w1.T),    axis=1), (hidden_1_size, 1)    )
+                            len(activation_list[len(activation_list) - 1]))), weights_list[len(weights_list) - 1].T), axis=1), (len(activation_list[len(activation_list) - 2]), 1)))
 
-    for layer in range(graph.hidden_layers, -1, -1):  # start at last hidden layer, go back until layer = 0
+    for layer in range(graph.hidden_layers, 0, -1):  # start at last hidden layer, go back until layer = 0
         # gradient of biases
         d_bias_list.insert(0, sigmoid_prime(
-            np.matmul(weights_list[layer], activation_list[layer - 1]) + bias_list[layer - 1]) *
+            np.matmul(weights_list[layer - 1], activation_list[layer - 1]) + bias_list[layer - 1]) *
                     d_activation_list[0])
 
         # gradient of weights
@@ -190,8 +186,9 @@ def backward(graph, correct_outputs):
 
         # gradient of activation from before last layer
         d_activation_list.insert(0, np.reshape(np.sum(np.multiply(np.resize(d_bias_list[0], (len(activation_list[layer - 1]),
-                                len(activation_list[layer]))), weights_list[layer]).T, axis=1), (len(activation_list[layer - 1]), 1)))
-    print(d_activation_list)
+                                len(activation_list[layer]))), weights_list[layer - 1].T), axis=1), (len(activation_list[layer - 1]), 1)))
+
+    print(d_weights_list)
 
 
 mygraph = Graph()
