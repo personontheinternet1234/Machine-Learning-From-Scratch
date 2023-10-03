@@ -120,8 +120,8 @@ for epoch in range(epochs):
     new_weights = []
     new_biases = []
     for connection in range(layers - 1):
-        new_weights.insert(0, np.subtract(weights[connection], np.multiply(learning_rate, d_weights[connection])))  # fix
-        new_biases.insert(0, np.subtract(biases[connection], np.multiply(learning_rate, d_biases[connection])))  # fix
+        new_weights.insert(0, np.subtract(weights[connection], learning_rate * d_weights[connection]))
+        new_biases.insert(0, np.subtract(biases[connection], learning_rate * d_biases[connection]))
     weights = new_weights
     biases = new_biases
 
