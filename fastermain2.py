@@ -2,11 +2,28 @@ import numpy as np
 import random
 from tqdm import tqdm
 
+
 # NeuralNet.py
 # Isaac Verbrugge & Christian Host-Madsen
 # (program info)
 
 # function definitions
+
+
+class Graph:
+    def __init__(self):
+        # one for inputs, one for outputs
+        self.layers_activations = np.array([
+            [], []
+        ])
+        # don't need one for inputs
+        self.layers_weights = np.array([
+
+        ])
+        # one for outputs
+        self.layers_bias = np.array([
+            []
+        ])
 
 
 def sigmoid(values):
@@ -31,15 +48,17 @@ def relu_prime(values):
     else:
         return 0.1
 
+
 def forward_pass(a0, w0, b1, w1, b2):
     # forward pass
     a1 = sigmoid(np.matmul(w0, a0) + b1)
     a2 = sigmoid(np.matmul(w1, a1) + b2)
-    
+
     return a2
 
+
 # def backpropagate():
-    # ...    
+# ...
 
 
 # code
@@ -75,20 +94,39 @@ output_training = [
 ]
 
 # instantiate weights and biases
-w0 = np.random.randn(hidden_1_size, input_size)
+w0 = np.random.randn(hidden_1_size, input_size)  # going_to x from
 b1 = np.zeros((hidden_1_size, 1))
 w1 = np.random.randn(output_size, hidden_1_size)
 b2 = np.zeros((output_size, 1))
+
+
+def create_graph(graph, input_nodes, hidden_layers, hidden_layers_nodes, output_nodes):
+    # weights for input
+    graph.layers_weights.append(np.random.randn(hidden_layers_nodes, input_nodes) * np.sqrt(2 / input_nodes))
+
+    for layer in range(hidden_layers):
+        graph.layers_activations.append([])
+        graph.layers_bias.append([])
+        for n in range(hidden_layers_nodes):
+            graph.layers_bias[layer].append(0)
+
+        # weights for hidden layers
+        graph.layers_weights.append(np.random.randn(hidden_layers_nodes, hidden_layers_nodes) * np.sqrt(2 / hidden_layers_nodes))
+
+    # weights for last hidden layer to outputs
+    graph.layers_weights.append(
+        np.random.randn(hidden_layers_nodes, output_nodes) * np.sqrt(2 / hidden_layers_nodes))
+
 
 # training loop
 for i in range(epochs):
     # choose from training set
     training_choice = random.randint(0, len(input_training) - 1)
-    
+
     # reformat inputs and outputs
     a0 = np.reshape(np.array(input_training[training_choice]), (len(input_training[training_choice]), 1))
     c = np.reshape(np.array(output_training[training_choice]), (len(output_training[training_choice]), 1))
-    
+
     # calculate outputs
     a1 = sigmoid(np.matmul(w0, a0) + b1)
     a2 = sigmoid(np.matmul(w1, a1) + b2)
@@ -99,12 +137,13 @@ for i in range(epochs):
     d_a2 = -2 * np.subtract(c, a2)
     d_b2 = sigmoid_prime(np.matmul(w1, a1) + b2) * d_a2
     d_w1 = np.multiply(np.resize(d_b2, (hidden_1_size, output_size)).T, np.resize(a1.T, (output_size, hidden_1_size)))
-    
+
     # first layer
-    d_a1 = np.reshape(np.sum(np.multiply(np.resize(d_b2, (hidden_1_size, output_size)), w1.T), axis=1), (hidden_1_size, 1))
+    d_a1 = np.reshape(np.sum(np.multiply(np.resize(d_b2, (hidden_1_size, output_size)), w1.T), axis=1),
+                      (hidden_1_size, 1))
     d_b1 = sigmoid_prime(np.matmul(w0, a0) + b1) * d_a1
     d_w0 = np.multiply(np.resize(d_b1, (input_size, hidden_1_size)).T, np.resize(a0.T, (hidden_1_size, input_size)))
-    
+
     # optimize weights and biases
 
     w0 = np.subtract(w0, learning_rate * d_w0)
@@ -141,7 +180,7 @@ while True:
     # forward pass
     a0 = np.reshape(inputs, (len(inputs), 1))
     a2 = forward_pass(a0, w0, b1, w1, b2)
-  
+
     # result
     print("")
     print(a2)

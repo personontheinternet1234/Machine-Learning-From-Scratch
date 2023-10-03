@@ -1,8 +1,5 @@
-import cv2
-
 import nodes
 import numpy as np
-from matplotlib import pyplot as plt
 import math
 from tqdm import tqdm
 
