@@ -11,8 +11,8 @@ from tqdm import tqdm
 
 
 class Graph:
-    def __init__(self, total_layers):
-        self.total_layers = total_layers
+    def __init__(self):
+        self.hidden_layers = "ERROR"
 
         # one for inputs, one for outputs
         self.layers_activations = [
@@ -26,6 +26,30 @@ class Graph:
         self.layers_bias = [
 
         ]
+
+
+def create_graph(graph, input_nodes, hidden_layers, hidden_layers_nodes, output_nodes):
+    graph.hidden_layers = hidden_layers
+
+    # weights for input
+    graph.layers_weights.append(np.random.randn(hidden_layers_nodes, input_nodes) * np.sqrt(2 / input_nodes))  # Xavier initialization
+
+    for layer in range(hidden_layers):
+        # Creating list(s) per layer to hold our activation vectors.
+        # graph.layers_activations.append(np.array([]))
+
+        # Creating a bias vector for each layer
+        graph.layers_bias.append(np.zeros((hidden_layers_nodes, 1)))
+
+        if layer != 0:
+            # weights for hidden layers, except last to output cus that is different dimensions
+            graph.layers_weights.append(np.random.randn(hidden_layers_nodes, hidden_layers_nodes) * np.sqrt(2 / hidden_layers_nodes))
+
+    # weights for last hidden layer to outputs
+    graph.layers_weights.append(np.random.randn(output_nodes, hidden_layers_nodes) * np.sqrt(2 / hidden_layers_nodes))
+
+    # biases for last layer
+    graph.layers_bias.append(np.zeros((output_nodes, 1)))
 
 
 def sigmoid(values):
@@ -58,12 +82,6 @@ def forward_pass(a0, w0, b1, w1, b2):
 
     return a2
 
-
-# def backpropagate():
-# ...
-
-
-# code
 
 # user output index
 user_outputs = ["1", "2"]
@@ -102,32 +120,49 @@ w1 = np.random.randn(output_size, hidden_1_size)
 b2 = np.zeros((output_size, 1))
 
 
-def create_graph(graph, input_nodes, hidden_layers, hidden_layers_nodes, output_nodes):
-    # weights for input
-    graph.layers_weights.append(np.random.randn(hidden_layers_nodes, input_nodes) * np.sqrt(2 / input_nodes))
+def forward(graph, inputs, correct_outputs):
+    inputs = np.reshape(np.array(inputs), (len(inputs), 1))
+    correct_outputs = np.reshape(np.array(correct_outputs), (len(correct_outputs), 1))
 
-    for layer in range(hidden_layers):
-        # Creating list(s) per layer to hold our activation vectors.
-        # graph.layers_activations.append(np.array([]))
+    graph.layers_activations.append(inputs)
+    result = np.matmul(graph.layers_weights[0], graph.layers_activations[0])
+    result = np.add(result, graph.layers_bias[0])
+    result = sigmoid(result)
+    graph.layers_activations.append(result)
 
-        # Creating a bias vector for each layer
-        graph.layers_bias.append(np.zeros((hidden_layers_nodes, 1)))
-
-        # weights for hidden layers
-        graph.layers_weights.append(np.random.randn(hidden_layers_nodes, hidden_layers_nodes) * np.sqrt(2 / hidden_layers_nodes))
-
-    # weights for last hidden layer to outputs
-    graph.layers_weights.append(np.random.randn(hidden_layers_nodes, output_nodes) * np.sqrt(2 / hidden_layers_nodes))
-
-    # biases for last layer
-    graph.layers_bias.append(np.zeros((output_nodes, 1)))
+    for layer in range(1, graph.hidden_layers + 1):  # now repeat for every layer from first hidden going forward
+        result = np.matmul(graph.layers_weights[layer], graph.layers_activations[layer])
+        result = np.add(result, graph.layers_bias[layer])
+        result = sigmoid(result)
+        graph.layers_activations.append(result)
 
 
-mygraph = Graph(5)
+def backward():
+    ...
+
+
+mygraph = Graph()
 create_graph(mygraph, 2, 3, 3, 4)
-print(mygraph.layers_activations)
-print(mygraph.layers_weights)
-print(mygraph.layers_bias)
+
+
+epochs = 1
+for i in range(epochs):
+    # choose from training set
+    training_index_choice = random.randint(0, len(input_training) - 1)
+    input_choice = input_training[training_index_choice]
+    output_choice = output_training[training_index_choice]
+
+    forward(mygraph, input_choice, output_choice)
+    print(mygraph.layers_activations)
+    backward()
+
+    # error report every few epochs
+    #     if i % return_rate == 0:
+    #         error = 0
+    #         for j in range(len(a2)):
+    #             error += (c[j] - a2[j]) ** 2
+    #         print(f"Error: {error} ({round(i / epochs * 100)}%)")
+
 
 # # training loop
 # for i in range(epochs):
