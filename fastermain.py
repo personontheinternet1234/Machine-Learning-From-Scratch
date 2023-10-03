@@ -1,6 +1,12 @@
+# NeuralNet.py
+# Isaac Verbrugge & Christian Host-Madsen
+# (program info)
+
 import numpy as np
 import random
 from tqdm import tqdm
+
+# function definitions
 
 # class NonLinearity:
     
@@ -24,7 +30,6 @@ from tqdm import tqdm
 # class Error:
 #     ...
 
-
 def sigmoid(values):
     output = 1 / (1 + np.exp(-1 * values))
     return output
@@ -47,37 +52,7 @@ def relu_prime(values):
     else:
         return 0.1
 
-# training data
-input_training = [
-    [0, 0],
-    [0, 1],
-    [1, 0],
-    [1, 1]
-]
-output_training = [
-    [0, 0],
-    [0, 1],
-    [1, 0],
-    [0.5, 0.5]
-]
 
-# user output index
-user_outputs = ["0", "1"]
-
-# add hidden layers when necessary
-input_size = 2
-hidden_layers = 2  # update for this later
-hidden_sizes = [3, 2]  # update for this later
-hidden_1_size = 3
-output_size = 2
-epochs = 10000
-learning_rate = 0.01
-
-# instantiate weights and biases
-w0 = np.random.randn(hidden_1_size, input_size)
-b1 = np.zeros((hidden_1_size, 1))
-w1 = np.random.randn(output_size, hidden_1_size)  # to x from
-b2 = np.zeros((output_size, 1))
 
 def forward(training_choice):
     # forward pass # this works i think
@@ -94,6 +69,8 @@ def forward(training_choice):
     a2 = sigmoid(np.matmul(w1, a1) + b2)
 
     return a2
+
+# learning algorithm
 
 def backward():  # calculate gradients
     global w0
@@ -114,19 +91,50 @@ def backward():  # calculate gradients
     # optimize weights and biases
 
     w0 = np.subtract(w0, learning_rate * d_w0)
-    # print(d_w0)
-    # print(w0)
     b1 = np.subtract(b1, learning_rate * d_b1)
-    # print(d_b1)
-    # print(b1)
     w1 = np.subtract(w1, learning_rate * d_w1)
-    # print(d_w1)
-    # print(w1)
     b2 = np.subtract(b2, learning_rate * d_b2)
-    # print(d_b2)
-    # print(b2)
+
+# main code
+
+# user output index
+user_outputs = ["0", "1"]
+
+# neural network structure
+input_size = 2
+hidden_layers = 2  # update for this later
+hidden_sizes = [3, 2]  # update for this later
+hidden_1_size = 3  # write this out
+output_size = 2
+
+# learning presets
+learn = True  # add this functionality, add ability to choose original weights and biases
+epochs = 100000
+return_rate = 1000
+learning_rate = 0.01
+
+# training data
+input_training = [
+    [0, 0],
+    [0, 1],
+    [1, 0],
+    [1, 1]
+]
+output_training = [
+    [0, 0],
+    [0, 1],
+    [1, 0],
+    [0.5, 0.5]
+]
+
+# instantiate weights and biases
+w0 = np.random.randn(hidden_1_size, input_size)
+b1 = np.zeros((hidden_1_size, 1))
+w1 = np.random.randn(output_size, hidden_1_size)
+b2 = np.zeros((output_size, 1))
 
 # training loop
+
 for i in range(epochs):
     # choose from training set
     training_choice = random.randint(0, len(input_training) - 1)
@@ -134,8 +142,8 @@ for i in range(epochs):
     forward(training_choice)
     backward()
 
-    # MSE
-    if i % 100 == 0:
+    # MSE  # broken
+    if i % return_rate == 0:
         error = 0
         for point in range(len(input_training) - 1):
             calculatedoutputs = forward(point)
