@@ -82,10 +82,7 @@ def relu(values):
 
 
 def relu_prime(values):
-    if values > 0:
-        return 1
-    else:
-        return 0.1
+    return np.where(values > 0, 1, 0.1)
 
 
 def forward_pass(a0, w0, b1, w1, b2):
@@ -108,8 +105,7 @@ output_size = 2
 
 # learning presets
 learn = True  # add this functionality, add ability to choose original weights and biases
-epochs = 100000
-return_rate = 1000
+epochs = 10000
 learning_rate = 0.01
 
 # training data
@@ -126,12 +122,6 @@ output_training = [
     [0, 0]
 ]
 
-# instantiate weights and biases
-w0 = np.random.randn(hidden_1_size, input_size)  # going_to x from
-b1 = np.zeros((hidden_1_size, 1))
-w1 = np.random.randn(output_size, hidden_1_size)
-b2 = np.zeros((output_size, 1))
-
 
 def forward(graph, inputs):
     inputs = np.reshape(np.array(inputs), (len(inputs), 1))
@@ -139,14 +129,18 @@ def forward(graph, inputs):
     graph.layers_activations.append(inputs)
     result = np.matmul(graph.layers_weights[0], graph.layers_activations[0])
     result = np.add(result, graph.layers_bias[0])
-    result = sigmoid(result)
+    result = relu(result)
     graph.layers_activations.append(result)
 
     for layer in range(1, graph.hidden_layers + 1):  # now repeat for every layer from first hidden going forward
         result = np.matmul(graph.layers_weights[layer], graph.layers_activations[layer])
         result = np.add(result, graph.layers_bias[layer])
-        result = sigmoid(result)
+        result = relu(result)
         graph.layers_activations.append(result)
+
+    return graph.layers_activations[-1]
+
+
 
 
 def backward(graph, correct_outputs):
@@ -163,7 +157,7 @@ def backward(graph, correct_outputs):
     d_activation_list.insert(0, -2 * np.subtract(correct_outputs, activation_list[len(activation_list) - 1]))
 
     # gradient of biases
-    d_bias_list.insert(0, sigmoid_prime(np.matmul(weights_list[len(weights_list) - 1], activation_list[len(activation_list) - 2]) + bias_list[len(bias_list) - 1]) *
+    d_bias_list.insert(0, relu_prime(np.matmul(weights_list[len(weights_list) - 1], activation_list[len(activation_list) - 2]) + bias_list[len(bias_list) - 1]) *
                        d_activation_list[0])
 
     # gradient of weights
@@ -175,7 +169,7 @@ def backward(graph, correct_outputs):
 
     for layer in range(graph.hidden_layers, 0, -1):  # start at last hidden layer, go back until layer = 0
         # gradient of biases
-        d_bias_list.insert(0, sigmoid_prime(
+        d_bias_list.insert(0, relu_prime(
             np.matmul(weights_list[layer - 1], activation_list[layer - 1]) + bias_list[layer - 1]) *
                     d_activation_list[0])
 
@@ -187,14 +181,17 @@ def backward(graph, correct_outputs):
         d_activation_list.insert(0, np.reshape(np.sum(np.multiply(np.resize(d_bias_list[0], (len(activation_list[layer - 1]),
                                 len(activation_list[layer]))), weights_list[layer - 1].T), axis=1), (len(activation_list[layer - 1]), 1)))
 
-    print(d_weights_list)
+    for weight_index in range(len(mygraph.layers_weights)):
+        mygraph.layers_weights[weight_index] = np.subtract(mygraph.layers_weights[weight_index], learning_rate * d_weights_list[weight_index])
+    for bias_index in range(len(mygraph.layers_bias)):
+        mygraph.layers_bias[bias_index] = np.subtract(mygraph.layers_bias[bias_index], learning_rate * d_bias_list[bias_index])
+
+    graph.layers_activations = []
 
 
 mygraph = Graph()
-create_graph(mygraph, 2, 2, 3, 2)
+create_graph(mygraph, 2, 5, 5, 2)
 
-
-epochs = 1
 for i in range(epochs):
     # choose from training set
     training_index_choice = random.randint(0, len(input_training) - 1)
@@ -204,66 +201,19 @@ for i in range(epochs):
     forward(mygraph, input_choice)
     backward(mygraph, output_choice)
 
-    # error report every few epochs
-    #     if i % return_rate == 0:
-    #         error = 0
-    #         for j in range(len(a2)):
-    #             error += (c[j] - a2[j]) ** 2
-    #         print(f"Error: {error} ({round(i / epochs * 100)}%)")
+correct_outputs = np.reshape(np.array(output_choice), (len(output_choice), 1))
+print(f"Error: {np.sum(np.subtract(output_choice, forward(mygraph, input_choice)) ** 2)}")
+mygraph.layers_activations = []  # clear activations
 
+# return optimized weights and biases
+print(mygraph.layers_weights)
+print(mygraph.layers_bias)
 
-#     # calculate gradients
-#
-#     # second layer
-#     d_a2 = -2 * np.subtract(c, a2)
-#     d_b2 = sigmoid_prime(np.matmul(w1, a1) + b2) * d_a2
-#     d_w1 = np.multiply(np.resize(d_b2, (hidden_1_size, output_size)).T, np.resize(a1.T, (output_size, hidden_1_size)))
-#
-#     # first layer
-#     d_a1 = np.reshape(np.sum(np.multiply(np.resize(d_b2, (hidden_1_size, output_size)), w1.T), axis=1),
-#                       (hidden_1_size, 1))
-#     d_b1 = sigmoid_prime(np.matmul(w0, a0) + b1) * d_a1
-#     d_w0 = np.multiply(np.resize(d_b1, (input_size, hidden_1_size)).T, np.resize(a0.T, (hidden_1_size, input_size)))
-#
-#     # optimize weights and biases
-#
-#     w0 = np.subtract(w0, learning_rate * d_w0)
-#     b1 = np.subtract(b1, learning_rate * d_b1)
-#     w1 = np.subtract(w1, learning_rate * d_w1)
-#     b2 = np.subtract(b2, learning_rate * d_b2)
-#
-#     # error report every few epochs
-#
-#     if i % return_rate == 0:
-#         error = 0
-#         for j in range(len(a2)):
-#             error += (c[j] - a2[j]) ** 2
-#         print(f"Error: {error} ({round(i / epochs * 100)}%)")
-#
-# # return optimized weights and biases
-# print("")
-# print("w0:")
-# print(w0)
-# print("b1:")
-# print(b1)
-# print("w1:")
-# print(w1)
-# print("b2:")
-# print(b2)
-#
-# # allow user to test optimized network
-# while True:
-#     print("")
-#     inputs = []
-#     for i in range(input_size):
-#         inputs.append(float(input("a(0)" + str(i) + ": ")))  # gets inputs
-#
-#     # forward pass
-#     a0 = np.reshape(inputs, (len(inputs), 1))
-#     a2 = forward_pass(a0, w0, b1, w1, b2)
-#
-#     # result
-#     print("")
-#     print(a2)
-#     output_index = np.nanargmax(np.where(a2 == a2.max(), a2, np.nan))
-#     print(f"Predicted: {user_outputs[output_index]}")
+# allow user to test optimized network
+while True:
+    user_test = []
+    for i in range(len(mygraph.layers_weights[0][0])):
+        activation = float(input(f"activation for node {i}: "))
+        user_test.append(activation)
+    print(forward(mygraph, user_test))
+    mygraph.layers_activations = []  # clear activations
