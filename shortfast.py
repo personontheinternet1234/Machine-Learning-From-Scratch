@@ -41,7 +41,7 @@ layer_sizes = [2, 3, 4, 2]
 
 # learning presets
 learn = True  # add this functionality, add ability to choose original weights and biases
-non_linearity = "sigmoid"  # add this functionality
+non_linearity = "leaky_relu"  # add this functionality
 error_analysis = "SSR"  # add this functionality
 error_report_type = "SSR"  # add this functionality
 epochs = 3
@@ -95,26 +95,40 @@ for epoch in range(epochs):
     # forward pass
     activations = [activation]
     for layer in range(layers - 1):
-        activation = sigmoid(np.matmul(weights[layer], activations) + biases[layer])
+        activation = relu(np.matmul(weights[layer], activations) + biases[layer])
         activations.append(activation)
 
-    # calculate gradients
+    # calculate gradients  # broken
     d_activations = []
     d_weights = []
     d_biases = []
     
-    d_activations.insert(0, np.multiply(-2, np.subtract(expected_values, activations[layers - 1])))
+    # d_activations.insert(0, np.multiply(-2, np.subtract(expected_values, activations[layers - 1])))
 
-    for layer in range(layers - 1):
-        d_bias = sigmoid_prime(np.matmul(weights[IDK], activations[IDK])) * d_activations[0]
-        d_biases.insert(0, d_bias)
-        d_weight = np.multiply(np.resize(d_biases[0], (layer_sizes[IDK], layer_sizes[IDK])).T, np.resize(activations[IDK], (layer_sizes[IDK], layer_sizes[IDK])))
-        d_weights.insert(0, d_weight)
-        d_activation = 1
-        d_activations.insert(0, d_activation)
+    # for layer in range(layers - 1):
+    #     d_bias = sigmoid_prime(np.matmul(weights[IDK], activations[IDK])) * d_activations[0]
+    #     d_biases.insert(0, d_bias)
+    #     d_weight = np.multiply(np.resize(d_biases[0], (layer_sizes[IDK], layer_sizes[IDK])).T, np.resize(activations[IDK], (layer_sizes[IDK], layer_sizes[IDK])))
+    #     d_weights.insert(0, d_weight)
+    #     d_activation = 1
+    #     d_activations.insert(0, d_activation)
 
-    # d_biases.insert
-    # d_weights.insert
+    # error with respect to last layer
+    d_activations.insert(0, -2 * np.subtract(expected_values, activations[-1]))
+
+    for layer in range(layers - 1, 0, -1):  # start at last hidden layer, go back until layer = 0
+        # gradient of biases
+        earlier = relu_prime(np.matmul(weights_list[layer - 1], activation_list[layer - 1])
+        d_biases.insert(0, earlier + bias_list[layer - 1]) *
+                    d_activation_list[0])
+
+        # gradient of weights
+        d_weights_list.insert(0, np.multiply(np.resize(d_bias_list[0], (len(activation_list[layer - 1]),
+                        len(activation_list[layer]))).T, np.resize(activation_list[layer - 1].T, (len(activation_list[layer]), len(activation_list[layer - 1])))))
+
+        # gradient of activation from before last layer
+        d_activation_list.insert(0, np.reshape(np.sum(np.multiply(np.resize(d_bias_list[0], (len(activation_list[layer - 1]),
+                                len(activation_list[layer]))), weights_list[layer - 1].T), axis=1), (len(activation_list[layer - 1]), 1)))
     
     # optimize weights and biases
     new_weights = []
@@ -149,7 +163,7 @@ while True:
     # forward pass
     activations = np.reshape(inputs, (len(inputs), 1))
     for layer in range(layers - 1):
-        activations = sigmoid(np.matmul(weights[layer], activations) + biases[layer])
+        activations = relu(np.matmul(weights[layer], activations) + biases[layer])
 
     # result
     print("")
