@@ -81,7 +81,7 @@ w1 = np.ones((output_size, hidden_1_size))
 b2 = np.zeros((output_size, 1))
 
 # training loop
-for i in range(2):
+for i in range(1):
     # choose from training set
     training_choice = 1
 

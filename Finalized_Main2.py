@@ -4,13 +4,7 @@ import numpy as np
 import random
 from tqdm import tqdm  # maybe won't use
 
-"""
-This program uses the nodes structure to practice basic backpropagation.
-Made from scratch (No tutorials, no pytorch).
-Version: 1.0
-Author: Isaac Park Verbrugge, Christian Host-Madsen
-"""
-
+# classes and definitions
 
 def sigmoid(values):
     output = 1 / (1 + np.exp(-1 * values))
@@ -23,7 +17,7 @@ def sigmoid_prime(values):
     return output
 
 
-def relu(values):  # Leaky rectified linear activation function
+def relu(values):
     output = np.maximum(0.1 * values, values)
     return output
 
@@ -32,25 +26,25 @@ def relu_prime(values):
     return np.where(values > 0, 1, 0.1)
 
 
-# forward pass
-def forward(inputs):
-    global activations
-    activations = [inputs]
-    for layer in range(layers - 1):
-        activation = relu(np.matmul(weights[layer], activations[-1]) + biases[layer])
-        activations.append(activation)
+# def make_vertical(vector):
+#     ...
 
+
+# network presets
 
 # user indexes
 input_index = ["a(0)0", "a(0)1"]
 output_index = ["1", "2"]
+
+# neural network structure
+layer_sizes = [2, 3, 2]
 
 # learning presets
 learn = True  # add this functionality, add ability to choose original weights and biases
 non_linearity = "sigmoid"  # add this functionality
 error_analysis = "SSR"  # add this functionality
 error_report_type = "SSR"  # add this functionality
-epochs = 10000
+epochs = 100000
 return_rate = 1000
 learning_rate = 0.01
 
@@ -77,34 +71,36 @@ output_training = [
     [0, 0]
 ]
 
-# neural network structure
-layer_sizes = [2, 3, 2]
+# network formation
+
 layers = len(layer_sizes)
 # instantiate weights and biases
 weights = []
 biases = []
 
 # for i in range(layers - 1):
-#     weights.append(np.random.randn(layer_sizes[i + 1], layer_sizes[i]) * np.sqrt(2 / layer_sizes[i]))  # Xavier Initialization
+#     weights.append(np.random.randn(layer_sizes[i + 1], layer_sizes[i]))
 #     biases.append(np.zeros((layer_sizes[i + 1], 1)))
+
 for i in range(layers - 1):
     weights.append(np.ones((layer_sizes[i + 1], layer_sizes[i])))
     biases.append(np.zeros((layer_sizes[i + 1], 1)))
 
-epochs = 1
-
 # training loop
-for epoch in range(epochs):
+for epoch in range(1):
     # choose from training set
     training_choice = random.randint(0, len(input_training) - 1)
-    training_choice = 1
+    # training_choice = 1
 
     # reformat inputs and outputs
-    inputs = np.reshape(np.array(input_training[training_choice]), (len(input_training[training_choice]), 1))
+    activation = np.reshape(np.array(input_training[training_choice]), (len(input_training[training_choice]), 1))
     expected_values = np.reshape(np.array(output_training[training_choice]), (len(output_training[training_choice]), 1))
 
     # forward pass
-    forward(inputs)
+    activations = [activation]
+    for layer in range(layers - 1):
+        activation = relu(np.matmul(weights[layer], activation) + biases[layer])
+        activations.append(activation)
 
     # calculate gradients
     d_activations = []
@@ -116,11 +112,13 @@ for epoch in range(epochs):
 
     for layer in range(layers - 2, -1, -1):  # start at last hidden layer, go back until layer = 0
         # gradient of biases
+        x = relu_prime(np.matmul(weights[layer], activations[layer]))
+        y = x + biases[layer]
         d_b = relu_prime(np.matmul(weights[layer], activations[layer]) + biases[layer]) * d_activations[0]
         d_biases.insert(0, d_b)
 
         # gradient of weights
-        upstream = np.resize(d_biases[0], (len(activations[layer]), len(activations[layer + 1]))).T
+        upstream = np.resize(d_biases[0], (len(activations[layer]), len(activations[layer + 1]))).T,
         y = np.resize(activations[layer].T, (len(activations[layer + 1]), len(activations[layer])))
 
         d_w = np.multiply(upstream[0], y)
@@ -144,19 +142,9 @@ for epoch in range(epochs):
     # error report
     if epoch % return_rate == 0:
         error = 0
-        for i in range(len(input_training)):
-            # reformat inputs and outputs
-            inputs = np.reshape(np.array(input_training[i]),
-                                    (len(input_training[i]), 1))
-            expected_values = np.reshape(np.array(output_training[i]),
-                                         (len(output_training[i]), 1))
-
-            forward(inputs)
-
-            error += np.sum(np.subtract(expected_values, activations[-1]) ** 2)
-        error /= len(input_training)
-        print(f"({round((epoch / epochs) * 100)}%) MSE: {error}")
-print()
+        for j in range(len(activations[-1])):
+            error += (expected_values[j] - activations[-1][j]) ** 2
+        print(f"({round((epoch / epochs) * 100)}%) Error: {error}")
 
 # else
 if not learn:
@@ -165,16 +153,23 @@ if not learn:
     biases = set_biases
 
 # finalized network application
+
 while True:
     # get inputs
+    print("")
     inputs = []
-    for input_node in range(layer_sizes[0]):
-        inputs.append(float(input(f"{input_index[input_node]}: ")))
+    for activation in range(layer_sizes[0]):
+        inputs.append(float(input(f"{input_index[activation]}: ")))
 
     # forward pass
-    inputs = np.reshape(inputs, (len(inputs), 1))
-    forward(inputs)
+    activations = np.reshape(inputs, (len(inputs), 1))
+    for layer in range(layers - 1):
+        activations = relu(np.matmul(weights[layer], activations) + biases[layer])
 
     # result
-    print(activations[-1])
-    print(f"Outputted: {output_index[np.nanargmax(activations[-1])]}")
+    print("")
+    print(activations)
+    output_number = np.nanargmax(np.where(activations == activations.max(), activations, np.nan))
+    print(f"Outputted: {output_index[output_number]}")
+
+# yay!
