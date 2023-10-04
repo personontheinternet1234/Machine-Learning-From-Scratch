@@ -33,6 +33,12 @@ def relu_prime(values):
     return np.where(values > 0, 1, 0.1)
 
 
+def reformat(training_choice):
+    inputs = np.reshape(np.array(input_training[training_choice]), (len(input_training[training_choice]), 1))
+    expected_values = np.reshape(np.array(output_training[training_choice]), (len(output_training[training_choice]), 1))
+    return inputs, expected_values
+
+
 # forward pass
 def forward(inputs):
     global activations
@@ -42,6 +48,7 @@ def forward(inputs):
         activations.append(activation)
 
 
+# backpropagation
 def backward():
     # global expected_values
     # global activations
@@ -75,12 +82,8 @@ def backward():
         d_activations.insert(0, d_a)
 
     for layer in range(layers - 2, -1, -1):
-        print(d_weights[layer])
-        print(d_biases[layer])
-
         weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
         biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
-
 
 # user indexes
 input_index = ["a(0)0", "a(0)1"]
@@ -125,25 +128,17 @@ layers = len(layer_sizes)
 weights = []
 biases = []
 
-# for i in range(layers - 1):
-#     weights.append(np.random.randn(layer_sizes[i + 1], layer_sizes[i]) * np.sqrt(2 / layer_sizes[i]))  # Xavier Initialization
-#     biases.append(np.zeros((layer_sizes[i + 1], 1)))
-
 for i in range(layers - 1):
-    weights.append(np.ones((layer_sizes[i + 1], layer_sizes[i])))
+    weights.append(np.random.randn(layer_sizes[i + 1], layer_sizes[i]) * np.sqrt(2 / layer_sizes[i]))  # Xavier Initialization
     biases.append(np.zeros((layer_sizes[i + 1], 1)))
-
-epochs = 1
 
 # training loop
 for epoch in range(epochs):
     # choose from training set
     training_choice = random.randint(0, len(input_training) - 1)
-    training_choice = 1
 
     # reformat inputs and outputs
-    inputs = np.reshape(np.array(input_training[training_choice]), (len(input_training[training_choice]), 1))
-    expected_values = np.reshape(np.array(output_training[training_choice]), (len(output_training[training_choice]), 1))
+    inputs, expected_values = reformat(training_choice)
 
     # forward pass
     forward(inputs)
@@ -156,16 +151,12 @@ for epoch in range(epochs):
         error = 0
         for i in range(len(input_training)):
             # reformat inputs and outputs
-            inputs = np.reshape(np.array(input_training[i]),
-                                    (len(input_training[i]), 1))
-            expected_values = np.reshape(np.array(output_training[i]),
-                                         (len(output_training[i]), 1))
+            inputs, expected_values = reformat(training_choice)
 
             forward(inputs)
 
             error += np.sum(np.subtract(expected_values, activations[-1]) ** 2)
-        error /= len(input_training)
-        print(f"({round((epoch / epochs) * 100)}%) MSE: {error}")
+        print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
 print()
 
 # else
