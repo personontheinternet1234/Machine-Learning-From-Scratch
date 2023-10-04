@@ -10,6 +10,7 @@ Made from scratch (No tutorials, no pytorch).
 Version: 1.0
 Author: Isaac Park Verbrugge, Christian Host-Madsen
 """
+activations = []
 
 
 def sigmoid(values):
@@ -39,6 +40,46 @@ def forward(inputs):
     for layer in range(layers - 1):
         activation = relu(np.matmul(weights[layer], activations[-1]) + biases[layer])
         activations.append(activation)
+
+
+def backward():
+    # global expected_values
+    # global activations
+    # global weights
+    # global biases
+
+    d_activations = []
+    d_weights = []
+    d_biases = []
+
+    # error with respect to last layer
+    d_activations.insert(0, -2 * np.subtract(expected_values, activations[-1]))
+
+    for layer in range(layers - 2, -1, -1):  # start at last hidden layer, go back until layer = 0
+        # gradient of biases
+        d_b = relu_prime(np.matmul(weights[layer], activations[layer]) + biases[layer]) * d_activations[0]
+        d_biases.insert(0, d_b)
+
+        # gradient of weights
+        upstream = np.resize(d_biases[0], (len(activations[layer]), len(activations[layer + 1]))).T
+        local = np.resize(activations[layer].T, (len(activations[layer + 1]), len(activations[layer])))
+
+        d_w = np.multiply(upstream, local)
+        d_weights.insert(0, d_w)
+
+        # gradient of activations
+        upstream = np.resize(d_biases[0], (len(activations[layer]), len(activations[layer + 1])))
+        totals = np.sum(np.multiply(upstream, weights[layer].T), axis=1)
+
+        d_a = np.reshape(totals, (len(activations[layer]), 1))
+        d_activations.insert(0, d_a)
+
+    for layer in range(layers - 2, -1, -1):
+        print(d_weights[layer])
+        print(d_biases[layer])
+
+        weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
+        biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
 
 
 # user indexes
@@ -87,6 +128,7 @@ biases = []
 # for i in range(layers - 1):
 #     weights.append(np.random.randn(layer_sizes[i + 1], layer_sizes[i]) * np.sqrt(2 / layer_sizes[i]))  # Xavier Initialization
 #     biases.append(np.zeros((layer_sizes[i + 1], 1)))
+
 for i in range(layers - 1):
     weights.append(np.ones((layer_sizes[i + 1], layer_sizes[i])))
     biases.append(np.zeros((layer_sizes[i + 1], 1)))
@@ -107,39 +149,7 @@ for epoch in range(epochs):
     forward(inputs)
 
     # calculate gradients
-    d_activations = []
-    d_weights = []
-    d_biases = []
-
-    # error with respect to last layer
-    d_activations.insert(0, -2 * np.subtract(expected_values, activations[-1]))
-
-    for layer in range(layers - 2, -1, -1):  # start at last hidden layer, go back until layer = 0
-        # gradient of biases
-        d_b = relu_prime(np.matmul(weights[layer], activations[layer]) + biases[layer]) * d_activations[0]
-        d_biases.insert(0, d_b)
-
-        # gradient of weights
-        upstream = np.resize(d_biases[0], (len(activations[layer]), len(activations[layer + 1]))).T
-        y = np.resize(activations[layer].T, (len(activations[layer + 1]), len(activations[layer])))
-
-        d_w = np.multiply(upstream, y)
-        d_weights.insert(0, d_w)
-
-        # gradient of activations
-        upstream = np.resize(d_biases[0], (len(activations[layer]), len(activations[layer + 1])))
-        totals = np.sum(np.multiply(upstream, weights[layer].T), axis=1)
-        # print(f"layer:{layer}")
-        # print(totals, "\n", len(activations[layer]))
-        d_a = np.reshape(totals, (len(activations[layer]), 1))
-        d_activations.insert(0, d_a)
-
-    for layer in range(layers - 2, -1, -1):
-        print(d_weights[layer])
-        print(d_biases[layer])
-
-        weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
-        biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
+    backward()
 
     # error report
     if epoch % return_rate == 0:
