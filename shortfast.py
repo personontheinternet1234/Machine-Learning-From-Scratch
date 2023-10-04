@@ -37,7 +37,7 @@ input_index = ["a(0)0", "a(0)1"]
 output_index = ["1", "2"]
 
 # neural network structure
-layer_sizes = [2, 3, 3, 2]
+layer_sizes = [2, 3, 2]
 
 # learning presets
 learn = True  # add this functionality, add ability to choose original weights and biases
@@ -74,7 +74,6 @@ output_training = [
 # network formation
 
 layers = len(layer_sizes)
-# if learn: indent afterwards
 # instantiate weights and biases
 weights = []
 biases = []
@@ -83,7 +82,11 @@ for i in range(layers - 1):
     weights.append(np.random.randn(layer_sizes[i + 1], layer_sizes[i]))
     biases.append(np.zeros((layer_sizes[i + 1], 1)))
 
-epochs = 2000
+# for i in range(layers - 1):
+#     weights.append(np.ones((layer_sizes[i + 1], layer_sizes[i])))
+#     biases.append(np.zeros((layer_sizes[i + 1], 1)))
+
+epochs = 1
 
 # training loop
 for epoch in range(epochs):
@@ -112,12 +115,12 @@ for epoch in range(epochs):
         # gradient of biases
         x = relu_prime(np.matmul(weights[layer], activations[layer]))
         y = x + biases[layer]
-        d_b = relu_prime(np.matmul(weights[layer], activations[layer]) + biases[layer] * d_activations[0])
+        d_b = relu_prime(np.matmul(weights[layer], activations[layer]) + biases[layer]) * d_activations[0]
         d_biases.insert(0, d_b)
 
         # gradient of weights
         upstream = np.resize(d_biases[0], (len(activations[layer]), len(activations[layer + 1]))).T,
-        y = np.resize(activations[layer - 1].T, (len(activations[layer + 1]), len(activations[layer])))
+        y = np.resize(activations[layer].T, (len(activations[layer + 1]), len(activations[layer])))
 
         d_w = np.multiply(upstream[0], y)
         d_weights.insert(0, d_w)
@@ -131,6 +134,9 @@ for epoch in range(epochs):
         d_activations.insert(0, d_a)
 
     for layer in range(layers - 2, -1, -1):
+        print(d_weights[layer])
+        print(d_biases[layer])
+
         weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
         biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
 
@@ -165,6 +171,6 @@ while True:
     print("")
     print(activations)
     output_number = np.nanargmax(np.where(activations == activations.max(), activations, np.nan))
-    print(f"Predicted: {output_index[output_number]}")
+    print(f"Outputted: {output_index[output_number]}")
 
 # yay!
