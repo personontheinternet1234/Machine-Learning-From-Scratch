@@ -44,9 +44,9 @@ learn = True  # add this functionality, add ability to choose original weights a
 non_linearity = "sigmoid"  # add this functionality
 error_analysis = "SSR"  # add this functionality
 error_report_type = "SSR"  # add this functionality
-epochs = 100
-return_rate = 1
-learning_rate = 0.01
+epochs = 10000
+return_rate = 100
+learning_rate = 0.0001
 
 # if set network
 set_weights = [
@@ -94,9 +94,13 @@ for epoch in range(epochs):
 
     # forward pass
     activations = [activation]
+    print(relu(np.matmul(weights[0], activation) + biases[0]))
+    fdssaf
     for layer in range(layers - 1):
         activation = relu(np.matmul(weights[layer], activation) + biases[layer])
         activations.append(activation)
+
+    print(activations)
 
     # calculate gradients
     d_activations = []
@@ -108,7 +112,6 @@ for epoch in range(epochs):
 
     for layer in range(layers - 1, 0, -1):  # start at last hidden layer, go back until layer = 0
         # gradient of biases
-        print(activations[layer])
         d_b = relu_prime(np.matmul(weights[layer - 1], activations[layer - 1]) + biases[layer - 1] * d_activations[0])
         d_biases.insert(0, d_b)
 
@@ -121,8 +124,16 @@ for epoch in range(epochs):
         # gradient of activation from before last layer
         upstream = np.resize(d_biases[0], (len(activations[layer - 1]), len(activations[layer])))
         totals = np.sum(np.multiply(upstream, weights[layer - 1].T), axis=1)
+        # print(totals)
+        # print(layer)
+        # print(len(activations[layer - 1]))
+        # print(activations)
         d_a = np.reshape(totals, (len(activations[layer - 1]), 1))
         d_activations.insert(0, d_a)
+
+    for layer in range(layers, 1, -1):
+        weights[layer - 2] = np.subtract(weights[layer - 2], learning_rate * d_weights[layer - 2])
+        biases[layer - 2] = np.subtract(biases[layer - 2], learning_rate * d_biases[layer - 2])
 
     # error report
     if epoch % return_rate == 0:
