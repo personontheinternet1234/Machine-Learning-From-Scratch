@@ -123,7 +123,7 @@ for epoch in range(epochs):
         upstream = np.resize(d_biases[0], (len(activations[layer]), len(activations[layer + 1]))).T
         y = np.resize(activations[layer].T, (len(activations[layer + 1]), len(activations[layer])))
 
-        d_w = np.multiply(upstream[0], y)
+        d_w = np.multiply(upstream, y)
         d_weights.insert(0, d_w)
 
         # gradient of activations
