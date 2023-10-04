@@ -83,6 +83,8 @@ for i in range(layers - 1):
     weights.append(np.random.randn(layer_sizes[i + 1], layer_sizes[i]))
     biases.append(np.zeros((layer_sizes[i + 1], 1)))
 
+epochs = 2000
+
 # training loop
 for epoch in range(epochs):
     # choose from training set
@@ -94,46 +96,43 @@ for epoch in range(epochs):
 
     # forward pass
     activations = [activation]
-    print(relu(np.matmul(weights[0], activation) + biases[0]))
-    fdssaf
     for layer in range(layers - 1):
         activation = relu(np.matmul(weights[layer], activation) + biases[layer])
         activations.append(activation)
-
-    print(activations)
 
     # calculate gradients
     d_activations = []
     d_weights = []
     d_biases = []
-    
+
     # error with respect to last layer
     d_activations.insert(0, -2 * np.subtract(expected_values, activations[-1]))
 
-    for layer in range(layers - 1, 0, -1):  # start at last hidden layer, go back until layer = 0
+    for layer in range(layers - 2, -1, -1):  # start at last hidden layer, go back until layer = 0
         # gradient of biases
-        d_b = relu_prime(np.matmul(weights[layer - 1], activations[layer - 1]) + biases[layer - 1] * d_activations[0])
+        x = relu_prime(np.matmul(weights[layer], activations[layer]))
+        y = x + biases[layer]
+        d_b = relu_prime(np.matmul(weights[layer], activations[layer]) + biases[layer] * d_activations[0])
         d_biases.insert(0, d_b)
 
         # gradient of weights
-        x = np.resize(biases[0], (len(activations[layer - 1]), len(activations[layer]))).T,
-        y = np.resize(activations[layer - 1].T, (len(activations[layer]), len(activations[layer - 1])))
-        d_w = np.multiply(x, y)
+        upstream = np.resize(d_biases[0], (len(activations[layer]), len(activations[layer + 1]))).T,
+        y = np.resize(activations[layer - 1].T, (len(activations[layer + 1]), len(activations[layer])))
+
+        d_w = np.multiply(upstream[0], y)
         d_weights.insert(0, d_w)
 
-        # gradient of activation from before last layer
-        upstream = np.resize(d_biases[0], (len(activations[layer - 1]), len(activations[layer])))
-        totals = np.sum(np.multiply(upstream, weights[layer - 1].T), axis=1)
-        # print(totals)
-        # print(layer)
-        # print(len(activations[layer - 1]))
-        # print(activations)
-        d_a = np.reshape(totals, (len(activations[layer - 1]), 1))
+        # gradient of activations
+        upstream = np.resize(d_biases[0], (len(activations[layer]), len(activations[layer + 1])))
+        totals = np.sum(np.multiply(upstream, weights[layer].T), axis=1)
+        # print(f"layer:{layer}")
+        # print(totals, "\n", len(activations[layer]))
+        d_a = np.reshape(totals, (len(activations[layer]), 1))
         d_activations.insert(0, d_a)
 
-    for layer in range(layers, 1, -1):
-        weights[layer - 2] = np.subtract(weights[layer - 2], learning_rate * d_weights[layer - 2])
-        biases[layer - 2] = np.subtract(biases[layer - 2], learning_rate * d_biases[layer - 2])
+    for layer in range(layers - 2, -1, -1):
+        weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
+        biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
 
     # error report
     if epoch % return_rate == 0:
