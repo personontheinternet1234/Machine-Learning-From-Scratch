@@ -64,13 +64,11 @@ def backward():
 
     # error with respect to last layer
     d_a_last = -2 * np.subtract(expected_values, activations[-1])
-    d_a_last = np.minimum(1, d_a_last)
     d_activations.insert(0, d_a_last)
 
     for layer in range(layers - 2, -1, -1):  # start at last hidden layer, go back until layer = 0
         # gradient of biases
         d_b = relu_prime(np.matmul(weights[layer], activations[layer]) + biases[layer]) * d_activations[0]
-        d_b = np.minimum(1, d_b)  # Clipping
         d_biases.insert(0, d_b)
 
         # gradient of weights
@@ -78,7 +76,6 @@ def backward():
         local = np.resize(activations[layer].T, (len(activations[layer + 1]), len(activations[layer])))
 
         d_w = np.multiply(upstream, local)
-        d_w = np.minimum(1, d_w)  # Clipping
         d_weights.insert(0, d_w)
 
         # gradient of activations
@@ -86,13 +83,12 @@ def backward():
         totals = np.sum(np.multiply(upstream, weights[layer].T), axis=1)
 
         d_a = np.reshape(totals, (len(activations[layer]), 1))
-        d_a = np.minimum(1, d_a)  # Clipping
         d_activations.insert(0, d_a)
 
     for layer in range(layers - 2, -1, -1):
-        print(d_weights[layer])
-        print("\n\n\n")
-        print(d_biases[layer])
+        # print(d_weights[layer])
+        # print("\n\n\n")
+        # print(d_biases[layer])
 
         weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
         biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
@@ -106,9 +102,9 @@ output_index = ["1", "2"]
 learn = True  # add this functionality, add ability to choose original weights and biases
 non_linearity = "relu"  # add this functionality
 error_analysis = "SSR"  # add this functionality
-epochs = 1
-return_rate = 10
-learning_rate = 0.01
+epochs = 100000
+return_rate = 1000
+learning_rate = 0.00000001
 
 # if set network
 set_weights = [
@@ -130,13 +126,15 @@ output_training = [
 
 ]
 
-for i in range(10):
+
+
+for i in range(100):
     input_training.append(train_x[i].flatten().tolist())
 
     node_values = []
     for h in range(10):
         if h == train_y[i]:
-            node_values.append(1)
+            node_values.append(255)
         else:
             node_values.append(0)
     output_training.append(node_values)
