@@ -2,7 +2,6 @@
 
 import numpy as np
 import random
-from tqdm import tqdm  # maybe won't use
 
 """
 This program uses the nodes structure to practice basic backpropagation.
@@ -97,10 +96,9 @@ output_index = ["1", "2"]
 
 # learning presets
 learn = True  # add this functionality, add ability to choose original weights and biases
-non_linearity = "sigmoid"  # add this functionality
+non_linearity = "relu"  # add this functionality
 error_analysis = "SSR"  # add this functionality
-error_report_type = "SSR"  # add this functionality
-epochs = 10000
+epochs = 100000
 return_rate = 1000
 learning_rate = 0.01
 
@@ -130,10 +128,10 @@ output_training = [
 # neural network structure
 layer_sizes = [2, 3, 2]
 layers = len(layer_sizes)
-# instantiate weights and biases
 weights = []
 biases = []
 
+# instantiate weights and biases
 for i in range(layers - 1):
     weights.append(np.random.randn(layer_sizes[i + 1], layer_sizes[i]) * np.sqrt(2 / layer_sizes[i]))  # Xavier Initialization
     biases.append(np.zeros((layer_sizes[i + 1], 1)))
@@ -141,6 +139,7 @@ for i in range(layers - 1):
 # training loop
 for epoch in range(epochs):
     # choose from training set
+    # training_choice = int(np.random.rand() * len(input_training))  # Random int from 0 - len(input_training) using np
     training_choice = random.randint(0, len(input_training) - 1)
 
     # reformat inputs and outputs
