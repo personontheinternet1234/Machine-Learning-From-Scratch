@@ -44,7 +44,7 @@ learn = True  # add this functionality, add ability to choose original weights a
 non_linearity = "sigmoid"  # add this functionality
 error_analysis = "SSR"  # add this functionality
 error_report_type = "SSR"  # add this functionality
-epochs = 3
+epochs = 100
 return_rate = 1
 learning_rate = 0.01
 
@@ -108,8 +108,8 @@ for epoch in range(epochs):
 
     for layer in range(layers - 1, 0, -1):  # start at last hidden layer, go back until layer = 0
         # gradient of biases
-        earlier = relu_prime(np.matmul(weights[layer - 1], activations[layer - 1]))
-        d_b = earlier + biases[layer - 1] * activations[0]
+        print(activations[layer])
+        d_b = relu_prime(np.matmul(weights[layer - 1], activations[layer - 1]) + biases[layer - 1] * d_activations[0])
         d_biases.insert(0, d_b)
 
         # gradient of weights
