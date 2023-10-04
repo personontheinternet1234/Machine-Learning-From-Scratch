@@ -137,9 +137,21 @@ for epoch in range(epochs):
     # error report
     if epoch % return_rate == 0:
         error = 0
-        for j in range(len(activations[-1])):
-            error += (expected_values[j] - activations[-1][j]) ** 2
-        print(f"({round((epoch / epochs) * 100)}%) Error: {error}")
+        for i in range(len(input_training)):
+            # reformat inputs and outputs
+            activation = np.reshape(np.array(input_training[i]),
+                                    (len(input_training[i]), 1))
+            expected_values = np.reshape(np.array(output_training[i]),
+                                         (len(output_training[i]), 1))
+            # forward pass
+            activations = [activation]
+            for layer in range(layers - 1):
+                activation = relu(np.matmul(weights[layer], activation) + biases[layer])
+                activations.append(activation)
+
+            error += np.sum(np.subtract(expected_values, activations[-1]) ** 2)
+        error /= len(input_training)
+        print(f"({round((epoch / epochs) * 100)}%) MSE: {error}")
 
 # else
 if not learn:
