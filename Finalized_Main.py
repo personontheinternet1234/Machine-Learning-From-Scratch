@@ -90,7 +90,7 @@ def backward():
 
 # user indexes
 input_index = ["a(0)0", "a(0)1"]
-output_index = ["1", "2"]
+output_index = ["checkered", "non checkered"]
 
 # learning presets
 learn = True  # add this functionality, add ability to choose original weights and biases
@@ -117,14 +117,14 @@ input_training = [
     [1, 1]
 ]
 output_training = [
-    [1, 1],
-    [1, 0],
     [0, 1],
-    [0, 0]
+    [1, 0],
+    [1, 0],
+    [0, 1]
 ]
 
 # neural network structure
-layer_sizes = [2, 3, 2]
+layer_sizes = [2, 5, 5, 5, 5, 2]
 layers = len(layer_sizes)
 weights = []
 biases = []
