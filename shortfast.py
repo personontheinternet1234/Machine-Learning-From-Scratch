@@ -78,13 +78,13 @@ layers = len(layer_sizes)
 weights = []
 biases = []
 
-# for i in range(layers - 1):
-#     weights.append(np.random.randn(layer_sizes[i + 1], layer_sizes[i]))
-#     biases.append(np.zeros((layer_sizes[i + 1], 1)))
-
 for i in range(layers - 1):
-    weights.append(np.ones((layer_sizes[i + 1], layer_sizes[i])))
+    weights.append(np.random.randn(layer_sizes[i + 1], layer_sizes[i]))
     biases.append(np.zeros((layer_sizes[i + 1], 1)))
+
+# for i in range(layers - 1):
+#     weights.append(np.ones((layer_sizes[i + 1], layer_sizes[i])))
+#     biases.append(np.zeros((layer_sizes[i + 1], 1)))
 
 # training loop
 for epoch in range(epochs):
