@@ -26,15 +26,13 @@ def relu(values):
 
 
 def relu_prime(values):
-    if values > 0:
-        return 1
-    else:
-        return 0.1
+    return np.where(values > 0, 1, 0.1)
+
 
 def forward_pass(a0, w0, b1, w1, b2):
     # forward pass
-    a1 = sigmoid(np.matmul(w0, a0) + b1)
-    a2 = sigmoid(np.matmul(w1, a1) + b2)
+    a1 = relu(np.matmul(w0, a0) + b1)
+    a2 = relu(np.matmul(w1, a1) + b2)
     
     return a2
 
@@ -90,19 +88,19 @@ for i in range(epochs):
     c = np.reshape(np.array(output_training[training_choice]), (len(output_training[training_choice]), 1))
     
     # calculate outputs
-    a1 = sigmoid(np.matmul(w0, a0) + b1)
-    a2 = sigmoid(np.matmul(w1, a1) + b2)
+    a1 = relu(np.matmul(w0, a0) + b1)
+    a2 = relu(np.matmul(w1, a1) + b2)
 
     # calculate gradients
 
     # second layer
     d_a2 = -2 * np.subtract(c, a2)
-    d_b2 = sigmoid_prime(np.matmul(w1, a1) + b2) * d_a2
+    d_b2 = relu_prime(np.matmul(w1, a1) + b2) * d_a2
     d_w1 = np.multiply(np.resize(d_b2, (hidden_1_size, output_size)).T, np.resize(a1.T, (output_size, hidden_1_size)))
     
     # first layer
     d_a1 = np.reshape(np.sum(np.multiply(np.resize(d_b2, (hidden_1_size, output_size)), w1.T), axis=1), (hidden_1_size, 1))
-    d_b1 = sigmoid_prime(np.matmul(w0, a0) + b1) * d_a1
+    d_b1 = relu_prime(np.matmul(w0, a0) + b1) * d_a1
     d_w0 = np.multiply(np.resize(d_b1, (input_size, hidden_1_size)).T, np.resize(a0.T, (hidden_1_size, input_size)))
     
     # optimize weights and biases

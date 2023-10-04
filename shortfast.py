@@ -44,9 +44,9 @@ learn = True  # add this functionality, add ability to choose original weights a
 non_linearity = "sigmoid"  # add this functionality
 error_analysis = "SSR"  # add this functionality
 error_report_type = "SSR"  # add this functionality
-epochs = 10000
-return_rate = 100
-learning_rate = 0.0001
+epochs = 100000
+return_rate = 1000
+learning_rate = 0.01
 
 # if set network
 set_weights = [
@@ -78,20 +78,19 @@ layers = len(layer_sizes)
 weights = []
 biases = []
 
-for i in range(layers - 1):
-    weights.append(np.random.randn(layer_sizes[i + 1], layer_sizes[i]))
-    biases.append(np.zeros((layer_sizes[i + 1], 1)))
-
 # for i in range(layers - 1):
-#     weights.append(np.ones((layer_sizes[i + 1], layer_sizes[i])))
+#     weights.append(np.random.randn(layer_sizes[i + 1], layer_sizes[i]))
 #     biases.append(np.zeros((layer_sizes[i + 1], 1)))
 
-epochs = 1
+for i in range(layers - 1):
+    weights.append(np.ones((layer_sizes[i + 1], layer_sizes[i])))
+    biases.append(np.zeros((layer_sizes[i + 1], 1)))
 
 # training loop
 for epoch in range(epochs):
     # choose from training set
     training_choice = random.randint(0, len(input_training) - 1)
+    # training_choice = 1
 
     # reformat inputs and outputs
     activation = np.reshape(np.array(input_training[training_choice]), (len(input_training[training_choice]), 1))
@@ -134,8 +133,8 @@ for epoch in range(epochs):
         d_activations.insert(0, d_a)
 
     for layer in range(layers - 2, -1, -1):
-        print(d_weights[layer])
-        print(d_biases[layer])
+        # print(d_weights[layer])
+        # print(d_biases[layer])
 
         weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
         biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])

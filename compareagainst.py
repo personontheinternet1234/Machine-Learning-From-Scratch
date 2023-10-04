@@ -81,9 +81,10 @@ w1 = np.ones((output_size, hidden_1_size))
 b2 = np.zeros((output_size, 1))
 
 # training loop
-for i in range(1):
+for i in range(100000):
     # choose from training set
-    training_choice = 1
+    # training_choice = 1
+    training_choice = random.randint(0, len(input_training) - 1)
 
     # reformat inputs and outputs
     a0 = np.reshape(np.array(input_training[training_choice]), (len(input_training[training_choice]), 1))
