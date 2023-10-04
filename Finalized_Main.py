@@ -32,6 +32,15 @@ def relu_prime(values):
     return np.where(values > 0, 1, 0.1)
 
 
+# forward pass
+def forward(inputs):
+    global activations
+    activations = [inputs]
+    for layer in range(layers - 1):
+        activation = relu(np.matmul(weights[layer], activations[-1]) + biases[layer])
+        activations.append(activation)
+
+
 # user indexes
 input_index = ["a(0)0", "a(0)1"]
 output_index = ["1", "2"]
@@ -88,14 +97,11 @@ for epoch in range(epochs):
     training_choice = random.randint(0, len(input_training) - 1)
 
     # reformat inputs and outputs
-    activation = np.reshape(np.array(input_training[training_choice]), (len(input_training[training_choice]), 1))
+    inputs = np.reshape(np.array(input_training[training_choice]), (len(input_training[training_choice]), 1))
     expected_values = np.reshape(np.array(output_training[training_choice]), (len(output_training[training_choice]), 1))
 
     # forward pass
-    activations = [activation]
-    for layer in range(layers - 1):
-        activation = relu(np.matmul(weights[layer], activation) + biases[layer])
-        activations.append(activation)
+    forward(inputs)
 
     # calculate gradients
     d_activations = []
@@ -139,15 +145,12 @@ for epoch in range(epochs):
         error = 0
         for i in range(len(input_training)):
             # reformat inputs and outputs
-            activation = np.reshape(np.array(input_training[i]),
+            inputs = np.reshape(np.array(input_training[i]),
                                     (len(input_training[i]), 1))
             expected_values = np.reshape(np.array(output_training[i]),
                                          (len(output_training[i]), 1))
-            # forward pass
-            activations = [activation]
-            for layer in range(layers - 1):
-                activation = relu(np.matmul(weights[layer], activation) + biases[layer])
-                activations.append(activation)
+
+            forward(inputs)
 
             error += np.sum(np.subtract(expected_values, activations[-1]) ** 2)
         error /= len(input_training)
