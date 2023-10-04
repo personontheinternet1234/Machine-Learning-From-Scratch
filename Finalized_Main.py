@@ -45,15 +45,12 @@ def forward(inputs):
 input_index = ["a(0)0", "a(0)1"]
 output_index = ["1", "2"]
 
-# neural network structure
-layer_sizes = [2, 3, 3, 2]
-
 # learning presets
 learn = True  # add this functionality, add ability to choose original weights and biases
 non_linearity = "sigmoid"  # add this functionality
 error_analysis = "SSR"  # add this functionality
 error_report_type = "SSR"  # add this functionality
-epochs = 100000
+epochs = 10000
 return_rate = 1000
 learning_rate = 0.01
 
@@ -80,8 +77,8 @@ output_training = [
     [0, 0]
 ]
 
-# network formation
-
+# neural network structure
+layer_sizes = [2, 3, 3, 2]
 layers = len(layer_sizes)
 # instantiate weights and biases
 weights = []
@@ -155,6 +152,7 @@ for epoch in range(epochs):
             error += np.sum(np.subtract(expected_values, activations[-1]) ** 2)
         error /= len(input_training)
         print(f"({round((epoch / epochs) * 100)}%) MSE: {error}")
+print()
 
 # else
 if not learn:
@@ -165,20 +163,16 @@ if not learn:
 # finalized network application
 while True:
     # get inputs
-    print("")
     inputs = []
-    for activation in range(layer_sizes[0]):
-        inputs.append(float(input(f"{input_index[activation]}: ")))
+    for input_node in range(layer_sizes[0]):
+        inputs.append(float(input(f"{input_index[input_node]}: ")))
 
     # forward pass
-    activations = np.reshape(inputs, (len(inputs), 1))
-    for layer in range(layers - 1):
-        activations = relu(np.matmul(weights[layer], activations) + biases[layer])
+    inputs = np.reshape(inputs, (len(inputs), 1))
+    forward(inputs)
 
     # result
-    print("")
-    print(activations)
-    output_number = np.nanargmax(np.where(activations == activations.max(), activations, np.nan))
-    print(f"Outputted: {output_index[output_number]}")
+    print(activations[-1])
+    print(f"Outputted: {output_index[np.nanargmax(activations[-1])]}")
 
 # yay!
