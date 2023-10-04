@@ -13,26 +13,31 @@ Author: Isaac Park Verbrugge, Christian Host-Madsen
 activations = []
 
 
+# sigmoid activation function
 def sigmoid(values):
     output = 1 / (1 + np.exp(-1 * values))
     return output
 
 
+# derivative of sigmoid
 def sigmoid_prime(values):
     # output = 1 / (1 + np.exp(-1 * values)) * (1 - 1 / (1 + np.exp(-1 * values)))
     output = sigmoid(values) * (1 - sigmoid(values))
     return output
 
 
-def relu(values):  # Leaky rectified linear activation function
+# leaky rectified linear activation function
+def relu(values):
     output = np.maximum(0.1 * values, values)
     return output
 
 
+# derivative of leaky relu
 def relu_prime(values):
     return np.where(values > 0, 1, 0.1)
 
 
+# function to reformat data into inputs / correct outputs
 def reformat(training_choice):
     inputs = np.reshape(np.array(input_training[training_choice]), (len(input_training[training_choice]), 1))
     expected_values = np.reshape(np.array(output_training[training_choice]), (len(output_training[training_choice]), 1))
@@ -84,6 +89,7 @@ def backward():
     for layer in range(layers - 2, -1, -1):
         weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
         biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
+
 
 # user indexes
 input_index = ["a(0)0", "a(0)1"]
