@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import ast
 from tensorflow import keras
 
 """
@@ -136,44 +137,68 @@ layers = len(layer_sizes)
 weights = []
 biases = []
 
-# instantiate weights and biases
-for i in range(layers - 1):
-    weights.append(np.random.randn(layer_sizes[i + 1], layer_sizes[i]) * np.sqrt(2 / layer_sizes[i]))  # Xavier Initialization
-    biases.append(np.zeros((layer_sizes[i + 1], 1)))
+while learn != "y" and learn != "n":
+    learn = input("Learn? (Y/n): ").lower()
 
-# training loop
-for epoch in range(epochs):
-    # choose from training set
-    # training_choice = int(np.random.rand() * len(input_training))  # Random int from 0 - len(input_training) using np
-    training_choice = random.randint(0, len(input_training) - 1)
+if learn == "y":
+    # instantiate weights and biases
+    for i in range(layers - 1):
+        weights.append(np.random.randn(layer_sizes[i + 1], layer_sizes[i]) * np.sqrt(2 / layer_sizes[i]))  # Xavier Initialization
+        biases.append(np.zeros((layer_sizes[i + 1], 1)))
 
-    # reformat inputs and outputs
-    inputs, expected_values = reformat(training_choice)
+    # training loop
+    for epoch in range(epochs):
+        # choose from training set
+        # training_choice = int(np.random.rand() * len(input_training))  # Random int from 0 - len(input_training) using np
+        training_choice = random.randint(0, len(input_training) - 1)
 
-    # forward pass
-    forward(inputs)
+        # reformat inputs and outputs
+        inputs, expected_values = reformat(training_choice)
 
-    # calculate gradients
-    backward()
+        # forward pass
+        forward(inputs)
 
-    # error report
-    if epoch % return_rate == 0:
-        error = 0
-        for i in range(len(input_training)):
-            # reformat inputs and outputs
-            inputs, expected_values = reformat(training_choice)
+        # calculate gradients
+        backward()
 
-            forward(inputs)
+        # error report
+        if epoch % return_rate == 0:
+            error = 0
+            for i in range(len(input_training)):
+                # reformat inputs and outputs
+                inputs, expected_values = reformat(training_choice)
 
-            error += np.sum(np.subtract(expected_values, activations[-1]) ** 2)
-        print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
+                forward(inputs)
+
+                error += np.sum(np.subtract(expected_values, activations[-1]) ** 2)
+            print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
+else:
+    with open("adjustables/weights.txt", "r") as file:
+        weights = ast.literal_eval(file.read())
+    with open("adjustables/biases.txt", "r") as file:
+        biases = ast.literal_eval(file.read())
+
+    for i in range(len(weights)):
+        weights[i] = np.array(weights[i])
+    for i in range(len(biases)):
+        biases[i] = np.array(biases[i])
 print()
 
-# # else
-# if not learn:
-#     # use set weights and biases
-#     weights = set_weights
-#     biases = set_biases
+save_question = "A"
+while save_question != "y" and save_question != "n":
+    save_question = input("Save the weights & biases just calculated? (Y/n): ").lower()
+
+    saved_weights = []
+    saved_biases = []
+    for i in range(len(weights)):
+        saved_weights.append(weights[i].tolist())
+    for i in range(len(biases)):
+        saved_biases.append(biases[i].tolist())
+
+    with open("adjustables/weights.txt", "w") as file:
+        file.write(str(saved_weights))
+    with open("adjustables/biases.txt", "w") as file:
+        file.write(str(saved_biases))
 
 # finalized network application
 while True:
