@@ -1,5 +1,4 @@
 import numpy as np
-import random
 import ast  # Used just for reading preset weights and biases into a list if we want to.
 
 """
@@ -141,8 +140,8 @@ if learn == "y":
     # training loop
     for epoch in range(epochs):
         # choose from training set
-        # training_choice = int(np.random.rand() * len(input_training))  # Random int from 0 - len(input_training) using np
-        training_choice = random.randint(0, len(input_training) - 1)
+        training_choice = int(np.random.rand() * len(input_training))  # SGD choice using np
+        # training_choice = random.randint(0, len(input_training) - 1)  
 
         # reformat inputs and outputs
         inputs, expected_values = reformat(training_choice)
@@ -180,6 +179,7 @@ save_question = "A"
 while save_question != "y" and save_question != "n":
     save_question = input("Save the weights & biases just calculated? (Y/n): ").lower()
 
+if save_question == "y":
     saved_weights = []
     saved_biases = []
     for i in range(len(weights)):
@@ -191,6 +191,8 @@ while save_question != "y" and save_question != "n":
         file.write(str(saved_weights))
     with open("adjustables/biases.txt", "w") as file:
         file.write(str(saved_biases))
+else:
+    pass
 
 # finalized network application
 while True:
