@@ -106,15 +106,6 @@ epochs = 100000
 return_rate = 1000
 learning_rate = 0.00000001
 
-# if set network
-set_weights = [
-
-]
-
-set_biases = [
-
-]
-
 (train_x, train_y), (test_x, test_y) = keras.datasets.mnist.load_data()
 
 # training data set
@@ -128,7 +119,7 @@ output_training = [
 
 
 
-for i in range(100):
+for i in range(1000):
     input_training.append(train_x[i].flatten().tolist())
 
     node_values = []
@@ -178,11 +169,11 @@ for epoch in range(epochs):
         print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
 print()
 
-# else
-if not learn:
-    # use set weights and biases
-    weights = set_weights
-    biases = set_biases
+# # else
+# if not learn:
+#     # use set weights and biases
+#     weights = set_weights
+#     biases = set_biases
 
 # finalized network application
 while True:
