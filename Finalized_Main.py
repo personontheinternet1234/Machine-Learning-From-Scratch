@@ -1,6 +1,6 @@
 import numpy as np
 import random
-import ast
+import ast  # Used just for reading preset weights and biases into a list if we want to.
 
 """
 This program uses the nodes structure to practice basic backpropagation.

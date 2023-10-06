@@ -1,8 +1,8 @@
 import numpy as np
 import random
-import ast
+import ast  # Used just for reading preset weights and biases into a list if we want to.
 
-from tensorflow import keras
+from tensorflow import keras  # Used ONLY for the MNIST training database
 
 """
 This program uses the nodes structure to practice basic backpropagation.
@@ -119,17 +119,13 @@ output_training = [
 
 ]
 
-
-
-for i in range(1000):
+# loading MNIST data
+for i in range(100):
     input_training.append(train_x[i].flatten().tolist())
 
-    node_values = []
-    for h in range(10):
-        if h == train_y[i]:
-            node_values.append(255)
-        else:
-            node_values.append(0)
+    node_values = np.zeros(10)
+    node_values[train_y[i]] = 255
+
     output_training.append(node_values)
 
 # neural network structure
