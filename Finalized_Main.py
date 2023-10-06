@@ -94,7 +94,7 @@ input_index = ["a(0)0", "a(0)1"]
 output_index = ["checkered", "non checkered"]
 
 # learning presets
-learn = False  # add this functionality, add ability to choose original weights and biases
+learn = "A"  # add this functionality, add ability to choose original weights and biases
 non_linearity = "relu"  # add this functionality
 error_analysis = "SSR"  # add this functionality
 epochs = 100000
@@ -129,7 +129,10 @@ layers = len(layer_sizes)
 weights = []
 biases = []
 
-if learn:
+while learn != "y" and learn != "n":
+    learn = input("Learn? (Y/n): ").lower()
+
+if learn == "y":
     # instantiate weights and biases
     for i in range(layers - 1):
         weights.append(np.random.randn(layer_sizes[i + 1], layer_sizes[i]) * np.sqrt(2 / layer_sizes[i]))  # Xavier Initialization
@@ -173,18 +176,21 @@ else:
         biases[i] = np.array(biases[i])
 print()
 
+save_question = "A"
+while save_question != "y" and save_question != "n":
+    save_question = input("Save the weights & biases just calculated? (Y/n): ").lower()
 
-saved_weights = []
-saved_biases = []
-for i in range(len(weights)):
-    saved_weights.append(weights[i].tolist())
-for i in range(len(biases)):
-    saved_biases.append(biases[i].tolist())
+    saved_weights = []
+    saved_biases = []
+    for i in range(len(weights)):
+        saved_weights.append(weights[i].tolist())
+    for i in range(len(biases)):
+        saved_biases.append(biases[i].tolist())
 
-with open("adjustables/weights.txt", "w") as file:
-    file.write(str(saved_weights))
-with open("adjustables/biases.txt", "w") as file:
-    file.write(str(saved_biases))
+    with open("adjustables/weights.txt", "w") as file:
+        file.write(str(saved_weights))
+    with open("adjustables/biases.txt", "w") as file:
+        file.write(str(saved_biases))
 
 # finalized network application
 while True:
