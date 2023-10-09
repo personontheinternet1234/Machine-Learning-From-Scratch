@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import ast  # Used just for reading preset weights and biases into a list if we want to.
+import drawing  # User inputted drawing code I made
 
 from tensorflow import keras  # Used ONLY for the MNIST training database
 
@@ -104,7 +105,7 @@ output_index = ["1", "2"]
 learn = True  # add this functionality, add ability to choose original weights and biases
 non_linearity = "relu"  # add this functionality
 error_analysis = "SSR"  # add this functionality
-epochs = 100000
+epochs = 1000000
 return_rate = 1000
 learning_rate = 0.00000001
 
@@ -120,7 +121,7 @@ output_training = [
 ]
 
 # loading MNIST data
-for i in range(100):
+for i in range(10000):
     input_training.append(train_x[i].flatten().tolist())
 
     node_values = np.zeros(10)
@@ -199,15 +200,31 @@ while save_question != "y" and save_question != "n":
 
 # finalized network application
 while True:
-    # get inputs
-    choice = int(input(f"Image Choice #: "))
-    inputs = train_x[choice].flatten().tolist()
+    test_question = "A"
+    while test_question != "data" and test_question != "drawing":
+        test_question = input("Try a data point or your own drawing? (data/drawing): ").lower()
+    if test_question == "data":
+        # get inputs
+        choice = int(input(f"Image Choice #: "))
+        inputs = train_x[choice].flatten().tolist()
 
-    # forward pass
-    inputs = np.reshape(inputs, (len(inputs), 1))
-    forward(inputs)
+        # forward pass
+        inputs = np.reshape(inputs, (len(inputs), 1))
+        forward(inputs)
 
-    # result
-    print(activations[-1])
-    print(f"Should be: {train_y[choice]}")
-    print(f"Outputted: {np.nanargmax(activations[-1])}")
+        # result
+        print(activations[-1])
+        print(f"Should be: {train_y[choice]}")
+        print(f"Outputted: {np.nanargmax(activations[-1])}")
+    elif test_question == "drawing":
+        inputs = np.array(drawing.main()).flatten().tolist()
+        # print(inputs)
+        # print(train_x[0].flatten().tolist())
+
+        inputs = np.reshape(inputs, (len(inputs), 1))
+        forward(inputs)
+
+        # result
+        print(activations[-1])
+        print(f"Outputted: {np.nanargmax(activations[-1])}")
+
