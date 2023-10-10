@@ -38,15 +38,17 @@ def softmax(values):
     return np.exp(values) / np.sum(np.exp(values))
 
 
-def cross_entropy_loss(softmax_probs, true_labels):
-    # Ensure true_labels are one-hot encoded or class indices.
-    return -np.log(softmax_probs[true_labels])
+def cross_entropy(softmax_probs, true_labels):
+    true_label_index = np.where(true_labels > 0)[0][0]
+    return -np.log(softmax_probs[true_label_index])
 
 
 def derivative_cross_entropy(values, true_labels):  # derivative is just softmax, unless you are the winner, then it is softmax - 1
+    true_label_index = np.where(true_labels > 0)[0][0]
+
     softmax_probs = softmax(values)
     d_loss_d_values = softmax_probs.copy()
-    d_loss_d_values[true_labels] -= 1
+    d_loss_d_values[true_label_index] -= 1
     return d_loss_d_values
 
 
@@ -76,9 +78,8 @@ def backward():
     d_activations = []
     d_weights = []
     d_biases = []
-
     # error with respect to last layer
-    d_activations.insert(0, -2 * np.subtract(expected_values, activations[-1]))
+    d_activations.insert(0, derivative_cross_entropy(activations[-1], expected_values))
 
     for layer in range(layers - 2, -1, -1):  # start at last hidden layer, go back until layer = 0
         # gradient of biases
@@ -112,9 +113,9 @@ output_index = ["checkered", "non checkered"]
 learn = "A"  # add this functionality, add ability to choose original weights and biases
 non_linearity = "relu"  # add this functionality
 error_analysis = "SSR"  # add this functionality
-epochs = 10000
+epochs = 100000
 return_rate = 1000
-learning_rate = 0.01
+learning_rate = 0.001
 # if set network
 set_weights = [
 
@@ -157,7 +158,7 @@ if learn == "y":
     for epoch in range(epochs):
         # choose from training set
         training_choice = int(np.random.rand() * len(input_training))  # SGD choice using np
-        # training_choice = random.randint(0, len(input_training) - 1)  
+        # training_choice = random.randint(0, len(input_training) - 1)
 
         # reformat inputs and outputs
         inputs, expected_values = reformat(training_choice)
@@ -170,15 +171,8 @@ if learn == "y":
 
         # error report
         if epoch % return_rate == 0:
-            error = 0
-            for i in range(len(input_training)):
-                # reformat inputs and outputs
-                inputs, expected_values = reformat(training_choice)
-
-                forward(inputs)
-
-                error += np.sum(np.subtract(expected_values, activations[-1]) ** 2)
-            print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
+            error = cross_entropy(softmax(activations[-1]), expected_values)
+            print(f"({round((epoch / epochs) * 100)}%) Cross Entropy: {error}")
 else:
     with open("etc/weights.txt", "r") as file:
         weights = ast.literal_eval(file.read())

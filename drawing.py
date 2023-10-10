@@ -26,7 +26,7 @@ def main():
 
 
     def save_image():
-        image.save("drawing.png")
+        image.save("etc/drawing.png")
         print("saved")
 
 
@@ -47,13 +47,13 @@ def main():
     app.mainloop()
 
     # Load the original image
-    test_drawing = cv2.imread('drawing.png')
+    test_drawing = cv2.imread('etc/drawing.png')
 
     # Resize the image to 28x28 pixels using cubic interpolation
     resized_image = cv2.resize(test_drawing, (28, 28), interpolation=cv2.INTER_CUBIC)
     grayscale_image = cv2.cvtColor(resized_image, cv2.COLOR_BGR2GRAY)
 
-    cv2.imwrite('resized.png', grayscale_image)
+    cv2.imwrite('etc/resized.png', grayscale_image)
     return grayscale_image
 
 if __name__ == '__main__':

@@ -170,9 +170,9 @@ if learn == "y":
                 error += np.sum(np.subtract(expected_values, activations[-1]) ** 2)
             print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
 else:
-    with open("adjustables/weights.txt", "r") as file:
+    with open("etc/weights.txt", "r") as file:
         weights = ast.literal_eval(file.read())
-    with open("adjustables/biases.txt", "r") as file:
+    with open("etc/biases.txt", "r") as file:
         biases = ast.literal_eval(file.read())
 
     for i in range(len(weights)):
@@ -193,9 +193,9 @@ if save_question == "y":
     for i in range(len(biases)):
         saved_biases.append(biases[i].tolist())
 
-    with open("adjustables/weights.txt", "w") as file:
+    with open("etc/weights.txt", "w") as file:
         file.write(str(saved_weights))
-    with open("adjustables/biases.txt", "w") as file:
+    with open("etc/biases.txt", "w") as file:
         file.write(str(saved_biases))
 else:
     pass
