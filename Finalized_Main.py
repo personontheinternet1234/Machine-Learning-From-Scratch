@@ -34,6 +34,22 @@ def relu_prime(values):
     return np.where(values > 0, 1, 0.1)
 
 
+def softmax(values):
+    return np.exp(values) / np.sum(np.exp(values))
+
+
+def cross_entropy_loss(softmax_probs, true_labels):
+    # Ensure true_labels are one-hot encoded or class indices.
+    return -np.log(softmax_probs[true_labels])
+
+
+def derivative_cross_entropy(values, true_labels):  # derivative is just softmax, unless you are the winner, then it is softmax - 1
+    softmax_probs = softmax(values)
+    d_loss_d_values = softmax_probs.copy()
+    d_loss_d_values[true_labels] -= 1
+    return d_loss_d_values
+
+
 # function to reformat data into inputs / correct outputs
 def reformat(training_choice):
     inputs = np.reshape(np.array(input_training[training_choice]), (len(input_training[training_choice]), 1))
@@ -96,7 +112,7 @@ output_index = ["checkered", "non checkered"]
 learn = "A"  # add this functionality, add ability to choose original weights and biases
 non_linearity = "relu"  # add this functionality
 error_analysis = "SSR"  # add this functionality
-epochs = 100000
+epochs = 10000
 return_rate = 1000
 learning_rate = 0.01
 # if set network
