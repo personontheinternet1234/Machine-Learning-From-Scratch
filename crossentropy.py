@@ -35,7 +35,8 @@ def relu_prime(values):
 
 
 def softmax(values):
-    return np.exp(values) / np.sum(np.exp(values))
+    exp_values = np.exp(values - np.max(values))  # Subtracting max value for numerical stability
+    return exp_values / np.sum(exp_values, axis=0)
 
 
 def cross_entropy(softmax_probs, true_labels):
@@ -130,12 +131,14 @@ input_training = [
     [0, 0],
     [0, 1],
     [1, 0],
-    [1, 1]
+    [1, 1],
+    [0.5, 0.5]
 ]
 output_training = [
     [0, 1],
     [1, 0],
     [1, 0],
+    [0, 1],
     [0, 1]
 ]
 
@@ -171,8 +174,13 @@ if learn == "y":
 
         # error report
         if epoch % return_rate == 0:
-            error = cross_entropy(softmax(activations[-1]), expected_values)
-            print(f"({round((epoch / epochs) * 100)}%) Cross Entropy: {error}")
+            error = 0
+            for i in input_training:
+                inputs, expected_values = reformat(training_choice)
+                forward(inputs)
+                error += cross_entropy(softmax(activations[-1]), expected_values)
+            print(f"({round((epoch / epochs) * 100)}%) Mean Cross Entropy: {error / len(input_training)}")
+
 else:
     with open("etc/weights.txt", "r") as file:
         weights = ast.literal_eval(file.read())
@@ -216,5 +224,5 @@ while True:
     forward(inputs)
 
     # result
-    print(activations[-1])
+    print(softmax(activations[-1]).round(4))
     print(f"Outputted: {output_index[np.nanargmax(activations[-1])]}")
