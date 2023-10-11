@@ -12,6 +12,14 @@ def leaky_relu_prime(inputs):
     output = np.where(inputs > 0, 1, 0.1)
     return output
 
+def xavier_initialize(length, width):
+    matrix = np.random.randn(length, width) * np.sqrt(2 / length)
+    return matrix
+
+def zeros_initialize(length, width):
+    matrix = np.zeros((length, width))
+    return matrix
+
 def forward_pass(inputs, weights, biases):
     activations = [inputs]
     for layer in range(len(weights)):
@@ -95,8 +103,8 @@ if learn:
     else:
         # use random weights and zeros for biases
         for connection in range(layers - 1):
-            weights.append(np.random.randn(layer_sizes[connection + 1], layer_sizes[connection]) * np.sqrt(2 / layer_sizes[connection]))
-            biases.append(np.zeros((layer_sizes[connection + 1], 1)))
+            weights.append(xavier_initialize(layer_sizes[connection + 1], layer_sizes[connection]))
+            biases.append(zeros_initialize(layer_sizes[connection + 1], 1))
     
     # training loop
     for epoch in range(epochs):
@@ -148,8 +156,8 @@ else:
     else:
         # use random weights and zeros for biases
         for connection in range(layers - 1):
-            weights.append(np.random.randn(layer_sizes[connection + 1], layer_sizes[connection]) * np.sqrt(2 / layer_sizes[connection]))
-            biases.append(np.zeros((layer_sizes[connection + 1], 1)))
+            weights.append(xavier_initialize(layer_sizes[connection + 1], layer_sizes[connection]))
+            biases.append(zeros_initialize(layer_sizes[connection + 1], 1))
 
 # finalized network application
 
