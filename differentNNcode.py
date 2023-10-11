@@ -36,8 +36,8 @@ def argmax(inputs):
     return index
 
 def calculate_error(expected, actual):
-    output = np.sum(np.multiply(np.subtract(expected, actual), np.subtract(expected, actual)), axis=0)
-    return output
+    error = np.sum(np.subtract(expected, actual) ** 2, axis=0)
+    return error
 
 # network presets
 
@@ -47,7 +47,7 @@ output_index = ["checkered", "non-checkered"]
 
 # learning presets
 learn = True
-set = False
+load = False
 save = False
 epochs = 10000
 return_rate = 1000
@@ -88,7 +88,7 @@ if learn:
     # instantiate weights and biases
     weights = []
     biases = []
-    if set:
+    if load:
         # use set weights and biases
         weights = set_weights
         biases = set_biases
@@ -131,44 +131,46 @@ if learn:
         biases = optimize(biases, d_biases, learning_rate)
         
         # error report
-        error += calculate_error(expected_values, activations[-1])
-        if epoch % return_rate == 0 and epoch > 0:
-            print(f"({round((epoch / epochs) * 100)}%) MSE: {error[0] / return_rate}")
+        if epoch % return_rate == 0:
             error = 0
+            for test_case in range(len(input_training)):
+                expected_values = make_vector(output_training[test_case])
+                actual_values = forward_pass(make_vector(input_training[test_case]), weights, biases)[-1]
+                error += calculate_error(expected_values, actual_values)
+            print(f"({round((epoch / epochs) * 100)}%) MSE: {error[0] / len(input_training)}")
 else:
     # instantiate weights and biases
     weights = []
     biases = []
-    if set:
+    if load:
         # use set weights and biases
         weights = set_weights
         biases = set_biases
     else:
         # use random weights and zeros for biases
         for connection in range(layers - 1):
-            weights.append(np.random.randn(layer_sizes[connection + 1], layer_sizes[connection]))
+            weights.append(np.random.randn(layer_sizes[connection + 1], layer_sizes[connection]) * np.sqrt(2 / layer_sizes[connection]))
             biases.append(np.zeros((layer_sizes[connection + 1], 1)))
 
 # finalized network application
 
-# return optimized weights and biases  # return somewhere else
+# print optimized weights and biases
 if save:
-    print("")
-    print("Weights:")
-    print("")
-    print(weights)
-    print("Biases:")
-    print("")
-    print(biases)
-    print("")
+    for connection in range(len(weights)):
+        print("")
+        print(f"Weights (layer {connection}):")
+        print(weights[connection])
+        print(f"Bias (layer {connection}):")
+        print(biases[connection])
 
+# print final error
+error = 0
+for test_case in range(len(input_training)):
+    expected_values = make_vector(output_training[test_case])
+    actual_values = forward_pass(make_vector(input_training[test_case]), weights, biases)[-1]
+    error += calculate_error(expected_values, actual_values)
 print("")
-for connection in range(len(weights)):
-    print(f"Weights (layer {connection}):")
-    print(weights[connection])
-    print(f"Bias (layer {connection}):")
-    print(biases[connection])
-    print("")
+print(f"Final MSE: {error[0] / len(input_training)}")
 
 # user input
 while True:
