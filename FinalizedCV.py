@@ -10,6 +10,12 @@ Made from scratch (No tutorials, no pytorch).
 Version: 1.0
 Author: Isaac Park Verbrugge, Christian Host-Madsen
 """
+
+# learning presets
+learn = "A"
+epochs = 10000
+return_rate = 1000
+learning_rate = 0.01
 activations = []
 
 
@@ -37,11 +43,45 @@ def relu_prime(values):
     return np.where(values > 0, 1, 0.1)
 
 
+def softmax(values):
+    exp_values = np.exp(values - np.max(values))
+    return exp_values / np.sum(exp_values)
+
+
+def cross_entropy(softmax_probs, true_labels):
+    true_label_index = np.where(true_labels > 0)[0][0]
+    return -np.log(softmax_probs[true_label_index])
+
+
+def derivative_cross_entropy(values, true_labels):  # derivative is just softmax, unless you are the winner, then it is softmax - 1
+    true_label_index = np.where(true_labels > 0)[0][0]
+
+    softmax_probs = softmax(values)
+    d_loss_d_values = softmax_probs.copy()
+    d_loss_d_values[true_label_index] -= 1
+    return d_loss_d_values
+
+
 # function to reformat data into inputs / correct outputs
 def reformat(training_choice):
     inputs = np.reshape(np.array(input_training[training_choice]), (len(input_training[training_choice]), 1))
     expected_values = np.reshape(np.array(output_training[training_choice]), (len(output_training[training_choice]), 1))
     return inputs, expected_values
+
+
+def xavier_initialize(length, width):
+    matrix = np.random.randn(length, width) * np.sqrt(2 / length)
+    return matrix
+
+
+def zeros_initialize(length, width):
+    matrix = np.zeros((length, width))
+    return matrix
+
+
+def ones_initialize(length, width):
+    matrix = np.ones((length, width))
+    return matrix
 
 
 # forward pass
@@ -65,8 +105,7 @@ def backward():
     d_biases = []
 
     # error with respect to last layer
-    d_a_last = -2 * np.subtract(expected_values, activations[-1])
-    d_activations.insert(0, d_a_last)
+    d_activations.insert(0, derivative_cross_entropy(activations[-1], expected_values))
 
     for layer in range(layers - 2, -1, -1):  # start at last hidden layer, go back until layer = 0
         # gradient of biases
@@ -95,19 +134,6 @@ def backward():
         weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
         biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
 
-
-# user indexes
-input_index = ["a(0)0", "a(0)1"]
-output_index = ["1", "2"]
-
-# learning presets
-learn = True  # add this functionality, add ability to choose original weights and biases
-non_linearity = "relu"  # add this functionality
-error_analysis = "SSR"  # add this functionality
-epochs = 1000000
-return_rate = 1000
-learning_rate = 0.00000001
-
 (train_x, train_y), (test_x, test_y) = keras.datasets.mnist.load_data()
 
 # training data set
@@ -120,16 +146,16 @@ output_training = [
 ]
 
 # loading MNIST data
-for i in range(10000):
-    input_training.append(train_x[i].flatten().tolist())
+for i in range(1000):
+    input_training.append(np.divide(train_x[i].flatten().tolist(), 255))
 
     node_values = np.zeros(10)
-    node_values[train_y[i]] = 255
+    node_values[train_y[i]] = 1
 
     output_training.append(node_values)
 
 # neural network structure
-layer_sizes = [784, 10, 10, 10]
+layer_sizes = [784, 16, 16, 10]
 layers = len(layer_sizes)
 weights = []
 biases = []
@@ -140,14 +166,13 @@ while learn != "y" and learn != "n":
 if learn == "y":
     # instantiate weights and biases
     for i in range(layers - 1):
-        weights.append(np.random.randn(layer_sizes[i + 1], layer_sizes[i]) * np.sqrt(2 / layer_sizes[i]))  # Xavier Initialization
-        biases.append(np.zeros((layer_sizes[i + 1], 1)))
+        weights.append(xavier_initialize(layer_sizes[i + 1], layer_sizes[i]))  # Xavier Initialization
+        biases.append(zeros_initialize(layer_sizes[i + 1], 1))
 
     # training loop
     for epoch in range(epochs):
         # choose from training set
-        training_choice = int(np.random.rand() * len(input_training))  # Stochastic Gradient Descent using np
-        # training_choice = random.randint(0, len(input_training) - 1)  
+        training_choice = int(np.random.rand() * len(input_training))  # SGD choice using np
 
         # reformat inputs and outputs
         inputs, expected_values = reformat(training_choice)
@@ -163,12 +188,12 @@ if learn == "y":
             error = 0
             for i in range(len(input_training)):
                 # reformat inputs and outputs
-                inputs, expected_values = reformat(training_choice)
+                inputs, expected_values = reformat(i)
 
                 forward(inputs)
 
-                error += np.sum(np.subtract(expected_values, activations[-1]) ** 2)
-            print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
+                error += cross_entropy(softmax(activations[-1]), expected_values)
+            print(f"({round((epoch / epochs) * 100)}%) Avg CE: {error / len(input_training)}")
 else:
     with open("etc/weights.txt", "r") as file:
         weights = ast.literal_eval(file.read())
@@ -184,7 +209,7 @@ print()
 save_question = "A"
 while save_question != "y" and save_question != "n":
     save_question = input("Save the weights & biases just calculated? (Y/n): ").lower()
-    
+
 if save_question == "y":
     saved_weights = []
     saved_biases = []
@@ -199,7 +224,6 @@ if save_question == "y":
         file.write(str(saved_biases))
 else:
     pass
-
 
 # finalized network application
 while True:
@@ -221,13 +245,11 @@ while True:
         print(f"Outputted: {np.nanargmax(activations[-1])}")
     elif test_question == "drawing":
         inputs = np.array(drawing.main()).flatten().tolist()
-        # print(inputs)
-        # print(train_x[0].flatten().tolist())
 
         inputs = np.reshape(inputs, (len(inputs), 1))
         forward(inputs)
 
         # result
-        print(activations[-1])
+        print(softmax(activations[-1]))
         print(f"Outputted: {np.nanargmax(activations[-1])}")
 

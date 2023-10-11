@@ -38,15 +38,17 @@ def softmax(values):
     return np.exp(values) / np.sum(np.exp(values))
 
 
-def cross_entropy_loss(softmax_probs, true_labels):
-    # Ensure true_labels are one-hot encoded or class indices.
-    return -np.log(softmax_probs[true_labels])
+def cross_entropy(softmax_probs, true_labels):
+    true_label_index = np.where(true_labels > 0)[0][0]
+    return -np.log(softmax_probs[true_label_index])
 
 
 def derivative_cross_entropy(values, true_labels):  # derivative is just softmax, unless you are the winner, then it is softmax - 1
+    true_label_index = np.where(true_labels > 0)[0][0]
+
     softmax_probs = softmax(values)
     d_loss_d_values = softmax_probs.copy()
-    d_loss_d_values[true_labels] -= 1
+    d_loss_d_values[true_label_index] -= 1
     return d_loss_d_values
 
 

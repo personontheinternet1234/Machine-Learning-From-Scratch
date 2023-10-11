@@ -35,8 +35,7 @@ def relu_prime(values):
 
 
 def softmax(values):
-    exp_values = np.exp(values - np.max(values))  # Subtracting max value for numerical stability
-    return exp_values / np.sum(exp_values, axis=0)
+    return np.exp(values) / np.sum(np.exp(values))
 
 
 def cross_entropy(softmax_probs, true_labels):
@@ -60,6 +59,21 @@ def reformat(training_choice):
     return inputs, expected_values
 
 
+def xavier_initialize(length, width):
+    matrix = np.random.randn(length, width) * np.sqrt(2 / length)
+    return matrix
+
+
+def zeros_initialize(length, width):
+    matrix = np.zeros((length, width))
+    return matrix
+
+
+def ones_initialize(length, width):
+    matrix = np.ones((length, width))
+    return matrix
+
+
 # forward pass
 def forward(inputs):
     global activations
@@ -79,6 +93,7 @@ def backward():
     d_activations = []
     d_weights = []
     d_biases = []
+
     # error with respect to last layer
     d_activations.insert(0, derivative_cross_entropy(activations[-1], expected_values))
 
@@ -116,7 +131,7 @@ non_linearity = "relu"  # add this functionality
 error_analysis = "SSR"  # add this functionality
 epochs = 100000
 return_rate = 1000
-learning_rate = 0.001
+learning_rate = 0.01
 # if set network
 set_weights = [
 
@@ -131,19 +146,17 @@ input_training = [
     [0, 0],
     [0, 1],
     [1, 0],
-    [1, 1],
-    [0.5, 0.5]
+    [1, 1]
 ]
 output_training = [
     [0, 1],
     [1, 0],
     [1, 0],
-    [0, 1],
     [0, 1]
 ]
 
 # neural network structure
-layer_sizes = [2, 5, 5, 5, 5, 2]
+layer_sizes = [2, 3, 2]
 layers = len(layer_sizes)
 weights = []
 biases = []
@@ -154,14 +167,13 @@ while learn != "y" and learn != "n":
 if learn == "y":
     # instantiate weights and biases
     for i in range(layers - 1):
-        weights.append(np.random.randn(layer_sizes[i + 1], layer_sizes[i]) * np.sqrt(2 / layer_sizes[i]))  # Xavier Initialization
-        biases.append(np.zeros((layer_sizes[i + 1], 1)))
+        weights.append(xavier_initialize(layer_sizes[i + 1], layer_sizes[i]))  # Xavier Initialization
+        biases.append(zeros_initialize(layer_sizes[i + 1], 1))
 
     # training loop
     for epoch in range(epochs):
         # choose from training set
         training_choice = int(np.random.rand() * len(input_training))  # SGD choice using np
-        # training_choice = random.randint(0, len(input_training) - 1)
 
         # reformat inputs and outputs
         inputs, expected_values = reformat(training_choice)
@@ -175,12 +187,14 @@ if learn == "y":
         # error report
         if epoch % return_rate == 0:
             error = 0
-            for i in input_training:
-                inputs, expected_values = reformat(training_choice)
-                forward(inputs)
-                error += cross_entropy(softmax(activations[-1]), expected_values)
-            print(f"({round((epoch / epochs) * 100)}%) Mean Cross Entropy: {error / len(input_training)}")
+            for i in range(len(input_training)):
+                # reformat inputs and outputs
+                inputs, expected_values = reformat(i)
 
+                forward(inputs)
+
+                error += cross_entropy(softmax(activations[-1]), expected_values)
+            print(f"({round((epoch / epochs) * 100)}%) Avg CE: {error / len(input_training)}")
 else:
     with open("etc/weights.txt", "r") as file:
         weights = ast.literal_eval(file.read())
@@ -224,5 +238,5 @@ while True:
     forward(inputs)
 
     # result
-    print(softmax(activations[-1]).round(4))
+    print(softmax(activations[-1]))
     print(f"Outputted: {output_index[np.nanargmax(activations[-1])]}")
