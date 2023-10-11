@@ -13,7 +13,7 @@ Author: Isaac Park Verbrugge, Christian Host-Madsen
 
 # learning presets
 learn = "A"
-epochs = 10000
+epochs = 100000
 return_rate = 1000
 learning_rate = 0.01
 activations = []
@@ -146,7 +146,7 @@ output_training = [
 ]
 
 # loading MNIST data
-for i in range(1000):
+for i in range(10000):
     input_training.append(np.divide(train_x[i].flatten().tolist(), 255))
 
     node_values = np.zeros(10)
