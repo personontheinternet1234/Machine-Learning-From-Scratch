@@ -99,7 +99,6 @@ if learn:
             biases.append(np.zeros((layer_sizes[connection + 1], 1)))
     
     # training loop
-    error = 0
     for epoch in range(epochs):
         # choose from training set
         training_choice = random.randint(0, len(input_training) - 1)  # maybe optimize?
