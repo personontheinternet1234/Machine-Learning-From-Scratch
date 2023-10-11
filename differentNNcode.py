@@ -47,22 +47,30 @@ output_index = ["checkered", "non-checkered"]
 
 # learning presets
 learn = True
-load = False
+load = True
 save = False
-epochs = 10000
+epochs = 1
 return_rate = 1000
-learning_rate = 0.1
+learning_rate = 0.01
 
 # neural network structure
 layer_sizes = [2, 3, 2]
 
 # if set network
 set_weights = [
-    
+    np.array([[1,1],
+              [1,1],
+              [1,1]]),
+    np.array([[1, 1, 1],
+              [1, 1, 1]])
 ]
 
 set_biases = [
-    
+    np.array([[1],
+              [1],
+              [1]]),
+    np.array([[1],
+              [1]]),
 ]
 
 # training data set
@@ -102,6 +110,7 @@ if learn:
     for epoch in range(epochs):
         # choose from training set
         training_choice = random.randint(0, len(input_training) - 1)  # maybe optimize?
+        training_choice = 1
         
         # reformat inputs and outputs
         activation = make_vector(input_training[training_choice])
@@ -128,13 +137,18 @@ if learn:
         # optimize weights and biases
         weights = optimize(weights, d_weights, learning_rate)
         biases = optimize(biases, d_biases, learning_rate)
+        print(d_weights)
+        print(d_biases)
         
         # error report
         if epoch % return_rate == 0:
             error = 0
             for test_case in range(len(input_training)):
                 expected_values = make_vector(output_training[test_case])
-                actual_values = forward_pass(make_vector(input_training[test_case]), weights, biases)[-1]
+                actual_values = forward_pass(make_vector(input_training[test_case]), weights, biases)
+                # print(weights, biases)
+                print(make_vector(input_training[test_case]), actual_values)
+                asd
                 error += calculate_error(expected_values, actual_values)
             print(f"({round((epoch / epochs) * 100)}%) MSE: {error[0] / len(input_training)}")
 else:
