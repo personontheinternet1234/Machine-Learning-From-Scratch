@@ -57,6 +57,21 @@ def reformat(training_choice):
     return inputs, expected_values
 
 
+def xavier_initialize(length, width):
+    matrix = np.random.randn(length, width) * np.sqrt(2 / length)
+    return matrix
+
+
+def zeros_initialize(length, width):
+    matrix = np.zeros((length, width))
+    return matrix
+
+
+def ones_initialize(length, width):
+    matrix = np.ones((length, width))
+    return matrix
+
+
 # forward pass
 def forward(inputs):
     global activations
@@ -102,8 +117,6 @@ def backward():
     for layer in range(layers - 2, -1, -1):
         weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
         biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
-    print(d_weights)
-    print(d_biases)
 
 
 # user indexes
@@ -114,7 +127,7 @@ output_index = ["checkered", "non checkered"]
 learn = "A"  # add this functionality, add ability to choose original weights and biases
 non_linearity = "relu"  # add this functionality
 error_analysis = "SSR"  # add this functionality
-epochs = 1
+epochs = 100000
 return_rate = 1000
 learning_rate = 0.01
 # if set network
@@ -151,18 +164,14 @@ while learn != "y" and learn != "n":
 
 if learn == "y":
     # instantiate weights and biases
-    # for i in range(layers - 1):
-    #     weights.append(np.random.randn(layer_sizes[i + 1], layer_sizes[i]) * np.sqrt(2 / layer_sizes[i]))  # Xavier Initialization
-    #     biases.append(np.zeros((layer_sizes[i + 1], 1)))
     for i in range(layers - 1):
-        weights.append(np.ones((layer_sizes[i + 1], layer_sizes[i])))  # Xavier Initialization
-        biases.append(np.zeros((layer_sizes[i + 1], 1)))
+        weights.append(xavier_initialize(layer_sizes[i + 1], layer_sizes[i]))  # Xavier Initialization
+        biases.append(zeros_initialize(layer_sizes[i + 1], 1))
 
     # training loop
     for epoch in range(epochs):
         # choose from training set
         training_choice = int(np.random.rand() * len(input_training))  # SGD choice using np
-        training_choice = 1
 
         # reformat inputs and outputs
         inputs, expected_values = reformat(training_choice)
@@ -182,9 +191,6 @@ if learn == "y":
 
                 forward(inputs)
 
-                # print(weights, biases)
-                print(inputs, activations)
-                asd
                 error += np.sum(np.subtract(expected_values, activations[-1]) ** 2)
             print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
 else:

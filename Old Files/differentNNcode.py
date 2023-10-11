@@ -74,11 +74,11 @@ set_weights = [
 ]
 
 set_biases = [
-    np.array([[1],
-              [1],
-              [1]]),
-    np.array([[1],
-              [1]]),
+    np.array([[0],
+              [0],
+              [0]]),
+    np.array([[0],
+              [0]]),
 ]
 
 # training data set
@@ -153,10 +153,8 @@ if learn:
             error = 0
             for test_case in range(len(input_training)):
                 expected_values = make_vector(output_training[test_case])
-                actual_values = forward_pass(make_vector(input_training[test_case]), weights, biases)
-                # print(weights, biases)
-                print(make_vector(input_training[test_case]), actual_values)
-                asd
+                actual_values = forward_pass(make_vector(input_training[test_case]), weights, biases)[-1]
+
                 error += calculate_error(expected_values, actual_values)
             print(f"({round((epoch / epochs) * 100)}%) MSE: {error[0] / len(input_training)}")
 else:
