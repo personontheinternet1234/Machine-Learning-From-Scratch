@@ -127,19 +127,9 @@ output_index = ["checkered", "non checkered"]
 
 # learning presets
 learn = "A"  # add this functionality, add ability to choose original weights and biases
-non_linearity = "relu"  # add this functionality
-error_analysis = "SSR"  # add this functionality
 epochs = 100000
 return_rate = 1000
 learning_rate = 0.01
-# if set network
-set_weights = [
-
-]
-
-set_biases = [
-
-]
 
 # training data set
 input_training = [

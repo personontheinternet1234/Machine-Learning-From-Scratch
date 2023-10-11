@@ -18,6 +18,32 @@ return_rate = 1000
 learning_rate = 0.01
 activations = []
 
+# neural network structure
+layer_sizes = [784, 16, 16, 10]
+layers = len(layer_sizes)
+weights = []
+biases = []
+
+(train_x, train_y), (test_x, test_y) = keras.datasets.mnist.load_data()
+
+# training data set
+input_training = [
+
+]
+
+output_training = [
+
+]
+
+# loading MNIST data
+for i in range(10000):
+    input_training.append(np.divide(train_x[i].flatten().tolist(), 255))
+
+    node_values = np.zeros(10)
+    node_values[train_y[i]] = 1
+
+    output_training.append(node_values)
+
 
 # sigmoid activation function
 def sigmoid(values):
@@ -134,31 +160,6 @@ def backward():
         weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
         biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
 
-(train_x, train_y), (test_x, test_y) = keras.datasets.mnist.load_data()
-
-# training data set
-input_training = [
-
-]
-
-output_training = [
-
-]
-
-# loading MNIST data
-for i in range(10000):
-    input_training.append(np.divide(train_x[i].flatten().tolist(), 255))
-
-    node_values = np.zeros(10)
-    node_values[train_y[i]] = 1
-
-    output_training.append(node_values)
-
-# neural network structure
-layer_sizes = [784, 16, 16, 10]
-layers = len(layer_sizes)
-weights = []
-biases = []
 
 while learn != "y" and learn != "n":
     learn = input("Learn? (Y/n): ").lower()
@@ -228,8 +229,10 @@ else:
 # finalized network application
 while True:
     test_question = "A"
+
     while test_question != "data" and test_question != "drawing":
         test_question = input("Try a data point or your own drawing? (data/drawing): ").lower()
+
     if test_question == "data":
         # get inputs
         choice = int(input(f"Image Choice #: "))
@@ -252,4 +255,3 @@ while True:
         # result
         print(softmax(activations[-1]))
         print(f"Outputted: {np.nanargmax(activations[-1])}")
-
