@@ -244,7 +244,7 @@ while True:
         print(f"Should be: {train_y[choice]}")
         print(f"Outputted: {np.nanargmax(activations[-1])}")
     elif test_question == "drawing":
-        inputs = np.array(drawing.main()).flatten().tolist()
+        inputs = np.divide(np.array(drawing.main()).flatten().tolist(), 255)
 
         inputs = np.reshape(inputs, (len(inputs), 1))
         forward(inputs)
