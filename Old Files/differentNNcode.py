@@ -26,8 +26,27 @@ def forward_pass(inputs, weights, biases):
         activations.append(leaky_relu(np.matmul(weights[layer], activations[-1]) + biases[layer]))
     return activations
 
-# def gradient(values, activations, weights, biases):
-#     ...
+def find_gradients(expected, activations, weights, biases):
+    # initialize gradeint lists
+    d_activations = []
+    d_weights = []
+    d_biases = []
+    layers = len(activations)
+    
+    # calculate gradients
+    d_activations.insert(0, np.multiply(-2, np.subtract(expected, activations[-1])))
+    for connection in range(layers - 2):
+        d_biases.insert(0, leaky_relu_prime(np.matmul(weights[-connection - 1], activations[-connection - 2]) + biases[-connection - 1]) * d_activations[0])
+        d_weights.insert(0, np.multiply(np.resize(d_biases[0], (layer_sizes[-connection - 2], layer_sizes[-connection - 1])).T, np.resize(activations[-connection - 2], (layer_sizes[-connection - 1], layer_sizes[-connection - 2]))))
+        d_activations.insert(0, np.reshape(np.sum(np.multiply(np.resize(d_biases[0], (layer_sizes[-connection - 2], layer_sizes[-connection - 1])), weights[-connection - 1].T), axis=1), (layer_sizes[-connection - 2], 1)))
+    d_biases.insert(0, leaky_relu_prime(np.matmul(weights[0], activations[0]) + biases[0]) * d_activations[0])
+    d_weights.insert(0, np.multiply(np.resize(d_biases[0], (layer_sizes[0], layer_sizes[1])).T, np.resize(activations[0], (layer_sizes[1], layer_sizes[0]))))
+    
+    gradients = {
+        "d_weights": d_weights,
+        "d_biases": d_biases,
+    }
+    return gradients
 
 def optimize(initial, gradient, learning_rate):
     output = []
@@ -55,30 +74,22 @@ output_index = ["checkered", "non-checkered"]
 
 # learning presets
 learn = True
-load = True
+load = False
 save = False
-epochs = 1
+epochs = 10000
 return_rate = 1000
-learning_rate = 0.01
+learning_rate = 0.1
 
 # neural network structure
 layer_sizes = [2, 3, 2]
 
 # if set network
 set_weights = [
-    np.array([[1,1],
-              [1,1],
-              [1,1]]),
-    np.array([[1, 1, 1],
-              [1, 1, 1]])
+    
 ]
 
 set_biases = [
-    np.array([[0],
-              [0],
-              [0]]),
-    np.array([[0],
-              [0]]),
+    
 ]
 
 # training data set
@@ -118,7 +129,6 @@ if learn:
     for epoch in range(epochs):
         # choose from training set
         training_choice = random.randint(0, len(input_training) - 1)  # maybe optimize?
-        training_choice = 1
         
         # reformat inputs and outputs
         activation = make_vector(input_training[training_choice])
@@ -127,26 +137,12 @@ if learn:
         # forward pass
         activations = forward_pass(activation, weights, biases)
         
-        # calculate gradients  # make function
-        d_activations = []
-        d_weights = []
-        d_biases = []
-        
-        d_activations.insert(0, np.multiply(-2, np.subtract(expected_values, activations[-1])))
-        
-        for connection in range(layers - 1):
-            d_bias = leaky_relu_prime(np.matmul(weights[-connection - 1], activations[-connection - 2]) + biases[-connection - 1]) * d_activations[0]
-            d_biases.insert(0, d_bias)
-            d_weight = np.multiply(np.resize(d_biases[0], (layer_sizes[-connection - 2], layer_sizes[-connection - 1])).T, np.resize(activations[-connection - 2], (layer_sizes[-connection - 1], layer_sizes[-connection - 2])))
-            d_weights.insert(0, d_weight)
-            d_activation = np.reshape(np.sum(np.multiply(np.resize(d_biases[0], (layer_sizes[-connection - 2], layer_sizes[-connection - 1])), weights[-connection - 1].T), axis=1), (layer_sizes[-connection - 2], 1))
-            d_activations.insert(0, d_activation)
+        # calculate gradients
+        gradients = find_gradients(expected_values, activations, weights, biases)
         
         # optimize weights and biases
-        weights = optimize(weights, d_weights, learning_rate)
-        biases = optimize(biases, d_biases, learning_rate)
-        print(d_weights)
-        print(d_biases)
+        weights = optimize(weights, gradients["d_weights"], learning_rate)
+        biases = optimize(biases, gradients["d_biases"], learning_rate)
         
         # error report
         if epoch % return_rate == 0:
@@ -154,7 +150,6 @@ if learn:
             for test_case in range(len(input_training)):
                 expected_values = make_vector(output_training[test_case])
                 actual_values = forward_pass(make_vector(input_training[test_case]), weights, biases)[-1]
-
                 error += calculate_error(expected_values, actual_values)
             print(f"({round((epoch / epochs) * 100)}%) MSE: {error[0] / len(input_training)}")
 else:
