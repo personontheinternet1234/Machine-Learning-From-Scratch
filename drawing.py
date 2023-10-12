@@ -43,7 +43,7 @@ def main():
     app.mainloop()
 
     # load the original image, and then blur it to increase likeness to MNIST dataset
-    test_drawing = cv2.blur(cv2.imread('etc/drawing.png'), (15, 15))
+    test_drawing = cv2.blur(cv2.imread('etc/drawing.png'), (10, 10))
 
     # resize the image to 28x28 pixels using cubic interpolation
     resized_image = cv2.resize(test_drawing, (28, 28), interpolation=cv2.INTER_CUBIC)

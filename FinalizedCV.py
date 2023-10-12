@@ -15,11 +15,11 @@ Author: Isaac Park Verbrugge, Christian Host-Madsen
 
 # learning presets
 learn = "A"
-epochs = 100000
+epochs = 10000
 return_rate = 1000
 learning_rate = 0.01
 activations = []
-lambda_reg = 0.01
+lambda_reg = 1
 amount_of_data = 1000
 
 # neural network structure
@@ -161,7 +161,8 @@ def backward():
         # print("\n\n\n")
         # print(d_biases[layer])
 
-        weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer] + (lambda_reg / amount_of_data) * weights[layer])
+        weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer] +
+                                     (lambda_reg / amount_of_data) * weights[layer])  # L2 regularization
         biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
 
 
@@ -252,18 +253,18 @@ while True:
         print(f"Outputted: {np.nanargmax(activations[-1])}")
     elif test_question == "drawing":
         inputs = np.divide(np.array(drawing.main()).flatten().tolist(), 255)
-        print(inputs)
+        # print(inputs)
 
         inputs = np.reshape(inputs, (len(inputs), 1))
         forward(inputs)
 
-        print(input_training[4])
+        # print(input_training[4])
 
         # result
         print(softmax(activations[-1]))
         print(f"Outputted: {np.nanargmax(activations[-1])}")
 
-        plt.gray()
-        plt.imshow(train_x[0])
-
-        plt.show()
+        # plt.gray()
+        # plt.imshow(train_x[0])
+        #
+        # plt.show()
