@@ -15,19 +15,20 @@ def main():
 
     def draw(event):
         global lastx, lasty
-        canvas.create_line((lastx, lasty, event.x, event.y), fill='white', width=25)
+        canvas.create_line((event.x, event.y, event.x + 20, event.y + 20), fill='white', width=20)
         draw_on_image(event.x, event.y)
         lastx, lasty = event.x, event.y
 
 
     def draw_on_image(x, y):
         draw = ImageDraw.Draw(image)
-        draw.line([(lastx, lasty), (x, y)], fill='white', width=25)
+        draw.ellipse((x, y, x + 20, y + 20), fill='white', width=20)
 
 
     def save_image():
         image.save("etc/drawing.png")
         print("saved")
+        app.destroy()
 
 
     # Create a button to save the drawing
@@ -47,7 +48,7 @@ def main():
     app.mainloop()
 
     # Load the original image
-    test_drawing = cv2.imread('etc/drawing.png')
+    test_drawing = cv2.GaussianBlur(cv2.imread('etc/drawing.png'), (5, 5), 0)
 
     # Resize the image to 28x28 pixels using cubic interpolation
     resized_image = cv2.resize(test_drawing, (28, 28), interpolation=cv2.INTER_CUBIC)
