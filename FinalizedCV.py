@@ -262,6 +262,6 @@ while True:
         print(f"Outputted: {np.nanargmax(activations[-1])}")
 
         plt.gray()
-        plt.imshow(train_x[4])
+        plt.imshow(train_x[0])
 
         plt.show()
