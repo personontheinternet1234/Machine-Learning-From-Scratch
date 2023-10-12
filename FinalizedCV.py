@@ -4,6 +4,8 @@ import drawing  # User inputted drawing code I made
 
 from tensorflow import keras  # Used ONLY for the MNIST training database
 
+from matplotlib import pyplot as plt
+
 """
 This program uses the nodes structure to practice basic backpropagation.
 Made from scratch (No tutorials, no pytorch).
@@ -248,10 +250,18 @@ while True:
         print(f"Outputted: {np.nanargmax(activations[-1])}")
     elif test_question == "drawing":
         inputs = np.divide(np.array(drawing.main()).flatten().tolist(), 255)
+        print(inputs)
 
         inputs = np.reshape(inputs, (len(inputs), 1))
         forward(inputs)
 
+        print(input_training[4])
+
         # result
         print(softmax(activations[-1]))
         print(f"Outputted: {np.nanargmax(activations[-1])}")
+
+        plt.gray()
+        plt.imshow(train_x[0])
+
+        plt.show()
