@@ -7,7 +7,33 @@ Made from scratch (No tutorials, no pytorch).
 Version: 1.0
 Author: Isaac Park Verbrugge, Christian Host-Madsen
 """
+
+# learning presets
+learn = "A"  # add this functionality, add ability to choose original weights and biases
+epochs = 100000
+return_rate = 1000
+learning_rate = 0.01
 activations = []
+
+# neural network structure
+layer_sizes = [2, 3, 2]
+layers = len(layer_sizes)
+weights = []
+biases = []
+
+# training data set
+input_training = [
+    [0, 0],
+    [0, 1],
+    [1, 0],
+    [1, 1]
+]
+output_training = [
+    [0, 1],
+    [1, 0],
+    [1, 0],
+    [0, 1]
+]
 
 
 # sigmoid activation function
@@ -124,42 +150,6 @@ def backward():
 # user indexes
 input_index = ["a(0)0", "a(0)1"]
 output_index = ["checkered", "non checkered"]
-
-# learning presets
-learn = "A"  # add this functionality, add ability to choose original weights and biases
-non_linearity = "relu"  # add this functionality
-error_analysis = "SSR"  # add this functionality
-epochs = 100000
-return_rate = 1000
-learning_rate = 0.01
-# if set network
-set_weights = [
-
-]
-
-set_biases = [
-
-]
-
-# training data set
-input_training = [
-    [0, 0],
-    [0, 1],
-    [1, 0],
-    [1, 1]
-]
-output_training = [
-    [0, 1],
-    [1, 0],
-    [1, 0],
-    [0, 1]
-]
-
-# neural network structure
-layer_sizes = [2, 3, 2]
-layers = len(layer_sizes)
-weights = []
-biases = []
 
 while learn != "y" and learn != "n":
     learn = input("Learn? (Y/n): ").lower()
