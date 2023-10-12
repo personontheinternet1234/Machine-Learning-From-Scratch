@@ -19,6 +19,8 @@ epochs = 100000
 return_rate = 1000
 learning_rate = 0.01
 activations = []
+lambda_reg = 0.01
+amount_of_data = 1000
 
 # neural network structure
 layer_sizes = [784, 16, 16, 10]
@@ -38,7 +40,7 @@ output_training = [
 ]
 
 # loading MNIST data
-for i in range(10000):
+for i in range(amount_of_data):
     input_training.append(np.divide(train_x[i].flatten().tolist(), 255))
 
     node_values = np.zeros(10)
@@ -159,7 +161,7 @@ def backward():
         # print("\n\n\n")
         # print(d_biases[layer])
 
-        weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
+        weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer] + (lambda_reg / amount_of_data) * weights[layer])
         biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
 
 
