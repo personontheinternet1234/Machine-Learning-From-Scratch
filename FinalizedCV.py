@@ -15,6 +15,8 @@ Author: Isaac Park Verbrugge, Christian Host-Madsen
 
 # learning presets
 learn = "A"
+load = "A"
+save = "A"
 epochs = 100000
 return_rate = 1000
 learning_rate = 0.01
@@ -165,16 +167,28 @@ def backward():
                                      (lambda_reg / amount_of_data) * weights[layer]))  # L2 regularization
         biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
 
+while load != "y" and load != "n":
+    load = input("Load? (Y/n): ").lower()
 
-while learn != "y" and learn != "n":
-    learn = input("Learn? (Y/n): ").lower()
-
-if learn == "y":
+if load == "y":
+    with open("etc/weights.txt", "r") as file:
+        weights = ast.literal_eval(file.read())
+    with open("etc/biases.txt", "r") as file:
+        biases = ast.literal_eval(file.read())
+    for i in range(len(weights)):
+        weights[i] = np.array(weights[i])
+    for i in range(len(biases)):
+        biases[i] = np.array(biases[i])
+elif load == "n":
     # instantiate weights and biases
     for i in range(layers - 1):
         weights.append(xavier_initialize(layer_sizes[i + 1], layer_sizes[i]))  # Xavier Initialization
         biases.append(zeros_initialize(layer_sizes[i + 1], 1))
 
+while learn != "y" and learn != "n":
+    learn = input("Learn? (Y/n): ").lower()
+
+if learn == "y":
     # training loop
     for epoch in range(epochs):
         # choose from training set
@@ -200,23 +214,12 @@ if learn == "y":
 
                 error += cross_entropy(softmax(activations[-1]), expected_values)
             print(f"({round((epoch / epochs) * 100)}%) Avg CE: {error / len(input_training)}")
-else:
-    with open("etc/weights.txt", "r") as file:
-        weights = ast.literal_eval(file.read())
-    with open("etc/biases.txt", "r") as file:
-        biases = ast.literal_eval(file.read())
-
-    for i in range(len(weights)):
-        weights[i] = np.array(weights[i])
-    for i in range(len(biases)):
-        biases[i] = np.array(biases[i])
 print()
 
-save_question = "A"
-while save_question != "y" and save_question != "n":
-    save_question = input("Save the weights & biases just calculated? (Y/n): ").lower()
+while save != "y" and save != "n":
+    save = input("Save the weights & biases just calculated? (Y/n): ").lower()
 
-if save_question == "y":
+if save == "y":
     saved_weights = []
     saved_biases = []
     for i in range(len(weights)):
@@ -253,12 +256,9 @@ while True:
         print(f"Outputted: {np.nanargmax(activations[-1])}")
     elif test_question == "drawing":
         inputs = np.divide(np.array(drawing.main()).flatten().tolist(), 255)
-        # print(inputs)
 
         inputs = np.reshape(inputs, (len(inputs), 1))
         forward(inputs)
-
-        # print(input_training[4])
 
         # result
         print(softmax(activations[-1]))
@@ -266,5 +266,4 @@ while True:
 
         # plt.gray()
         # plt.imshow(train_x[0])
-        #
         # plt.show()
