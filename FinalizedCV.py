@@ -4,6 +4,8 @@ import drawing  # User inputted drawing code I made
 
 from tensorflow import keras  # Used ONLY for the MNIST training database
 
+from matplotlib import pyplot as plt
+
 """
 This program uses the nodes structure to practice basic backpropagation.
 Made from scratch (No tutorials, no pytorch).
@@ -13,10 +15,40 @@ Author: Isaac Park Verbrugge, Christian Host-Madsen
 
 # learning presets
 learn = "A"
+load = "A"
+save = "A"
 epochs = 100000
 return_rate = 1000
 learning_rate = 0.01
 activations = []
+lambda_reg = 1
+amount_of_data = 10000
+
+# neural network structure
+layer_sizes = [784, 16, 16, 10]
+layers = len(layer_sizes)
+weights = []
+biases = []
+
+(train_x, train_y), (test_x, test_y) = keras.datasets.mnist.load_data()
+
+# training data set
+input_training = [
+
+]
+
+output_training = [
+
+]
+
+# loading MNIST data
+for i in range(amount_of_data):
+    input_training.append(np.divide(train_x[i].flatten().tolist(), 255))
+
+    node_values = np.zeros(10)
+    node_values[train_y[i]] = 1
+
+    output_training.append(node_values)
 
 
 # sigmoid activation function
@@ -131,44 +163,32 @@ def backward():
         # print("\n\n\n")
         # print(d_biases[layer])
 
-        weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
+        weights[layer] = np.subtract(weights[layer], learning_rate * (d_weights[layer] +
+                                     (lambda_reg / amount_of_data) * weights[layer]))  # L2 regularization
         biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
 
-(train_x, train_y), (test_x, test_y) = keras.datasets.mnist.load_data()
+while load != "y" and load != "n":
+    load = input("Load? (Y/n): ").lower()
 
-# training data set
-input_training = [
-
-]
-
-output_training = [
-
-]
-
-# loading MNIST data
-for i in range(10000):
-    input_training.append(np.divide(train_x[i].flatten().tolist(), 255))
-
-    node_values = np.zeros(10)
-    node_values[train_y[i]] = 1
-
-    output_training.append(node_values)
-
-# neural network structure
-layer_sizes = [784, 16, 16, 10]
-layers = len(layer_sizes)
-weights = []
-biases = []
-
-while learn != "y" and learn != "n":
-    learn = input("Learn? (Y/n): ").lower()
-
-if learn == "y":
+if load == "y":
+    with open("etc/weights.txt", "r") as file:
+        weights = ast.literal_eval(file.read())
+    with open("etc/biases.txt", "r") as file:
+        biases = ast.literal_eval(file.read())
+    for i in range(len(weights)):
+        weights[i] = np.array(weights[i])
+    for i in range(len(biases)):
+        biases[i] = np.array(biases[i])
+elif load == "n":
     # instantiate weights and biases
     for i in range(layers - 1):
         weights.append(xavier_initialize(layer_sizes[i + 1], layer_sizes[i]))  # Xavier Initialization
         biases.append(zeros_initialize(layer_sizes[i + 1], 1))
 
+while learn != "y" and learn != "n":
+    learn = input("Learn? (Y/n): ").lower()
+
+if learn == "y":
     # training loop
     for epoch in range(epochs):
         # choose from training set
@@ -194,23 +214,12 @@ if learn == "y":
 
                 error += cross_entropy(softmax(activations[-1]), expected_values)
             print(f"({round((epoch / epochs) * 100)}%) Avg CE: {error / len(input_training)}")
-else:
-    with open("etc/weights.txt", "r") as file:
-        weights = ast.literal_eval(file.read())
-    with open("etc/biases.txt", "r") as file:
-        biases = ast.literal_eval(file.read())
-
-    for i in range(len(weights)):
-        weights[i] = np.array(weights[i])
-    for i in range(len(biases)):
-        biases[i] = np.array(biases[i])
 print()
 
-save_question = "A"
-while save_question != "y" and save_question != "n":
-    save_question = input("Save the weights & biases just calculated? (Y/n): ").lower()
+while save != "y" and save != "n":
+    save = input("Save the weights & biases just calculated? (Y/n): ").lower()
 
-if save_question == "y":
+if save == "y":
     saved_weights = []
     saved_biases = []
     for i in range(len(weights)):
@@ -228,8 +237,10 @@ else:
 # finalized network application
 while True:
     test_question = "A"
+
     while test_question != "data" and test_question != "drawing":
         test_question = input("Try a data point or your own drawing? (data/drawing): ").lower()
+
     if test_question == "data":
         # get inputs
         choice = int(input(f"Image Choice #: "))
@@ -253,3 +264,6 @@ while True:
         print(softmax(activations[-1]))
         print(f"Outputted: {np.nanargmax(activations[-1])}")
 
+        # plt.gray()
+        # plt.imshow(train_x[0])
+        # plt.show()

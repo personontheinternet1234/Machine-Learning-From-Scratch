@@ -7,7 +7,35 @@ Made from scratch (No tutorials, no pytorch).
 Version: 1.0
 Author: Isaac Park Verbrugge, Christian Host-Madsen
 """
+
+# learning presets
+learn = "A"  # add this functionality, add ability to choose original weights and biases
+load = "A"
+save = "A"
+epochs = 100000
+return_rate = 1000
+learning_rate = 0.01
 activations = []
+
+# neural network structure
+layer_sizes = [2, 3, 2]
+layers = len(layer_sizes)
+weights = []
+biases = []
+
+# training data set
+input_training = [
+    [0, 0],
+    [0, 1],
+    [1, 0],
+    [1, 1]
+]
+output_training = [
+    [0, 1],
+    [1, 0],
+    [1, 0],
+    [0, 1]
+]
 
 
 # sigmoid activation function
@@ -125,41 +153,23 @@ def backward():
 input_index = ["a(0)0", "a(0)1"]
 output_index = ["checkered", "non checkered"]
 
-# learning presets
-learn = "A"  # add this functionality, add ability to choose original weights and biases
-non_linearity = "relu"  # add this functionality
-error_analysis = "SSR"  # add this functionality
-epochs = 100000
-return_rate = 1000
-learning_rate = 0.01
-# if set network
-set_weights = [
+while load != "y" and load != "n":
+    load = input("Load? (Y/n): ").lower()
 
-]
-
-set_biases = [
-
-]
-
-# training data set
-input_training = [
-    [0, 0],
-    [0, 1],
-    [1, 0],
-    [1, 1]
-]
-output_training = [
-    [0, 1],
-    [1, 0],
-    [1, 0],
-    [0, 1]
-]
-
-# neural network structure
-layer_sizes = [2, 3, 2]
-layers = len(layer_sizes)
-weights = []
-biases = []
+if load == "y":
+    with open("etc/weights.txt", "r") as file:
+        weights = ast.literal_eval(file.read())
+    with open("etc/biases.txt", "r") as file:
+        biases = ast.literal_eval(file.read())
+    for i in range(len(weights)):
+        weights[i] = np.array(weights[i])
+    for i in range(len(biases)):
+        biases[i] = np.array(biases[i])
+elif load == "n":
+    # instantiate weights and biases
+    for i in range(layers - 1):
+        weights.append(xavier_initialize(layer_sizes[i + 1], layer_sizes[i]))  # Xavier Initialization
+        biases.append(zeros_initialize(layer_sizes[i + 1], 1))
 
 while learn != "y" and learn != "n":
     learn = input("Learn? (Y/n): ").lower()
@@ -195,23 +205,12 @@ if learn == "y":
 
                 error += np.sum(np.subtract(expected_values, activations[-1]) ** 2)
             print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
-else:
-    with open("etc/weights.txt", "r") as file:
-        weights = ast.literal_eval(file.read())
-    with open("etc/biases.txt", "r") as file:
-        biases = ast.literal_eval(file.read())
-
-    for i in range(len(weights)):
-        weights[i] = np.array(weights[i])
-    for i in range(len(biases)):
-        biases[i] = np.array(biases[i])
 print()
 
-save_question = "A"
-while save_question != "y" and save_question != "n":
-    save_question = input("Save the weights & biases just calculated? (Y/n): ").lower()
+while save != "y" and save != "n":
+    save = input("Save the weights & biases just calculated? (Y/n): ").lower()
 
-if save_question == "y":
+if save == "y":
     saved_weights = []
     saved_biases = []
     for i in range(len(weights)):
