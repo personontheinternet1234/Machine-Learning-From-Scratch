@@ -15,12 +15,12 @@ Author: Isaac Park Verbrugge, Christian Host-Madsen
 
 # learning presets
 learn = "A"
-epochs = 10000
+epochs = 100000
 return_rate = 1000
 learning_rate = 0.01
 activations = []
 lambda_reg = 1
-amount_of_data = 1000
+amount_of_data = 10000
 
 # neural network structure
 layer_sizes = [784, 16, 16, 10]
@@ -161,8 +161,8 @@ def backward():
         # print("\n\n\n")
         # print(d_biases[layer])
 
-        weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer] +
-                                     (lambda_reg / amount_of_data) * weights[layer])  # L2 regularization
+        weights[layer] = np.subtract(weights[layer], learning_rate * (d_weights[layer] +
+                                     (lambda_reg / amount_of_data) * weights[layer]))  # L2 regularization
         biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
 
 
