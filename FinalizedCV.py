@@ -1,6 +1,7 @@
 import numpy as np
 import ast  # Used just for reading preset weights and biases into a list if we want to.
 import drawing  # User inputted drawing code I made
+import os
 
 from tensorflow import keras  # Used ONLY for the MNIST training database
 
@@ -17,11 +18,12 @@ Author: Isaac Park Verbrugge, Christian Host-Madsen
 learn = "A"
 load = "A"
 save = "A"
+choose_name = "A"
 epochs = 100000
 return_rate = 1000
 learning_rate = 0.01
 activations = []
-lambda_reg = 1
+lambda_reg = 0.1
 amount_of_data = 10000
 
 # neural network structure
@@ -169,11 +171,13 @@ def backward():
 
 while load != "y" and load != "n":
     load = input("Load? (Y/n): ").lower()
+while choose_name not in os.listdir("etc/"):
+    choose_name = input("Choose a file: ")
 
 if load == "y":
-    with open("etc/weights.txt", "r") as file:
+    with open(f"etc/{choose_name}/weights.txt", "r") as file:
         weights = ast.literal_eval(file.read())
-    with open("etc/biases.txt", "r") as file:
+    with open(f"etc/{choose_name}/biases.txt", "r") as file:
         biases = ast.literal_eval(file.read())
     for i in range(len(weights)):
         weights[i] = np.array(weights[i])
@@ -227,9 +231,12 @@ if save == "y":
     for i in range(len(biases)):
         saved_biases.append(biases[i].tolist())
 
-    with open("etc/weights.txt", "w") as file:
+    directory_name = input("Enter a name for this save: ")
+    os.mkdir(f"etc/{directory_name}")
+
+    with open(f"etc/{directory_name}/weights.txt", "w") as file:
         file.write(str(saved_weights))
-    with open("etc/biases.txt", "w") as file:
+    with open(f"etc/{directory_name}/biases.txt", "w") as file:
         file.write(str(saved_biases))
 else:
     pass
