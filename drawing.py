@@ -19,7 +19,7 @@ def main():
 
     def draw_on_image(x, y):
         draw = ImageDraw.Draw(image)
-        draw.ellipse((x, y, x + 15, y + 15), fill='white', width=0)
+        draw.ellipse((x, y, x + 23, y + 23), fill='white', width=0)
 
     def save_image():
         image.save("etc/drawing.png")

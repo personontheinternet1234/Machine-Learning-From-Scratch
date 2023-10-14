@@ -209,15 +209,16 @@ if learn == "y":
 
         # error report
         if epoch % return_rate == 0:
-            error = 0
-            for i in range(len(input_training)):
-                # reformat inputs and outputs
-                inputs, expected_values = reformat(i)
-
-                forward(inputs)
-
-                error += cross_entropy(softmax(activations[-1]), expected_values)
-            print(f"({round((epoch / epochs) * 100)}%) Avg CE: {error / len(input_training)}")
+            # error = 0
+            # for i in range(len(input_training)):
+            #     # reformat inputs and outputs
+            #     inputs, expected_values = reformat(i)
+            #
+            #     forward(inputs)
+            #
+            #     error += cross_entropy(softmax(activations[-1]), expected_values)
+            # print(f"({round((epoch / epochs) * 100)}%) Avg CE: {error / len(input_training)}")
+            print(f"({round((epoch / epochs) * 100)}%)")
 print()
 
 while save != "y" and save != "n":
@@ -232,7 +233,10 @@ if save == "y":
         saved_biases.append(biases[i].tolist())
 
     directory_name = input("Enter a name for this save: ")
-    os.mkdir(f"etc/{directory_name}")
+    try:
+        os.mkdir(f"etc/{directory_name}")
+    except:
+        print("Directory already exists, overwriting...")
 
     with open(f"etc/{directory_name}/weights.txt", "w") as file:
         file.write(str(saved_weights))
