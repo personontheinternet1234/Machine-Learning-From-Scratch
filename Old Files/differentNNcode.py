@@ -1,3 +1,4 @@
+import ast
 import random
 
 import numpy as np
@@ -84,22 +85,14 @@ output_index = ["checkered", "non-checkered"]
 
 # learning presets
 learn = True
-load = True
-print = True
+load = False
+save = False
 epochs = 10000
 return_rate = 1000
 learning_rate = 0.1
 
 # neural network structure
 layer_sizes = [2, 3, 2]
-
-# saved weights & biases
-set_weights = [
-
-]
-set_biases = [
-
-]
 
 # training set
 input_training = [
@@ -126,22 +119,32 @@ if learn:
     biases = []
     if load:
         # load weights and biases
-        weights = set_weights
-        biases = set_biases
+        with open("saved/weights", "r") as weights_f:
+            for line in weights_f:
+                weights.append(np.array(ast.literal_eval(line)))
+        with open("saved/biases", "r") as biases_f:
+            for line in biases_f:
+                biases.append(make_vector(ast.literal_eval(line)))
     else:
         # generate weights and biases
         for connection in range(layers - 1):
             weights.append(xavier_initialize(layer_sizes[connection + 1], layer_sizes[connection]))
             biases.append(zeros_initialize(layer_sizes[connection + 1], 1))
     
-    # training loop
+    # format training data
+    for data in range(len(input_training)):
+        input_training[data] = make_vector(input_training[data])
+    for data in range(len(output_training)):
+        output_training[data] = make_vector(output_training[data])
+    
+    # begin training loop
     for epoch in range(epochs):
         # choose from training set
-        training_choice = random.randint(0, len(input_training) - 1)
+        training_choice = random.randint(0, len(input_training) - 1)  # maybe optimize?
         
-        # reformat inputs and outputs
-        activation = make_vector(input_training[training_choice])
-        expected = make_vector(output_training[training_choice])
+        # set inputs and outputs
+        activation = input_training[training_choice]
+        expected = output_training[training_choice]
         
         # forward pass
         activations = forward_pass(activation, weights, biases)
@@ -157,45 +160,47 @@ if learn:
         if epoch % return_rate == 0:
             error = 0
             for test_case in range(len(input_training)):
-                expected = make_vector(output_training[test_case])
-                actual_values = forward_pass(make_vector(input_training[test_case]), weights, biases)[-1]
+                expected = output_training[test_case]
+                actual_values = forward_pass(input_training[test_case], weights, biases)[-1]
                 error += calculate_error(expected, actual_values)
             print(f"({round((epoch / epochs) * 100)}%) MSE: {error[0] / len(input_training)}")
+    
+    # print final error
+    error = 0
+    for test_case in range(len(input_training)):
+        expected = output_training[test_case]
+        actual_values = forward_pass(input_training[test_case], weights, biases)[-1]
+        error += calculate_error(expected, actual_values)
+    print("")
+    print(f"Final MSE: {error[0] / len(input_training)}")
 else:
     # instantiate weights and biases
     weights = []
     biases = []
     if load:
         # load weights and biases
-        weights = set_weights
-        biases = set_biases
+        with open("saved/weights", "r") as weights_f:
+            for line in weights_f:
+                weights.append(np.array(ast.literal_eval(line)))
+        with open("saved/biases", "r") as biases_f:
+            for line in biases_f:
+                biases.append(make_vector(ast.literal_eval(line)))
     else:
         # generate weights and biases
         for connection in range(layers - 1):
             weights.append(xavier_initialize(layer_sizes[connection + 1], layer_sizes[connection]))
             biases.append(zeros_initialize(layer_sizes[connection + 1], 1))
+if save:
+    # save optimized weights and biases
+    with open("saved/weights", "w") as file:
+        for array in range(len(weights)):
+            file.write(str(weights[array].tolist()) + "\n")
+    with open("saved/biases", "w") as file:
+        for array in range(len(biases)):
+            file.write(str(biases[array].tolist()) + "\n")
 
 # finalized network application
 
-# print optimized weights and biases
-if print:
-    for connection in range(len(weights)):
-        print("")
-        print(f"Weights (layer {connection}):")
-        print(weights[connection])
-        print(f"Biases (layer {connection}):")
-        print(biases[connection])
-
-# print final error
-error = 0
-for test_case in range(len(input_training)):
-    expected = make_vector(output_training[test_case])
-    actual_values = forward_pass(make_vector(input_training[test_case]), weights, biases)[-1]
-    error += calculate_error(expected, actual_values)
-print("")
-print(f"Final MSE: {error[0] / len(input_training)}")
-
-# user input
 while True:
     # get inputs
     print("")
