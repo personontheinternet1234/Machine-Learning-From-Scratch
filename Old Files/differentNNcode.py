@@ -96,8 +96,8 @@ output_index = ["checkered", "non-checkered"]
 
 # learning presets
 learn = True
-load = True
-save = True
+load = False
+save = False
 epochs = 100000
 return_rate = 1000
 learning_rate = 0.1
