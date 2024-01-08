@@ -1,10 +1,13 @@
+""" neural network without libraries
+    Isaac Park Verbrugge & Christian Host-Madsen """
+
 import ast
 import random
 
 import numpy as np
 
+""" functions """
 
-# functions
 
 def leaky_relu(inputs):
     # leaky relu equation
@@ -39,7 +42,7 @@ def forward_pass(inputs, weights, biases):
 
 
 def find_gradients(expected, activations, weights, biases):
-    # initialize gradeint lists
+    # initialize gradient lists
     d_activations = []
     d_weights = []
     d_biases = []
@@ -88,7 +91,7 @@ def calculate_error(expected, actual):
     return error
 
 
-# network presets
+""" network presets """
 
 # user indexes
 input_index = ["a(0)0", "a(0)1"]
@@ -119,7 +122,7 @@ output_training = [
     [0, 1]
 ]
 
-# network formation
+""" network formation """
 
 input('Press "Enter" to start.')
 
@@ -210,7 +213,7 @@ if save:
         for array in range(len(biases)):
             file.write(str(biases[array].tolist()) + "\n")
 
-# finalized network application
+""" finalized network application """
 
 while True:
     # get inputs
