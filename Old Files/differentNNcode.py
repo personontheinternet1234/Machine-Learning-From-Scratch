@@ -3,6 +3,7 @@
 
 import ast
 import random
+import time
 
 import numpy as np
 
@@ -16,7 +17,7 @@ def leaky_relu(inputs):
 
 
 def leaky_relu_prime(inputs):
-    # leaky relu' equation
+    # leaky relu equation
     output = np.where(inputs > 0, 1, 0.1)
     return output
 
@@ -50,10 +51,10 @@ def find_gradients(expected, activations, weights, biases):
 
     # calculate gradients
     d_activations.insert(0, np.multiply(-2, np.subtract(expected, activations[-1])))
-    for connection in range(layers - 2):
-        d_biases.insert(0, leaky_relu_prime(np.matmul(weights[-connection - 1], activations[-connection - 2]) + biases[-connection - 1]) * d_activations[0])
-        d_weights.insert(0, np.multiply(np.resize(d_biases[0], (layer_sizes[-connection - 2], layer_sizes[-connection - 1])).T, np.resize(activations[-connection - 2], (layer_sizes[-connection - 1], layer_sizes[-connection - 2]))))
-        d_activations.insert(0, np.reshape(np.sum(np.multiply(np.resize(d_biases[0], (layer_sizes[-connection - 2], layer_sizes[-connection - 1])), weights[-connection - 1].T), axis=1), (layer_sizes[-connection - 2], 1)))
+    for connection in range(-1, -layers + 1, -1):
+        d_biases.insert(0, leaky_relu_prime(np.matmul(weights[connection], activations[connection - 1]) + biases[connection]) * d_activations[0])
+        d_weights.insert(0, np.multiply(np.resize(d_biases[0], (layer_sizes[connection - 1], layer_sizes[connection])).T, np.resize(activations[connection - 1], (layer_sizes[connection], layer_sizes[connection - 1]))))
+        d_activations.insert(0, np.reshape(np.sum(np.multiply(np.resize(d_biases[0], (layer_sizes[connection - 1], layer_sizes[connection])), weights[connection].T), axis=1), (layer_sizes[connection - 1], 1)))
     d_biases.insert(0, leaky_relu_prime(np.matmul(weights[0], activations[0]) + biases[0]) * d_activations[0])
     d_weights.insert(0, np.multiply(np.resize(d_biases[0], (layer_sizes[0], layer_sizes[1])).T, np.resize(activations[0], (layer_sizes[1], layer_sizes[0]))))
 
@@ -99,46 +100,47 @@ output_index = ["checkered", "non-checkered"]
 
 # learning presets
 learn = True
-load = False
+load = True
 save = False
-epochs = 100000
-return_rate = 1000
+epochs = 500000
+return_rate = 10000
 learning_rate = 0.1
 
 # neural network structure
 layer_sizes = [2, 3, 2]
 
 # training set
-input_training = [
-    [0, 0],
-    [0, 1],
-    [1, 0],
-    [1, 1]
-]
-output_training = [
-    [0, 1],
-    [1, 0],
-    [1, 0],
-    [0, 1]
-]
+if learn:
+    input_training = []
+    output_training = []
+    with open("data/input_data.txt", "r") as f:
+        for line in f:
+            input_training.append(ast.literal_eval(line))
+    with open("data/output_data.txt", "r") as f:
+        for line in f:
+            output_training.append(ast.literal_eval(line))
 
 """ network formation """
 
 input('Press "Enter" to start.')
+start_time = time.time()
 
 layers = len(layer_sizes)
+input_len = len(input_training)
+output_len = len(output_training)
 if learn:
     # instantiate weights and biases
     weights = []
     biases = []
     if load:
         # load weights and biases
-        with open("saved/weights", "r") as weights_f:
-            for line in weights_f:
+        with open("saved/weights.txt", "r") as f:
+            for line in f:
                 weights.append(np.array(ast.literal_eval(line)))
-        with open("saved/biases", "r") as biases_f:
-            for line in biases_f:
+        with open("saved/biases.txt", "r") as f:
+            for line in f:
                 biases.append(make_vector(ast.literal_eval(line)))
+        weights_len = len(weights)
     else:
         # generate weights and biases
         for connection in range(layers - 1):
@@ -146,15 +148,15 @@ if learn:
             biases.append(zeros_initialize(layer_sizes[connection + 1], 1))
 
     # format training data
-    for data in range(len(input_training)):
+    for data in range(input_len):
         input_training[data] = make_vector(input_training[data])
-    for data in range(len(output_training)):
+    for data in range(output_len):
         output_training[data] = make_vector(output_training[data])
 
     # begin training loop
     for epoch in range(epochs):
         # choose from training set
-        training_choice = random.randint(0, len(input_training) - 1)
+        training_choice = random.randint(0, input_len - 1)
 
         # set inputs and outputs
         activation = input_training[training_choice]
@@ -173,31 +175,33 @@ if learn:
         # error report
         if epoch % return_rate == 0:
             error = 0
-            for test_case in range(len(input_training)):
+            for test_case in range(input_len):
                 expected = output_training[test_case]
                 actual_values = forward_pass(input_training[test_case], weights, biases)[-1]
                 error += calculate_error(expected, actual_values)
-            print(f"({round((epoch / epochs) * 100)}%) MSE: {error[0] / len(input_training)}")
+            print(f"({round((epoch / epochs) * 100)}%) MSE: {error[0] / input_len}")
 
-    # print final error
+    # print final error and time
+    end_time = time.time()
     error = 0
-    for test_case in range(len(input_training)):
+    for test_case in range(input_len):
         expected = output_training[test_case]
         actual_values = forward_pass(input_training[test_case], weights, biases)[-1]
         error += calculate_error(expected, actual_values)
     print("")
-    print(f"Final MSE: {error[0] / len(input_training)}")
+    print(f"Final MSE: {error[0] / input_len}")
+    print(f"Elapsed time: {end_time - start_time} seconds")
 else:
     # instantiate weights and biases
     weights = []
     biases = []
     if load:
         # load weights and biases
-        with open("saved/weights", "r") as weights_f:
-            for line in weights_f:
+        with open("saved/weights.txt", "r") as f:
+            for line in f:
                 weights.append(np.array(ast.literal_eval(line)))
-        with open("saved/biases", "r") as biases_f:
-            for line in biases_f:
+        with open("saved/biases.txt", "r") as f:
+            for line in f:
                 biases.append(make_vector(ast.literal_eval(line)))
     else:
         # generate weights and biases
@@ -206,12 +210,12 @@ else:
             biases.append(zeros_initialize(layer_sizes[connection + 1], 1))
 if save:
     # save optimized weights and biases
-    with open("saved/weights", "w") as file:
+    with open("saved/weights.txt", "w") as f:
         for array in range(len(weights)):
-            file.write(str(weights[array].tolist()) + "\n")
-    with open("saved/biases", "w") as file:
+            f.write(str(weights[array].tolist()) + "\n")
+    with open("saved/biases.txt", "w") as f:
         for array in range(len(biases)):
-            file.write(str(biases[array].tolist()) + "\n")
+            f.write(str(biases[array].tolist()) + "\n")
 
 """ finalized network application """
 
