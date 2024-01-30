@@ -69,7 +69,8 @@ def find_gradients(expected, activations, weights, biases):
 def optimize(initial, gradient, learning_rate):
     # adjust weights and biases
     output = []
-    for connection in range(len(initial)):
+    layer_size = len(initial)
+    for connection in range(layer_size):
         output.append(np.subtract(initial[connection], np.multiply(learning_rate, gradient[connection])))
     return output
 
@@ -100,59 +101,65 @@ output_index = ["checkered", "non-checkered"]
 
 # learning presets
 learn = True
-load = True
+load = False
 save = False
-epochs = 500000
+epochs = 100000
 return_rate = 10000
 learning_rate = 0.1
 
 # neural network structure
 layer_sizes = [2, 3, 2]
 
-# training set
-if learn:
-    input_training = []
-    output_training = []
-    with open("data/input_data.txt", "r") as f:
-        for line in f:
-            input_training.append(ast.literal_eval(line))
-    with open("data/output_data.txt", "r") as f:
-        for line in f:
-            output_training.append(ast.literal_eval(line))
+# file locations
+input_data_location = "data/input_data.txt"
+output_data_location = "data/output_data.txt"
+
 
 """ network formation """
 
 input('Press "Enter" to start.')
 start_time = time.time()
 
+# load training set
+input_training = []
+output_training = []
+with open("data/input_data.txt", "r") as f:
+    for line in f:
+        input_training.append(ast.literal_eval(line))
+with open("data/output_data.txt", "r") as f:
+    for line in f:
+        output_training.append(ast.literal_eval(line))
+
+# set values
 layers = len(layer_sizes)
 input_len = len(input_training)
 output_len = len(output_training)
+
+# format training data
+for data in range(input_len):
+    input_training[data] = make_vector(input_training[data])
+for data in range(output_len):
+    output_training[data] = make_vector(output_training[data])
+
+# instantiate weights and biases
+weights = []
+biases = []
+if load:
+    # load weights and biases
+    with open("saved/weights.txt", "r") as f:
+        for line in f:
+            weights.append(np.array(ast.literal_eval(line)))
+    with open("saved/biases.txt", "r") as f:
+        for line in f:
+            biases.append(make_vector(ast.literal_eval(line)))
+    weights_len = len(weights)
+else:
+    # generate weights and biases
+    for connection in range(layers - 1):
+        weights.append(xavier_initialize(layer_sizes[connection + 1], layer_sizes[connection]))
+        biases.append(zeros_initialize(layer_sizes[connection + 1], 1))
+
 if learn:
-    # instantiate weights and biases
-    weights = []
-    biases = []
-    if load:
-        # load weights and biases
-        with open("saved/weights.txt", "r") as f:
-            for line in f:
-                weights.append(np.array(ast.literal_eval(line)))
-        with open("saved/biases.txt", "r") as f:
-            for line in f:
-                biases.append(make_vector(ast.literal_eval(line)))
-        weights_len = len(weights)
-    else:
-        # generate weights and biases
-        for connection in range(layers - 1):
-            weights.append(xavier_initialize(layer_sizes[connection + 1], layer_sizes[connection]))
-            biases.append(zeros_initialize(layer_sizes[connection + 1], 1))
-
-    # format training data
-    for data in range(input_len):
-        input_training[data] = make_vector(input_training[data])
-    for data in range(output_len):
-        output_training[data] = make_vector(output_training[data])
-
     # begin training loop
     for epoch in range(epochs):
         # choose from training set
@@ -172,42 +179,31 @@ if learn:
         weights = optimize(weights, gradients["d_weights"], learning_rate)
         biases = optimize(biases, gradients["d_biases"], learning_rate)
 
-        # error report
+        # loss report
         if epoch % return_rate == 0:
             error = 0
             for test_case in range(input_len):
                 expected = output_training[test_case]
                 actual_values = forward_pass(input_training[test_case], weights, biases)[-1]
                 error += calculate_error(expected, actual_values)
-            print(f"({round((epoch / epochs) * 100)}%) MSE: {error[0] / input_len}")
+            print(f"{round((epoch / epochs) * 100)}% - MSE: {error[0] / input_len}")
 
-    # print final error and time
-    end_time = time.time()
-    error = 0
-    for test_case in range(input_len):
-        expected = output_training[test_case]
-        actual_values = forward_pass(input_training[test_case], weights, biases)[-1]
-        error += calculate_error(expected, actual_values)
-    print("")
-    print(f"Final MSE: {error[0] / input_len}")
-    print(f"Elapsed time: {end_time - start_time} seconds")
-else:
-    # instantiate weights and biases
-    weights = []
-    biases = []
-    if load:
-        # load weights and biases
-        with open("saved/weights.txt", "r") as f:
-            for line in f:
-                weights.append(np.array(ast.literal_eval(line)))
-        with open("saved/biases.txt", "r") as f:
-            for line in f:
-                biases.append(make_vector(ast.literal_eval(line)))
-    else:
-        # generate weights and biases
-        for connection in range(layers - 1):
-            weights.append(xavier_initialize(layer_sizes[connection + 1], layer_sizes[connection]))
-            biases.append(zeros_initialize(layer_sizes[connection + 1], 1))
+end_time = time.time()
+# calculate loss
+error = 0
+for test_case in range(input_len):
+    expected = output_training[test_case]
+    actual_values = forward_pass(input_training[test_case], weights, biases)[-1]
+    error += calculate_error(expected, actual_values)
+# calculate accuracy
+correct = 0
+for test_case in range(input_len):
+    if argmax(output_training[test_case]) == argmax(forward_pass(input_training[test_case], weights, biases)[-1]):
+        correct += 1
+# return results
+print("")
+print(f"Results - Loss: {error[0] / input_len} - Elapsed Time: {end_time - start_time}s - Accuracy: {correct / len(input_training) * 100}%")
+
 if save:
     # save optimized weights and biases
     with open("saved/weights.txt", "w") as f:
