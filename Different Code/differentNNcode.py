@@ -66,26 +66,16 @@ def find_gradients(expected, activations, weights, biases):
     return gradients
 
 
-def optimize(initial, gradient, learning_rate):
-    # adjust weights and biases
-    output = []
-    layer_size = len(initial)
-    for connection in range(layer_size):
-        output.append(np.subtract(initial[connection], np.multiply(learning_rate, gradient[connection])))
-    return output
-
-
-def optimize_2(weights_in, biases_in, gradient, data_amount, learning_rate, lambda_value):
+def optimize(weights_in, biases_in, gradient, data_amount, learning_rate, lambda_value):
     # adjust weights and biases
     weights_output = []
     biases_output = []
     weights_size = len(weights_in)
     biases_size = len(biases_in)
     for connection in range(weights_size):
-        # weights_output.append(np.subtract(weights_in[connection], np.multiply(learning_rate, (gradient["d_weights"][connection] + lambda_value / data_amount) * weights_in[connection])))
-        weights_output.append(np.subtract(weights_in[connection], np.multiply(learning_rate, gradient["d_weights"][connection])))
+        weights_output.append(np.subtract(weights_in[connection], learning_rate * (gradient["d_weights"][connection] + (lambda_value / data_amount) * weights_in[connection])))
     for connection in range(biases_size):
-        biases_output.append(np.subtract(biases_in[connection], np.multiply(learning_rate, gradient["d_biases"][connection])))
+        biases_output.append(np.subtract(biases_in[connection], learning_rate * gradient["d_biases"][connection]))
     return weights_output, biases_output
 
 
@@ -126,8 +116,8 @@ lambda_reg = 0.1
 layer_sizes = [2, 3, 2]
 
 # file locations
-input_data_location = "data/input_data.txt"
-output_data_location = "data/output_data.txt"
+input_data_location = "Different Code/data/input_data.txt"
+output_data_location = "Different Code/data/output_data.txt"
 
 
 """ network formation """
@@ -136,17 +126,14 @@ input('Press "Enter" to start.')
 start_time = time.time()
 
 # load training set
-# input_training = []
-# output_training = []
-# with open("data/input_data.txt", "r") as f:
-#     for line in f:
-#         input_training.append(ast.literal_eval(line))
-# with open("data/output_data.txt", "r") as f:
-#     for line in f:
-#         output_training.append(ast.literal_eval(line))
-
-input_training = [[0, 0], [0, 1], [1, 0], [1, 1]]
-output_training = [[0, 1], [1, 0], [1, 0], [0, 1]]
+input_training = []
+output_training = []
+with open("Different Code/data/input_data.txt", "r") as f:
+    for line in f:
+        input_training.append(ast.literal_eval(line))
+with open("Different Code/data/output_data.txt", "r") as f:
+    for line in f:
+        output_training.append(ast.literal_eval(line))
 amount_data = len(input_training)
 
 # set values
@@ -165,10 +152,10 @@ weights = []
 biases = []
 if load:
     # load weights and biases
-    with open("saved/weights.txt", "r") as f:
+    with open("Different Code/saved/weights.txt", "r") as f:
         for line in f:
             weights.append(np.array(ast.literal_eval(line)))
-    with open("saved/biases.txt", "r") as f:
+    with open("Different Code/saved/biases.txt", "r") as f:
         for line in f:
             biases.append(make_vector(ast.literal_eval(line)))
     weights_len = len(weights)
@@ -195,10 +182,7 @@ if learn:
         gradients = find_gradients(expected, activations, weights, biases)
 
         # optimize weights and biases
-        weights, biases = optimize_2(weights, biases, gradients, amount_data, learning_rate, lambda_reg)
-        # weights, biases = optimize_2(weights, )
-        # weights = optimize(weights, gradients["d_weights"], learning_rate)
-        # biases = optimize(biases, gradients["d_biases"], learning_rate)
+        weights, biases = optimize(weights, biases, gradients, amount_data, learning_rate, lambda_reg)
 
         # loss report
         if epoch % return_rate == 0:

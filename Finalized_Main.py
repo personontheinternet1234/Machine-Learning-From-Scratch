@@ -146,6 +146,7 @@ def backward():
 
     for layer in range(layers - 2, -1, -1):
         weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
+        weights[layer] = np.subtract(weights[layer], learning_rate * (d_weights[layer] + (0.1 / 4) * weights[layer]))
         biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
 
 
