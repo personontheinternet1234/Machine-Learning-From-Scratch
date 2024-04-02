@@ -76,6 +76,13 @@ def zeros_initialize(length, width):
     return matrix
 
 
+# function to reformat data into inputs / correct outputs
+def reformat(training_choice):
+    inputs = np.reshape(np.array(input_training[training_choice]), (len(input_training[training_choice]), 1))
+    expected_values = np.reshape(np.array(output_training[training_choice]), (len(output_training[training_choice]), 1))
+    return inputs, expected_values
+
+
 # forward pass
 def forward(inputs, weights, biases):
     activations = [inputs]
@@ -86,14 +93,14 @@ def forward(inputs, weights, biases):
 
 
 # backpropagation
-def backward(activations, weights, biases, true):
+def backward(activations, weights, biases, predicted):
     # initialize lists
     d_activations = []
     d_weights = []
     d_biases = []
 
     # error with respect to last layer
-    d_activations.insert(0, -2 * np.subtract(true, activations[-1]))
+    d_activations.insert(0, -2 * np.subtract(predicted, activations[-1]))
 
     # loop through layers backwards
     for layer in range(layers - 2, -1, -1):
@@ -115,12 +122,22 @@ def backward(activations, weights, biases, true):
         d_a = np.reshape(totals, (len(activations[layer]), 1))
         d_activations.insert(0, d_a)
 
-    for layer in range(layers - 2, -1, -1):
-        weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
-        # weights[layer] = np.subtract(weights[layer], learning_rate * (d_weights[layer] + (0.1 / 4) * weights[layer]))
-        biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
+    # for layer in range(layers - 2, -1, -1):
+    #     weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
+    #     # weights[layer] = np.subtract(weights[layer], learning_rate * (d_weights[layer] + (0.1 / 4) * weights[layer]))
+    #     biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
 
-    return activations, weights, biases
+    # return activations, weights, biases
+    return d_weights, d_biases
+
+def apply_gradient(weights, biases, d_weights, d_biases, learning_rate, layers):
+    for layer in range(layers - 2, -1, -1):
+        # weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
+        weights[layer] = np.subtract(weights[layer], learning_rate * (d_weights[layer] + (0.1 / 4) * weights[layer]))
+        biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
+    return weights, biases
+
+
 
 
 # confusion matrix
@@ -148,7 +165,7 @@ learn = True
 load = False
 save = False
 generate_graphs = True
-epochs = 10000
+epochs = 100000
 return_rate = 1
 learning_rate = 0.001
 lambda_reg = 0.1
@@ -207,10 +224,10 @@ else:
 if learn:
     saved_epochs = []
     saved_errors = []
-    # instantiate weights and biases
-    for i in range(layers - 1):
-        weights.append(xavier_initialize(layer_sizes[i + 1], layer_sizes[i]))  # Xavier Initialization
-        biases.append(zeros_initialize(layer_sizes[i + 1], 1))
+    # # instantiate weights and biases
+    # for i in range(layers - 1):
+    #     weights.append(xavier_initialize(layer_sizes[i + 1], layer_sizes[i]))  # Xavier Initialization
+    #     biases.append(zeros_initialize(layer_sizes[i + 1], 1))
 
     # training loop
     for epoch in range(epochs):
@@ -218,24 +235,30 @@ if learn:
         training_choice = int(np.random.rand() * len(input_training))  # SGD choice using np
 
         # reformat inputs and outputs
-        inputs = input_training[training_choice]
-        true = output_training[training_choice]
+        # inputs = input_training[training_choice]
+        # predicted = output_training[training_choice]
+        inputs, predicted = reformat(training_choice)
 
         # forward pass
         activations, weights, biases = forward(inputs, weights, biases)
 
         # calculate gradients
-        activations, weights, biases = backward(activations, weights, biases, true)
+        d_weights, d_biases = backward(activations, weights, biases, predicted)
+
+        #optimize
+        weights, biases = apply_gradient(weights,biases,d_weights,d_biases, learning_rate, layers)
 
         # error report
         if epoch % return_rate == 0:
             error = 0
             for i in range(len(input_training)):
+                inputs, predicted = reformat(i)
+
                 activations, _, _ = forward(inputs, weights, biases)
-                error += np.sum(np.subtract(true, activations[-1]) ** 2)
+                error += np.sum(np.subtract(predicted, activations[-1]) ** 2)
             # print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
             saved_epochs.append(epoch)
-            saved_errors.append(error)
+            saved_errors.append(error / len(input_training))
 
 end_time = time.time()
 

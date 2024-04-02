@@ -130,9 +130,9 @@ output_index = ["checkered", "non-checkered"]
 learn = True
 load = False
 save = False
-epochs = 10000
+epochs = 1000
 return_rate = 1
-learning_rate = 0.001
+learning_rate = 0.0001
 lambda_reg = 0.1
 
 # neural network structure
@@ -229,7 +229,7 @@ if learn:
                 actual_values = forward_pass(input_training[test_case], weights, biases)[-1]
                 error += calculate_error(expected, actual_values)
             saved_epochs.append(epoch)
-            saved_errors.append(error)
+            saved_errors.append(error / input_len)
             # print(f"{round((epoch / epochs) * 100)}% - MSE: {error[0] / input_len}")
 
 # find elapsed time
