@@ -1,5 +1,11 @@
+import ast
+import random
+import time
+
+from matplotlib import pyplot as plt
 import numpy as np
-import ast  # Used just for reading preset weights and biases into a list if we want to.
+# import pandas as pd
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 """
 This program uses the nodes structure to practice basic backpropagation.
@@ -15,20 +21,20 @@ def sigmoid(values):
 
 
 # derivative of sigmoid
-def sigmoid_prime(values):
+def d_sigmoid(values):
     # output = 1 / (1 + np.exp(-1 * values)) * (1 - 1 / (1 + np.exp(-1 * values)))
     output = sigmoid(values) * (1 - sigmoid(values))
     return output
 
 
 # leaky rectified linear activation function
-def relu(values):
+def l_relu(values):
     output = np.maximum(0.1 * values, values)
     return output
 
 
 # derivative of leaky relu
-def relu_prime(values):
+def d_l_relu(values):
     return np.where(values > 0, 1, 0.1)
 
 
@@ -36,14 +42,16 @@ def softmax(values):
     return np.exp(values) / np.sum(np.exp(values))
 
 
-def cross_entropy(softmax_probs, true_labels):
+# cross entropy
+def centropy(softmax_probs, true_labels):
     true_label_index = np.where(true_labels > 0)[0][0]
     return -np.log(softmax_probs[true_label_index])
 
 
-def derivative_cross_entropy(values, true_labels):  # derivative is just softmax, unless you are the winner, then it is softmax - 1
+# derivative of cross entropy
+def d_centropy(values, true_labels):
+    # derivative is just softmax, unless you are the winner, then it is softmax - 1
     true_label_index = np.where(true_labels > 0)[0][0]
-
     softmax_probs = softmax(values)
     d_loss_d_values = softmax_probs.copy()
     d_loss_d_values[true_label_index] -= 1
@@ -57,18 +65,15 @@ def reformat(training_choice):
     return inputs, expected_values
 
 
+# xavier initialized array
 def xavier_initialize(length, width):
     matrix = np.random.randn(length, width) * np.sqrt(2 / length)
     return matrix
 
 
+# zeros array
 def zeros_initialize(length, width):
     matrix = np.zeros((length, width))
-    return matrix
-
-
-def ones_initialize(length, width):
-    matrix = np.ones((length, width))
     return matrix
 
 
@@ -76,14 +81,14 @@ def ones_initialize(length, width):
 def forward(inputs, weights, biases):
     activations = [inputs]
     for layer in range(layers - 1):
-        activation = relu(np.matmul(weights[layer], activations[-1]) + biases[layer])
+        activation = l_relu(np.matmul(weights[layer], activations[-1]) + biases[layer])
         activations.append(activation)
     return activations, weights, biases
 
 
 # backpropagation
 def backward(activations, weights, biases):
-
+    # initialize lists
     d_activations = []
     d_weights = []
     d_biases = []
@@ -91,9 +96,10 @@ def backward(activations, weights, biases):
     # error with respect to last layer
     d_activations.insert(0, -2 * np.subtract(expected_values, activations[-1]))
 
-    for layer in range(layers - 2, -1, -1):  # start at last hidden layer, go back until layer = 0
+    # loop through layers backwards
+    for layer in range(layers - 2, -1, -1):
         # gradient of biases
-        d_b = relu_prime(np.matmul(weights[layer], activations[layer]) + biases[layer]) * d_activations[0]
+        d_b = d_l_relu(np.matmul(weights[layer], activations[layer]) + biases[layer]) * d_activations[0]
         d_biases.insert(0, d_b)
 
         # gradient of weights
@@ -115,16 +121,37 @@ def backward(activations, weights, biases):
         weights[layer] = np.subtract(weights[layer], learning_rate * (d_weights[layer] + (0.1 / 4) * weights[layer]))
         biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
 
-    return activations, weights, biases    
+    return activations, weights, biases
+
+
+# confusion matrix
+def plot_cm(cm, title=None, labels=None, color="binary"):
+    disp = ConfusionMatrixDisplay(
+        confusion_matrix=cm,
+        display_labels=labels
+    )
+    disp.plot(cmap=color)
+    disp.ax_.set_title(title)
+    plt.show()
+
+
+# normal graph
+def plot_graph(data, title=None, labels=None, color="black"):
+    plt.plot(data[0], data[1], color=color)
+    plt.xlabel(labels[0])
+    plt.ylabel(labels[1])
+    plt.title(title)
+    plt.show()
 
 
 # learning presets
-learn = "A"  # add this functionality, add ability to choose original weights and biases
-load = "A"
-save = "A"
+learn = True
+load = False
+save = False
 epochs = 100000
 return_rate = 1000
 learning_rate = 0.01
+lambda_reg = 0.1
 activations = []
 
 # neural network structure
@@ -132,7 +159,6 @@ layer_sizes = [2, 3, 2]
 layers = len(layer_sizes)
 weights = []
 biases = []
-
 
 # training data set
 input_training = [
@@ -152,10 +178,7 @@ output_training = [
 input_index = ["a(0)0", "a(0)1"]
 output_index = ["checkered", "non checkered"]
 
-while load != "y" and load != "n":
-    load = input("Load? (Y/n): ").lower()
-
-if load == "y":
+if load:
     with open("etc/weights.txt", "r") as file:
         weights = ast.literal_eval(file.read())
     with open("etc/biases.txt", "r") as file:
@@ -164,16 +187,14 @@ if load == "y":
         weights[i] = np.array(weights[i])
     for i in range(len(biases)):
         biases[i] = np.array(biases[i])
-elif load == "n":
+else:
     # instantiate weights and biases
     for i in range(layers - 1):
         weights.append(xavier_initialize(layer_sizes[i + 1], layer_sizes[i]))  # Xavier Initialization
         biases.append(zeros_initialize(layer_sizes[i + 1], 1))
 
-while learn != "y" and learn != "n":
-    learn = input("Learn? (Y/n): ").lower()
 
-if learn == "y":
+if learn:
     # instantiate weights and biases
     for i in range(layers - 1):
         weights.append(xavier_initialize(layer_sizes[i + 1], layer_sizes[i]))  # Xavier Initialization
@@ -204,12 +225,9 @@ if learn == "y":
 
                 error += np.sum(np.subtract(expected_values, activations[-1]) ** 2)
             print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
-print()
+print("")
 
-while save != "y" and save != "n":
-    save = input("Save the weights & biases just calculated? (Y/n): ").lower()
-
-if save == "y":
+if save:
     saved_weights = []
     saved_biases = []
     for i in range(len(weights)):
@@ -221,8 +239,6 @@ if save == "y":
         file.write(str(saved_weights))
     with open("etc/biases.txt", "w") as file:
         file.write(str(saved_biases))
-else:
-    pass
 
 # finalized network application
 while True:
