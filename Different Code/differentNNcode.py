@@ -152,6 +152,8 @@ output_training = [
     [1, 0],
     [0, 1]
 ]
+# input_training = []
+# output_training = []
 # with open("data/input_data.txt", "r") as f:
 #     for line in f:
 #         input_training.append(ast.literal_eval(line))

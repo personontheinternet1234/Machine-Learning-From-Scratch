@@ -113,11 +113,6 @@ def forward(inputs):
 
 # backpropagation
 def backward():
-    # global expected_values
-    # global activations
-    # global weights
-    # global biases
-
     d_activations = []
     d_weights = []
     d_biases = []
