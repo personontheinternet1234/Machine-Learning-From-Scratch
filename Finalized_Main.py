@@ -8,36 +8,6 @@ Version: 1.0
 Author: Isaac Park Verbrugge, Christian Host-Madsen
 """
 
-# learning presets
-learn = "A"  # add this functionality, add ability to choose original weights and biases
-load = "A"
-save = "A"
-epochs = 100000
-return_rate = 1000
-learning_rate = 0.01
-activations = []
-
-# neural network structure
-layer_sizes = [2, 3, 2]
-layers = len(layer_sizes)
-weights = []
-biases = []
-
-# training data set
-input_training = [
-    [0, 0],
-    [0, 1],
-    [1, 0],
-    [1, 1]
-]
-output_training = [
-    [0, 1],
-    [1, 0],
-    [1, 0],
-    [0, 1]
-]
-
-
 # sigmoid activation function
 def sigmoid(values):
     output = 1 / (1 + np.exp(-1 * values))
@@ -103,16 +73,17 @@ def ones_initialize(length, width):
 
 
 # forward pass
-def forward(inputs):
-    global activations
+def forward(inputs, weights, biases):
     activations = [inputs]
     for layer in range(layers - 1):
         activation = relu(np.matmul(weights[layer], activations[-1]) + biases[layer])
         activations.append(activation)
+    return activations, weights, biases
 
 
 # backpropagation
-def backward():
+def backward(activations, weights, biases):
+
     d_activations = []
     d_weights = []
     d_biases = []
@@ -144,6 +115,38 @@ def backward():
         weights[layer] = np.subtract(weights[layer], learning_rate * (d_weights[layer] + (0.1 / 4) * weights[layer]))
         biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
 
+    return activations, weights, biases    
+
+
+# learning presets
+learn = "A"  # add this functionality, add ability to choose original weights and biases
+load = "A"
+save = "A"
+epochs = 100000
+return_rate = 1000
+learning_rate = 0.01
+activations = []
+
+# neural network structure
+layer_sizes = [2, 3, 2]
+layers = len(layer_sizes)
+weights = []
+biases = []
+
+
+# training data set
+input_training = [
+    [0, 0],
+    [0, 1],
+    [1, 0],
+    [1, 1]
+]
+output_training = [
+    [0, 1],
+    [1, 0],
+    [1, 0],
+    [0, 1]
+]
 
 # user indexes
 input_index = ["a(0)0", "a(0)1"]
@@ -185,10 +188,10 @@ if learn == "y":
         inputs, expected_values = reformat(training_choice)
 
         # forward pass
-        forward(inputs)
+        activations, weights, biases = forward(inputs, weights, biases)
 
         # calculate gradients
-        backward()
+        activations, weights, biases = backward(activations, weights, biases)
 
         # error report
         if epoch % return_rate == 0:
@@ -197,7 +200,7 @@ if learn == "y":
                 # reformat inputs and outputs
                 inputs, expected_values = reformat(i)
 
-                forward(inputs)
+                activations, weights, biases = forward(inputs, weights, biases)
 
                 error += np.sum(np.subtract(expected_values, activations[-1]) ** 2)
             print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
@@ -230,7 +233,7 @@ while True:
 
     # forward pass
     inputs = np.reshape(inputs, (len(inputs), 1))
-    forward(inputs)
+    activations, weights, biases = forward(inputs, weights, biases)
 
     # result
     print(activations[-1])
