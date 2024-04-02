@@ -14,41 +14,42 @@ Version: 1.0
 Author: Isaac Park Verbrugge, Christian Host-Madsen
 """
 
-# sigmoid activation function
+
+# sigmoid activator
 def sigmoid(values):
     output = 1 / (1 + np.exp(-1 * values))
     return output
 
 
-# derivative of sigmoid
+# derivative of sigmoid activator
 def d_sigmoid(values):
     # output = 1 / (1 + np.exp(-1 * values)) * (1 - 1 / (1 + np.exp(-1 * values)))
     output = sigmoid(values) * (1 - sigmoid(values))
     return output
 
 
-# leaky rectified linear activation function
+# leaky rectified linear activator
 def l_relu(values):
     output = np.maximum(0.1 * values, values)
     return output
 
 
-# derivative of leaky relu
+# derivative of leaky rectified linear activator
 def d_l_relu(values):
     return np.where(values > 0, 1, 0.1)
 
+# # softmax activator
+# def softmax(values):
+#     return np.exp(values) / np.sum(np.exp(values))
 
-def softmax(values):
-    return np.exp(values) / np.sum(np.exp(values))
 
-
-# cross entropy
+# cross entropy error function
 def centropy(softmax_probs, true_labels):
     true_label_index = np.where(true_labels > 0)[0][0]
     return -np.log(softmax_probs[true_label_index])
 
 
-# derivative of cross entropy
+# derivative of cross entropy error function
 def d_centropy(values, true_labels):
     # derivative is just softmax, unless you are the winner, then it is softmax - 1
     true_label_index = np.where(true_labels > 0)[0][0]
@@ -58,28 +59,28 @@ def d_centropy(values, true_labels):
     return d_loss_d_values
 
 
+# list reformatter
 def vectorize(list):
-    # turn a list into a vector
     vector = np.reshape(np.array(list), (len(list), 1))
     return vector
 
 
-# xavier initialized array
+# xavier initialization
 def xavier_initialize(length, width):
-    matrix = np.random.randn(length, width) * np.sqrt(2 / length)
-    return matrix
+    array = np.random.randn(length, width) * np.sqrt(2 / length)
+    return array
 
 
-# zeros array
+# zero initialized array
 def zeros_initialize(length, width):
-    matrix = np.zeros((length, width))
-    return matrix
+    array = np.zeros((length, width))
+    return array
 
 
 # function to reformat data into inputs / correct outputs
 def reformat(training_choice):
-    inputs = np.reshape(np.array(input_training[training_choice]), (len(input_training[training_choice]), 1))
-    expected_values = np.reshape(np.array(output_training[training_choice]), (len(output_training[training_choice]), 1))
+    inputs = np.reshape(np.array(X[training_choice]), (len(X[training_choice]), 1))
+    expected_values = np.reshape(np.array(Y[training_choice]), (len(Y[training_choice]), 1))
     return inputs, expected_values
 
 
@@ -122,25 +123,25 @@ def backward(activations, weights, biases, predicted):
         d_a = np.reshape(totals, (len(activations[layer]), 1))
         d_activations.insert(0, d_a)
 
-    # for layer in range(layers - 2, -1, -1):
-    #     weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
-    #     # weights[layer] = np.subtract(weights[layer], learning_rate * (d_weights[layer] + (0.1 / 4) * weights[layer]))
-    #     biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
+    for layer in range(layers - 2, -1, -1):
+        weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
+        # weights[layer] = np.subtract(weights[layer], learning_rate * (d_weights[layer] + (0.1 / 4) * weights[layer]))
+        biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
 
     # return activations, weights, biases
     return d_weights, d_biases
 
-def apply_gradient(weights, biases, d_weights, d_biases, learning_rate, layers):
-    for layer in range(layers - 2, -1, -1):
-        # weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
-        weights[layer] = np.subtract(weights[layer], learning_rate * (d_weights[layer] + (0.1 / 4) * weights[layer]))
-        biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
-    return weights, biases
+
+# def apply_gradient(weights, biases, d_weights, d_biases, learning_rate, layers):
+#     for layer in range(layers - 2, -1, -1):
+#         # weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
+#         weights[layer] = np.subtract(weights[layer],
+#                                      learning_rate * (d_weights[layer] + (lambda_reg / len(X)) * weights[layer]))
+#         biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
+#     return weights, biases
 
 
-
-
-# confusion matrix
+# graph confusion matrix
 def plot_cm(cm, title=None, labels=None, color="binary"):
     disp = ConfusionMatrixDisplay(
         confusion_matrix=cm,
@@ -151,7 +152,7 @@ def plot_cm(cm, title=None, labels=None, color="binary"):
     plt.show()
 
 
-# normal graph
+# graph normal graph
 def plot_graph(data, title=None, labels=None, color="black"):
     plt.plot(data[0], data[1], color=color)
     plt.xlabel(labels[0])
@@ -160,30 +161,36 @@ def plot_graph(data, title=None, labels=None, color="black"):
     plt.show()
 
 
+# split training and testing data
+def test_train_split(data, test_size=0.3):
+    random.shuffle(data)
+    test = data[0:round(len(data) * test_size)]
+    train = data[round(len(data) * test_size):len(data)]
+    return train, test
+
+
 # network settings
 learn = True
 load = False
 save = False
 generate_graphs = True
-epochs = 100000
+epochs = 10000
 return_rate = 1
-learning_rate = 0.001
+learning_rate = 0.01
 lambda_reg = 0.1
 
 # network structure
 layer_sizes = [2, 3, 2]
 layers = len(layer_sizes)
-weights = []
-biases = []
 
-# training data set
-input_training = [
+# dataset
+X = [
     [0, 0],
     [0, 1],
     [1, 0],
     [1, 1]
 ]
-output_training = [
+Y = [
     [0, 1],
     [1, 0],
     [1, 0],
@@ -191,21 +198,24 @@ output_training = [
 ]
 
 # user indexes
-input_index = ["a(0)0", "a(0)1"]
-output_index = ["checkered", "non checkered"]
+in_names = ["a(0)0", "a(0)1"]
+out_names = ["checkered", "non checkered"]
 
 """ network code """
 
 start_time = time.time()
 
 # reformat training data
-for i in range(len(input_training)):
-    input_training[i] = vectorize(input_training[i])
-for i in range(len(output_training)):
-    output_training[i] = vectorize(output_training[i])
+for i in range(len(X)):
+    X[i] = vectorize(X[i])
+for i in range(len(Y)):
+    Y[i] = vectorize(Y[i])
 
-# load weights and biases
+# instantiate weights and biases
+weights = []
+biases = []
 if load:
+    # load weights and biases
     with open("etc/weights.txt", "r") as file:
         weights = ast.literal_eval(file.read())
     with open("etc/biases.txt", "r") as file:
@@ -215,69 +225,59 @@ if load:
     for i in range(len(biases)):
         biases[i] = np.array(biases[i])
 else:
-    # instantiate weights and biases
+    # generate weights and biases
     for i in range(layers - 1):
         weights.append(xavier_initialize(layer_sizes[i + 1], layer_sizes[i]))
-        biases.append(zeros_initialize(layer_sizes[i + 1], 1))
+        biases.append(np.zeros((layer_sizes[i + 1], 1)))
 
-# training loop
+# network training
 if learn:
     saved_epochs = []
     saved_errors = []
-    # # instantiate weights and biases
-    # for i in range(layers - 1):
-    #     weights.append(xavier_initialize(layer_sizes[i + 1], layer_sizes[i]))  # Xavier Initialization
-    #     biases.append(zeros_initialize(layer_sizes[i + 1], 1))
 
     # training loop
     for epoch in range(epochs):
-        # choose from training set
-        training_choice = int(np.random.rand() * len(input_training))  # SGD choice using np
-
-        # reformat inputs and outputs
-        # inputs = input_training[training_choice]
-        # predicted = output_training[training_choice]
-        inputs, predicted = reformat(training_choice)
+        # SGD choice
+        training_choice = int(np.random.rand() * len(X))
+        inputs = X[training_choice]
+        predicted = Y[training_choice]
 
         # forward pass
         activations, weights, biases = forward(inputs, weights, biases)
 
-        # calculate gradients
+        # backpropagation
         d_weights, d_biases = backward(activations, weights, biases, predicted)
 
-        #optimize
-        weights, biases = apply_gradient(weights,biases,d_weights,d_biases, learning_rate, layers)
-
-        # error report
+        # loss calculation
         if epoch % return_rate == 0:
-            error = 0
-            for i in range(len(input_training)):
-                inputs, predicted = reformat(i)
-
-                activations, _, _ = forward(inputs, weights, biases)
-                error += np.sum(np.subtract(predicted, activations[-1]) ** 2)
+            # SSR
+            loss = 0
+            for i in range(len(X)):
+                activations, _, _ = forward(X[i], weights, biases)
+                loss += np.sum(np.subtract(Y[i], activations[-1]) ** 2)
             # print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
             saved_epochs.append(epoch)
-            saved_errors.append(error / len(input_training))
+            saved_errors.append(loss)
 
 end_time = time.time()
 
 """ return results """
 
 # calculate accuracies
-error = 0
+loss = 0
 correct = 0
-for i in range(len(input_training)):
-    expected = output_training[i]
-    activations, _, _ = forward(input_training[i], weights, biases)
+for i in range(len(X)):
+    expected = Y[i]
+    activations, _, _ = forward(X[i], weights, biases)
     predicted = activations[-1]
-    error += np.sum(np.subtract(expected, predicted) ** 2, axis=0)
+    loss += np.sum(np.subtract(expected, predicted) ** 2, axis=0)
     if np.nanargmax(predicted) == np.nanargmax(expected):
         correct += 1
 
 # return results
 print("")
-print(f"Results - Loss: {round(error[0] / len(input_training), 5)} - Elapsed Time: {round(end_time - start_time, 5)}s - Accuracy: {round(correct / len(input_training) * 100, 5)}%")
+print(
+    f"Results - Loss: {round(loss[0] / len(X), 5)} - Elapsed Time: {round(end_time - start_time, 5)}s - Accuracy: {round(correct / len(X) * 100, 5)}%")
 
 # save results
 if save:
@@ -296,17 +296,14 @@ if save:
 if generate_graphs:
     y_true = []
     y_pred = []
-    for i in range(len(input_training)):
-        activations, _, _ = forward(input_training[i], weights, biases)
+    for i in range(len(X)):
+        activations, _, _ = forward(X[i], weights, biases)
         y_true.append(np.nanargmax(activations[-1]))
-        y_pred.append(np.nanargmax(output_training[i]))
+        y_pred.append(np.nanargmax(Y[i]))
     cm = confusion_matrix(y_true, y_pred, normalize="true")
-    plot_cm(cm, title="Neural Network Results", labels=output_index)
+    plot_cm(cm, title="Neural Network Results", labels=out_names)
 
-    x_stuff = np.array(saved_epochs)
-    y_stuff = np.array(saved_errors)
-    plot_graph(data=[x_stuff, y_stuff], title="Error vs Epoch", labels=["Epoch", "Error"])
-
+    plot_graph([np.array(saved_epochs), np.array(saved_errors)], title="Loss v.s. Epoch", labels=["Epoch", "Loss"])
 
 # network application
 while True:
@@ -314,7 +311,7 @@ while True:
     # get inputs
     inputs = []
     for input_node in range(layer_sizes[0]):
-        inputs.append(float(input(f"{input_index[input_node]}: ")))
+        inputs.append(float(input(f"{in_names[input_node]}: ")))
 
     # forward pass
     inputs = np.reshape(inputs, (len(inputs), 1))
@@ -322,4 +319,4 @@ while True:
 
     # result
     print(activations[-1])
-    print(f"Outputted: {output_index[np.nanargmax(activations[-1])]}")
+    print(f"Outputted: {out_names[np.nanargmax(activations[-1])]}")
