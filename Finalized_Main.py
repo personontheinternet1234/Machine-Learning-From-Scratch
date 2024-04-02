@@ -154,7 +154,7 @@ learning_rate = 0.001
 lambda_reg = 0.1
 
 # network structure
-layer_sizes = [2, 5, 5, 5, 2]
+layer_sizes = [2, 3, 2]
 layers = len(layer_sizes)
 weights = []
 biases = []

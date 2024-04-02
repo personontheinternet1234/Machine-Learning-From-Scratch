@@ -136,7 +136,7 @@ learning_rate = 0.001
 lambda_reg = 0.1
 
 # neural network structure
-layer_sizes = [2, 5, 5, 5, 2]
+layer_sizes = [2, 3, 2]
 
 # file locations
 input_data_location = "data/input_data.txt"
