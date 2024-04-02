@@ -38,9 +38,10 @@ def l_relu(values):
 def d_l_relu(values):
     return np.where(values > 0, 1, 0.1)
 
+
 # # softmax activator
-# def softmax(values):
-#     return np.exp(values) / np.sum(np.exp(values))
+def softmax(values):
+    return np.exp(values) / np.sum(np.exp(values))
 
 
 # cross entropy error function
@@ -59,7 +60,7 @@ def d_centropy(values, true_labels):
     return d_loss_d_values
 
 
-# list reformatter
+# list reformatting
 def vectorize(list):
     vector = np.reshape(np.array(list), (len(list), 1))
     return vector
@@ -75,13 +76,6 @@ def xavier_initialize(length, width):
 def zeros_initialize(length, width):
     array = np.zeros((length, width))
     return array
-
-
-# function to reformat data into inputs / correct outputs
-def reformat(training_choice):
-    inputs = np.reshape(np.array(X[training_choice]), (len(X[training_choice]), 1))
-    expected_values = np.reshape(np.array(Y[training_choice]), (len(Y[training_choice]), 1))
-    return inputs, expected_values
 
 
 # forward pass
@@ -165,7 +159,7 @@ def plot_graph(data, title=None, labels=None, color="black"):
 def test_train_split(data, test_size=0.3):
     random.shuffle(data)
     test = data[0:round(len(data) * test_size)]
-    train = data[round(len(data) * test_size):len(data)]
+    train = data[round(len(data) * test_size):]
     return train, test
 
 
@@ -197,9 +191,11 @@ Y = [
     [0, 1]
 ]
 
+print(test_train_split(X))
+
 # user indexes
-in_names = ["a(0)0", "a(0)1"]
-out_names = ["checkered", "non checkered"]
+X_labels = ["a(0)0", "a(0)1"]
+Y_labels = ["checkered", "non checkered"]
 
 """ network code """
 
@@ -231,10 +227,9 @@ else:
         biases.append(np.zeros((layer_sizes[i + 1], 1)))
 
 # network training
+saved_epochs = []
+saved_errors = []
 if learn:
-    saved_epochs = []
-    saved_errors = []
-
     # training loop
     for epoch in range(epochs):
         # SGD choice
@@ -276,8 +271,7 @@ for i in range(len(X)):
 
 # return results
 print("")
-print(
-    f"Results - Loss: {round(loss[0] / len(X), 5)} - Elapsed Time: {round(end_time - start_time, 5)}s - Accuracy: {round(correct / len(X) * 100, 5)}%")
+print(f"Results - Loss: {round(loss[0] / len(X), 5)} - Elapsed Time: {round(end_time - start_time, 5)}s - Accuracy: {round(correct / len(X) * 100, 5)}%")
 
 # save results
 if save:
@@ -301,7 +295,7 @@ if generate_graphs:
         y_true.append(np.nanargmax(activations[-1]))
         y_pred.append(np.nanargmax(Y[i]))
     cm = confusion_matrix(y_true, y_pred, normalize="true")
-    plot_cm(cm, title="Neural Network Results", labels=out_names)
+    plot_cm(cm, title="Neural Network Results", labels=Y_labels)
 
     plot_graph([np.array(saved_epochs), np.array(saved_errors)], title="Loss v.s. Epoch", labels=["Epoch", "Loss"])
 
@@ -311,7 +305,7 @@ while True:
     # get inputs
     inputs = []
     for input_node in range(layer_sizes[0]):
-        inputs.append(float(input(f"{in_names[input_node]}: ")))
+        inputs.append(float(input(f"{X_labels[input_node]}: ")))
 
     # forward pass
     inputs = np.reshape(inputs, (len(inputs), 1))
@@ -319,4 +313,4 @@ while True:
 
     # result
     print(activations[-1])
-    print(f"Outputted: {out_names[np.nanargmax(activations[-1])]}")
+    print(f"Outputted: {Y_labels[np.nanargmax(activations[-1])]}")
