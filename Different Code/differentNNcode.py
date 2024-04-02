@@ -8,6 +8,8 @@ import time
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+
 
 """ functions """
 
@@ -99,6 +101,16 @@ def calculate_error(expected, actual):
     return error
 
 
+def plot_cm(cm, title, labels, color):
+    disp = ConfusionMatrixDisplay(
+        confusion_matrix=cm,
+        display_labels=labels
+    )
+    disp.plot(cmap=f"{color}")
+    disp.ax_.set_title(f"{title}")
+    plt.show()
+
+
 """ network presets """
 
 # user indexes
@@ -128,14 +140,24 @@ input('Press "Enter" to start.')
 start_time = time.time()
 
 # load training set
-input_training = []
-output_training = []
-with open("data/input_data.txt", "r") as f:
-    for line in f:
-        input_training.append(ast.literal_eval(line))
-with open("data/output_data.txt", "r") as f:
-    for line in f:
-        output_training.append(ast.literal_eval(line))
+input_training = [
+    [0, 0],
+    [0, 1],
+    [1, 0],
+    [1, 1]
+]
+output_training = [
+    [0, 1],
+    [1, 0],
+    [1, 0],
+    [0, 1]
+]
+# with open("data/input_data.txt", "r") as f:
+#     for line in f:
+#         input_training.append(ast.literal_eval(line))
+# with open("data/output_data.txt", "r") as f:
+#     for line in f:
+#         output_training.append(ast.literal_eval(line))
 amount_data = len(input_training)
 
 # set values
@@ -195,21 +217,34 @@ if learn:
                 error += calculate_error(expected, actual_values)
             print(f"{round((epoch / epochs) * 100)}% - MSE: {error[0] / input_len}")
 
+# find elapsed time
 end_time = time.time()
+
 # calculate loss
 error = 0
 for test_case in range(input_len):
     expected = output_training[test_case]
     actual_values = forward_pass(input_training[test_case], weights, biases)[-1]
     error += calculate_error(expected, actual_values)
+
+# make cm
+y_true = []
+y_pred = []
+for test_case in range(input_len):
+    y_true.append(argmax(output_training[test_case]))
+    y_pred.append(argmax(forward_pass(input_training[test_case], weights, biases)[-1]))
+cm = confusion_matrix(y_true, y_pred, normalize="true")
+plot_cm(cm, "Neural Network Results", output_index, "binary")
+
 # calculate accuracy
 correct = 0
 for test_case in range(input_len):
     if argmax(output_training[test_case]) == argmax(forward_pass(input_training[test_case], weights, biases)[-1]):
         correct += 1
+
 # return results
 print("")
-print(f"Results - Loss: {error[0] / input_len} - Elapsed Time: {end_time - start_time}s - Accuracy: {correct / len(input_training) * 100}%")
+print(f"Results - Loss: {round(error[0] / input_len, 5)} - Elapsed Time: {round(end_time - start_time, 5)}s - Accuracy: {round(correct / len(input_training) * 100, 5)}%")
 
 if save:
     # save optimized weights and biases
