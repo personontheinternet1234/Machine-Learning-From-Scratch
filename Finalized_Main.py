@@ -58,11 +58,10 @@ def d_centropy(values, true_labels):
     return d_loss_d_values
 
 
-# function to reformat data into inputs / correct outputs
-def reformat(training_choice):
-    inputs = np.reshape(np.array(input_training[training_choice]), (len(input_training[training_choice]), 1))
-    expected_values = np.reshape(np.array(output_training[training_choice]), (len(output_training[training_choice]), 1))
-    return inputs, expected_values
+def vectorize(list):
+    # turn a list into a vector
+    vector = np.reshape(np.array(list), (len(list), 1))
+    return vector
 
 
 # xavier initialized array
@@ -87,14 +86,14 @@ def forward(inputs, weights, biases):
 
 
 # backpropagation
-def backward(activations, weights, biases):
+def backward(activations, weights, biases, true):
     # initialize lists
     d_activations = []
     d_weights = []
     d_biases = []
 
     # error with respect to last layer
-    d_activations.insert(0, -2 * np.subtract(expected_values, activations[-1]))
+    d_activations.insert(0, -2 * np.subtract(true, activations[-1]))
 
     # loop through layers backwards
     for layer in range(layers - 2, -1, -1):
@@ -144,17 +143,18 @@ def plot_graph(data, title=None, labels=None, color="black"):
     plt.show()
 
 
-# learning presets
+# network settings
 learn = True
 load = False
 save = False
+generate_graphs = True
 epochs = 100000
+data_check = 100
 return_rate = 1000
 learning_rate = 0.01
 lambda_reg = 0.1
-activations = []
 
-# neural network structure
+# network structure
 layer_sizes = [2, 3, 2]
 layers = len(layer_sizes)
 weights = []
@@ -178,6 +178,17 @@ output_training = [
 input_index = ["a(0)0", "a(0)1"]
 output_index = ["checkered", "non checkered"]
 
+""" network code """
+
+start_time = time.time()
+
+# reformat training data
+for i in range(len(input_training)):
+    input_training[i] = vectorize(input_training[i])
+for i in range(len(output_training)):
+    output_training[i] = vectorize(output_training[i])
+
+# load weights and biases
 if load:
     with open("etc/weights.txt", "r") as file:
         weights = ast.literal_eval(file.read())
@@ -190,10 +201,10 @@ if load:
 else:
     # instantiate weights and biases
     for i in range(layers - 1):
-        weights.append(xavier_initialize(layer_sizes[i + 1], layer_sizes[i]))  # Xavier Initialization
+        weights.append(xavier_initialize(layer_sizes[i + 1], layer_sizes[i]))
         biases.append(zeros_initialize(layer_sizes[i + 1], 1))
 
-
+# training loop
 if learn:
     # instantiate weights and biases
     for i in range(layers - 1):
@@ -206,27 +217,43 @@ if learn:
         training_choice = int(np.random.rand() * len(input_training))  # SGD choice using np
 
         # reformat inputs and outputs
-        inputs, expected_values = reformat(training_choice)
+        inputs = input_training[training_choice]
+        true = output_training[training_choice]
 
         # forward pass
         activations, weights, biases = forward(inputs, weights, biases)
 
         # calculate gradients
-        activations, weights, biases = backward(activations, weights, biases)
+        activations, weights, biases = backward(activations, weights, biases, true)
 
         # error report
         if epoch % return_rate == 0:
             error = 0
             for i in range(len(input_training)):
-                # reformat inputs and outputs
-                inputs, expected_values = reformat(i)
-
                 activations, weights, biases = forward(inputs, weights, biases)
-
-                error += np.sum(np.subtract(expected_values, activations[-1]) ** 2)
+                error += np.sum(np.subtract(true, activations[-1]) ** 2)
             print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
-print("")
 
+end_time = time.time()
+
+""" return results """
+
+# calculate accuracies
+error = 0
+correct = 0
+for i in range(len(input_training)):
+    expected = output_training[i]
+    activations, _, _ = forward(input_training[i], weights, biases)
+    predicted = activations[-1]
+    error += np.sum(np.subtract(expected, predicted) ** 2, axis=0)
+    if np.nanargmax(predicted) == np.nanargmax(expected):
+        correct += 1
+
+# return results
+print("")
+print(f"Results - Loss: {round(error[0] / len(input_training), 5)} - Elapsed Time: {round(end_time - start_time, 5)}s - Accuracy: {round(correct / len(input_training) * 100, 5)}%")
+
+# save results
 if save:
     saved_weights = []
     saved_biases = []
@@ -234,14 +261,25 @@ if save:
         saved_weights.append(weights[i].tolist())
     for i in range(len(biases)):
         saved_biases.append(biases[i].tolist())
-
     with open("etc/weights.txt", "w") as file:
         file.write(str(saved_weights))
     with open("etc/biases.txt", "w") as file:
         file.write(str(saved_biases))
 
-# finalized network application
+# matplotlib graphs
+if generate_graphs:
+    y_true = []
+    y_pred = []
+    for i in range(len(input_training)):
+        activations, _, _ = forward(input_training[i], weights, biases)
+        y_true.append(np.nanargmax(activations[-1]))
+        y_pred.append(np.nanargmax(output_training[i]))
+    cm = confusion_matrix(y_true, y_pred, normalize="true")
+    plot_cm(cm, title="Neural Network Results", labels=output_index)
+
+# network application
 while True:
+    print("")
     # get inputs
     inputs = []
     for input_node in range(layer_sizes[0]):
@@ -249,7 +287,7 @@ while True:
 
     # forward pass
     inputs = np.reshape(inputs, (len(inputs), 1))
-    activations, weights, biases = forward(inputs, weights, biases)
+    activations, _, _ = forward(inputs, weights, biases)
 
     # result
     print(activations[-1])

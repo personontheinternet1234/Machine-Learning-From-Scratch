@@ -235,6 +235,8 @@ y_pred = []
 for test_case in range(input_len):
     y_true.append(argmax(output_training[test_case]))
     y_pred.append(argmax(forward_pass(input_training[test_case], weights, biases)[-1]))
+    print(y_true)
+    print(y_pred)
 cm = confusion_matrix(y_true, y_pred, normalize="true")
 plot_cm(cm, "Neural Network Results", output_index, "binary")
 
