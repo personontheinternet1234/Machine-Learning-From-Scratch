@@ -117,7 +117,7 @@ def backward(activations, weights, biases, true):
 
     for layer in range(layers - 2, -1, -1):
         weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
-        weights[layer] = np.subtract(weights[layer], learning_rate * (d_weights[layer] + (0.1 / 4) * weights[layer]))
+        # weights[layer] = np.subtract(weights[layer], learning_rate * (d_weights[layer] + (0.1 / 4) * weights[layer]))
         biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
 
     return activations, weights, biases
@@ -148,9 +148,8 @@ learn = True
 load = False
 save = False
 generate_graphs = True
-epochs = 100000
-data_check = 100
-return_rate = 1000
+epochs = 10000
+return_rate = 1
 learning_rate = 0.01
 lambda_reg = 0.1
 
@@ -206,6 +205,8 @@ else:
 
 # training loop
 if learn:
+    saved_epochs = []
+    saved_errors = []
     # instantiate weights and biases
     for i in range(layers - 1):
         weights.append(xavier_initialize(layer_sizes[i + 1], layer_sizes[i]))  # Xavier Initialization
@@ -232,7 +233,9 @@ if learn:
             for i in range(len(input_training)):
                 activations, weights, biases = forward(inputs, weights, biases)
                 error += np.sum(np.subtract(true, activations[-1]) ** 2)
-            print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
+            # print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
+            saved_epochs.append(epoch)
+            saved_errors.append(error)
 
 end_time = time.time()
 
@@ -276,6 +279,11 @@ if generate_graphs:
         y_pred.append(np.nanargmax(output_training[i]))
     cm = confusion_matrix(y_true, y_pred, normalize="true")
     plot_cm(cm, title="Neural Network Results", labels=output_index)
+
+    x_stuff = np.array(saved_epochs)
+    y_stuff = np.array(saved_errors)
+    plot_graph(data=[x_stuff, y_stuff], title="Error vs Epoch", labels=["Epoch", "Error"])
+
 
 # network application
 while True:

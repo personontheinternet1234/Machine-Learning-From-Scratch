@@ -77,7 +77,8 @@ def optimize(weights_in, biases_in, gradient, data_amount, learning_rate, lambda
     weights_size = len(weights_in)
     biases_size = len(biases_in)
     for connection in range(weights_size):
-        weights_output.append(np.subtract(weights_in[connection], learning_rate * (gradient["d_weights"][connection] + (lambda_value / data_amount) * weights_in[connection])))
+        # weights_output.append(np.subtract(weights_in[connection], learning_rate * (gradient["d_weights"][connection] + (lambda_value / data_amount) * weights_in[connection])))
+        weights_output.append(np.subtract(weights_in[connection], learning_rate * gradient["d_weights"][connection]))
     for connection in range(biases_size):
         biases_output.append(np.subtract(biases_in[connection], learning_rate * gradient["d_biases"][connection]))
     return weights_output, biases_output
@@ -111,6 +112,14 @@ def plot_cm(cm, title, labels, color):
     plt.show()
 
 
+def plot_graph(data, title=None, labels=None, color="black"):
+    plt.plot(data[0], data[1], color=color)
+    plt.xlabel(labels[0])
+    plt.ylabel(labels[1])
+    plt.title(title)
+    plt.show()
+
+
 """ network presets """
 
 # user indexes
@@ -121,9 +130,9 @@ output_index = ["checkered", "non-checkered"]
 learn = True
 load = False
 save = False
-epochs = 100000
-return_rate = 10000
-learning_rate = 0.1
+epochs = 10000
+return_rate = 1
+learning_rate = 0.01
 lambda_reg = 0.1
 
 # neural network structure
@@ -192,6 +201,8 @@ else:
         biases.append(zeros_initialize(layer_sizes[connection + 1], 1))
 
 if learn:
+    saved_epochs = []
+    saved_errors = []
     # begin training loop
     for epoch in range(epochs):
         # choose from training set
@@ -217,7 +228,9 @@ if learn:
                 expected = output_training[test_case]
                 actual_values = forward_pass(input_training[test_case], weights, biases)[-1]
                 error += calculate_error(expected, actual_values)
-            print(f"{round((epoch / epochs) * 100)}% - MSE: {error[0] / input_len}")
+            saved_epochs.append(epoch)
+            saved_errors.append(error)
+            # print(f"{round((epoch / epochs) * 100)}% - MSE: {error[0] / input_len}")
 
 # find elapsed time
 end_time = time.time()
@@ -235,10 +248,12 @@ y_pred = []
 for test_case in range(input_len):
     y_true.append(argmax(output_training[test_case]))
     y_pred.append(argmax(forward_pass(input_training[test_case], weights, biases)[-1]))
-    print(y_true)
-    print(y_pred)
 cm = confusion_matrix(y_true, y_pred, normalize="true")
 plot_cm(cm, "Neural Network Results", output_index, "binary")
+
+x_stuff = np.array(saved_epochs)
+y_stuff = np.array(saved_errors)
+plot_graph(data=[x_stuff, y_stuff], title="Error vs Epoch", labels=["Epoch", "Error"])
 
 # calculate accuracy
 correct = 0
