@@ -150,11 +150,11 @@ save = False
 generate_graphs = True
 epochs = 10000
 return_rate = 1
-learning_rate = 0.01
+learning_rate = 0.001
 lambda_reg = 0.1
 
 # network structure
-layer_sizes = [2, 3, 2]
+layer_sizes = [2, 5, 5, 5, 2]
 layers = len(layer_sizes)
 weights = []
 biases = []
@@ -231,7 +231,7 @@ if learn:
         if epoch % return_rate == 0:
             error = 0
             for i in range(len(input_training)):
-                activations, weights, biases = forward(inputs, weights, biases)
+                activations, _, _ = forward(inputs, weights, biases)
                 error += np.sum(np.subtract(true, activations[-1]) ** 2)
             # print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
             saved_epochs.append(epoch)

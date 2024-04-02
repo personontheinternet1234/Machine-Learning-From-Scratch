@@ -132,11 +132,11 @@ load = False
 save = False
 epochs = 10000
 return_rate = 1
-learning_rate = 0.01
+learning_rate = 0.001
 lambda_reg = 0.1
 
 # neural network structure
-layer_sizes = [2, 3, 2]
+layer_sizes = [2, 5, 5, 5, 2]
 
 # file locations
 input_data_location = "data/input_data.txt"
@@ -145,7 +145,7 @@ output_data_location = "data/output_data.txt"
 
 """ network formation """
 
-input('Press "Enter" to start.')
+# input('Press "Enter" to start.')
 start_time = time.time()
 
 # load training set
@@ -242,19 +242,6 @@ for test_case in range(input_len):
     actual_values = forward_pass(input_training[test_case], weights, biases)[-1]
     error += calculate_error(expected, actual_values)
 
-# make cm
-y_true = []
-y_pred = []
-for test_case in range(input_len):
-    y_true.append(argmax(output_training[test_case]))
-    y_pred.append(argmax(forward_pass(input_training[test_case], weights, biases)[-1]))
-cm = confusion_matrix(y_true, y_pred, normalize="true")
-plot_cm(cm, "Neural Network Results", output_index, "binary")
-
-x_stuff = np.array(saved_epochs)
-y_stuff = np.array(saved_errors)
-plot_graph(data=[x_stuff, y_stuff], title="Error vs Epoch", labels=["Epoch", "Error"])
-
 # calculate accuracy
 correct = 0
 for test_case in range(input_len):
@@ -264,6 +251,20 @@ for test_case in range(input_len):
 # return results
 print("")
 print(f"Results - Loss: {round(error[0] / input_len, 5)} - Elapsed Time: {round(end_time - start_time, 5)}s - Accuracy: {round(correct / len(input_training) * 100, 5)}%")
+
+# make cm
+y_true = []
+y_pred = []
+for test_case in range(input_len):
+    y_true.append(argmax(output_training[test_case]))
+    y_pred.append(argmax(forward_pass(input_training[test_case], weights, biases)[-1]))
+cm = confusion_matrix(y_true, y_pred, normalize="true")
+plot_cm(cm, "Neural Network Results", output_index, "binary")
+
+# error vs epoch graph
+x_stuff = np.array(saved_epochs)
+y_stuff = np.array(saved_errors)
+plot_graph(data=[x_stuff, y_stuff], title="Error vs Epoch", labels=["Epoch", "Error"])
 
 if save:
     # save optimized weights and biases
