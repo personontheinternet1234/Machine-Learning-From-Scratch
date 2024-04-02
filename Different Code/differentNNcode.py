@@ -5,7 +5,9 @@ import ast
 import random
 import time
 
+from matplotlib import pyplot as plt
 import numpy as np
+import pandas as pd
 
 """ functions """
 
@@ -116,8 +118,8 @@ lambda_reg = 0.1
 layer_sizes = [2, 3, 2]
 
 # file locations
-input_data_location = "Different Code/data/input_data.txt"
-output_data_location = "Different Code/data/output_data.txt"
+input_data_location = "data/input_data.txt"
+output_data_location = "data/output_data.txt"
 
 
 """ network formation """
@@ -128,10 +130,10 @@ start_time = time.time()
 # load training set
 input_training = []
 output_training = []
-with open("Different Code/data/input_data.txt", "r") as f:
+with open("data/input_data.txt", "r") as f:
     for line in f:
         input_training.append(ast.literal_eval(line))
-with open("Different Code/data/output_data.txt", "r") as f:
+with open("data/output_data.txt", "r") as f:
     for line in f:
         output_training.append(ast.literal_eval(line))
 amount_data = len(input_training)
@@ -152,10 +154,10 @@ weights = []
 biases = []
 if load:
     # load weights and biases
-    with open("Different Code/saved/weights.txt", "r") as f:
+    with open("saved/weights.txt", "r") as f:
         for line in f:
             weights.append(np.array(ast.literal_eval(line)))
-    with open("Different Code/saved/biases.txt", "r") as f:
+    with open("saved/biases.txt", "r") as f:
         for line in f:
             biases.append(make_vector(ast.literal_eval(line)))
     weights_len = len(weights)
