@@ -193,7 +193,6 @@ if load:
     with open("saved/biases.txt", "r") as f:
         for line in f:
             biases.append(make_vector(ast.literal_eval(line)))
-    weights_len = len(weights)
 else:
     # generate weights and biases
     for connection in range(layers - 1):
