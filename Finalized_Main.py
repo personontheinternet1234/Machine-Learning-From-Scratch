@@ -175,12 +175,10 @@ def plot_graph(data, title=None, labels=None, color="black"):
 
 
 # split training and testing data
-def test_train_split(data, test_size=0.3):
+def test_train_split(data, test_size):
     random.shuffle(data)
-    print(data)
     test = data[0:round(len(data) * test_size)]
     train = data[round(len(data) * test_size):]
-    print(test, train)
     return train, test
 
 
@@ -226,8 +224,16 @@ for i in range(data_len):
 # split training and testing data
 train, test = test_train_split(list(zip(X, Y)), test_size=0.3)
 # unzip training and testing data
-X, Y = zip(*train)
-X_test, Y_test = zip(*test)
+if len(train) == 0:
+    X = []
+    Y = []
+else:
+    X, Y = zip(*train)
+if len(test) == 0:
+    X_test = []
+    Y_test = []
+else:
+    X_test, Y_test = zip(*test)
 # reformat training and testing data
 X, Y = list(X), list(Y)
 X_test, Y_test = list(X_test), list(Y_test)
@@ -260,6 +266,7 @@ start_time = time.time()
 
 logged_epochs = []
 logged_losses = []
+logged_losses_test = []
 if learn:
     # training loop
     for epoch in range(epochs):
@@ -278,11 +285,16 @@ if learn:
         if epoch % log_rate == 0:
             # SSR
             loss = 0
+            test_loss = 0
             for i in range(len(X)):
                 predicted = forward(X[i], weights, biases)[-1]
                 loss += np.sum(np.subtract(Y[i], predicted) ** 2)
+            for i in range(len(X_test)):
+                predicted = forward(X_test[i], weights, biases)[-1]
+                test_loss += np.sum(np.subtract(Y[i], predicted) ** 2)
             logged_epochs.append(epoch)
             logged_losses.append(loss)
+            logged_losses_test.append(test_loss)
             # print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
 
 end_time = time.time()
@@ -329,6 +341,7 @@ if graphs:
     plot_cm(cm, title="Neural Network Results", labels=Y_labels)
 
     plot_graph([np.array(logged_epochs), np.array(logged_losses)], title="Loss v.s. Epoch", labels=["Epoch", "Loss"])
+    plot_graph([np.array(logged_epochs), np.array(logged_losses_test)], title="Test Loss v.s. Epoch", labels=["Epoch", "Loss"])
 
 # network application
 while True:
