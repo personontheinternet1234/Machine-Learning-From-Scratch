@@ -2,9 +2,9 @@ import ast
 import random
 import time
 
-from matplotlib import pyplot as plt
 import numpy as np
 # import pandas as pd
+from matplotlib import pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 """
@@ -118,22 +118,41 @@ def backward(activations, weights, biases, predicted):
         d_activations.insert(0, d_a)
 
     for layer in range(layers - 2, -1, -1):
-        weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
-        # weights[layer] = np.subtract(weights[layer], learning_rate * (d_weights[layer] + (0.1 / 4) * weights[layer]))
+        # weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
+        weights[layer] = np.subtract(weights[layer], learning_rate * (d_weights[layer] + (lambda_reg / train_len) * weights[layer]))
         biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
 
     # return activations, weights, biases
-    return d_weights, d_biases
+    return weights, biases
 
 
-# def apply_gradient(weights, biases, d_weights, d_biases, learning_rate, layers):
-#     for layer in range(layers - 2, -1, -1):
-#         # weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
-#         weights[layer] = np.subtract(weights[layer],
-#                                      learning_rate * (d_weights[layer] + (lambda_reg / len(X)) * weights[layer]))
-#         biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
-#     return weights, biases
+def backward_2(activations, weights, biases, expected):
+    # initialize gradient lists
+    d_activations = []
+    d_weights = []
+    d_biases = []
+    layers = len(activations)
 
+    # calculate gradients
+    d_activations.insert(0, np.multiply(-2, np.subtract(expected, activations[-1])))
+    for connection in range(-1, -layers + 1, -1):
+        d_biases.insert(0, d_l_relu(np.matmul(weights[connection], activations[connection - 1]) + biases[connection]) * d_activations[0])
+        d_weights.insert(0, np.multiply(np.resize(d_biases[0], (layer_sizes[connection - 1], layer_sizes[connection])).T, np.resize(activations[connection - 1], (layer_sizes[connection], layer_sizes[connection - 1]))))
+        d_activations.insert(0, np.reshape(np.sum(np.multiply(np.resize(d_biases[0], (layer_sizes[connection - 1], layer_sizes[connection])), weights[connection].T), axis=1), (layer_sizes[connection - 1], 1)))
+    d_biases.insert(0, d_l_relu(np.matmul(weights[0], activations[0]) + biases[0]) * d_activations[0])
+    d_weights.insert(0, np.multiply(np.resize(d_biases[0], (layer_sizes[0], layer_sizes[1])).T, np.resize(activations[0], (layer_sizes[1], layer_sizes[0]))))
+
+    # apply gradients
+    weights_output = []
+    biases_output = []
+    weights_size = len(weights)
+    biases_size = len(biases)
+    for connection in range(weights_size):
+        weights_output.append(np.subtract(weights[connection], learning_rate * (d_weights[connection] + (lambda_reg / train_len) * weights[connection])))
+        # weights_output.append(np.subtract(weights[connection], learning_rate * d_weights[connection]))
+    for connection in range(biases_size):
+        biases_output.append(np.subtract(biases[connection], learning_rate * d_biases[connection]))
+    return weights_output, biases_output
 
 # graph confusion matrix
 def plot_cm(cm, title=None, labels=None, color="binary"):
@@ -167,15 +186,14 @@ def test_train_split(data, test_size=0.3):
 learn = True
 load = False
 save = False
-generate_graphs = True
-epochs = 10000
+graphs = True
+epochs = 1000000
 return_rate = 1
-learning_rate = 0.01
+learning_rate = 0.0001
 lambda_reg = 0.1
 
 # network structure
 layer_sizes = [2, 3, 2]
-layers = len(layer_sizes)
 
 # dataset
 X = [
@@ -191,21 +209,23 @@ Y = [
     [0, 1]
 ]
 
-print(test_train_split(X))
-
 # user indexes
 X_labels = ["a(0)0", "a(0)1"]
 Y_labels = ["checkered", "non checkered"]
 
+# preset values
+layers = len(layer_sizes)
+train_len = len(X)
+
 """ network code """
 
-start_time = time.time()
-
 # reformat training data
-for i in range(len(X)):
+for i in range(train_len):
     X[i] = vectorize(X[i])
-for i in range(len(Y)):
+for i in range(train_len):
     Y[i] = vectorize(Y[i])
+
+start_time = time.time()
 
 # instantiate weights and biases
 weights = []
@@ -241,7 +261,7 @@ if learn:
         activations, weights, biases = forward(inputs, weights, biases)
 
         # backpropagation
-        d_weights, d_biases = backward(activations, weights, biases, predicted)
+        weights, biases = backward(activations, weights, biases, predicted)
 
         # loss calculation
         if epoch % return_rate == 0:
@@ -250,9 +270,9 @@ if learn:
             for i in range(len(X)):
                 activations, _, _ = forward(X[i], weights, biases)
                 loss += np.sum(np.subtract(Y[i], activations[-1]) ** 2)
-            # print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
             saved_epochs.append(epoch)
             saved_errors.append(loss)
+            # print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
 
 end_time = time.time()
 
@@ -261,17 +281,17 @@ end_time = time.time()
 # calculate accuracies
 loss = 0
 correct = 0
-for i in range(len(X)):
+for i in range(train_len):
     expected = Y[i]
     activations, _, _ = forward(X[i], weights, biases)
     predicted = activations[-1]
-    loss += np.sum(np.subtract(expected, predicted) ** 2, axis=0)
+    loss += np.sum(np.subtract(expected, predicted) ** 2)
     if np.nanargmax(predicted) == np.nanargmax(expected):
         correct += 1
 
 # return results
 print("")
-print(f"Results - Loss: {round(loss[0] / len(X), 5)} - Elapsed Time: {round(end_time - start_time, 5)}s - Accuracy: {round(correct / len(X) * 100, 5)}%")
+print(f"Results - Loss: {round(loss / len(X), 5)} - Elapsed Time: {round(end_time - start_time, 5)}s - Accuracy: {round(correct / len(X) * 100, 5)}%")
 
 # save results
 if save:
@@ -287,10 +307,10 @@ if save:
         file.write(str(saved_biases))
 
 # matplotlib graphs
-if generate_graphs:
+if graphs:
     y_true = []
     y_pred = []
-    for i in range(len(X)):
+    for i in range(train_len):
         activations, _, _ = forward(X[i], weights, biases)
         y_true.append(np.nanargmax(activations[-1]))
         y_pred.append(np.nanargmax(Y[i]))
