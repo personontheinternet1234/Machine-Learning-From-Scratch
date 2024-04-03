@@ -119,7 +119,8 @@ def backward(activations, predicted, weights, biases):
 
     for layer in range(layers - 2, -1, -1):
         # weights[layer] = np.subtract(weights[layer], learning_rate * d_weights[layer])
-        weights[layer] = np.subtract(weights[layer], learning_rate * (d_weights[layer] + (lambda_reg / train_len) * weights[layer]))
+        weights[layer] = np.subtract(weights[layer],
+                                     learning_rate * (d_weights[layer] + (lambda_reg / train_len) * weights[layer]))
         biases[layer] = np.subtract(biases[layer], learning_rate * d_biases[layer])
 
     # return activations, weights, biases
@@ -136,11 +137,17 @@ def backward_2(activations, expected, weights, biases):
     # calculate gradients
     d_activations.insert(0, np.multiply(-2, np.subtract(expected, activations[-1])))
     for layer in range(-1, -layers + 1, -1):
-        d_biases.insert(0, d_l_relu(np.matmul(weights[layer], activations[layer - 1]) + biases[layer]) * d_activations[0])
-        d_weights.insert(0, np.multiply(np.resize(d_biases[0], (layer_sizes[layer - 1], layer_sizes[layer])).T, np.resize(activations[layer - 1], (layer_sizes[layer], layer_sizes[layer - 1]))))
-        d_activations.insert(0, np.reshape(np.sum(np.multiply(np.resize(d_biases[0], (layer_sizes[layer - 1], layer_sizes[layer])), weights[layer].T), axis=1), (layer_sizes[layer - 1], 1)))
+        d_biases.insert(0,
+                        d_l_relu(np.matmul(weights[layer], activations[layer - 1]) + biases[layer]) * d_activations[0])
+        d_weights.insert(0, np.multiply(np.resize(d_biases[0], (layer_sizes[layer - 1], layer_sizes[layer])).T,
+                                        np.resize(activations[layer - 1],
+                                                  (layer_sizes[layer], layer_sizes[layer - 1]))))
+        d_activations.insert(0, np.reshape(
+            np.sum(np.multiply(np.resize(d_biases[0], (layer_sizes[layer - 1], layer_sizes[layer])), weights[layer].T),
+                   axis=1), (layer_sizes[layer - 1], 1)))
     d_biases.insert(0, d_l_relu(np.matmul(weights[0], activations[0]) + biases[0]) * d_activations[0])
-    d_weights.insert(0, np.multiply(np.resize(d_biases[0], (layer_sizes[0], layer_sizes[1])).T, np.resize(activations[0], (layer_sizes[1], layer_sizes[0]))))
+    d_weights.insert(0, np.multiply(np.resize(d_biases[0], (layer_sizes[0], layer_sizes[1])).T,
+                                    np.resize(activations[0], (layer_sizes[1], layer_sizes[0]))))
 
     # apply gradients
     weights_output = []
@@ -148,29 +155,22 @@ def backward_2(activations, expected, weights, biases):
     weights_size = len(weights)
     biases_size = len(biases)
     for connection in range(weights_size):
-        weights_output.append(np.subtract(weights[connection], learning_rate * (d_weights[connection] + (lambda_reg / train_len) * weights[connection])))
+        weights_output.append(np.subtract(weights[connection], learning_rate * (
+                    d_weights[connection] + (lambda_reg / train_len) * weights[connection])))
         # weights_output.append(np.subtract(weights[connection], learning_rate * d_weights[connection]))
     for connection in range(biases_size):
         biases_output.append(np.subtract(biases[connection], learning_rate * d_biases[connection]))
     return weights_output, biases_output
 
+
 # graph confusion matrix
-def plot_cm(cm, title=None, labels=None, color="binary"):
+def plot_cm(cm, title=None, labels=None, color="Blues"):
     disp = ConfusionMatrixDisplay(
         confusion_matrix=cm,
         display_labels=labels
     )
     disp.plot(cmap=color)
     disp.ax_.set_title(title)
-    plt.show()
-
-
-# graph normal graph
-def plot_graph(data, title=None, labels=None, color="black"):
-    plt.plot(data[0], data[1], color=color)
-    plt.xlabel(labels[0])
-    plt.ylabel(labels[1])
-    plt.title(title)
     plt.show()
 
 
@@ -222,7 +222,7 @@ for i in range(data_len):
     Y[i] = vectorize(Y[i])
 
 # split training and testing data
-train, test = test_train_split(list(zip(X, Y)), test_size=0.3)
+train, test = test_train_split(list(zip(X, Y)), test_size=0)
 # unzip training and testing data
 if len(train) == 0:
     X = []
@@ -313,7 +313,8 @@ for i in range(train_len):
 
 # return results
 print("")
-print(f"Results - Loss: {round(loss / len(X), 5)} - Elapsed Time: {round(end_time - start_time, 5)}s - Accuracy: {round(correct / len(X) * 100, 5)}%")
+print(
+    f"Results - Loss: {round(loss / len(X), 5)} - Elapsed Time: {round(end_time - start_time, 5)}s - Accuracy: {round(correct / len(X) * 100, 5)}%")
 
 # save results
 if save:
@@ -330,6 +331,7 @@ if save:
 
 # matplotlib graphs
 if graphs:
+    # confusion matrix graph
     y_true = []
     y_pred = []
     for i in range(train_len):
@@ -340,8 +342,18 @@ if graphs:
     cm = confusion_matrix(y_true, y_pred, normalize="true")
     plot_cm(cm, title="Neural Network Results", labels=Y_labels)
 
-    plot_graph([np.array(logged_epochs), np.array(logged_losses)], title="Loss v.s. Epoch", labels=["Epoch", "Loss"])
-    plot_graph([np.array(logged_epochs), np.array(logged_losses_test)], title="Test Loss v.s. Epoch", labels=["Epoch", "Loss"])
+    # loss vs epoch graph
+    logged_epochs = np.array(logged_epochs)
+    logged_losses = np.array(logged_losses)
+    logged_losses_test = np.array(logged_losses_test)
+
+    plt.plot(logged_epochs, logged_losses, color="red", label="Train")
+    plt.plot(logged_epochs, logged_losses_test, color="blue", label="Test")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.title("Loss v.s. Epoch")
+    plt.legend(loc="lower right")
+    plt.show()
 
 # network application
 while True:
