@@ -187,9 +187,9 @@ learn = True
 load = False
 save = False
 graphs = True
-epochs = 100000
+epochs = 10000
 log_rate = 1
-learning_rate = 0.001
+learning_rate = 0.01
 lambda_reg = 0.1
 
 # network structure
@@ -283,7 +283,7 @@ if learn:
         neurons = forward(inputs, weights, biases)
 
         # backpropagation
-        weights, biases = backward(neurons, expected, weights, biases)
+        weights, biases = backward_2(neurons, expected, weights, biases)
 
         # loss calculation
         if epoch % log_rate == 0:
@@ -296,6 +296,8 @@ if learn:
             for i in range(len(X_test)):
                 predicted = forward(X_test[i], weights, biases)[-1]
                 test_loss += np.sum(np.subtract(Y_test[i], predicted) ** 2)
+            loss = loss / train_len
+            test_loss = test_loss / test_len
             logged_epochs.append(epoch)
             logged_losses.append(loss)
             logged_losses_test.append(test_loss)
@@ -312,6 +314,7 @@ for i in range(train_len):
     predicted = forward(X[i], weights, biases)[-1]
     expected = Y[i]
     loss += np.sum(np.subtract(expected, predicted) ** 2)
+loss = loss / train_len
 for i in range(test_len):
     predicted = forward(X_test[i], weights, biases)[-1]
     expected = Y_test[i]
@@ -353,8 +356,8 @@ if graphs:
     logged_losses = np.array(logged_losses)
     logged_losses_test = np.array(logged_losses_test)
 
-    plt.plot(logged_epochs, logged_losses, color="red", label="Train")
-    plt.plot(logged_epochs, logged_losses_test, color="blue", label="Test")
+    plt.plot(logged_epochs, logged_losses, color="blue", label="Train")
+    plt.plot(logged_epochs, logged_losses_test, color="red", label="Test")
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.title("Loss v.s. Epoch")
