@@ -209,6 +209,9 @@ Y = [
     [0, 1]
 ]
 
+X = X * 5
+Y = Y * 5
+
 # user indexes
 X_labels = ["a(0)0", "a(0)1"]
 Y_labels = ["checkered", "non checkered"]
@@ -222,7 +225,7 @@ for i in range(data_len):
     Y[i] = vectorize(Y[i])
 
 # split training and testing data
-train, test = test_train_split(list(zip(X, Y)), test_size=0)
+train, test = test_train_split(list(zip(X, Y)), test_size=0.3)
 # unzip training and testing data
 if len(train) == 0:
     X = []
@@ -241,6 +244,7 @@ X_test, Y_test = list(X_test), list(Y_test)
 # generated values
 layers = len(layer_sizes)
 train_len = len(X)
+test_len = len(X_test)
 
 """ network code """
 
@@ -291,7 +295,7 @@ if learn:
                 loss += np.sum(np.subtract(Y[i], predicted) ** 2)
             for i in range(len(X_test)):
                 predicted = forward(X_test[i], weights, biases)[-1]
-                test_loss += np.sum(np.subtract(Y[i], predicted) ** 2)
+                test_loss += np.sum(np.subtract(Y_test[i], predicted) ** 2)
             logged_epochs.append(epoch)
             logged_losses.append(loss)
             logged_losses_test.append(test_loss)
@@ -308,13 +312,15 @@ for i in range(train_len):
     predicted = forward(X[i], weights, biases)[-1]
     expected = Y[i]
     loss += np.sum(np.subtract(expected, predicted) ** 2)
+for i in range(test_len):
+    predicted = forward(X_test[i], weights, biases)[-1]
+    expected = Y_test[i]
     if np.nanargmax(predicted) == np.nanargmax(expected):
         correct += 1
 
 # return results
 print("")
-print(
-    f"Results - Loss: {round(loss / len(X), 5)} - Elapsed Time: {round(end_time - start_time, 5)}s - Accuracy: {round(correct / len(X) * 100, 5)}%")
+print(f"Results - Train Loss: {round(loss, 5)} - Elapsed Time: {round(end_time - start_time, 5)}s - Test Accuracy: {round(correct / test_len * 100, 5)}%")
 
 # save results
 if save:
@@ -334,13 +340,13 @@ if graphs:
     # confusion matrix graph
     y_true = []
     y_pred = []
-    for i in range(train_len):
-        predicted = forward(X[i], weights, biases)[-1]
-        expected = Y[i]
+    for i in range(test_len):
+        predicted = forward(X_test[i], weights, biases)[-1]
+        expected = Y_test[i]
         y_true.append(np.nanargmax(predicted))
         y_pred.append(np.nanargmax(expected))
     cm = confusion_matrix(y_true, y_pred, normalize="true")
-    plot_cm(cm, title="Neural Network Results", labels=Y_labels)
+    plot_cm(cm, title="Test Results", labels=Y_labels)
 
     # loss vs epoch graph
     logged_epochs = np.array(logged_epochs)
