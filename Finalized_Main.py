@@ -180,7 +180,7 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
 # network settings
 learn = True
 load = False
-save = True
+save = False
 graphs = True
 epochs = 1000000
 log_rate = 1000000
