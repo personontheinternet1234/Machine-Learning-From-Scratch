@@ -139,8 +139,8 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
 
 
 # network settings
-learn = True
-load = False
+learn = False
+load = True
 save = False
 graphs = True
 epochs = 1000000
@@ -289,7 +289,7 @@ if graphs:
         expected = Y_test[i]
         y_true.append(np.nanargmax(predicted))
         y_pred.append(np.nanargmax(expected))
-    cm = confusion_matrix(y_true, y_pred, normalize="true")
+    cm = confusion_matrix(y_true, y_pred, normalize="false")
     plot_cm(cm, title="Test Results", labels=Y_names)
 
     # loss vs epoch graph
