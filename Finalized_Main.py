@@ -5,7 +5,7 @@ import time
 import numpy as np
 # import pandas as pd
 from matplotlib import pyplot as plt
-from matplotlib.animation import ArtistAnimation
+from matplotlib.animation import FuncAnimation
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 """
@@ -275,8 +275,6 @@ start_time = time.time()
 logged_epochs = []
 logged_losses = []
 logged_losses_test = []
-frames = []
-fig, ax = plt.subplots()
 if learn:
     # training loop
     for epoch in range(epochs):
@@ -307,13 +305,9 @@ if learn:
             logged_epochs.append(epoch)
             logged_losses.append(loss)
             logged_losses_test.append(test_loss)
-            line, = ax.plot(epoch, loss)
-            frames.append(line)
             # print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
-print(frames)
-ani = ArtistAnimation(fig, frames, interval=50)
+            
 
-plt.show()
 end_time = time.time()
 
 """ return results """
