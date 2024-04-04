@@ -6,6 +6,8 @@ import numpy as np
 # import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from tqdm import tqdm
+from tensorflow import keras  # number training dataset
 
 """
 This program uses the nodes structure to practice basic backpropagation.
@@ -66,7 +68,7 @@ def d_l_relu(values):
     return np.where(values > 0, 1, 0.1)
 
 
-# list vectorizing
+# turn list into vector
 def vectorize(values):
     vector = np.reshape(np.array(values), (len(values), 1))
     return vector
@@ -83,12 +85,6 @@ def test_train_split(data, test_size):
 # xavier initialization
 def xavier_initialize(length, width):
     array = np.random.randn(length, width) * np.sqrt(2 / length)
-    return array
-
-
-# zero initialized array
-def zeros_initialize(length, width):
-    array = np.zeros((length, width))
     return array
 
 
@@ -163,16 +159,11 @@ def backward_2(nodes, expected, weights, biases):
     d_weights.insert(0, d_w)
 
     # apply gradients
-    weights_output = []
-    biases_output = []
     for layer in range(len(nodes) - 1):
-        w = np.subtract(weights[layer], learning_rate * (d_weights[layer] + (lambda_reg / train_len) * weights[layer]))
-        weights_output.append(w)
+        weights[layer] -= learning_rate * (d_weights[layer] + (lambda_reg / train_len) * weights[layer])
     for layer in range(len(nodes) - 1):
-        b = np.subtract(biases[layer], learning_rate * d_biases[layer])
-        biases_output.append(b)
-    # print(layers, weights_size, biases_size)
-    return weights_output, biases_output
+        biases[layer] -= learning_rate * d_biases[layer]
+    return weights, biases
 
 
 # graph confusion matrix
@@ -189,59 +180,46 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
 # network settings
 learn = True
 load = False
-save = False
+save = True
 graphs = True
-epochs = 10000
-log_rate = 10000
-learning_rate = 0.01
+epochs = 1000000
+log_rate = 1000000
+learning_rate = 0.001
 lambda_reg = 0.1
 
 # network structure
-layer_sizes = [2, 3, 2]
-
-# dataset
-X = [
-    [0, 0],
-    [0, 1],
-    [1, 0],
-    [1, 1]
-]
-Y = [
-    [0, 1],
-    [1, 0],
-    [1, 0],
-    [0, 1]
-]
-
-
-X = []
-Y = []
-with open("data/data_input.txt", "r") as f:
-    for line in f:
-        X.append(ast.literal_eval(line))
-with open("data/data_input.txt", "r") as f:
-    for line in f:
-        Y.append(ast.literal_eval(line))
-
-X = X * 5
-Y = Y * 5
+layer_sizes = [784, 16, 16, 10]
 
 # user indexes
-X_names = ["a(0)0", "a(0)1"]
-Y_names = ["c", "n-c"]
+Y_names = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 
-data_len = len(X)
+# set dataset
+
+# I actually have 0 idea why this doesn't work
+# X = []
+# Y = []
+# with open("data/data_input.txt", "r") as f:
+#     for line in f:
+#         X.append(ast.literal_eval(line))
+# with open("data/data_input.txt", "r") as f:
+#     for line in f:
+#         Y.append(ast.literal_eval(line))
+
+(train_values, train_labels), (test_values, test_labels) = keras.datasets.mnist.load_data()
+X = []
+Y = []
 
 # reformat data
-for i in range(data_len):
+for i in range(len(train_values)):
+    X.append(np.divide(train_values[i].flatten().tolist(), 255))
     X[i] = vectorize(X[i])
-for i in range(data_len):
-    Y[i] = vectorize(Y[i])
+    node_values = np.zeros(10)
+    node_values[train_labels[i]] = 1
+    Y.append(vectorize(node_values))
 
 # split training and testing data
 train, test = test_train_split(list(zip(X, Y)), test_size=0.3)
 # unzip training and testing data
-
 X, Y = zip(*train)
 X_test, Y_test = zip(*test)
 # reformat training and testing data
@@ -280,9 +258,9 @@ logged_losses = []
 logged_losses_test = []
 if learn:
     # training loop
-    for epoch in range(epochs):
+    for epoch in tqdm(range(epochs), ncols=100):
         # SGD choice
-        training_choice = int(np.random.rand() * train_len)
+        training_choice = int(np.random.rand() * len(X))
         inputs = X[training_choice]
         expected = Y[training_choice]
 
@@ -297,18 +275,17 @@ if learn:
             # SSR
             loss = 0
             test_loss = 0
-            for i in range(train_len):
+            for i in range(len(X)):
                 predicted = forward(X[i], weights, biases)[-1]
                 loss += np.sum(np.subtract(Y[i], predicted) ** 2)
-            for i in range(test_len):
+            for i in range(len(X_test)):
                 predicted = forward(X_test[i], weights, biases)[-1]
                 test_loss += np.sum(np.subtract(Y_test[i], predicted) ** 2)
-            loss = loss / train_len
-            test_loss = test_loss / test_len
+            loss /= train_len
+            test_loss /= test_len
             logged_epochs.append(epoch)
             logged_losses.append(loss)
             logged_losses_test.append(test_loss)
-            # print(f"({round((epoch / epochs) * 100)}%) MSE: {error / len(input_training)}")
 
 end_time = time.time()
 
@@ -320,14 +297,12 @@ correct = 0
 for i in range(train_len):
     # SSR
     predicted = forward(X[i], weights, biases)[-1]
-    expected = Y[i]
-    loss += np.sum(np.subtract(expected, predicted) ** 2)
-loss = loss / train_len
-for i in range(test_len):
+    loss += np.sum(np.subtract(Y[i], predicted) ** 2)
+loss /= len(X)
+for i in range(len(X_test)):
     # accuracies
     predicted = forward(X_test[i], weights, biases)[-1]
-    expected = Y_test[i]
-    if np.nanargmax(predicted) == np.nanargmax(expected):
+    if np.nanargmax(predicted) == np.nanargmax(Y_test[i]):
         correct += 1
 
 # print results
@@ -336,10 +311,10 @@ print(f"Results - Train Loss: {round(loss, 5)} - Elapsed Time: {round(end_time -
 
 # save optimized weights and biases
 if save:
-    with open("saved/weights.txt", "w") as f:
+    with open("etc/weights.txt", "w") as f:
         for array in range(len(weights)):
             f.write(str(weights[array].tolist()) + "\n")
-    with open("saved/biases.txt", "w") as f:
+    with open("etc/biases.txt", "w") as f:
         for array in range(len(biases)):
             f.write(str(biases[array].tolist()) + "\n")
 
@@ -348,7 +323,7 @@ if graphs:
     # confusion matrix graph
     y_true = []
     y_pred = []
-    for i in range(test_len):
+    for i in range(len(X_test)):
         predicted = forward(X_test[i], weights, biases)[-1]
         expected = Y_test[i]
         y_true.append(np.nanargmax(predicted))
@@ -374,7 +349,7 @@ while True:
     # get inputs
     inputs = []
     for input_node in range(layer_sizes[0]):
-        inputs.append(float(input(f"{X_names[input_node]}: ")))
+        inputs.append(float(input(f"Node {input_node + 1}: ")))
 
     # forward pass
     inputs = np.reshape(inputs, (len(inputs), 1))
