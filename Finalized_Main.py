@@ -16,7 +16,6 @@ Version: 1.0
 Author: Isaac Park Verbrugge, Christian Host-Madsen
 """
 
-
 """ unused definitions """
 
 
@@ -110,13 +109,17 @@ def backward(nodes, expected, weights, biases):
     for layer in range(-1, -len(nodes) + 1, -1):
         d_b = d_l_relu(np.matmul(weights[layer], nodes[layer - 1]) + biases[layer]) * d_nodes[0]
         d_biases.insert(0, d_b)
-        d_w = np.multiply(np.resize(d_biases[0], (layer_sizes[layer - 1], layer_sizes[layer])).T, np.resize(nodes[layer - 1], (layer_sizes[layer], layer_sizes[layer - 1])))
+        d_w = np.multiply(np.resize(d_biases[0], (layer_sizes[layer - 1], layer_sizes[layer])).T,
+                          np.resize(nodes[layer - 1], (layer_sizes[layer], layer_sizes[layer - 1])))
         d_weights.insert(0, d_w)
-        d_n = np.reshape(np.sum(np.multiply(np.resize(d_biases[0], (layer_sizes[layer - 1], layer_sizes[layer])), weights[layer].T), axis=1), (layer_sizes[layer - 1], 1))
+        d_n = np.reshape(
+            np.sum(np.multiply(np.resize(d_biases[0], (layer_sizes[layer - 1], layer_sizes[layer])), weights[layer].T),
+                   axis=1), (layer_sizes[layer - 1], 1))
         d_nodes.insert(0, d_n)
     d_b = d_l_relu(np.matmul(weights[0], nodes[0]) + biases[0]) * d_nodes[0]
     d_biases.insert(0, d_b)
-    d_w = np.multiply(np.resize(d_biases[0], (layer_sizes[0], layer_sizes[1])).T, np.resize(nodes[0], (layer_sizes[1], layer_sizes[0])))
+    d_w = np.multiply(np.resize(d_biases[0], (layer_sizes[0], layer_sizes[1])).T,
+                      np.resize(nodes[0], (layer_sizes[1], layer_sizes[0])))
     d_weights.insert(0, d_w)
 
     # apply gradients
@@ -139,12 +142,12 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
 
 
 # network settings
-learn = False
-load = True
+learn = True
+load = False
 save = False
 graphs = True
-epochs = 1000000
-log_rate = 1000000
+epochs = 10000
+log_rate = 1
 learning_rate = 0.001
 lambda_reg = 0.1
 
@@ -167,20 +170,48 @@ Y_names = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 #         Y.append(ast.literal_eval(line))
 
 (train_values, train_labels), (test_values, test_labels) = keras.datasets.mnist.load_data()
+# print(type(list(train_values)))
+# train_values = list(train_values)
+# test_values = list(test_values)
+# train_labels = list(train_labels)
+# test_labels = list(test_labels)
+# train_values.append(test_values)
+# train_labels.append(test_labels)
+# print(train_values)
+# train_values = np.array(train_values)
+# train_labels = np.array(train_labels)
+# train_values = np.append(test_values, train_values)
+# train_labels = np.append(test_labels, train_labels)
+# train_values.append(test_values)
+# train_labels.append(test_labels)
 X = []
 Y = []
+
+# reformat temp test data
+X_test_2 = []
+Y_test_2 = []
+
+# for i in range(len(test_values)):
+#     X_test_2.append(np.divide(test_values[i].flatten().tolist(), 255))
+#     X_test_2[i] = vectorize(X_test_2[i])
+#     node_values = np.zeros(layer_sizes[-1])
+#     node_values[test_labels[i]] = 1
+#     Y_test_2.append(vectorize(node_values))
+
 
 # reformat data
 for i in range(len(train_values)):
     X.append(np.divide(train_values[i].flatten().tolist(), 255))
     X[i] = vectorize(X[i])
-    node_values = np.zeros(10)
+    node_values = np.zeros(layer_sizes[-1])
     node_values[train_labels[i]] = 1
     Y.append(vectorize(node_values))
 
 # split training and testing data
 train, test = test_train_split(list(zip(X, Y)), test_size=0.3)
 # unzip training and testing data
+train = train[0:1000]
+test = test[0:1000]
 X, Y = zip(*train)
 X_test, Y_test = zip(*test)
 # reformat training and testing data
@@ -268,7 +299,8 @@ for i in range(len(X_test)):
 
 # print results
 print("")
-print(f"Results - Train Loss: {round(loss, 5)} - Elapsed Time: {round(end_time - start_time, 5)}s - Test Accuracy: {round(correct / test_len * 100, 5)}%")
+print(
+    f"Results - Train Loss: {round(loss, 5)} - Elapsed Time: {round(end_time - start_time, 5)}s - Test Accuracy: {round(correct / test_len * 100, 5)}%")
 
 # save optimized weights and biases
 if save:
@@ -289,7 +321,7 @@ if graphs:
         expected = Y_test[i]
         y_true.append(np.nanargmax(predicted))
         y_pred.append(np.nanargmax(expected))
-    cm = confusion_matrix(y_true, y_pred, normalize="false")
+    cm = confusion_matrix(y_true, y_pred, normalize="true")
     plot_cm(cm, title="Test Results", labels=Y_names)
 
     # loss vs epoch graph
