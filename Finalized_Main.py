@@ -7,7 +7,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from tqdm import tqdm
-import keras  # number training dataset
+import keras  # number dataset
 
 """
 This program uses the nodes structure to practice basic backpropagation.
@@ -153,8 +153,8 @@ learn = True
 load = False
 save = True
 graphs = True
-epochs = 10000000
-log_rate = 100000
+epochs = 1000000
+log_rate = 10000
 learning_rate = 0.001
 lambda_reg = 0.1
 
@@ -162,7 +162,8 @@ lambda_reg = 0.1
 layer_sizes = [784, 16, 16, 10]
 
 # user indexes
-Y_names = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+# Y_names = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+Y_names = ["c", "nc"]
 
 # set dataset
 
@@ -217,8 +218,8 @@ for i in range(len(train_values)):
 # split training and testing data
 train, test = test_train_split(list(zip(X_b, Y_b)), test_size=0.3)
 # trim training data (optional
-train = train[0:10000]
-test = test[0:10000]
+# train = train[0:10000]
+# test = test[0:10000]
 # unzip training and testing data
 X, Y = zip(*train)
 X_test, Y_test = zip(*test)
@@ -226,6 +227,7 @@ X_test, Y_test = zip(*test)
 X, Y = list(X), list(Y)
 X_test, Y_test = list(X_test), list(Y_test)
 # random.shuffle(Y)
+# random.shuffle(Y_test)
 
 # generated values
 layers = len(layer_sizes)
@@ -301,22 +303,36 @@ end_time = time.time()
 
 # calculate results
 loss = 0
-correct = 0
-for i in range(train_len):
+loss_test = 0
+accu = 0
+accu_test = 0
+
+for i in range(len(X)):
     # SSR
     predicted = forward(X[i], weights, biases)[-1]
     loss += np.sum(np.subtract(Y[i], predicted) ** 2)
-loss /= len(X)
+for i in range(len(X_test)):
+    # SSR
+    predicted = forward(X_test[i], weights, biases)[-1]
+    loss_test += np.sum(np.subtract(Y_test[i], predicted) ** 2)
+loss /= train_len
+loss_test /= test_len
+for i in range(len(X)):
+    # accuracies
+    predicted = forward(X[i], weights, biases)[-1]
+    if np.nanargmax(predicted) == np.nanargmax(Y[i]):
+        accu += 1
 for i in range(len(X_test)):
     # accuracies
     predicted = forward(X_test[i], weights, biases)[-1]
     if np.nanargmax(predicted) == np.nanargmax(Y_test[i]):
-        correct += 1
+        accu_test += 1
+accu /= train_len
+accu_test /= test_len
 
 # print results
 print("")
-print(
-    f"Results - Train Loss: {round(loss, 5)} - Elapsed Time: {round(end_time - start_time, 5)}s - Test Accuracy: {round(correct / test_len * 100, 5)}%")
+print(f"Results - Train Loss: {round(loss, 5)} - Test Loss: {round(loss_test, 5)} - Train Accuracy: {round(accu, 5)} - Test Accuracy: {round(accu_test, 5)} - Elapsed Time: {round(end_time - start_time, 5)}s")
 
 # save optimized weights and biases
 if save:
@@ -339,6 +355,16 @@ if graphs:
         y_pred.append(np.nanargmax(expected))
     cm = confusion_matrix(y_true, y_pred, normalize="true")
     plot_cm(cm, title="Test Results", labels=Y_names)
+
+    y_true_train = []
+    y_pred_train = []
+    for i in range(len(X)):
+        predicted = forward(X[i], weights, biases)[-1]
+        expected = Y[i]
+        y_true_train.append(np.nanargmax(predicted))
+        y_pred_train.append(np.nanargmax(expected))
+    cm = confusion_matrix(y_true_train, y_pred_train, normalize="true")
+    plot_cm(cm, title="Train Results", labels=Y_names)
 
     # loss vs epoch graph
     logged_epochs = np.array(logged_epochs)
