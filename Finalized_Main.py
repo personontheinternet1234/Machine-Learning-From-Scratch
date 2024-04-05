@@ -7,7 +7,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from tqdm import tqdm
-from tensorflow import keras  # number training dataset
+import keras  # number training dataset
 
 """
 This program uses the nodes structure to practice basic backpropagation.
@@ -143,7 +143,7 @@ learn = True
 load = False
 save = False
 graphs = True
-epochs = 1000000
+epochs = 10000
 log_rate = 1000000
 learning_rate = 0.001
 lambda_reg = 0.1
