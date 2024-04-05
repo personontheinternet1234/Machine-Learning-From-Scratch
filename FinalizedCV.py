@@ -232,6 +232,8 @@ print()
 while save != "y" and save != "n":
     save = input("Save the weights & biases just calculated? (Y/n): ").lower()
 
+save = "n"
+
 if save == "y":
     saved_weights = []
     saved_biases = []
@@ -255,32 +257,33 @@ else:
 
 # finalized network application
 while True:
-    test_question = "A"
+    # test_question = "A"
+    #
+    # while test_question != "data" and test_question != "drawing":
+    #     test_question = input("Try a data point or your own drawing? (data/drawing): ").lower()
 
-    while test_question != "data" and test_question != "drawing":
-        test_question = input("Try a data point or your own drawing? (data/drawing): ").lower()
-
-    if test_question == "data":
-        # get inputs
-        choice = int(input(f"Image Choice #: "))
-        inputs = train_x[choice].flatten().tolist()
-
-        # forward pass
-        inputs = np.reshape(inputs, (len(inputs), 1))
-        forward(inputs)
-
-        # result
-        print(activations[-1])
-        print(f"Should be: {train_y[choice]}")
-        print(f"Outputted: {np.nanargmax(activations[-1])}")
-    elif test_question == "drawing":
+    # if test_question == "data":
+    #     # get inputs
+    #     choice = int(input(f"Image Choice #: "))
+    #     inputs = train_x[choice].flatten().tolist()
+    #
+    #     # forward pass
+    #     inputs = np.reshape(inputs, (len(inputs), 1))
+    #     forward(inputs)
+    #
+    #     # result
+    #     print(activations[-1])
+    #     print(f"Should be: {train_y[choice]}")
+    #     print(f"Outputted: {np.nanargmax(activations[-1])}")
+    if True:
         inputs = np.divide(np.array(drawing.main()).flatten().tolist(), 255)
 
         inputs = np.reshape(inputs, (len(inputs), 1))
         forward(inputs)
 
         # result
-        print(softmax(activations[-1]))
+        print(activations[-1])
+        # print(softmax(activations[-1]))
         print(f"Outputted: {np.nanargmax(activations[-1])}")
 
         # plt.gray()
