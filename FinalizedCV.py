@@ -171,8 +171,8 @@ def backward():
 
 while load != "y" and load != "n":
     load = input("Load? (Y/n): ").lower()
-while choose_name not in os.listdir("etc/"):
-    choose_name = input("Choose a file: ")
+# while choose_name not in os.listdir("etc/"):
+#     choose_name = input("Choose a file: ")
 
 if load == "y":
     # load weights and biases
