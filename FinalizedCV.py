@@ -175,14 +175,22 @@ while choose_name not in os.listdir("etc/"):
     choose_name = input("Choose a file: ")
 
 if load == "y":
-    with open(f"etc/{choose_name}/weights.txt", "r") as file:
-        weights = ast.literal_eval(file.read())
-    with open(f"etc/{choose_name}/biases.txt", "r") as file:
-        biases = ast.literal_eval(file.read())
-    for i in range(len(weights)):
-        weights[i] = np.array(weights[i])
-    for i in range(len(biases)):
-        biases[i] = np.array(biases[i])
+    # load weights and biases
+    with open("etc/weights.txt", "r") as f:
+        for line in f:
+            weights.append(np.array(ast.literal_eval(line)))
+    with open("etc/biases.txt", "r") as f:
+        for line in f:
+            biases.append(np.array(ast.literal_eval(line)))
+
+    # with open(f"etc/{choose_name}/weights.txt", "r") as file:
+    #     weights = ast.literal_eval(file.read())
+    # with open(f"etc/{choose_name}/biases.txt", "r") as file:
+    #     biases = ast.literal_eval(file.read())
+    # for i in range(len(weights)):
+    #     weights[i] = np.array(weights[i])
+    # for i in range(len(biases)):
+    #     biases[i] = np.array(biases[i])
 elif load == "n":
     # instantiate weights and biases
     for i in range(layers - 1):
