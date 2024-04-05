@@ -7,6 +7,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from tqdm import tqdm
+import drawing
 import keras  # number dataset
 
 """
@@ -149,9 +150,9 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
 
 
 # network settings
-learn = True
-load = False
-save = True
+learn = False
+load = True
+save = False
 graphs = True
 epochs = 1000000
 log_rate = 10000
@@ -162,8 +163,8 @@ lambda_reg = 0.1
 layer_sizes = [784, 16, 16, 10]
 
 # user indexes
-# Y_names = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
-Y_names = ["c", "nc"]
+Y_names = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+# Y_names = ["c", "nc"]
 
 # set dataset
 
@@ -382,14 +383,20 @@ if graphs:
 while True:
     print("")
     # get inputs
-    inputs = []
-    for input_node in range(layer_sizes[0]):
-        inputs.append(float(input(f"Node {input_node + 1}: ")))
+    # inputs = []
+    # for input_node in range(layer_sizes[0]):
+    #     inputs.append(float(input(f"Node {input_node + 1}: ")))
 
     # forward pass
+
+    inputs = np.divide(np.array(drawing.main()).flatten().tolist(), 255)
     inputs = np.reshape(inputs, (len(inputs), 1))
     nodes = forward(inputs, weights, biases)
     predicted = nodes[-1]
+
+    # inputs = np.reshape(inputs, (len(inputs), 1))
+    # nodes = forward(inputs, weights, biases)
+    # predicted = nodes[-1]
 
     # result
     print(predicted)
