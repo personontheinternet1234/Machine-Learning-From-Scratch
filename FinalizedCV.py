@@ -226,8 +226,8 @@ if learn == "y":
             #
             #     error += cross_entropy(softmax(activations[-1]), expected_values)
             # print(f"({round((epoch / epochs) * 100)}%) Avg CE: {error / len(input_training)}")
-            print(f"({round((epoch / epochs) * 100)}%)")
-print()
+            # print(f"({round((epoch / epochs) * 100)}%)")
+print("")
 
 while save != "y" and save != "n":
     save = input("Save the weights & biases just calculated? (Y/n): ").lower()
