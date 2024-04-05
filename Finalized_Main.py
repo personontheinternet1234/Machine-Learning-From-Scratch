@@ -127,6 +127,13 @@ def backward(nodes, expected, weights, biases):
         weights[layer] -= learning_rate * (d_weights[layer] + (lambda_reg / train_len) * weights[layer])
     for layer in range(len(nodes) - 1):
         biases[layer] -= learning_rate * d_biases[layer]
+
+    # for layer in range(len(nodes) - 1):
+    #     weights[layer] -= learning_rate * (np.sum(d_weights[layer], axis=0) + (lambda_reg / train_len) * weights[layer])
+    #     # weights[layer] = np.multiply(learning_rate, d_weights[layer] + (lambda_reg / train_len) * weights[layer], axis=0)
+    # for layer in range(len(nodes) - 1):
+    #     biases[layer] -= learning_rate * np.sum(d_biases[layer], axis=0)
+    #     # biases[layer] = np.multiply(learning_rate, d_biases[layer], axis=0)
     return weights, biases
 
 
@@ -146,8 +153,8 @@ learn = True
 load = False
 save = False
 graphs = True
-epochs = 10000
-log_rate = 100000
+epochs = 100000
+log_rate = 10
 learning_rate = 0.001
 lambda_reg = 0.1
 
@@ -184,8 +191,8 @@ Y_names = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 # train_labels = np.append(test_labels, train_labels)
 # train_values.append(test_values)
 # train_labels.append(test_labels)
-X = []
-Y = []
+X_b = []
+Y_b = []
 
 # reformat temp test data
 X_test_2 = []
@@ -201,17 +208,18 @@ Y_test_2 = []
 
 # reformat data
 for i in range(len(train_values)):
-    X.append(np.divide(train_values[i].flatten().tolist(), 255))
-    X[i] = vectorize(X[i])
+    X_b.append(np.divide(train_values[i].flatten().tolist(), 255))
+    X_b[i] = vectorize(X_b[i])
     node_values = np.zeros(layer_sizes[-1])
     node_values[train_labels[i]] = 1
-    Y.append(vectorize(node_values))
+    Y_b.append(vectorize(node_values))
 
 # split training and testing data
-train, test = test_train_split(list(zip(X, Y)), test_size=0.3)
+train, test = test_train_split(list(zip(X_b, Y_b)), test_size=0.3)
+# trim training data (optional
+# train = train[0:10000]
+# test = test[0:10000]
 # unzip training and testing data
-train = train[0:1000]
-test = test[0:1000]
 X, Y = zip(*train)
 X_test, Y_test = zip(*test)
 # reformat training and testing data
@@ -251,7 +259,7 @@ logged_losses_test = []
 if learn:
     # training loop
     for epoch in tqdm(range(epochs), ncols=100):
-        # SGD choice
+        # # SGD choice
         training_choice = int(np.random.rand() * len(X))
         inputs = X[training_choice]
         expected = Y[training_choice]
@@ -262,22 +270,29 @@ if learn:
         # backpropagation
         weights, biases = backward(nodes, expected, weights, biases)
 
+        # nodes = forward(X, weights, biases)
+        # weights, biases = backward(nodes, Y, weights, biases)
+
         # loss calculation
         if epoch % log_rate == 0:
             # SSR
-            loss = 0
-            test_loss = 0
-            for i in range(len(X)):
-                predicted = forward(X[i], weights, biases)[-1]
-                loss += np.sum(np.subtract(Y[i], predicted) ** 2)
-            for i in range(len(X_test)):
-                predicted = forward(X_test[i], weights, biases)[-1]
-                test_loss += np.sum(np.subtract(Y_test[i], predicted) ** 2)
-            loss /= train_len
-            test_loss /= test_len
+            train_predicted = forward(X, weights, biases)[-1]
+            test_predicted = forward(X_test, weights, biases)[-1]
+            loss2 = np.sum(np.subtract(Y, train_predicted) ** 2) / train_len
+            test_loss2 = np.sum(np.subtract(Y_test, test_predicted) ** 2) / test_len
+            # loss = 0
+            # test_loss = 0
+            # for i in range(len(X)):
+            #     predicted = forward(X[i], weights, biases)[-1]
+            #     loss += np.sum(np.subtract(Y[i], predicted) ** 2)
+            # for i in range(len(X_test)):
+            #     predicted = forward(X_test[i], weights, biases)[-1]
+            #     test_loss += np.sum(np.subtract(Y_test[i], predicted) ** 2)
+            # loss /= train_len
+            # test_loss /= test_len
             logged_epochs.append(epoch)
-            logged_losses.append(loss)
-            logged_losses_test.append(test_loss)
+            logged_losses.append(loss2)
+            logged_losses_test.append(test_loss2)
 
 end_time = time.time()
 
