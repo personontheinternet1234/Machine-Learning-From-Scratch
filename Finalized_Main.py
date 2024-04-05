@@ -151,10 +151,10 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
 # network settings
 learn = True
 load = False
-save = False
+save = True
 graphs = True
-epochs = 100000
-log_rate = 10
+epochs = 10000000
+log_rate = 100000
 learning_rate = 0.001
 lambda_reg = 0.1
 
@@ -217,14 +217,15 @@ for i in range(len(train_values)):
 # split training and testing data
 train, test = test_train_split(list(zip(X_b, Y_b)), test_size=0.3)
 # trim training data (optional
-# train = train[0:10000]
-# test = test[0:10000]
+train = train[0:10000]
+test = test[0:10000]
 # unzip training and testing data
 X, Y = zip(*train)
 X_test, Y_test = zip(*test)
 # reformat training and testing data
 X, Y = list(X), list(Y)
 X_test, Y_test = list(X_test), list(Y_test)
+# random.shuffle(Y)
 
 # generated values
 layers = len(layer_sizes)
