@@ -162,8 +162,8 @@ load = False
 save = False
 graphs = True
 epochs = 1000
-log_rate = 1
-learning_rate = 0.0000001
+log_rate = 1000
+learning_rate = 0.000001
 lambda_reg = 0.1
 
 # network structure
