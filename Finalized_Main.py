@@ -123,18 +123,25 @@ def backward(nodes, expected, weights, biases):
                       np.resize(nodes[0], (layer_sizes[1], layer_sizes[0])))
     d_weights.insert(0, d_w)
 
+    # print(d_weights)
+    # print(weights[1])
+    # print("--------------")
+    # print(d_weights[1])
+    # print("--------------")
+    # print(np.sum(d_weights[1], axis=0))
+
     # apply gradients
+    # for layer in range(len(nodes) - 1):
+    #     weights[layer] -= learning_rate * (d_weights[layer] + (lambda_reg / train_len) * weights[layer])
+    # for layer in range(len(nodes) - 1):
+    #     biases[layer] -= learning_rate * d_biases[layer]
+
     for layer in range(len(nodes) - 1):
         weights[layer] -= learning_rate * (d_weights[layer] + (lambda_reg / train_len) * weights[layer])
+        # weights[layer] = np.multiply(learning_rate, d_weights[layer] + (lambda_reg / train_len) * weights[layer], axis=0)
     for layer in range(len(nodes) - 1):
-        biases[layer] -= learning_rate * d_biases[layer]
-
-    # for layer in range(len(nodes) - 1):
-    #     weights[layer] -= learning_rate * (np.sum(d_weights[layer], axis=0) + (lambda_reg / train_len) * weights[layer])
-    #     # weights[layer] = np.multiply(learning_rate, d_weights[layer] + (lambda_reg / train_len) * weights[layer], axis=0)
-    # for layer in range(len(nodes) - 1):
-    #     biases[layer] -= learning_rate * np.sum(d_biases[layer], axis=0)
-    #     # biases[layer] = np.multiply(learning_rate, d_biases[layer], axis=0)
+        biases[layer] -= learning_rate * np.sum(d_biases[layer], axis=0)
+        # biases[layer] = np.multiply(learning_rate, d_biases[layer], axis=0)
     return weights, biases
 
 
@@ -150,13 +157,13 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
 
 
 # network settings
-learn = False
-load = True
+learn = True
+load = False
 save = False
 graphs = True
-epochs = 1000000
-log_rate = 10000
-learning_rate = 0.001
+epochs = 1000
+log_rate = 1
+learning_rate = 0.0000001
 lambda_reg = 0.1
 
 # network structure
@@ -179,6 +186,9 @@ Y_names = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 #         Y.append(ast.literal_eval(line))
 
 (train_values, train_labels), (test_values, test_labels) = keras.datasets.mnist.load_data()
+# combine training and testing labels from keras since not randomized
+train_values = np.append(train_values, test_values, axis=0)
+train_labels = np.append(train_labels, test_labels, axis=0)
 # print(type(list(train_values)))
 # train_values = list(train_values)
 # test_values = list(test_values)
@@ -218,9 +228,9 @@ for i in range(len(train_values)):
 
 # split training and testing data
 train, test = test_train_split(list(zip(X_b, Y_b)), test_size=0.3)
-# trim training data (optional
-# train = train[0:10000]
-# test = test[0:10000]
+# trim training data (optional)
+# train = train[0:250]
+# test = test[0:250]
 # unzip training and testing data
 X, Y = zip(*train)
 X_test, Y_test = zip(*test)
@@ -234,6 +244,8 @@ X_test, Y_test = list(X_test), list(Y_test)
 layers = len(layer_sizes)
 train_len = len(X)
 test_len = len(X_test)
+print(train_len)
+print(test_len)
 
 """ network code """
 
@@ -264,18 +276,18 @@ if learn:
     # training loop
     for epoch in tqdm(range(epochs), ncols=100):
         # # SGD choice
-        training_choice = int(np.random.rand() * len(X))
-        inputs = X[training_choice]
-        expected = Y[training_choice]
+        # training_choice = int(np.random.rand() * len(X))
+        # inputs = X[training_choice]
+        # expected = Y[training_choice]
+        #
+        # # forward pass
+        # nodes = forward(inputs, weights, biases)
+        #
+        # # backpropagation
+        # weights, biases = backward(nodes, expected, weights, biases)
 
-        # forward pass
-        nodes = forward(inputs, weights, biases)
-
-        # backpropagation
-        weights, biases = backward(nodes, expected, weights, biases)
-
-        # nodes = forward(X, weights, biases)
-        # weights, biases = backward(nodes, Y, weights, biases)
+        nodes = forward(X, weights, biases)  # this works
+        weights, biases = backward(nodes, Y, weights, biases)  # this doesn't
 
         # loss calculation
         if epoch % log_rate == 0:
@@ -308,16 +320,21 @@ loss_test = 0
 accu = 0
 accu_test = 0
 
-for i in range(len(X)):
-    # SSR
-    predicted = forward(X[i], weights, biases)[-1]
-    loss += np.sum(np.subtract(Y[i], predicted) ** 2)
-for i in range(len(X_test)):
-    # SSR
-    predicted = forward(X_test[i], weights, biases)[-1]
-    loss_test += np.sum(np.subtract(Y_test[i], predicted) ** 2)
-loss /= train_len
-loss_test /= test_len
+train_predicted = forward(X, weights, biases)[-1]
+test_predicted = forward(X_test, weights, biases)[-1]
+loss2 = np.sum(np.subtract(Y, train_predicted) ** 2) / train_len
+test_loss2 = np.sum(np.subtract(Y_test, test_predicted) ** 2) / test_len
+
+# for i in range(len(X)):
+#     # SSR
+#     predicted = forward(X[i], weights, biases)[-1]
+#     loss += np.sum(np.subtract(Y[i], predicted) ** 2)
+# for i in range(len(X_test)):
+#     # SSR
+#     predicted = forward(X_test[i], weights, biases)[-1]
+#     loss_test += np.sum(np.subtract(Y_test[i], predicted) ** 2)
+# loss /= train_len
+# loss_test /= test_len
 for i in range(len(X)):
     # accuracies
     predicted = forward(X[i], weights, biases)[-1]
@@ -333,7 +350,7 @@ accu_test /= test_len
 
 # print results
 print("")
-print(f"Results - Train Loss: {round(loss, 5)} - Test Loss: {round(loss_test, 5)} - Train Accuracy: {round(accu, 5)} - Test Accuracy: {round(accu_test, 5)} - Elapsed Time: {round(end_time - start_time, 5)}s")
+print(f"Results - Train Loss: {round(loss2, 5)} - Test Loss: {round(test_loss2, 5)} - Train Accuracy: {round(accu, 5)} - Test Accuracy: {round(accu_test, 5)} - Elapsed Time: {round(end_time - start_time, 5)}s")
 
 # save optimized weights and biases
 if save:
@@ -347,16 +364,6 @@ if save:
 # matplotlib graphs
 if graphs:
     # confusion matrix graph
-    y_true = []
-    y_pred = []
-    for i in range(len(X_test)):
-        predicted = forward(X_test[i], weights, biases)[-1]
-        expected = Y_test[i]
-        y_true.append(np.nanargmax(predicted))
-        y_pred.append(np.nanargmax(expected))
-    cm = confusion_matrix(y_true, y_pred, normalize="true")
-    plot_cm(cm, title="Test Results", labels=Y_names)
-
     y_true_train = []
     y_pred_train = []
     for i in range(len(X)):
@@ -366,6 +373,16 @@ if graphs:
         y_pred_train.append(np.nanargmax(expected))
     cm = confusion_matrix(y_true_train, y_pred_train, normalize="true")
     plot_cm(cm, title="Train Results", labels=Y_names)
+
+    y_true = []
+    y_pred = []
+    for i in range(len(X_test)):
+        predicted = forward(X_test[i], weights, biases)[-1]
+        expected = Y_test[i]
+        y_true.append(np.nanargmax(predicted))
+        y_pred.append(np.nanargmax(expected))
+    cm = confusion_matrix(y_true, y_pred, normalize="true")
+    plot_cm(cm, title="Test Results", labels=Y_names)
 
     # loss vs epoch graph
     logged_epochs = np.array(logged_epochs)
@@ -380,8 +397,8 @@ if graphs:
     plt.show()
 
 # network application
-while True:
-    print("")
+# while True:
+#     print("")
     # get inputs
     # inputs = []
     # for input_node in range(layer_sizes[0]):
@@ -389,15 +406,15 @@ while True:
 
     # forward pass
 
-    inputs = np.divide(np.array(drawing.main()).flatten().tolist(), 255)
-    inputs = np.reshape(inputs, (len(inputs), 1))
-    nodes = forward(inputs, weights, biases)
-    predicted = nodes[-1]
+    # inputs = np.divide(np.array(drawing.main()).flatten().tolist(), 255)
+    # inputs = np.reshape(inputs, (len(inputs), 1))
+    # nodes = forward(inputs, weights, biases)
+    # predicted = nodes[-1]
 
     # inputs = np.reshape(inputs, (len(inputs), 1))
     # nodes = forward(inputs, weights, biases)
     # predicted = nodes[-1]
 
     # result
-    print(predicted)
-    print(f"Predicted: {Y_names[np.nanargmax(predicted)]}")
+    # print(predicted)
+    # print(f"Predicted: {Y_names[np.nanargmax(predicted)]}")

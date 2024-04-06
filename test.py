@@ -1,4 +1,5 @@
 import numpy as np
+import keras
 
 bob = [np.array([1, 2, 3]), np.array([4, 5, 6]), np.array([7, 8, 9])]
 jeff = np.array([[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]])
@@ -22,3 +23,10 @@ loss2 /= len(bob)
 print(loss2)
 
 print(np.sum(george, axis=0))
+
+
+(train_values, train_labels), (test_values, test_labels) = keras.datasets.mnist.load_data()
+
+
+train_values = np.append(train_values, test_values, axis=0)
+print(len(train_values))

@@ -216,7 +216,7 @@ if learn == "y":
         backward()
 
         # error report
-        if epoch % return_rate == 0:
+        # if epoch % return_rate == 0:
             # error = 0
             # for i in range(len(input_training)):
             #     # reformat inputs and outputs
