@@ -161,8 +161,8 @@ learn = True
 load = False
 save = False
 graphs = True
-epochs = 1000
-log_rate = 1000
+epochs = 10
+log_rate = 1
 learning_rate = 0.000001
 lambda_reg = 0.1
 
