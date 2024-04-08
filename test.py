@@ -14,6 +14,8 @@ def t_break():
     print("---------------")
 
 
+# 3 4 2
+
 # [0, 2]
 t_c = 0
 
@@ -47,9 +49,11 @@ d_b_s = []
 
 for i in range(-1, -len(f_a) + 1, -1):
     print(i)
-    # d_b_a.insert(0, d_l_relu(np.matmul(jeff[i], f_a[i - 1]) + arnold[i]) * d_a_a[0])
+    print(jeff[i])
+    print(np.sum(f_a[i - 1], axis=0))
+    d_b_a.insert(0, d_l_relu(np.matmul(jeff[i], np.sum(f_a[i - 1], axis=0)) + arnold[i]) * d_a_a[0])
 for i in range(-1, -len(f_s) + 1, -1):
-    d_b_s.insert(0, d_l_relu(np.matmul(jeff[i], f_s[i - 1]) + arnold[i]) * d_a_s[0])
+    d_b_s.insert(0, d_l_relu(np.matmul(jeff[i], f_s[i - 1][t_c]) + arnold[i]) * d_a_s[0])
 
 print(d_b_a)
 t_break()
