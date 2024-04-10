@@ -114,7 +114,7 @@ layer_sizes = [784, 16, 16, 10]
 epochs = 100000
 learning_rate = 0.001
 lambda_reg = 0.1
-log_rate = 100000
+log_rate = 10000
 
 # dataset params
 trim = False
