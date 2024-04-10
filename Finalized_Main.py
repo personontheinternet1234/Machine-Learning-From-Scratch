@@ -264,26 +264,28 @@ if save:
 
 # matplotlib graphs
 if graphs:
-    # confusion matrix graph
-    y_true_train = []
-    y_pred_train = []
+    # generate cms
+    y_true = []
+    y_pred = []
     for i in range(len(X)):
         predicted = forward(X[i], weights, biases)[-1]
         expected = Y[i]
-        y_true_train.append(np.nanargmax(predicted))
-        y_pred_train.append(np.nanargmax(expected))
-    cm = confusion_matrix(y_true_train, y_pred_train, normalize="true")
-    plot_cm(cm, title="Train Results", labels=Y_names)
+        y_true.append(np.nanargmax(predicted))
+        y_pred.append(np.nanargmax(expected))
+    cm_train = confusion_matrix(y_true, y_pred, normalize="true")
 
-    y_true = []
-    y_pred = []
+    y_true_test = []
+    y_pred_test = []
     for i in range(len(X_test)):
         predicted = forward(X_test[i], weights, biases)[-1]
         expected = Y_test[i]
-        y_true.append(np.nanargmax(predicted))
-        y_pred.append(np.nanargmax(expected))
-    cm = confusion_matrix(y_true, y_pred, normalize="true")
-    plot_cm(cm, title="Test Results", labels=Y_names)
+        y_true_test.append(np.nanargmax(predicted))
+        y_pred_test.append(np.nanargmax(expected))
+    cm_test = confusion_matrix(y_true_test, y_pred_test, normalize="true")
+
+    # graph cms
+    plot_cm(cm_train, title="Train Results", labels=Y_names)
+    plot_cm(cm_test, title="Test Results", labels=Y_names)
 
     # loss vs epoch graph
     logged_epochs = np.array(logged_epochs)
