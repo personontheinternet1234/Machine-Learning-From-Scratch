@@ -283,14 +283,16 @@ if graphs:
         y_pred_test.append(np.nanargmax(expected))
     cm_test = confusion_matrix(y_true_test, y_pred_test, normalize="true")
 
+    # generate loss vs epoch values
+    logged_epochs = np.array(logged_epochs)
+    logged_losses = np.array(logged_losses)
+    logged_losses_test = np.array(logged_losses_test)
+
     # graph cms
     plot_cm(cm_train, title="Train Results", labels=Y_names)
     plot_cm(cm_test, title="Test Results", labels=Y_names)
 
-    # loss vs epoch graph
-    logged_epochs = np.array(logged_epochs)
-    logged_losses = np.array(logged_losses)
-    logged_losses_test = np.array(logged_losses_test)
+    # graph loss vs epoch
     plt.plot(logged_epochs, logged_losses, color="blue", label="Train")
     plt.plot(logged_epochs, logged_losses_test, color="red", label="Test")
     plt.xlabel("Epoch")
