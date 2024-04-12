@@ -54,7 +54,7 @@ dW1 = A1_s.T * dB1
 print(dW1)
 tb()
 # l1
-dA1 = np.reshape(np.sum(W1 * dB1, axis=1), (1, hls))
+dA1 = np.reshape(np.sum(W1 * dB1, axis=1), (1, hls))  # ???
 print(dA1)
 tb()
 dB0 = dA1
