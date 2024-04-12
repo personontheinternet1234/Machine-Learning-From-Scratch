@@ -54,13 +54,13 @@ dW1 = A1_s.T * dB1
 print(dW1)
 tb()
 # l1
-dA1 = np.sum(W1 * dB1, axis=1)
+dA1 = np.reshape(np.sum(W1 * dB1, axis=1), (1, hls))
 print(dA1)
 tb()
 dB0 = dA1
 print(dB0)
 tb()
-dW0 = np.multiply(np.resize(X[tc], (len(X[tc]), 1)), np.resize(dB0, (1, len(dB0))))
+dW0 = np.multiply(np.resize(X[tc], (len(X[tc]), 1)), dB0)
 print(dW0)
 tb()
 
