@@ -1,5 +1,3 @@
-import random
-
 import numpy as np
 
 
@@ -12,6 +10,10 @@ def d_l_relu(values):
     return np.where(values > 0, 1, 0.1)
 
 
+def tb():
+    print("---------------")
+
+
 # X & Y
 X = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
 Y = [[350, 514], [712, 1068], [1024, 1550]]
@@ -22,32 +24,69 @@ W1 = np.array([[4, 6], [5, 8], [2, 3], [5, 7]]).T
 B0 = np.array([[5], [6], [7], [8]])
 B1 = np.array([[4], [9]])
 
-# choose from training set
-tc = random.randint(0, len(X) - 1)
+# params
+lr = 0.1
+tc = 0
+ins = 3
+hls = 4
+ots = 2
 
-# reformat inputs and outputs
+# reformat
 A0 = np.reshape(np.array(X[tc]), (len(X[tc]), 1))
-c = np.reshape(np.array(X[tc]), (len(X[tc]), 1))
+c = np.reshape(np.array(Y[tc]), (len(Y[tc]), 1))
 
-# calculate outputs
-a1 = relu(np.matmul(w0, a0) + b0)
-a2 = relu(np.matmul(w1, a1) + b1)
+# f
+A1 = l_relu(np.matmul(W0, A0) + B0)
+A2 = l_relu(np.matmul(W1, A1) + B1)
+tb()
+print(A1.T)
+tb()
+print(A2.T)
+tb()
 
-# calculate gradients
+for i in range(3):
+    print("")
 
-# second layer
-d_a2 = -2 * np.subtract(c, a2)
-d_b1 = relu_prime(np.matmul(w1, a1) + b1) * d_a2
-d_w1 = np.multiply(np.resize(d_b1, (hidden_1_size, output_size)).T, np.resize(a1, (output_size, hidden_1_size)))
+# b
+# l2
+dA2 = -2 * np.subtract(c, A2)
+tb()
+print(dA2.T)
+tb()
+dB1 = d_l_relu(np.matmul(W1, A1) + B1) * dA2
+print(dB1.T)
+tb()
+dW1 = np.multiply(np.resize(dB1, (hls, ots)).T, np.resize(A1, (ots, hls)))
+print(dW1.T)
+tb()
+# l1
+dA1 = np.reshape(np.sum(np.multiply(np.resize(dB1, (hls, ots)), W1.T), axis=1), (hls, 1))
+print(np.sum(np.multiply(np.resize(dB1, (hls, ots)), W1.T), axis=1))
+print(dA1.T)
+tb()
+dB0 = d_l_relu(np.matmul(W0, A0) + B0) * dA1
+print(dB0.T)
+tb()
+dW0 = np.multiply(np.resize(dB0, (ins, hls)).T, np.resize(A0, (hls, ins)))
+print(dW0.T)
+tb()
 
-# first layer
-d_a1 = np.reshape(np.sum(np.multiply(np.resize(d_b1, (hidden_1_size, output_size)), w1.T), axis=1), (hidden_1_size, 1))
-d_b0 = relu_prime(np.matmul(w0, a0) + b0) * d_a1
-d_w0 = np.multiply(np.resize(d_b0, (input_size, hidden_1_size)).T, np.resize(a0, (hidden_1_size, input_size)))
+for i in range(3):
+    print("")
 
-# optimize weights and biases
+# optimize
+W0 = np.subtract(W0, lr * dW0)
+B0 = np.subtract(B0, lr * dB0)
+W1 = np.subtract(W1, lr * dW1)
+B1 = np.subtract(B1, lr * dB1)
 
-w0 = np.subtract(w0, learning_rate * d_w0)
-b0 = np.subtract(b0, learning_rate * d_b0)
-w1 = np.subtract(w1, learning_rate * d_w1)
-b1 = np.subtract(b1, learning_rate * d_b1)
+# return
+tb()
+print(W0.T)
+tb()
+print(B0.T)
+tb()
+print(W1.T)
+tb()
+print(B1.T)
+tb()
