@@ -61,7 +61,6 @@ def forward(inputs, weights, biases):
 
 # redone forward pass
 def forward2(inputs, weights, biases):
-    inputs = [inputs]
     nodes = [inputs]
     for layer in range(layers - 1):
         activations = l_relu(np.matmul(nodes[-1], weights[layer]) + biases[layer])
@@ -106,22 +105,25 @@ def backward(nodes, expected, weights, biases):
 # redone backpropagation
 def backward2(nodes, expected, weights, biases):
     # initialize gradient lists
-    d_nodes = []
     d_weights = []
     d_biases = []
 
-    d_n = -2 * (expected - nodes[-1])
-    d_nodes.insert(0, d_n)
+    d_b = -2 * (expected - nodes[-1])
+    d_biases.insert(0, d_b)
+    for layer in range(-1, -len(nodes) + 1, -1):
+        d_w = nodes[layer - 1].T * d_b
+        d_weights.insert(0, d_w)
+        d_b = np.array([np.sum(weights[layer] * d_b, axis=1)])
+        d_biases.insert(0, d_b)
+    d_w = nodes[0].T * d_b
+    d_weights.insert(0, d_w)
 
-    # backprop
-    dA2 = -2 * (Y[tc] - A2_s)
-    dB1 = dA2
-    dW1 = A1_s.T * dB1
-    # l1
-    dA1 = np.array([np.sum(W1 * dB1, axis=1)])
-    dB0 = dA1
-    dW0 = np.resize(X[tc], (ins, 1)) * dB0
+    for layer in range(len(nodes) - 1):
+        weights[layer] -= learning_rate * (d_weights[layer] + (lambda_reg / train_len) * weights[layer])
+    for layer in range(len(nodes) - 1):
+        biases[layer] -= learning_rate * d_biases[layer]
 
+    return weights, biases
 
 
 # graph confusion matrix
@@ -139,7 +141,7 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
 learn = True
 load = False
 save = False
-graphs = True
+graphs = False
 layer_sizes = [784, 16, 16, 10]
 epochs = 100000
 learning_rate = 0.001
@@ -176,9 +178,10 @@ data_labels = []
 
 # reformat data from mnist
 for i in range(len(train_values)):
-    data_values.append(np.divide(import_data_values[i].flatten().tolist(), 255))
+    data_values.append(np.array([np.divide(import_data_values[i].flatten().tolist(), 255)]))
     node_values = np.zeros(layer_sizes[-1])
     node_values[train_labels[i]] = 1
+    node_values = np.array([node_values])
     data_labels.append(node_values)
 
 """ mnist end """
@@ -235,10 +238,10 @@ if learn:
         expected = Y[training_choice]
 
         # forward pass
-        nodes = forward(inputs, weights, biases)
+        nodes = forward2(inputs, weights, biases)
 
         # backpropagation
-        weights, biases = backward(nodes, expected, weights, biases)
+        weights, biases = backward2(nodes, expected, weights, biases)
 
         # loss calculation
         if epoch % log_rate == 0:
