@@ -29,51 +29,49 @@ B0 = np.array([5, 6, 7, 8])
 B1 = np.array([4, 9])
 
 # f
-A1_s = l_relu(np.matmul(W0.T, np.reshape(X[tc], (3, 1))) + np.reshape(B0, (4, 1))).T
+A1_s = l_relu(np.matmul([X[tc]], W0) + B0)
 A2_s = l_relu(np.matmul(A1_s, W1) + B1)
 
+# b
+# l2
+dA2 = -2 * (Y[tc] - A2_s)
+dB1 = dA2
+dW1 = A1_s.T * dB1
+# l1
+dA1 = np.array([np.sum(W1 * dB1, axis=1)])
+dB0 = dA1
+dW0 = np.resize(X[tc], (ins, 1)) * dB0
+
+
+# optimize
+W0 = W0 - lr * dW0
+B0 = B0 - lr * dB0
+W1 = W1 - lr * dW1
+B1 = B1 - lr * dB1
+
+# return
 tb()
 print(A1_s)
 tb()
 print(A2_s)
 tb()
-
 for i in range(3):
     print("")
-
-# b
-# l2
 tb()
-dA2 = -2 * np.subtract(Y[tc], A2_s)
 print(dA2)
 tb()
-dB1 = dA2
 print(dB1)
 tb()
-dW1 = A1_s.T * dB1
 print(dW1)
 tb()
-# l1
-dA1 = np.reshape(np.sum(W1 * dB1, axis=1), (1, hls))  # ???
 print(dA1)
 tb()
-dB0 = dA1
 print(dB0)
 tb()
-dW0 = np.multiply(np.resize(X[tc], (len(X[tc]), 1)), dB0)
 print(dW0)
 tb()
-
 for i in range(3):
     print("")
-
-# optimize
-W0 = np.subtract(W0, lr * dW0)
-B0 = np.subtract(B0, lr * dB0)
-W1 = np.subtract(W1, lr * dW1)
-B1 = np.subtract(B1, lr * dB1)
-
-# return
 tb()
 print(W0)
 tb()
