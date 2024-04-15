@@ -63,6 +63,9 @@ def forward(inputs, weights, biases):
 def forward2(inputs, weights, biases):
     nodes = [inputs]
     for layer in range(layers - 1):
+        print(nodes[-1])
+        print(weights[layer].shape)
+        print(nodes[-1].shape)
         activations = l_relu(np.matmul(nodes[-1], weights[layer]) + biases[layer])
         nodes.append(activations)
     return nodes
@@ -199,6 +202,10 @@ X_test, Y_test = zip(*test)
 X, Y = list(X), list(Y)
 X_test, Y_test = list(X_test), list(Y_test)
 
+# print(X)
+# print("-------------")
+# print(Y)
+
 # network values
 layers = len(layer_sizes)
 train_len = len(X)
@@ -222,6 +229,9 @@ else:
     for i in range(layers - 1):
         weights.append(xavier_initialize(layer_sizes[i], layer_sizes[i + 1]))
         biases.append(np.zeros((1, layer_sizes[i + 1])))
+
+print(weights)
+print(biases)
 
 # network training
 start_time = time.time()
