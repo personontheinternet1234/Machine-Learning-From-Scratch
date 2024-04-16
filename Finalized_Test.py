@@ -63,9 +63,6 @@ def forward(inputs, weights, biases):
 def forward2(inputs, weights, biases):
     nodes = [inputs]
     for layer in range(layers - 1):
-        print(nodes[-1])
-        print(weights[layer].shape)
-        print(nodes[-1].shape)
         activations = l_relu(np.matmul(nodes[-1], weights[layer]) + biases[layer])
         nodes.append(activations)
     return nodes
@@ -144,12 +141,12 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
 learn = True
 load = False
 save = False
-graphs = False
+graphs = True
 layer_sizes = [784, 16, 16, 10]
 epochs = 100000
 learning_rate = 0.001
 lambda_reg = 0.1
-log_rate = 10000
+log_rate = 100000
 
 # dataset params
 trim = False
@@ -202,10 +199,6 @@ X_test, Y_test = zip(*test)
 X, Y = list(X), list(Y)
 X_test, Y_test = list(X_test), list(Y_test)
 
-# print(X)
-# print("-------------")
-# print(Y)
-
 # network values
 layers = len(layer_sizes)
 train_len = len(X)
@@ -229,9 +222,6 @@ else:
     for i in range(layers - 1):
         weights.append(xavier_initialize(layer_sizes[i], layer_sizes[i + 1]))
         biases.append(np.zeros((1, layer_sizes[i + 1])))
-
-print(weights)
-print(biases)
 
 # network training
 start_time = time.time()
@@ -257,8 +247,8 @@ if learn:
         if epoch % log_rate == 0:
             # SSR
             # check
-            train_predicted = forward(X, weights, biases)[-1]
-            test_predicted = forward(X_test, weights, biases)[-1]
+            train_predicted = forward2(X, weights, biases)[-1]
+            test_predicted = forward2(X_test, weights, biases)[-1]
             loss = np.sum(np.subtract(Y, train_predicted) ** 2) / train_len
             test_loss = np.sum(np.subtract(Y_test, test_predicted) ** 2) / test_len
             logged_epochs.append(epoch)
@@ -272,8 +262,8 @@ end_time = time.time()
 # calculate results
 # check
 
-train_predicted = forward(X, weights, biases)[-1]
-test_predicted = forward(X_test, weights, biases)[-1]
+train_predicted = forward2(X, weights, biases)[-1]
+test_predicted = forward2(X_test, weights, biases)[-1]
 loss = np.sum(np.subtract(Y, train_predicted) ** 2) / train_len
 loss_test = np.sum(np.subtract(Y_test, test_predicted) ** 2) / test_len
 
@@ -281,12 +271,12 @@ accu = 0
 accu_test = 0
 for i in range(len(X)):
     # train accuracies
-    predicted = forward(X[i], weights, biases)[-1]
+    predicted = forward2(X[i], weights, biases)[-1]
     if np.nanargmax(predicted) == np.nanargmax(Y[i]):
         accu += 1
 for i in range(len(X_test)):
     # test accuracies
-    predicted = forward(X_test[i], weights, biases)[-1]
+    predicted = forward2(X_test[i], weights, biases)[-1]
     if np.nanargmax(predicted) == np.nanargmax(Y_test[i]):
         accu_test += 1
 accu /= train_len
@@ -312,7 +302,7 @@ if graphs:
     y_true = []
     y_pred = []
     for i in range(len(X)):
-        predicted = forward(X[i], weights, biases)[-1]
+        predicted = forward2(X[i], weights, biases)[-1]
         expected = Y[i]
         y_true.append(np.nanargmax(predicted))
         y_pred.append(np.nanargmax(expected))
@@ -321,7 +311,7 @@ if graphs:
     y_true_test = []
     y_pred_test = []
     for i in range(len(X_test)):
-        predicted = forward(X_test[i], weights, biases)[-1]
+        predicted = forward2(X_test[i], weights, biases)[-1]
         expected = Y_test[i]
         y_true_test.append(np.nanargmax(predicted))
         y_pred_test.append(np.nanargmax(expected))
