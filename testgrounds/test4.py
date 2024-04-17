@@ -19,16 +19,18 @@ ins = 3
 hls = 4
 ots = 2
 
-X = [np.array([[1, 2, 3]]), np.array([[4, 5, 6]]), np.array([[7, 8, 9]])]
-Y = [np.array([[350, 514]]), np.array([[712, 1068]]), np.array([[1024, 1550]])]
+# X = [np.array([[1, 2, 3]]), np.array([[4, 5, 6]]), np.array([[7, 8, 9]])]
+# Y = [np.array([[350, 514]]), np.array([[712, 1068]]), np.array([[1024, 1550]])]
+X = [np.array([[0, 1]]), np.array([[1, 1]]), np.array([[1, 0]]), np.array([[0, 0]]) ]
+Y = [np.array([[1, 0]]), np.array([[0, 1]]), np.array([[1, 0]]), np.array([[0, 1]])]
 
-W0 = np.array([[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]])
+W0 = np.array([[1, 2, 3, 4], [1, 2, 3, 4]])
 W1 = np.array([[4, 6], [5, 8], [2, 3], [5, 7]])
-B0 = np.array([5, 6, 7, 8])
-B1 = np.array([4, 9])
+B0 = np.array([1, 1, 1, 1])
+B1 = np.array([1, 1])
 
 # f
-for i in range(1000):
+for i in range(10000):
     for tc in range(len(X)):
         A0_s = X[tc]
         A1_s = l_relu(np.matmul(A0_s, W0) + B0)
@@ -92,3 +94,8 @@ for i in range(1000):
         print("----------------------------------------------------------------------")
         for i in range(3):
             print("")
+
+        print(A0_s)
+        print(A2_s)
+
+

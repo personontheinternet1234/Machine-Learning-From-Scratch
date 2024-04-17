@@ -168,14 +168,14 @@ Y_names = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 
 # # load dataset
 # I actually have 0 idea why this doesn't work (HELP !!)
-# X = []
-# Y = []
-# with open("data/data_input.txt", "r") as f:
-#     for line in f:
-#         X.append(ast.literal_eval(line))
-# with open("data/data_input.txt", "r") as f:
-#     for line in f:
-#         Y.append(ast.literal_eval(line))
+X = []
+Y = []
+with open("etc/data_input.txt", "r") as f:
+    for line in f:
+        X.append(ast.literal_eval(line))
+with open("etc/data_input.txt", "r") as f:
+    for line in f:
+        Y.append(ast.literal_eval(line))
 
 """ mnist """
 
