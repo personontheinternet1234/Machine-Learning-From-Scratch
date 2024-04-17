@@ -108,19 +108,30 @@ def backward2(nodes, expected, weights, biases):
     d_weights = []
     d_biases = []
 
-    d_b = -2 * (expected - nodes[-1])
-    d_biases.insert(0, d_b)
+    # d_b = -2 * (expected - nodes[-1])
+    # d_biases.insert(0, d_b)
+    # d_biases.append(d_b)
+    d_biases.insert(0, -2 * (expected - nodes[-1]))
     for layer in range(-1, -len(nodes) + 1, -1):
-        d_w = nodes[layer - 1].T * d_b
-        d_weights.insert(0, d_w)
-        d_b = np.array([np.sum(weights[layer] * d_b, axis=1)])
-        d_biases.insert(0, d_b)
-    d_w = nodes[0].T * d_b
-    d_weights.insert(0, d_w)
+        # d_w = nodes[layer - 1].T * d_b
+        # d_weights.insert(0, d_w)
+        # d_weights.append(d_w)
+        d_weights.insert(0, nodes[layer - 1].T * d_biases[0])
+        # d_b = np.array([np.sum(weights[layer] * d_b, axis=1)])
+        # d_biases.insert(0, d_b)
+        # d_biases.append(d_b)
+        d_biases.insert(0, np.array([np.sum(weights[layer] * d_biases[0], axis=1)]))
+    # d_w = nodes[0].T * d_b
+    # d_weights.insert(0, d_w)
+    # d_weights.append(d_w)
+    d_weights.insert(0, nodes[0].T * d_biases[0])
+
+    # for layer in range(len(nodes) - 1):
+    #     weights[layer] -= learning_rate * (d_weights[-layer - 1] + (lambda_reg / train_len) * weights[layer])
+    #     biases[layer] -= learning_rate * d_biases[-layer - 1]
 
     for layer in range(len(nodes) - 1):
         weights[layer] -= learning_rate * (d_weights[layer] + (lambda_reg / train_len) * weights[layer])
-    for layer in range(len(nodes) - 1):
         biases[layer] -= learning_rate * d_biases[layer]
 
     return weights, biases
