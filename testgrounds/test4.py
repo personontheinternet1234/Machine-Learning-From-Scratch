@@ -16,7 +16,7 @@ def tb():
     print("---------------")
 
 
-lr = 0.1
+lr = 0.01
 ins = 2
 hls = 4
 ots = 2
@@ -29,12 +29,13 @@ Y = [np.array([[1, 0]]), np.array([[0, 1]]), np.array([[1, 0]]), np.array([[0, 1
 # 2-4-2
 W0 = np.array([[1, 1, 1, 1], [1, 1, 1, 1]])
 W1 = np.array([[1, 1], [1, 1], [1, 1], [1, 1]])
-B0 = np.array([[0, 0, 0, 0]])
-B1 = np.array([[0, 0]])
+B0 = np.array([0, 0, 0, 0])
+B1 = np.array([0, 0])
 
 # f
-for i in range(3):
+for i in range(300):
     tc = random.randrange(len(X))
+    tc = 1
     A0_s = X[tc]
     A1_s = l_relu(np.matmul(A0_s, W0) + B0)
     A2_s = l_relu(np.matmul(A1_s, W1) + B1)
@@ -51,9 +52,9 @@ for i in range(3):
     dW0 = A0_s.T * dB0
 
     # optimize
-    W0 -= lr * dW0
+    W0 = W0 - lr * dW0
     B0 = B0 - lr * dB0
-    W1 -= lr * dW1
+    W1 = W1 - lr * dW1
     B1 = B1 - lr * dB1
 
     # return
