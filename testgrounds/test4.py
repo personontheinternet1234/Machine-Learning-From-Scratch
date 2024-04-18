@@ -33,9 +33,8 @@ B0 = np.array([0, 0, 0, 0])
 B1 = np.array([0, 0])
 
 # f
-for i in range(300):
+for i in range(3000):
     tc = random.randrange(len(X))
-    tc = 1
     A0_s = X[tc]
     A1_s = l_relu(np.matmul(A0_s, W0) + B0)
     A2_s = l_relu(np.matmul(A1_s, W1) + B1)
