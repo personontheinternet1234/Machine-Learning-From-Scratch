@@ -18,7 +18,7 @@ def tb():
 
 lr = 0.01
 ins = 2
-hls = 4
+hls = 3
 ots = 2
 
 # X = [np.array([[1, 2, 3]]), np.array([[4, 5, 6]]), np.array([[7, 8, 9]])]
@@ -27,81 +27,72 @@ X = [np.array([[0, 1]]), np.array([[1, 1]]), np.array([[1, 0]]), np.array([[0, 0
 Y = [np.array([[1, 0]]), np.array([[0, 1]]), np.array([[1, 0]]), np.array([[0, 1]])]
 
 # 2-4-2
-W0 = np.array([[1, 1, 1, 1], [1, 1, 1, 1]])
-W1 = np.array([[1, 1], [1, 1], [1, 1], [1, 1]])
-B0 = np.array([0, 0, 0, 0])
-B1 = np.array([0, 0])
+# W0 = np.array([[1, 1, 1], [1, 1, 1]])
+# W1 = np.array([[1, 1], [1, 1], [1, 1]])
+# B0 = np.array([0, 0, 0])
+# B1 = np.array([0, 0])
+
+W0 = np.random.randn(ins, hls)
+B0 = np.zeros((1, hls))
+W1 = np.random.randn(hls, ots)
+B1 = np.zeros((1, ots))
+
 
 # f
-for i in range(3000):
-    tc = random.randrange(len(X))
-    tc = 0
-    A0_s = X[tc]
-    A1_s = l_relu(np.matmul(A0_s, W0) + B0)
-    A2_s = l_relu(np.matmul(A1_s, W1) + B1)
-    E = Y[tc]
+for i in range(100000):
+    dW0a = 0
+    dB0a = 0
+    dW1a = 0
+    dB1a = 0
+    for tc in range(len(X)):
+        A0_s = X[tc]
+        A1_s = l_relu(np.matmul(A0_s, W0) + B0)
+        A2_s = l_relu(np.matmul(A1_s, W1) + B1)
+        E = Y[tc]
 
-    # b
-    # l2
-    dA2 = -2 * (E - A2_s)
-    dB1 = dA2
-    dW1 = A1_s.T * dB1
-    # l1
-    dA1 = np.array([np.sum(W1 * dB1, axis=1)])
-    dB0 = dA1
-    dW0 = A0_s.T * dB0
+        # b
+        # l2
+        dA2 = -2 * (E - A2_s)
+        dB1 = dA2
+        dW1 = A1_s.T * dB1
+        # l1
+        dA1 = np.array([np.sum(W1 * dB1, axis=1)])
+        dB0 = dA1
+        dW0 = A0_s.T * dB0
+
+        dW0a += dW0
+        dB0a += dB0
+        dW1a += dW1
+        dB1a += dB1
 
     # optimize
-    W0 = W0 - lr * dW0
-    B0 = B0 - lr * dB0
-    W1 = W1 - lr * dW1
-    B1 = B1 - lr * dB1
+    W0 = W0 - lr * dW0a
+    B0 = B0 - lr * dB0a
+    W1 = W1 - lr * dW1a
+    B1 = B1 - lr * dB1a
 
     # return
-    # tb()
-    # print(A0_s)
-    # tb()
-    # print(A1_s)
-    # tb()
-    # print(A2_s)
-    # tb()
-    # print(E)
-    # tb()
-    # for i in range(3):
-    #     print("")
-    # tb()
-    # print(dA2)
-    # tb()
-    # print(dB1)
-    # tb()
-    # print(dW1)
-    # tb()
-    # print(dA1)
-    # tb()
-    # print(dB0)
-    # tb()
-    # print(dW0)
-    # tb()
-    # for i in range(3):
-    #     print("")
-    # tb()
-    # print(W0)
-    # tb()
-    # print(B0)
-    # tb()
-    # print(W1)
-    # tb()
-    # print(B1)
-    # tb()
-    # for i in range(3):
-    #     print("")
-    # print("----------------------------------------------------------------------")
-    # for i in range(3):
-    #     print("")
-
-    print(Y[tc])
+    tcs = int(np.random.rand() * len(X))
+    A0_s = X[tcs]
+    A1_s = l_relu(np.matmul(A0_s, W0) + B0)
+    A2_s = l_relu(np.matmul(A1_s, W1) + B1)
+    print(A0_s)
     print(A2_s)
+    print(Y[tcs])
+    tb()
+    # print(dA2)
 
+while True:
+    print("")
+    inputs = []
+    for i in range(ins):
+        inputs.append(float(input("a(0)" + str(i) + ": ")))
 
+    # forward pass
+    A0_s = np.array(inputs)
+    A1_s = l_relu(np.matmul(A0_s, W0) + B0)
+    A2_s = l_relu(np.matmul(A1_s, W1) + B1)
 
-
+    # result
+    print("")
+    print(A2_s)
