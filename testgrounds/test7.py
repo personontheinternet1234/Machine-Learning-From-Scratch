@@ -15,13 +15,13 @@ def tb():
     print("---------------")
 
 
-lr = 0.1
+lr = 0.001
 ins = 2
 hls = 3
 ots = 2
 
-X = [np.array([[0, 1]]), np.array([[1, 1]]), np.array([[1, 0]]), np.array([[0, 0]])]
-Y = [np.array([[1, 0]]), np.array([[0, 1]]), np.array([[1, 0]]), np.array([[0, 1]])]
+X = [np.array([[0, 0]]), np.array([[0, 1]]), np.array([[1, 0]]), np.array([[1, 1]])]
+Y = [np.array([[1, 1]]), np.array([[1, 0]]), np.array([[0, 1]]), np.array([[0, 0]])]
 
 W0 = np.random.randn(ins, hls)
 B0 = np.zeros((1, hls))
@@ -32,7 +32,7 @@ Ll = []
 il = []
 
 # f
-for i in tqdm(range(1000000)):
+for i in tqdm(range(10000)):
     tc = int(np.random.rand() * len(X))
 
     A0_s = X[tc]

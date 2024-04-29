@@ -8,6 +8,7 @@ import random
 import time
 
 import numpy as np
+# import pandas as pd
 
 from matplotlib import pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
@@ -268,33 +269,32 @@ end_time = time.time()
 
 """ return results """
 
-# calculate results
-# check
-
+# train loss
 train_predicted = forward2(X, weights, biases)[-1]
-test_predicted = forward2(X_test, weights, biases)[-1]
 loss = np.sum(np.subtract(Y, train_predicted) ** 2) / train_len
+# test loss
+test_predicted = forward2(X_test, weights, biases)[-1]
 loss_test = np.sum(np.subtract(Y_test, test_predicted) ** 2) / test_len
 
+# train accu
 accu = 0
-accu_test = 0
 for i in range(len(X)):
-    # train accuracies
     predicted = forward2(X[i], weights, biases)[-1]
     if np.nanargmax(predicted) == np.nanargmax(Y[i]):
         accu += 1
+accu /= train_len
+
+# test accu
+accu_test = 0
 for i in range(len(X_test)):
-    # test accuracies
     predicted = forward2(X_test[i], weights, biases)[-1]
     if np.nanargmax(predicted) == np.nanargmax(Y_test[i]):
         accu_test += 1
-accu /= train_len
 accu_test /= test_len
 
 # print results
 print("")
-print(
-    f"Results - Train Loss: {round(loss, 5)} - Test Loss: {round(loss_test, 5)} - Train Accuracy: {round(accu, 5)} - Test Accuracy: {round(accu_test, 5)} - Elapsed Time: {round(end_time - start_time, 5)}s")
+print(f"Results - Train Loss: {round(loss, 5)} - Test Loss: {round(loss_test, 5)} - Train Accuracy: {round(accu, 5)} - Test Accuracy: {round(accu_test, 5)} - Elapsed Time: {round(end_time - start_time, 5)}s")
 
 # save optimized weights and biases
 if save:
@@ -308,6 +308,7 @@ if save:
 # matplotlib graphs
 if graphs:
     # generate cms
+    # train
     y_true = []
     y_pred = []
     for i in range(len(X)):
@@ -317,6 +318,7 @@ if graphs:
         y_pred.append(np.nanargmax(expected))
     cm_train = confusion_matrix(y_true, y_pred, normalize="true")
 
+    # test
     y_true_test = []
     y_pred_test = []
     for i in range(len(X_test)):
@@ -326,7 +328,7 @@ if graphs:
         y_pred_test.append(np.nanargmax(expected))
     cm_test = confusion_matrix(y_true_test, y_pred_test, normalize="true")
 
-    # generate loss vs epoch values
+    # generate loss vs epoch
     logged_epochs = np.array(logged_epochs)
     logged_losses = np.array(logged_losses)
     logged_losses_test = np.array(logged_losses_test)
