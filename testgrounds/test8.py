@@ -33,28 +33,26 @@ B1 = np.zeros((1, ots))
 
 Ll = []
 il = []
+testa = []
 
 # f
-for i in tqdm(range(10000)):
+for i in range(1):
     # f a
     A0 = X
     A1 = l_relu(np.matmul(A0, W0) + B0)
     A2 = l_relu(np.matmul(A1, W1) + B1)
+    E = Y
 
     # b a
     # l2
-    dA2 = -2 * (E - A2_s)
-    dB1 = dA2
-    dW1 = A1_s.T * dB1
-    # l1
-    dA1 = np.array([np.sum(W1 * dB1, axis=1)])
-    dB0 = dA1
-    dW0 = A0_s.T * dB0
-
-    dW0ao = dW0
-    dB0ao = dB0
-    dW1ao = dW1
-    dB1ao = dB1
+    dA2ao = -2 * (E - A2)
+    dB1ao = dA2ao
+    print(A1)
+    print(np.shape(A1))
+    # print(np.transpose(A1, (4, 3, 1)))
+    tb()
+    # dW1ao = A1.T * dB1ao
+    # print(dW1ao)
 
     dW0a = 0
     dB0a = 0
@@ -72,6 +70,8 @@ for i in tqdm(range(10000)):
         dA2 = -2 * (E - A2_s)
         dB1 = dA2
         dW1 = A1_s.T * dB1
+        print(A1_s.T)
+        testa.append(A1_s.T)
         # l1
         dA1 = np.array([np.sum(W1 * dB1, axis=1)])
         dB0 = dA1
@@ -81,6 +81,12 @@ for i in tqdm(range(10000)):
         dB0a += dB0
         dW1a += dW1
         dB1a += dB1
+
+    tb()
+    testa = np.array(testa)
+    print(testa)
+    print(np.shape(testa))
+
 
     # optimize
     W0 = W0 - lr * dW0a / len(X)
