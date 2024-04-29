@@ -47,12 +47,13 @@ for i in range(1):
     # l2
     dA2ao = -2 * (E - A2)
     dB1ao = dA2ao
-    print(A1)
-    print(np.shape(A1))
-    # print(np.transpose(A1, (4, 3, 1)))
-    tb()
-    # dW1ao = A1.T * dB1ao
-    # print(dW1ao)
+    dW1ao = np.reshape(A1, (4, 3, 1)) * dB1ao
+
+    # l1
+    dA1ao = np.array([np.sum(W1 * dB1ao, axis=2)])
+    dB0ao = dA1ao
+    print(np.shape(dA1ao))
+    dW0ao = np.reshape(A0, (4, 2, 1)) * dB0ao
 
     dW0a = 0
     dB0a = 0
@@ -70,23 +71,18 @@ for i in range(1):
         dA2 = -2 * (E - A2_s)
         dB1 = dA2
         dW1 = A1_s.T * dB1
-        print(A1_s.T)
-        testa.append(A1_s.T)
         # l1
         dA1 = np.array([np.sum(W1 * dB1, axis=1)])
         dB0 = dA1
         dW0 = A0_s.T * dB0
+        # testa.append(A0_s.T)
 
         dW0a += dW0
         dB0a += dB0
         dW1a += dW1
         dB1a += dB1
 
-    tb()
-    testa = np.array(testa)
-    print(testa)
-    print(np.shape(testa))
-
+    # print(np.shape(np.array(testa)))
 
     # optimize
     W0 = W0 - lr * dW0a / len(X)
