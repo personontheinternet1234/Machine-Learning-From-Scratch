@@ -146,17 +146,18 @@ def backward3(nodes, expected, weights, biases):
     d_b = -2 * (expected - nodes[-1])
     d_biases.insert(0, d_b)
     for layer in range(-1, -len(nodes) + 1, -1):
-        shape_a = np.shape(nodes[layer - 1])
-        d_w = np.reshape(nodes[layer - 1], (shape_a[0], shape_a[2], 1)) * d_b
-        # d_w = np.reshape(nodes[layer - 1], (train_len, layer_sizes[layer], 1)) * d_b
+        # shape_a = np.shape(nodes[layer - 1])
+        # d_w = np.reshape(nodes[layer - 1], (shape_a[0], shape_a[2], 1)) * d_b
+        d_w = np.reshape(nodes[layer - 1], (train_len, layer_sizes[layer - 1], 1)) * d_b
         d_weights.insert(0, d_w)
         # d_b = np.array([np.sum(weights[layer] * d_b, axis=1)])
-        shape_c = np.shape(np.array([np.sum(weights[layer] * d_b, axis=2)]))
-        d_b = np.reshape(np.array([np.sum(weights[layer] * d_b, axis=2)]), (shape_c[1], 1, shape_c[2]))
-        # d_b = np.reshape(np.array([np.sum(weights[layer] * d_b, axis=2)]), (train_len, 1, layer_sizes[layer]))
+        # shape_c = np.shape(np.array([np.sum(weights[layer] * d_b, axis=2)]))
+        # d_b = np.reshape(np.array([np.sum(weights[layer] * d_b, axis=2)]), (shape_c[1], 1, shape_c[2]))
+        d_b = np.reshape(np.array([np.sum(weights[layer] * d_b, axis=2)]), (train_len, 1, layer_sizes[layer - 1]))
         d_biases.insert(0, d_b)
-    shape_a = np.shape(nodes[0])
-    d_w = np.reshape(nodes[0], (shape_a[0], shape_a[2], 1)) * d_b
+    # shape_a = np.shape(nodes[0])
+    # d_w = np.reshape(nodes[0], (shape_a[0], shape_a[2], 1)) * d_b
+    d_w = np.reshape(nodes[0], (train_len, layer_sizes[0], 1)) * d_b
     d_weights.insert(0, d_w)
 
     for layer in range(len(nodes) - 1):
