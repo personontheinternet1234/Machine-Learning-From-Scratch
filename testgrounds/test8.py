@@ -23,6 +23,8 @@ ins = 2
 hls = 3
 ots = 2
 
+# X = [np.array([[0, 1]]), np.array([[1, 1]]), np.array([[1, 0]]), np.array([[0, 0]])]
+# Y = [np.array([[1, 0]]), np.array([[0, 1]]), np.array([[1, 0]]), np.array([[0, 1]])]
 X = [np.array([[0, 0]]), np.array([[0, 1]]), np.array([[1, 0]]), np.array([[1, 1]])]
 Y = [np.array([[1, 1]]), np.array([[1, 0]]), np.array([[0, 1]]), np.array([[0, 0]])]
 
@@ -51,6 +53,7 @@ for i in range(1000):
 
     # l1
     dA1 = np.reshape(np.array([np.sum(W1 * dB1, axis=2)]), (4, 1, 3))
+    print(np.shape(np.array([np.sum(W1 * dB1, axis=2)])))
     dB0 = dA1
     dW0 = np.reshape(A0, (4, 2, 1)) * dB0
 
