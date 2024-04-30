@@ -8,7 +8,7 @@ import random
 import time
 
 import numpy as np
-# import pandas as pd
+import pandas as pd
 
 from matplotlib import pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
@@ -122,21 +122,28 @@ lambda_reg = 0.1
 log_rate = 10000
 
 # dataset params
-df_values_location = "data_values_keras.txt"
-df_labels_location = "data_labels_keras.txt"
+df_values_location = "data_values_keras.csv"
+df_labels_location = "data_labels_keras.csv"
 split_value = 0.3
 trim = False
 trim_value = 7000
 
+print("Loading Data")
+
 # load dataset
-data_values = []
-data_labels = []
-with open(f"saved/{df_values_location}", "r") as f:
-    for line in f:
-        data_values.append(np.array(ast.literal_eval(line)))
-with open(f"saved/{df_labels_location}", "r") as f:
-    for line in f:
-        data_labels.append(np.array(ast.literal_eval(line)))
+# data_values = []
+# data_labels = []
+# with open(f"saved/{df_values_location}", "r") as f:
+#     for line in f:
+#         data_values.append(np.array(ast.literal_eval(line)))
+# with open(f"saved/{df_labels_location}", "r") as f:
+#     for line in f:
+#         data_labels.append(np.array(ast.literal_eval(line)))
+
+data_values = np.array([pd.read_csv(f"saved/{df_values_location}")])
+data_labels = np.array([pd.read_csv(f"saved/{df_labels_location}")])
+
+print(data_values)
 
 # trim dataset
 if trim:
