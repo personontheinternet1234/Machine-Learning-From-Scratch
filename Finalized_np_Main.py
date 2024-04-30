@@ -53,7 +53,7 @@ def forward(inputs, weights, biases):
 
 
 # sgd backpropagation
-def sgdbackward(nodes, expected, weights, biases):
+def sgd_backward(nodes, expected, weights, biases):
     # initialize gradient lists
     d_weights = []
     d_biases = []
@@ -76,7 +76,7 @@ def sgdbackward(nodes, expected, weights, biases):
 
 
 # tensor backpropagation
-def tensorbackward(nodes, expected, weights, biases):
+def tensor_backward(nodes, expected, weights, biases):
     # initialize gradient lists
     d_weights = []
     d_biases = []
@@ -131,13 +131,12 @@ trim_value = 7000
 # load dataset
 data_values = []
 data_labels = []
-print("loading df")
 with open(f"saved/{df_values_location}", "r") as f:
     for line in f:
-        data_values.append(ast.literal_eval(line))
+        data_values.append(np.array(ast.literal_eval(line)))
 with open(f"saved/{df_labels_location}", "r") as f:
     for line in f:
-        data_labels.append(ast.literal_eval(line))
+        data_labels.append(np.array(ast.literal_eval(line)))
 
 # trim dataset
 if trim:
@@ -195,7 +194,7 @@ if learn:
             nodes = forward(inputs, weights, biases)
 
             # backpropagation
-            weights, biases = sgdbackward(nodes, expected, weights, biases)
+            weights, biases = sgd_backward(nodes, expected, weights, biases)
 
             # loss calculation
             if epoch % log_rate == 0:
@@ -216,7 +215,7 @@ if learn:
             nodes = forward(inputs, weights, biases)
 
             # backpropagation
-            weights, biases = tensorbackward(nodes, expected, weights, biases)
+            weights, biases = tensor_backward(nodes, expected, weights, biases)
 
             # loss calculation
             if epoch % log_rate == 0:
