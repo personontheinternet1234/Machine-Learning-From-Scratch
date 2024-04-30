@@ -4,17 +4,19 @@ Isaac Park Verbrugge & Christian SW Host-Madsen
 """
 
 import ast
+import math
 import random
 import time
 
 import numpy as np
 # import pandas as pd
+import tensorflow as tf
 
 from matplotlib import pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from tqdm import tqdm
 
-import keras  # keras's number dataset
+import keras
 
 """ definitions """
 
@@ -30,18 +32,24 @@ def test_train_split(data, test_size):
 # xavier initialization
 def xavier_initialize(length, width):
     array = np.random.randn(length, width) * np.sqrt(2 / length)
+    # array = tf.random.uniform((length, width)) * math.sqrt(2 / length)  # works
     return array
 
 
 # leaky rectified linear activator
 def l_relu(values):
     output = np.maximum(0.1 * values, values)
+    # print(0.1 * values)
+    # print("-----------")
+    # print(values)
+    # output = tf.maximum(0.1 * values, values)
     return output
 
 
 # derivative of leaky rectified linear activator
 def d_l_relu(values):
     output = np.where(values > 0, 1, 0.1)
+    # output = tf.where(values > 0, 1, 0.1)
     return output
 
 
@@ -54,41 +62,6 @@ def forward(inputs, weights, biases):
     return nodes
 
 
-# sgd backpropagation
-def sgdbackward(nodes, expected, weights, biases):
-    # initialize gradient lists
-    d_weights = []
-    d_biases = []
-
-    # d_b = -2 * (expected - nodes[-1])
-    # d_biases.insert(0, d_b)
-    # d_biases.append(d_b)
-    d_biases.insert(0, -2 * (expected - nodes[-1]))
-    for layer in range(-1, -len(nodes) + 1, -1):
-        # d_w = nodes[layer - 1].T * d_b
-        # d_weights.insert(0, d_w)
-        # d_weights.append(d_w)
-        d_weights.insert(0, nodes[layer - 1].T * d_biases[0])
-        # d_b = np.array([np.sum(weights[layer] * d_b, axis=1)])
-        # d_biases.insert(0, d_b)
-        # d_biases.append(d_b)
-        d_biases.insert(0, np.array([np.sum(weights[layer] * d_biases[0], axis=1)]))
-    # d_w = nodes[0].T * d_b
-    # d_weights.insert(0, d_w)
-    # d_weights.append(d_w)
-    d_weights.insert(0, nodes[0].T * d_biases[0])
-
-    # for layer in range(len(nodes) - 1):
-    #     weights[layer] -= learning_rate * (d_weights[-layer - 1] + (lambda_reg / train_len) * weights[layer])
-    #     biases[layer] -= learning_rate * d_biases[-layer - 1]
-
-    for layer in range(len(nodes) - 1):
-        weights[layer] -= learning_rate * (d_weights[layer] + (lambda_reg / train_len) * weights[layer])
-        biases[layer] -= learning_rate * d_biases[layer]
-
-    return weights, biases
-
-
 # tensor backpropagation
 def tensorbackward(nodes, expected, weights, biases):
     # initialize gradient lists
@@ -98,17 +71,10 @@ def tensorbackward(nodes, expected, weights, biases):
     d_b = -2 * (expected - nodes[-1])
     d_biases.insert(0, d_b)
     for layer in range(-1, -len(nodes) + 1, -1):
-        # shape_a = np.shape(nodes[layer - 1])
-        # d_w = np.reshape(nodes[layer - 1], (shape_a[0], shape_a[2], 1)) * d_b
         d_w = np.reshape(nodes[layer - 1], (train_len, layer_sizes[layer - 1], 1)) * d_b
         d_weights.insert(0, d_w)
-        # d_b = np.array([np.sum(weights[layer] * d_b, axis=1)])
-        # shape_c = np.shape(np.array([np.sum(weights[layer] * d_b, axis=2)]))
-        # d_b = np.reshape(np.array([np.sum(weights[layer] * d_b, axis=2)]), (shape_c[1], 1, shape_c[2]))
         d_b = np.reshape(np.array([np.sum(weights[layer] * d_b, axis=2)]), (train_len, 1, layer_sizes[layer - 1]))
         d_biases.insert(0, d_b)
-    # shape_a = np.shape(nodes[0])
-    # d_w = np.reshape(nodes[0], (shape_a[0], shape_a[2], 1)) * d_b
     d_w = np.reshape(nodes[0], (train_len, layer_sizes[0], 1)) * d_b
     d_weights.insert(0, d_w)
 
@@ -154,6 +120,8 @@ Y_names = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 # load data from mnist
 (train_values, train_labels), (test_values, test_labels) = keras.datasets.mnist.load_data()
 # combine training and testing labels
+# import_data_values = tf.concat([train_values, test_values], 0)
+# import_data_labels = tf.concat([train_labels, test_labels], 0)
 import_data_values = np.append(train_values, test_values, axis=0)
 import_data_labels = np.append(train_labels, test_labels, axis=0)
 data_values = []
@@ -163,8 +131,10 @@ data_labels = []
 for i in range(len(train_values)):
     data_values.append(np.array([np.divide(import_data_values[i].flatten().tolist(), 255)]))
     node_values = np.zeros(layer_sizes[-1])
+    # node_values = tf.zeros([10, 1])
     node_values[train_labels[i]] = 1
     node_values = np.array([node_values])
+    # node_values = tf.constant(node_values)
     data_labels.append(node_values)
 
 """ mnist end """
@@ -215,49 +185,26 @@ logged_losses_test = []
 if learn:
     # training loop
     for epoch in tqdm(range(epochs), ncols=100):
-        if sgd:
-            # SGD choice
-            training_choice = int(np.random.rand() * len(X))
-            inputs = X[training_choice]
-            expected = Y[training_choice]
+        # tensors
+        inputs = X
+        expected = Y
 
-            # forward pass
-            nodes = forward(inputs, weights, biases)
+        # forward pass
+        nodes = forward(inputs, weights, biases)
 
-            # backpropagation
-            weights, biases = sgdbackward(nodes, expected, weights, biases)
+        # backpropagation
+        weights, biases = tensorbackward(nodes, expected, weights, biases)
 
-            # loss calculation
-            if epoch % log_rate == 0:
-                # SSR
-                train_predicted = forward(X, weights, biases)[-1]
-                test_predicted = forward(X_test, weights, biases)[-1]
-                loss = np.sum(np.subtract(Y, train_predicted) ** 2) / train_len
-                test_loss = np.sum(np.subtract(Y_test, test_predicted) ** 2) / test_len
-                logged_epochs.append(epoch)
-                logged_losses.append(loss)
-                logged_losses_test.append(test_loss)
-        else:
-            # tensors
-            inputs = X
-            expected = Y
-
-            # forward pass
-            nodes = forward(inputs, weights, biases)
-
-            # backpropagation
-            weights, biases = tensorbackward(nodes, expected, weights, biases)
-
-            # loss calculation
-            if epoch % log_rate == 0:
-                # SSR
-                train_predicted = forward(X, weights, biases)[-1]
-                test_predicted = forward(X_test, weights, biases)[-1]
-                loss = np.sum(np.subtract(Y, train_predicted) ** 2) / train_len
-                test_loss = np.sum(np.subtract(Y_test, test_predicted) ** 2) / test_len
-                logged_epochs.append(epoch)
-                logged_losses.append(loss)
-                logged_losses_test.append(test_loss)
+        # loss calculation
+        if epoch % log_rate == 0:
+            # SSR
+            train_predicted = forward(X, weights, biases)[-1]
+            test_predicted = forward(X_test, weights, biases)[-1]
+            loss = np.sum(np.subtract(Y, train_predicted) ** 2) / train_len
+            test_loss = np.sum(np.subtract(Y_test, test_predicted) ** 2) / test_len
+            logged_epochs.append(epoch)
+            logged_losses.append(loss)
+            logged_losses_test.append(test_loss)
 
 end_time = time.time()
 

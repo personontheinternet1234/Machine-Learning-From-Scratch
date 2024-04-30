@@ -17,4 +17,6 @@ arraymulti2 = tf.constant([
 
 print(tf.cumsum(arraymulti, axis=0)[-1])
 
-print(tf.raw_ops.Concat(0, (arraymulti, arraymulti2)))
+print(tf.concat([arraymulti, arraymulti2], 0))
+
+print(tf.random.uniform((2, 3)))
