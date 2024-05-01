@@ -108,11 +108,12 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
     disp.ax_.set_title(title)
     plt.show()
 
+""" network settings """
 
-# network params
-learn = True
+# network superparams
+learn = False
 sgd = True
-load = False
+load = True
 save = False
 graphs = True
 layer_sizes = [784, 16, 16, 10]
@@ -121,29 +122,26 @@ learning_rate = 0.001
 lambda_reg = 0.1
 log_rate = 10000
 
-# dataset params
+# file locations
 df_values_location = "data_values_keras.csv"
 df_labels_location = "data_labels_keras.csv"
+weights_location = "weights_keras.txt"
+biases_location = "biases_keras.txt"
+
+# dataset params
 split_value = 0.3
 trim = False
 trim_value = 7000
 
-print("Loading Data")
+""" network generation """
 
 # load dataset
-# data_values = []
-# data_labels = []
-# with open(f"saved/{df_values_location}", "r") as f:
-#     for line in f:
-#         data_values.append(np.array(ast.literal_eval(line)))
-# with open(f"saved/{df_labels_location}", "r") as f:
-#     for line in f:
-#         data_labels.append(np.array(ast.literal_eval(line)))
-
-data_values = np.array([pd.read_csv(f"saved/{df_values_location}")])
-data_labels = np.array([pd.read_csv(f"saved/{df_labels_location}")])
-
-print(data_values)
+data_values = np.array(pd.read_csv(f"saved/{df_values_location}")).tolist()
+for i in tqdm(range(len(data_values)), ncols=100, desc="Reformatting Data Values"):
+    data_values[i] = np.array([data_values[i]])
+data_labels = np.array(pd.read_csv(f"saved/{df_labels_location}")).tolist()
+for i in tqdm(range(len(data_labels)), ncols=100, desc="Reformatting Data Labels"):
+    data_labels[i] = np.array([data_labels[i]])
 
 # trim dataset
 if trim:
@@ -163,17 +161,15 @@ layers = len(layer_sizes)
 train_len = len(X)
 test_len = len(X_test)
 
-""" network code """
-
 # instantiate weights and biases
 weights = []
 biases = []
 if load:
     # load weights and biases
-    with open("etc/weights.txt", "r") as f:
+    with open(f"saved/{weights_location}", "r") as f:
         for line in f:
             weights.append(np.array(ast.literal_eval(line)))
-    with open("etc/biases.txt", "r") as f:
+    with open(f"saved/{biases_location}", "r") as f:
         for line in f:
             biases.append(ast.literal_eval(line))
 else:
@@ -182,7 +178,8 @@ else:
         weights.append(xavier_initialize(layer_sizes[i], layer_sizes[i + 1]))
         biases.append(np.zeros((1, layer_sizes[i + 1])))
 
-# network training
+""" network training """
+
 start_time = time.time()
 
 logged_epochs = []
@@ -190,9 +187,9 @@ logged_losses = []
 logged_losses_test = []
 if learn:
     # training loop
-    for epoch in tqdm(range(epochs), ncols=100):
+    for epoch in tqdm(range(epochs), ncols=100, desc="Training"):
         if sgd:
-            # SGD choice
+            # SGD
             training_choice = int(np.random.rand() * len(X))
             inputs = X[training_choice]
             expected = Y[training_choice]
@@ -237,7 +234,18 @@ if learn:
 
 end_time = time.time()
 
-""" return results """
+""" data saving """
+
+# save optimized weights and biases
+if save:
+    with open(f"saved/{weights_location}", "w") as f:
+        for array in tqdm(range(len(weights)), ncols=100, desc="Saving Weights"):
+            f.write(str(weights[array].tolist()) + "\n")
+    with open(f"saved/{biases_location}", "w") as f:
+        for array in tqdm(range(len(biases)), ncols=100, desc="Saving Biases"):
+            f.write(str(biases[array].tolist()) + "\n")
+
+""" result calculation """
 
 # train loss
 train_predicted = forward(X, weights, biases)[-1]
@@ -248,7 +256,7 @@ loss_test = np.sum(np.subtract(Y_test, test_predicted) ** 2) / test_len
 
 # train accu
 accu = 0
-for i in range(len(X)):
+for i in tqdm(range(len(X)), ncols=100, desc="Calculating Training Accuracy"):
     predicted = forward(X[i], weights, biases)[-1]
     if np.nanargmax(predicted) == np.nanargmax(Y[i]):
         accu += 1
@@ -256,24 +264,11 @@ accu /= train_len
 
 # test accu
 accu_test = 0
-for i in range(len(X_test)):
+for i in tqdm(range(len(X_test)), ncols=100, desc="Calculating Testing Accuracy"):
     predicted = forward(X_test[i], weights, biases)[-1]
     if np.nanargmax(predicted) == np.nanargmax(Y_test[i]):
         accu_test += 1
 accu_test /= test_len
-
-# print results
-print("")
-print(f"Results - Train Loss: {round(loss, 5)} - Test Loss: {round(loss_test, 5)} - Train Accuracy: {round(accu, 5)} - Test Accuracy: {round(accu_test, 5)} - Elapsed Time: {round(end_time - start_time, 5)}s")
-
-# save optimized weights and biases
-if save:
-    with open("etc/weights.txt", "w") as f:
-        for array in weights:
-            f.write(str(array.tolist()) + "\n")
-    with open("etc/biases.txt", "w") as f:
-        for array in biases:
-            f.write(str(array.tolist()) + "\n")
 
 # matplotlib graphs
 if graphs:
@@ -281,7 +276,7 @@ if graphs:
     # train
     y_true = []
     y_pred = []
-    for i in range(len(X)):
+    for i in tqdm(range(len(X)), ncols=100, desc="Generating Training Confusion Matrix"):
         predicted = forward(X[i], weights, biases)[-1]
         expected = Y[i]
         y_true.append(np.nanargmax(predicted))
@@ -291,7 +286,7 @@ if graphs:
     # test
     y_true_test = []
     y_pred_test = []
-    for i in range(len(X_test)):
+    for i in tqdm(range(len(X_test)), ncols=100, desc="Generating Testing Confusion Matrix"):
         predicted = forward(X_test[i], weights, biases)[-1]
         expected = Y_test[i]
         y_true_test.append(np.nanargmax(predicted))
@@ -303,9 +298,19 @@ if graphs:
     logged_losses = np.array(logged_losses)
     logged_losses_test = np.array(logged_losses_test)
 
+""" result display """
+
+# print results
+print("")
+print(f"Results - Train Loss: {round(loss, 5)} - Test Loss: {round(loss_test, 5)} - Train Accuracy: {round(accu, 5)} - Test Accuracy: {round(accu_test, 5)} - Elapsed Time: {round(end_time - start_time, 5)}s")
+
+# show matplotlib graphs
+if graphs:
+    # find label names
+    label_names = pd.read_csv(f"saved/{df_labels_location}", nrows=0).columns.tolist()
     # graph cms
-    plot_cm(cm_train, title="Train Results")
-    plot_cm(cm_test, title="Test Results")
+    plot_cm(cm_train, title="Train Results", labels=label_names)
+    plot_cm(cm_test, title="Test Results", labels=label_names)
 
     # graph loss vs epoch
     plt.plot(logged_epochs, logged_losses, color="blue", label="Train")
