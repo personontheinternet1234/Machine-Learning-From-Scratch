@@ -1,6 +1,5 @@
 
-saved/data_labels_keras.txt
-saved/data_values_keras.txt
 saved/data_values_keras.csv
 saved/data_labels_keras.csv
-saved/dataset_data_wpws_clean.csv
+saved/weigts_keras.txt
+saved/biases_keras.txt
