@@ -1,12 +1,14 @@
 import numpy as np
-import keras
 from tqdm import tqdm
 
+import keras
+
+# locations & settings
 save_location_values = "saved/data_values_keras.csv"
 save_location_labels = "saved/data_labels_keras.csv"
 num_labels = 10
 
-# load data from mnistzz
+# load data from mnist
 (train_values, train_labels), (test_values, test_labels) = keras.datasets.mnist.load_data()
 # combine training and testing labels
 import_data_values = np.append(train_values, test_values, axis=0)

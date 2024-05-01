@@ -108,19 +108,28 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
     disp.ax_.set_title(title)
     plt.show()
 
+
 """ network settings """
 
 # network superparams
-learn = False
+learn = True
 sgd = True
-load = True
+load = False
 save = False
-graphs = True
 layer_sizes = [784, 16, 16, 10]
 epochs = 100000
 learning_rate = 0.001
 lambda_reg = 0.1
+
+# dataset params
+test_frac = 0.3
+trim = False
+trim_value = 6000
+
+# user information
+graphs = True
 log_rate = 10000
+nn_version = "1.4"
 
 # file locations
 df_values_location = "data_values_keras.csv"
@@ -128,12 +137,9 @@ df_labels_location = "data_labels_keras.csv"
 weights_location = "weights_keras.txt"
 biases_location = "biases_keras.txt"
 
-# dataset params
-split_value = 0.3
-trim = False
-trim_value = 7000
-
 """ network generation """
+
+print(f"(Neural Network Version {nn_version})")
 
 # load dataset
 data_values = np.array(pd.read_csv(f"saved/{df_values_location}")).tolist()
@@ -148,7 +154,7 @@ if trim:
     data_values = data_values[0:trim_value]
     data_labels = data_labels[0:trim_value]
 # split training and testing data
-train, test = test_train_split(list(zip(data_values, data_labels)), test_size=split_value)
+train, test = test_train_split(list(zip(data_values, data_labels)), test_size=test_frac)
 # unzip training and testing data
 X, Y = zip(*train)
 X_test, Y_test = zip(*test)
@@ -301,7 +307,6 @@ if graphs:
 """ result display """
 
 # print results
-print("")
 print(f"Results - Train Loss: {round(loss, 5)} - Test Loss: {round(loss_test, 5)} - Train Accuracy: {round(accu, 5)} - Test Accuracy: {round(accu_test, 5)} - Elapsed Time: {round(end_time - start_time, 5)}s")
 
 # show matplotlib graphs
