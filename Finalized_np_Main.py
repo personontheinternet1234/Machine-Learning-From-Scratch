@@ -123,7 +123,7 @@ lambda_reg = 0.1
 
 # dataset params
 test_frac = 0.3
-trim = False
+trim = True
 trim_value = 6000
 
 # user information
@@ -143,10 +143,10 @@ print(f"(Neural Network Version {nn_version})")
 
 # load dataset
 data_values = np.array(pd.read_csv(f"saved/{df_values_location}")).tolist()
-for i in tqdm(range(len(data_values)), ncols=100, desc="Reformatting Data Values"):
+for i in tqdm(range(len(data_values)), ncols=150, desc="Reformatting Data Values"):
     data_values[i] = np.array([data_values[i]])
 data_labels = np.array(pd.read_csv(f"saved/{df_labels_location}")).tolist()
-for i in tqdm(range(len(data_labels)), ncols=100, desc="Reformatting Data Labels"):
+for i in tqdm(range(len(data_labels)), ncols=150, desc="Reformatting Data Labels"):
     data_labels[i] = np.array([data_labels[i]])
 
 # trim dataset
@@ -161,6 +161,8 @@ X_test, Y_test = zip(*test)
 # reformat training and testing data
 X, Y = list(X), list(Y)
 X_test, Y_test = list(X_test), list(Y_test)
+array_X, array_Y = np.array(X), np.array(Y)
+array_X_test, array_Y_test = np.array(X_test), np.array(Y_test)
 
 # network values
 layers = len(layer_sizes)
@@ -193,9 +195,10 @@ logged_losses = []
 logged_losses_test = []
 if learn:
     # training loop
-    for epoch in tqdm(range(epochs), ncols=100, desc="Training"):
+    for epoch in tqdm(range(epochs), ncols=150, desc="Training"):
         if sgd:
             # SGD
+            # test choice
             training_choice = int(np.random.rand() * len(X))
             inputs = X[training_choice]
             expected = Y[training_choice]
@@ -209,31 +212,28 @@ if learn:
             # loss calculation
             if epoch % log_rate == 0:
                 # SSR
-                train_predicted = forward(X, weights, biases)[-1]
-                test_predicted = forward(X_test, weights, biases)[-1]
-                loss = np.sum(np.subtract(Y, train_predicted) ** 2) / train_len
-                test_loss = np.sum(np.subtract(Y_test, test_predicted) ** 2) / test_len
+                train_predicted = forward(array_X, weights, biases)[-1]
+                test_predicted = forward(array_X_test, weights, biases)[-1]
+                loss = np.sum(np.subtract(array_Y, train_predicted) ** 2) / train_len
+                test_loss = np.sum(np.subtract(array_Y_test, test_predicted) ** 2) / test_len
                 logged_epochs.append(epoch)
                 logged_losses.append(loss)
                 logged_losses_test.append(test_loss)
         else:
             # tensors
-            inputs = X
-            expected = Y
-
             # forward pass
-            nodes = forward(inputs, weights, biases)
+            nodes = forward(array_X, weights, biases)
 
             # backpropagation
-            weights, biases = tensor_backward(nodes, expected, weights, biases)
+            weights, biases = tensor_backward(nodes, array_Y, weights, biases)
 
             # loss calculation
             if epoch % log_rate == 0:
                 # SSR
-                train_predicted = forward(X, weights, biases)[-1]
-                test_predicted = forward(X_test, weights, biases)[-1]
-                loss = np.sum(np.subtract(Y, train_predicted) ** 2) / train_len
-                test_loss = np.sum(np.subtract(Y_test, test_predicted) ** 2) / test_len
+                train_predicted = forward(array_X, weights, biases)[-1]
+                test_predicted = forward(array_X_test, weights, biases)[-1]
+                loss = np.sum(np.subtract(array_Y, train_predicted) ** 2) / train_len
+                test_loss = np.sum(np.subtract(array_Y_test, test_predicted) ** 2) / test_len
                 logged_epochs.append(epoch)
                 logged_losses.append(loss)
                 logged_losses_test.append(test_loss)
@@ -245,10 +245,10 @@ end_time = time.time()
 # save optimized weights and biases
 if save:
     with open(f"saved/{weights_location}", "w") as f:
-        for array in tqdm(range(len(weights)), ncols=100, desc="Saving Weights"):
+        for array in tqdm(range(len(weights)), ncols=150, desc="Saving Weights"):
             f.write(str(weights[array].tolist()) + "\n")
     with open(f"saved/{biases_location}", "w") as f:
-        for array in tqdm(range(len(biases)), ncols=100, desc="Saving Biases"):
+        for array in tqdm(range(len(biases)), ncols=150, desc="Saving Biases"):
             f.write(str(biases[array].tolist()) + "\n")
 
 """ result calculation """
@@ -262,7 +262,7 @@ loss_test = np.sum(np.subtract(Y_test, test_predicted) ** 2) / test_len
 
 # train accu
 accu = 0
-for i in tqdm(range(len(X)), ncols=100, desc="Calculating Training Accuracy"):
+for i in tqdm(range(len(X)), ncols=150, desc="Calculating Training Accuracy"):
     predicted = forward(X[i], weights, biases)[-1]
     if np.nanargmax(predicted) == np.nanargmax(Y[i]):
         accu += 1
@@ -270,7 +270,7 @@ accu /= train_len
 
 # test accu
 accu_test = 0
-for i in tqdm(range(len(X_test)), ncols=100, desc="Calculating Testing Accuracy"):
+for i in tqdm(range(len(X_test)), ncols=150, desc="Calculating Testing Accuracy"):
     predicted = forward(X_test[i], weights, biases)[-1]
     if np.nanargmax(predicted) == np.nanargmax(Y_test[i]):
         accu_test += 1
@@ -282,7 +282,7 @@ if graphs:
     # train
     y_true = []
     y_pred = []
-    for i in tqdm(range(len(X)), ncols=100, desc="Generating Training Confusion Matrix"):
+    for i in tqdm(range(len(X)), ncols=150, desc="Generating Training Confusion Matrix"):
         predicted = forward(X[i], weights, biases)[-1]
         expected = Y[i]
         y_true.append(np.nanargmax(predicted))
@@ -292,7 +292,7 @@ if graphs:
     # test
     y_true_test = []
     y_pred_test = []
-    for i in tqdm(range(len(X_test)), ncols=100, desc="Generating Testing Confusion Matrix"):
+    for i in tqdm(range(len(X_test)), ncols=150, desc="Generating Testing Confusion Matrix"):
         predicted = forward(X_test[i], weights, biases)[-1]
         expected = Y_test[i]
         y_true_test.append(np.nanargmax(predicted))

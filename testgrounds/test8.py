@@ -28,6 +28,9 @@ ots = 2
 X = [np.array([[0, 0]]), np.array([[0, 1]]), np.array([[1, 0]]), np.array([[1, 1]])]
 Y = [np.array([[1, 1]]), np.array([[1, 0]]), np.array([[0, 1]]), np.array([[0, 0]])]
 
+X = np.array(X)
+Y = np.array(Y)
+
 W0 = np.random.randn(ins, hls)
 B0 = np.zeros((1, hls))
 W1 = np.random.randn(hls, ots)
