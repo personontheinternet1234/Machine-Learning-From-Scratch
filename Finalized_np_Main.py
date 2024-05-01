@@ -142,10 +142,10 @@ biases_location = "biases_keras.txt"
 print(f"(Neural Network Version {nn_version})")
 
 # load dataset
-data_values = np.array(pd.read_csv(f"saved/{df_values_location}")).tolist()
+data_values = np.array(pd.read_csv(f"data/{df_values_location}")).tolist()
 for i in tqdm(range(len(data_values)), ncols=150, desc="Reformatting Data Values"):
     data_values[i] = np.array([data_values[i]])
-data_labels = np.array(pd.read_csv(f"saved/{df_labels_location}")).tolist()
+data_labels = np.array(pd.read_csv(f"data/{df_labels_location}")).tolist()
 for i in tqdm(range(len(data_labels)), ncols=150, desc="Reformatting Data Labels"):
     data_labels[i] = np.array([data_labels[i]])
 
@@ -312,7 +312,7 @@ print(f"Results - Train Loss: {round(loss, 5)} - Test Loss: {round(loss_test, 5)
 # show matplotlib graphs
 if graphs:
     # find label names
-    label_names = pd.read_csv(f"saved/{df_labels_location}", nrows=0).columns.tolist()
+    label_names = pd.read_csv(f"data/{df_labels_location}", nrows=0).columns.tolist()
     # graph cms
     plot_cm(cm_train, title="Train Results", labels=label_names)
     plot_cm(cm_test, title="Test Results", labels=label_names)
