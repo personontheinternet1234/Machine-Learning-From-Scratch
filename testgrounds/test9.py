@@ -1,17 +1,19 @@
 import random
 
 import numpy as np
+import tensorflow as tf
+
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 
 def l_relu(values):
-    output = np.maximum(0.1 * values, values)
+    output = tf.maximum(0.1 * values, values)
     return output
 
 
 def d_l_relu(values):
-    return np.where(values > 0, 1, 0.1)
+    return tf.where(values > 0, 1, 0.1)
 
 
 def tb():
@@ -25,16 +27,19 @@ ots = 2
 
 # X = [np.array([[0, 1]]), np.array([[1, 1]]), np.array([[1, 0]]), np.array([[0, 0]])]
 # Y = [np.array([[1, 0]]), np.array([[0, 1]]), np.array([[1, 0]]), np.array([[0, 1]])]
-X = [np.array([[0, 0]]), np.array([[0, 1]]), np.array([[1, 0]]), np.array([[1, 1]])]
-Y = [np.array([[1, 1]]), np.array([[1, 0]]), np.array([[0, 1]]), np.array([[0, 0]])]
+X = [[0, 0], [0, 1], [1, 0], [1, 1]]
+Y = [[1, 1], [1, 0], [0, 1], [0, 0]]
 
-X = np.array(X)
-Y = np.array(Y)
+X = tf.constant(X)
+Y = tf.constant(Y)
 
-W0 = np.random.randn(ins, hls)
-B0 = np.zeros((1, hls))
-W1 = np.random.randn(hls, ots)
-B1 = np.zeros((1, ots))
+print(X)
+print(Y)
+
+W0 = tf.random.uniform((ins, hls))
+B0 = tf.zeros((1, hls))
+W1 = tf.random.uniform((hls, ots))
+B1 = tf.zeros((1, ots))
 
 Ll = []
 il = []
@@ -44,31 +49,31 @@ testa = []
 for i in tqdm(range(1000)):
     # f a
     A0 = X
-    A1 = l_relu(np.matmul(A0, W0) + B0)
-    A2 = l_relu(np.matmul(A1, W1) + B1)
+    A1 = l_relu(tf.matmul(A0, W0) + B0)
+    A2 = l_relu(tf.matmul(A1, W1) + B1)
     E = Y
 
     # b a
     # l2
     dA2 = -2 * (E - A2)
     dB1 = dA2
-    dW1 = np.reshape(A1, (4, 3, 1)) * dB1
+    dW1 = tf.reshape(A1, (4, 3, 1)) * dB1
 
     # l1
-    dA1 = np.reshape(np.array([np.sum(W1 * dB1, axis=2)]), (4, 1, 3))
+    dA1 = tf.reshape(tf.constant([tf.reduce_sum(W1 * dB1, axis=2)]), (4, 1, 3))
     dB0 = dA1
-    dW0 = np.reshape(A0, (4, 2, 1)) * dB0
+    dW0 = tf.reshape(A0, (4, 2, 1)) * dB0
 
     # o
-    W0 = W0 - lr * np.sum(dW0, axis=0) / len(X)
-    B0 = B0 - lr * np.sum(dB0, axis=0) / len(X)
-    W1 = W1 - lr * np.sum(dW1, axis=0) / len(X)
-    B1 = B1 - lr * np.sum(dB1, axis=0) / len(X)
+    W0 = W0 - lr * tf.reduce_sum(dW0, axis=0) / len(X)
+    B0 = B0 - lr * tf.reduce_sum(dB0, axis=0) / len(X)
+    W1 = W1 - lr * tf.reduce_sum(dW1, axis=0) / len(X)
+    B1 = B1 - lr * tf.reduce_sum(dB1, axis=0) / len(X)
 
     # e
-    X1 = l_relu(np.matmul(X, W0) + B0)
-    X2 = l_relu(np.matmul(X1, W1) + B1)
-    L = np.sum(np.subtract(Y, X2) ** 2) / len(X)
+    X1 = l_relu(tf.matmul(X, W0) + B0)
+    X2 = l_relu(tf.matmul(X1, W1) + B1)
+    L = tf.reduce_sum(tf.subtract(Y, X2) ** 2) / len(X)
 
     # s
     il.append(i)

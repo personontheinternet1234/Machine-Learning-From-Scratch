@@ -299,11 +299,6 @@ if graphs:
         y_pred_test.append(np.nanargmax(expected))
     cm_test = confusion_matrix(y_true_test, y_pred_test, normalize="true")
 
-    # generate loss vs epoch
-    logged_epochs = np.array(logged_epochs)
-    logged_losses = np.array(logged_losses)
-    logged_losses_test = np.array(logged_losses_test)
-
 """ result display """
 
 # print results
