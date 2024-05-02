@@ -4,8 +4,8 @@ from tqdm import tqdm
 import keras
 
 # locations & settings
-save_location_values = "saved/data_values_keras.csv"
-save_location_labels = "saved/data_labels_keras.csv"
+save_location_values = "data/data_values_keras.csv"
+save_location_labels = "data/data_labels_keras.csv"
 num_labels = 10
 
 # load data from mnist
