@@ -15,7 +15,7 @@ arraymulti2 = tf.constant([
 
 # print(tf.math.argmax(arraymulti))
 
-print(tf.cumsum(arraymulti, axis=0)[-1])
+print(tf.reduce_sum(arraymulti, axis=0))
 
 print(tf.concat([arraymulti, arraymulti2], 0))
 

@@ -25,21 +25,16 @@ ins = 2
 hls = 3
 ots = 2
 
-# X = [np.array([[0, 1]]), np.array([[1, 1]]), np.array([[1, 0]]), np.array([[0, 0]])]
-# Y = [np.array([[1, 0]]), np.array([[0, 1]]), np.array([[1, 0]]), np.array([[0, 1]])]
-X = [[0, 0], [0, 1], [1, 0], [1, 1]]
-Y = [[1, 1], [1, 0], [0, 1], [0, 0]]
+X = [0, 0], [0, 1], [1, 0], [1, 1]
+Y = [1, 1], [1, 0], [0, 1], [0, 0]
+#
+X = tf.constant([X], dtype=tf.float32)
+Y = tf.constant([Y], dtype=tf.float32)
 
-X = tf.constant(X)
-Y = tf.constant(Y)
-
-print(X)
-print(Y)
-
-W0 = tf.random.uniform((ins, hls))
-B0 = tf.zeros((1, hls))
-W1 = tf.random.uniform((hls, ots))
-B1 = tf.zeros((1, ots))
+W0 = tf.Variable(tf.random.uniform((ins, hls)))
+B0 = tf.Variable(tf.zeros((1, hls)))
+W1 = tf.Variable(tf.random.uniform((hls, ots)))
+B1 = tf.Variable(tf.zeros((1, ots)))
 
 Ll = []
 il = []
@@ -49,6 +44,9 @@ testa = []
 for i in tqdm(range(1000)):
     # f a
     A0 = X
+    print(A0)
+    tb()
+    print(W0)
     A1 = l_relu(tf.matmul(A0, W0) + B0)
     A2 = l_relu(tf.matmul(A1, W1) + B1)
     E = Y
@@ -57,7 +55,7 @@ for i in tqdm(range(1000)):
     # l2
     dA2 = -2 * (E - A2)
     dB1 = dA2
-    dW1 = tf.reshape(A1, (4, 3, 1)) * dB1
+    dW1 = tf.reshape(A1, (4, 3, 1)) * dB1  # error
 
     # l1
     dA1 = tf.reshape(tf.constant([tf.reduce_sum(W1 * dB1, axis=2)]), (4, 1, 3))
