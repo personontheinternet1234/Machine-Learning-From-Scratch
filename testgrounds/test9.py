@@ -22,13 +22,13 @@ def tb():
 
 
 lr = 0.01
+ep = 10000
 ins = 2
 hls = 3
 ots = 2
 
 X = [[[0, 0]], [[0, 1]], [[1, 0]], [[1, 1]]]
 Y = [[[1, 1]], [[1, 0]], [[0, 1]], [[0, 0]]]
-#
 X = tf.constant(X, dtype=tf.float32)
 Y = tf.constant(Y, dtype=tf.float32)
 
@@ -38,12 +38,9 @@ W1 = tf.Variable(tf.random.uniform((hls, ots)))
 B1 = tf.Variable(tf.zeros((1, ots)))
 
 Ll = []
-il = []
-testa = []
-
 t1 = time.time()
 # f
-for i in tqdm(range(10000), ncols=150):
+for i in tqdm(range(ep), ncols=150):
     # f a
     A0 = X
     A1 = l_relu(tf.matmul(A0, W0) + B0)
@@ -73,12 +70,11 @@ for i in tqdm(range(10000), ncols=150):
     L = tf.reduce_sum(tf.subtract(Y, X2) ** 2) / len(X)
 
     # s
-    il.append(i)
     Ll.append(L)
 t2 = time.time()
 
 print(t2 - t1)
-plt.plot(il, Ll, color="blue")
+plt.plot(range(ep), Ll, color="blue")
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
 plt.title("Loss v.s. Epoch")

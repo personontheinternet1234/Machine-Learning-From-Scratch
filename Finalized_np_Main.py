@@ -190,7 +190,6 @@ else:
 
 start_time = time.time()
 
-logged_epochs = []
 logged_losses = []
 logged_losses_test = []
 if learn:
@@ -216,7 +215,6 @@ if learn:
                 test_predicted = forward(array_X_test, weights, biases)[-1]
                 loss = np.sum(np.subtract(array_Y, train_predicted) ** 2) / train_len
                 test_loss = np.sum(np.subtract(array_Y_test, test_predicted) ** 2) / test_len
-                logged_epochs.append(epoch)
                 logged_losses.append(loss)
                 logged_losses_test.append(test_loss)
         else:
@@ -234,7 +232,6 @@ if learn:
                 test_predicted = forward(array_X_test, weights, biases)[-1]
                 loss = np.sum(np.subtract(array_Y, train_predicted) ** 2) / train_len
                 test_loss = np.sum(np.subtract(array_Y_test, test_predicted) ** 2) / test_len
-                logged_epochs.append(epoch)
                 logged_losses.append(loss)
                 logged_losses_test.append(test_loss)
 
@@ -313,8 +310,8 @@ if graphs:
     plot_cm(cm_test, title="Test Results", labels=label_names)
 
     # graph loss vs epoch
-    plt.plot(logged_epochs, logged_losses, color="blue", label="Train")
-    plt.plot(logged_epochs, logged_losses_test, color="red", label="Test")
+    plt.plot(range(0, epochs, log_rate), logged_losses, color="blue", label="Train")
+    plt.plot(range(0, epochs, log_rate), logged_losses_test, color="red", label="Test")
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.title("Loss v.s. Epoch")
