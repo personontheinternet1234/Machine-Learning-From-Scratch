@@ -52,12 +52,12 @@ for i in tqdm(range(ep), ncols=150):
     # l2
     dA2 = -2 * (E - A2)
     dB1 = dA2
-    dW1 = tf.reshape(A1, [3, 1]) * dB1  # error
+    dW1 = tf.transpose(A1) * dB1
 
     # l1
     dA1 = tf.reduce_sum(W1 * dB1, axis=1)
     dB0 = dA1
-    dW0 = tf.reshape(A0, [2, 1]) * dB0
+    dW0 = tf.transpose(A0) * dB0
 
     # o
     W0 = W0 - lr * dW0

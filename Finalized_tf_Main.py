@@ -10,6 +10,7 @@ import time
 
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 
 from matplotlib import pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
@@ -28,19 +29,19 @@ def test_train_split(data, test_size):
 
 # xavier initialization
 def xavier_initialize(length, width):
-    array = np.random.randn(length, width) * math.sqrt(2 / length)
+    array = tf.Variable(tf.random.uniform((length, width)) * math.sqrt(2 / length))
     return array
 
 
 # leaky rectified linear activator
 def l_relu(values):
-    output = np.maximum(0.1 * values, values)
+    output = tf.maximum(0.1 * values, values)
     return output
 
 
 # derivative of leaky rectified linear activator
 def d_l_relu(values):
-    output = np.where(values > 0, 1, 0.1)
+    output = tf.where(values > 0, 1, 0.1)
     return output
 
 
@@ -48,7 +49,7 @@ def d_l_relu(values):
 def forward(inputs, weights, biases):
     nodes = [inputs]
     for layer in range(layers - 1):
-        activations = l_relu(np.matmul(nodes[-1], weights[layer]) + biases[layer])
+        activations = l_relu(tf.matmul(nodes[-1], weights[layer]) + biases[layer])
         nodes.append(activations)
     return nodes
 
@@ -62,11 +63,11 @@ def sgd_backward(nodes, expected, weights, biases):
     d_b = -2 * (expected - nodes[-1])
     d_biases.insert(0, d_b)
     for layer in range(-1, -len(nodes) + 1, -1):
-        d_w = nodes[layer - 1].T * d_b
+        d_w = tf.transpose(nodes[layer - 1]) * d_b
         d_weights.insert(0, d_w)
-        d_b = np.array([np.sum(weights[layer] * d_b, axis=1)])
+        d_b = tf.reduce_sum(weights[layer] * d_b, axis=1)
         d_biases.insert(0, d_b)
-    d_w = nodes[0].T * d_b
+    d_w = tf.transpose(nodes[0]) * d_b
     d_weights.insert(0, d_w)
 
     for layer in range(len(nodes) - 1):
@@ -85,16 +86,16 @@ def tensor_backward(nodes, expected, weights, biases):
     d_b = -2 * (expected - nodes[-1])
     d_biases.insert(0, d_b)
     for layer in range(-1, -len(nodes) + 1, -1):
-        d_w = np.reshape(nodes[layer - 1], (train_len, layer_sizes[layer - 1], 1)) * d_b
+        d_w = tf.reshape(nodes[layer - 1], [train_len, layer_sizes[layer - 1], 1]) * d_b
         d_weights.insert(0, d_w)
-        d_b = np.reshape(np.array([np.sum(weights[layer] * d_b, axis=2)]), (train_len, 1, layer_sizes[layer - 1]))
+        d_b = tf.reshape(tf.reduce_sum(weights[layer] * d_b, axis=2), [train_len, 1, layer_sizes[layer - 1]])
         d_biases.insert(0, d_b)
-    d_w = np.reshape(nodes[0], (train_len, layer_sizes[0], 1)) * d_b
+    d_w = tf.reshape(nodes[0], [train_len, layer_sizes[0], 1]) * d_b
     d_weights.insert(0, d_w)
 
     for layer in range(len(nodes) - 1):
-        weights[layer] -= learning_rate * np.sum((d_weights[layer] + (lambda_reg / train_len) * weights[layer]), axis=0) / train_len
-        biases[layer] -= learning_rate * np.sum(d_biases[layer], axis=0) / train_len
+        weights[layer] -= learning_rate * tf.reduce_sum((d_weights[layer] + (lambda_reg / train_len) * weights[layer]), axis=0) / train_len
+        biases[layer] -= learning_rate * tf.reduce_sum(d_biases[layer], axis=0) / train_len
 
     return weights, biases
 
@@ -129,7 +130,7 @@ trim_value = 6000
 
 # user information
 graphs = True
-log_rate = 1000000
+log_rate = 10000
 nn_version = "1.4"
 
 # file locations
@@ -141,14 +142,17 @@ biases_location = "biases_keras.txt"
 """ network generation """
 
 print(f"(Neural Network Version {nn_version})")
+print("Recognized GPUs: ", tf.config.list_physical_devices('GPU'))
 
-# load dataset
-data_values = np.array(pd.read_csv(f"data/{df_values_location}")).tolist()
-for i in tqdm(range(len(data_values)), ncols=150, desc="Reformatting Data Values"):
-    data_values[i] = np.array([data_values[i]])
-data_labels = np.array(pd.read_csv(f"data/{df_labels_location}")).tolist()
-for i in tqdm(range(len(data_labels)), ncols=150, desc="Reformatting Data Labels"):
-    data_labels[i] = np.array([data_labels[i]])
+# load dataset  # error formatting properly
+data_values = tf.constant(pd.read_csv(f"data/{df_values_location}"), dtype=tf.float32).tolist()
+# for i in tqdm(range(len(data_values)), ncols=150, desc="Reformatting Data Values"):
+#     data_values[i] = np.array([data_values[i]])
+data_labels = tf.constant(pd.read_csv(f"data/{df_labels_location}"), dtype=tf.float32).tolist()
+# for i in tqdm(range(len(data_labels)), ncols=150, desc="Reformatting Data Labels"):
+#     data_labels[i] = np.array([data_labels[i]])
+
+print(data_labels)
 
 # trim dataset
 if trim:
@@ -162,8 +166,8 @@ X_test, Y_test = zip(*test)
 # reformat training and testing data
 X, Y = list(X), list(Y)
 X_test, Y_test = list(X_test), list(Y_test)
-array_X, array_Y = np.array(X), np.array(Y)
-array_X_test, array_Y_test = np.array(X_test), np.array(Y_test)
+array_X, array_Y = tf.constant(X, dtype=tf.float32), tf.constant(Y, dtype=tf.float32)
+array_X_test, array_Y_test = tf.constant(X_test, dtype=tf.float32), tf.constant(Y_test, dtype=tf.float32)
 
 # network values
 layers = len(layer_sizes)
@@ -173,7 +177,7 @@ test_len = len(X_test)
 # instantiate weights and biases
 weights = []
 biases = []
-if load:
+if load:  # this won't work for now
     # load weights and biases
     with open(f"saved/{weights_location}", "r") as f:
         for line in f:
@@ -199,7 +203,7 @@ if learn:
         if sgd:
             # SGD
             # test choice
-            training_choice = random.randint(0, train_len - 1)
+            training_choice = int(np.random.rand() * len(X))
             inputs = X[training_choice]
             expected = Y[training_choice]
 
