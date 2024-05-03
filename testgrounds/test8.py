@@ -1,4 +1,5 @@
 import random
+import time
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -40,8 +41,9 @@ Ll = []
 il = []
 testa = []
 
+t1 = time.time()
 # f
-for i in tqdm(range(1000)):
+for i in tqdm(range(10000), ncols=150):
     # f a
     A0 = X
     A1 = l_relu(np.matmul(A0, W0) + B0)
@@ -73,7 +75,9 @@ for i in tqdm(range(1000)):
     # s
     il.append(i)
     Ll.append(L)
+t2 = time.time()
 
+print(t2 - t1)
 plt.plot(il, Ll, color="blue")
 plt.xlabel("Epoch")
 plt.ylabel("Loss")

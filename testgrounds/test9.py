@@ -1,4 +1,5 @@
 import random
+import time
 
 import numpy as np
 import tensorflow as tf
@@ -25,11 +26,11 @@ ins = 2
 hls = 3
 ots = 2
 
-X = [0, 0], [0, 1], [1, 0], [1, 1]
-Y = [1, 1], [1, 0], [0, 1], [0, 0]
+X = [[[0, 0]], [[0, 1]], [[1, 0]], [[1, 1]]]
+Y = [[[1, 1]], [[1, 0]], [[0, 1]], [[0, 0]]]
 #
-X = tf.constant([X], dtype=tf.float32)
-Y = tf.constant([Y], dtype=tf.float32)
+X = tf.constant(X, dtype=tf.float32)
+Y = tf.constant(Y, dtype=tf.float32)
 
 W0 = tf.Variable(tf.random.uniform((ins, hls)))
 B0 = tf.Variable(tf.zeros((1, hls)))
@@ -40,13 +41,11 @@ Ll = []
 il = []
 testa = []
 
+t1 = time.time()
 # f
-for i in tqdm(range(1000)):
+for i in tqdm(range(10000), ncols=150):
     # f a
     A0 = X
-    print(A0)
-    tb()
-    print(W0)
     A1 = l_relu(tf.matmul(A0, W0) + B0)
     A2 = l_relu(tf.matmul(A1, W1) + B1)
     E = Y
@@ -55,12 +54,12 @@ for i in tqdm(range(1000)):
     # l2
     dA2 = -2 * (E - A2)
     dB1 = dA2
-    dW1 = tf.reshape(A1, (4, 3, 1)) * dB1  # error
+    dW1 = tf.reshape(A1, [4, 3, 1]) * dB1
 
     # l1
-    dA1 = tf.reshape(tf.constant([tf.reduce_sum(W1 * dB1, axis=2)]), (4, 1, 3))
+    dA1 = tf.reshape(tf.reduce_sum(W1 * dB1, axis=2), [4, 1, 3])
     dB0 = dA1
-    dW0 = tf.reshape(A0, (4, 2, 1)) * dB0
+    dW0 = tf.reshape(A0, [4, 2, 1]) * dB0
 
     # o
     W0 = W0 - lr * tf.reduce_sum(dW0, axis=0) / len(X)
@@ -76,7 +75,9 @@ for i in tqdm(range(1000)):
     # s
     il.append(i)
     Ll.append(L)
+t2 = time.time()
 
+print(t2 - t1)
 plt.plot(il, Ll, color="blue")
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
