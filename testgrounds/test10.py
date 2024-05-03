@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 lr = 0.01
-ep = 5
+ep = 10000
 ins = 2
 hls = 3
 ots = 2
@@ -26,16 +26,20 @@ for i in tqdm(range(ep), ncols=150):
     with tf.GradientTape() as tape:
         A1 = tf.nn.leaky_relu(tf.matmul(X, W0) + B0)
         A2 = tf.nn.leaky_relu(tf.matmul(A1, W1) + B1)
-        loss = tf.losses.mean_squared_error(Y, A2)
+        loss = tf.reduce_sum(tf.losses.mean_squared_error(Y, A2), axis=0)
 
     # b
     gradients = tape.gradient(loss, [W0, B0, W1, B1])
-    optimizer = tf.keras.optimizers.SGD(learning_rate=lr)
-    optimizer.apply_gradients(zip(gradients, [W0, B0, W1, B1]))
+    W0.assign_sub(lr * gradients[0])
+    B0.assign_sub(lr * gradients[1])
+    W1.assign_sub(lr * gradients[2])
+    B1.assign_sub(lr * gradients[3])
 
     # e
     Ll.append(loss.numpy())
+t2 = time.time()
 
+print(t2 - t1)
 plt.plot(range(ep), Ll, color="blue")
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
@@ -50,8 +54,8 @@ while True:
 
     # f
     A0_s = np.array(inputs)
-    A1_s = l_relu(np.matmul(A0_s, W0) + B0)
-    A2_s = l_relu(np.matmul(A1_s, W1) + B1)
+    A1_s = tf.nn.leaky_relu(np.matmul(A0_s, W0) + B0)
+    A2_s = tf.nn.leaky_relu(np.matmul(A1_s, W1) + B1)
 
     # r
     print("")

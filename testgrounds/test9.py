@@ -39,15 +39,14 @@ B1 = tf.Variable(tf.zeros((1, ots)))
 
 Ll = []
 t1 = time.time()
-# f
 for i in tqdm(range(ep), ncols=150):
-    # f a
+    # f
     A0 = X
     A1 = l_relu(tf.matmul(A0, W0) + B0)
     A2 = l_relu(tf.matmul(A1, W1) + B1)
     E = Y
 
-    # b a
+    # b
     # l2
     dA2 = -2 * (E - A2)
     dB1 = dA2
