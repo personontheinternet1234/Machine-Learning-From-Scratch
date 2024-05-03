@@ -9,6 +9,7 @@ import time
 
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 
 from matplotlib import pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay

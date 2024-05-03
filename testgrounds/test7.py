@@ -1,6 +1,9 @@
+import time
+
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+
 
 def l_relu(values):
     output = np.maximum(0.1 * values, values)
@@ -15,7 +18,8 @@ def tb():
     print("---------------")
 
 
-lr = 0.001
+lr = 0.01
+ep = 10000
 ins = 2
 hls = 3
 ots = 2
@@ -28,13 +32,11 @@ B0 = np.zeros((1, hls))
 W1 = np.random.randn(hls, ots)
 B1 = np.zeros((1, ots))
 
+t1 = time.time()
 Ll = []
-il = []
-
-# f
-for i in tqdm(range(10000)):
+for i in tqdm(range(ep), ncols=150):
+    # f
     tc = int(np.random.rand() * len(X))
-
     A0_s = X[tc]
     A1_s = l_relu(np.matmul(A0_s, W0) + B0)
     A2_s = l_relu(np.matmul(A1_s, W1) + B1)
@@ -62,16 +64,11 @@ for i in tqdm(range(10000)):
     L = np.sum(np.subtract(Y, X2) ** 2) / len(X)
 
     # s
-    il.append(i)
     Ll.append(L)
+t2 = time.time()
 
-    # r
-    # print(A0_s)
-    # print(A2_s)
-    # print(Y[tc])
-    # tb()
-
-plt.plot(np.array(il), np.array(Ll), color="blue")
+print(t2 - t1)
+plt.plot(range(ep), Ll, color="blue")
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
 plt.title("Loss v.s. Epoch")

@@ -1,7 +1,5 @@
-import random
 import time
 
-import numpy as np
 import tensorflow as tf
 
 import matplotlib.pyplot as plt
@@ -37,8 +35,10 @@ B0 = tf.Variable(tf.zeros((1, hls)))
 W1 = tf.Variable(tf.random.uniform((hls, ots)))
 B1 = tf.Variable(tf.zeros((1, ots)))
 
-Ll = []
+print("GPUs: ", tf.config.list_physical_devices('GPU'))
+
 t1 = time.time()
+Ll = []
 for i in tqdm(range(ep), ncols=150):
     # f
     A0 = X
@@ -86,9 +86,9 @@ while True:
         inputs.append(float(input(f"{str(i)}: ")))
 
     # f
-    A0_s = np.array(inputs)
-    A1_s = l_relu(np.matmul(A0_s, W0) + B0)
-    A2_s = l_relu(np.matmul(A1_s, W1) + B1)
+    A0_s = tf.constant([inputs], dtype=tf.float32)
+    A1_s = l_relu(tf.matmul(A0_s, W0) + B0)
+    A2_s = l_relu(tf.matmul(A1_s, W1) + B1)
 
     # r
     print("")

@@ -1,4 +1,3 @@
-import random
 import time
 
 import numpy as np
@@ -25,11 +24,8 @@ ins = 2
 hls = 3
 ots = 2
 
-# X = [np.array([[0, 1]]), np.array([[1, 1]]), np.array([[1, 0]]), np.array([[0, 0]])]
-# Y = [np.array([[1, 0]]), np.array([[0, 1]]), np.array([[1, 0]]), np.array([[0, 1]])]
 X = [np.array([[0, 0]]), np.array([[0, 1]]), np.array([[1, 0]]), np.array([[1, 1]])]
 Y = [np.array([[1, 1]]), np.array([[1, 0]]), np.array([[0, 1]]), np.array([[0, 0]])]
-
 X = np.array(X)
 Y = np.array(Y)
 
