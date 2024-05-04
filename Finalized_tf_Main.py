@@ -125,7 +125,7 @@ lambda_reg = 0.1
 
 # dataset params
 test_frac = 0.3
-trim = False
+trim = True
 trim_value = 6000
 
 # user information
@@ -145,14 +145,16 @@ print(f"(Neural Network Version {nn_version})")
 print("Recognized GPUs: ", tf.config.list_physical_devices('GPU'))
 
 # load dataset  # error formatting properly
-data_values = tf.constant(pd.read_csv(f"data/{df_values_location}"), dtype=tf.float32).tolist()
-# for i in tqdm(range(len(data_values)), ncols=150, desc="Reformatting Data Values"):
-#     data_values[i] = np.array([data_values[i]])
-data_labels = tf.constant(pd.read_csv(f"data/{df_labels_location}"), dtype=tf.float32).tolist()
-# for i in tqdm(range(len(data_labels)), ncols=150, desc="Reformatting Data Labels"):
-#     data_labels[i] = np.array([data_labels[i]])
+data_values = pd.read_csv(f"data/{df_values_location}").tolist()
+print(data_values[0:10])
 
-print(data_labels)
+for i in tqdm(range(len(data_values)), ncols=150, desc="Reformatting Data Values"):
+    data_values[i] = tf.constant([data_values[i]], dtype=tf.float32)
+data_labels = np.array(pd.read_csv(f"data/{df_labels_location}")).tolist()
+for i in tqdm(range(len(data_labels)), ncols=150, desc="Reformatting Data Labels"):
+    data_labels[i] = tf.constant([data_labels[i]], dtype=tf.float32)
+
+print(data_labels[0:10])
 
 # trim dataset
 if trim:
@@ -166,6 +168,8 @@ X_test, Y_test = zip(*test)
 # reformat training and testing data
 X, Y = list(X), list(Y)
 X_test, Y_test = list(X_test), list(Y_test)
+# print(Y_test)
+array_x = tf.constant(X, dtype=tf.float32)
 array_X, array_Y = tf.constant(X, dtype=tf.float32), tf.constant(Y, dtype=tf.float32)
 array_X_test, array_Y_test = tf.constant(X_test, dtype=tf.float32), tf.constant(Y_test, dtype=tf.float32)
 
@@ -177,19 +181,19 @@ test_len = len(X_test)
 # instantiate weights and biases
 weights = []
 biases = []
-if load:  # this won't work for now
+if load:
     # load weights and biases
     with open(f"saved/{weights_location}", "r") as f:
         for line in f:
-            weights.append(np.array(ast.literal_eval(line)))
+            weights.append(tf.Variable(ast.literal_eval(line), dtype=tf.float32))
     with open(f"saved/{biases_location}", "r") as f:
         for line in f:
-            biases.append(ast.literal_eval(line))
+            biases.append(tf.Variable(ast.literal_eval(line), dtype=tf.float32))
 else:
     # generate weights and biases
     for i in range(layers - 1):
         weights.append(xavier_initialize(layer_sizes[i], layer_sizes[i + 1]))
-        biases.append(np.zeros((1, layer_sizes[i + 1])))
+        biases.append(tf.Variable(tf.zeros((1, layer_sizes[i + 1]))))
 
 """ network training """
 
@@ -203,7 +207,7 @@ if learn:
         if sgd:
             # SGD
             # test choice
-            training_choice = int(np.random.rand() * len(X))
+            training_choice = random.randint(0, train_len - 1)
             inputs = X[training_choice]
             expected = Y[training_choice]
 
@@ -218,8 +222,8 @@ if learn:
                 # SSR
                 train_predicted = forward(array_X, weights, biases)[-1]
                 test_predicted = forward(array_X_test, weights, biases)[-1]
-                loss = np.sum(np.subtract(array_Y, train_predicted) ** 2) / train_len
-                test_loss = np.sum(np.subtract(array_Y_test, test_predicted) ** 2) / test_len
+                loss = tf.reduce_sum(tf.subtract(array_Y, train_predicted) ** 2) / train_len
+                test_loss = tf.reduce_sum(tf.subtract(array_Y_test, test_predicted) ** 2) / test_len
                 logged_losses.append(loss)
                 logged_losses_test.append(test_loss)
         else:
@@ -235,8 +239,8 @@ if learn:
                 # SSR
                 train_predicted = forward(array_X, weights, biases)[-1]
                 test_predicted = forward(array_X_test, weights, biases)[-1]
-                loss = np.sum(np.subtract(array_Y, train_predicted) ** 2) / train_len
-                test_loss = np.sum(np.subtract(array_Y_test, test_predicted) ** 2) / test_len
+                loss = tf.reduce_sum(tf.subtract(array_Y, train_predicted) ** 2) / train_len
+                test_loss = tf.reduce_sum(tf.subtract(array_Y_test, test_predicted) ** 2) / test_len
                 logged_losses.append(loss)
                 logged_losses_test.append(test_loss)
 
@@ -257,10 +261,10 @@ if save:
 
 # train loss
 train_predicted = forward(X, weights, biases)[-1]
-loss = np.sum(np.subtract(Y, train_predicted) ** 2) / train_len
+loss = tf.reduce_sum(tf.subtract(array_Y, train_predicted) ** 2) / train_len
 # test loss
 test_predicted = forward(X_test, weights, biases)[-1]
-loss_test = np.sum(np.subtract(Y_test, test_predicted) ** 2) / test_len
+test_loss = tf.reduce_sum(tf.subtract(array_Y_test, test_predicted) ** 2) / test_len
 
 # train accu
 accu = 0

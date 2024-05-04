@@ -114,22 +114,23 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
 
 # network superparams
 learn = True
-sgd = True
+sgd = False
 load = False
 save = False
 layer_sizes = [784, 16, 16, 10]
-epochs = 100000
-learning_rate = 0.001
+epochs = 500
+learning_rate = 0.01
 lambda_reg = 0.1
 
 # dataset params
 test_frac = 0.3
-trim = False
-trim_value = 6000
+trim = True
+trim_value = 4200
 
 # user information
 graphs = True
-log_rate = 1000000
+normalization = "true"
+log_rate = 1
 nn_version = "1.4"
 
 # file locations
@@ -151,16 +152,19 @@ for i in tqdm(range(len(data_labels)), ncols=150, desc="Reformatting Data Labels
     data_labels[i] = np.array([data_labels[i]])
 
 # trim dataset
-if trim:
-    data_values = data_values[0:trim_value]
-    data_labels = data_labels[0:trim_value]
+# if trim:
+#     data_values = data_values[0:trim_value]
+#     data_labels = data_labels[0:trim_value]
 # split training and testing data
 train, test = test_train_split(list(zip(data_values, data_labels)), test_size=test_frac)
 # unzip training and testing data
 X, Y = zip(*train)
 X_test, Y_test = zip(*test)
 # reformat training and testing data
-X, Y = list(X), list(Y)
+if trim:
+    X, Y = list(X)[0:trim_value], list(Y)[0:trim_value]
+else:
+    X, Y = list(X), list(Y)
 X_test, Y_test = list(X_test), list(Y_test)
 array_X, array_Y = np.array(X), np.array(Y)
 array_X_test, array_Y_test = np.array(X_test), np.array(Y_test)
@@ -180,7 +184,7 @@ if load:
             weights.append(np.array(ast.literal_eval(line)))
     with open(f"saved/{biases_location}", "r") as f:
         for line in f:
-            biases.append(ast.literal_eval(line))
+            biases.append(np.array(ast.literal_eval(line)))
 else:
     # generate weights and biases
     for i in range(layers - 1):
@@ -285,7 +289,7 @@ if graphs:
         expected = Y[i]
         y_true.append(np.nanargmax(predicted))
         y_pred.append(np.nanargmax(expected))
-    cm_train = confusion_matrix(y_true, y_pred, normalize="true")
+    cm_train = confusion_matrix(y_true, y_pred, normalize=normalization)
 
     # test
     y_true_test = []
@@ -295,7 +299,7 @@ if graphs:
         expected = Y_test[i]
         y_true_test.append(np.nanargmax(predicted))
         y_pred_test.append(np.nanargmax(expected))
-    cm_test = confusion_matrix(y_true_test, y_pred_test, normalize="true")
+    cm_test = confusion_matrix(y_true_test, y_pred_test, normalize=normalization)
 
 """ result display """
 
