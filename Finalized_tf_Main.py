@@ -144,7 +144,7 @@ biases_location = "biases_keras.txt"
 print(f"(Neural Network Version {nn_version})")
 print("Recognized GPUs: ", tf.config.list_physical_devices('GPU'))
 
-# load dataset  # error formatting properly
+# load dataset  # error formatting properly  # this is the weirdest goddamn format for data i've ever seen. why does everything need to be double nested???
 data_values = pd.read_csv(f"data/{df_values_location}").tolist()
 print(data_values[0:10])
 
