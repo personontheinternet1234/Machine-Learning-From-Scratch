@@ -1,4 +1,8 @@
 """
+TensorFlow hasn't had great support for Windows or AMD, so most likely this version will never be completed.
+"""
+
+"""
 A Neural Network made using only mathematical functions
 Isaac Park Verbrugge & Christian SW Host-Madsen
 """
