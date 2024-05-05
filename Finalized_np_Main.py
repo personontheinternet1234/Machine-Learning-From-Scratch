@@ -118,19 +118,19 @@ sgd = False
 load = False
 save = False
 layer_sizes = [784, 16, 16, 10]
-epochs = 500
+epochs = 10000
 learning_rate = 0.01
 lambda_reg = 0.1
 
 # dataset params
 test_frac = 0.3
-trim = True
+trim = False
 trim_value = 4200
 
 # user information
 graphs = True
 normalization = "true"
-log_rate = 1
+log_rate = 10
 nn_version = "1.4"
 
 # file locations
@@ -151,20 +151,17 @@ data_labels = np.array(pd.read_csv(f"data/{df_labels_location}")).tolist()
 for i in tqdm(range(len(data_labels)), ncols=150, desc="Reformatting Data Labels"):
     data_labels[i] = np.array([data_labels[i]])
 
-# trim dataset
-# if trim:
-#     data_values = data_values[0:trim_value]
-#     data_labels = data_labels[0:trim_value]
 # split training and testing data
 train, test = test_train_split(list(zip(data_values, data_labels)), test_size=test_frac)
 # unzip training and testing data
 X, Y = zip(*train)
 X_test, Y_test = zip(*test)
-# reformat training and testing data
+# trim dataset
 if trim:
     X, Y = list(X)[0:trim_value], list(Y)[0:trim_value]
 else:
     X, Y = list(X), list(Y)
+# reformat training and testing data
 X_test, Y_test = list(X_test), list(Y_test)
 array_X, array_Y = np.array(X), np.array(Y)
 array_X_test, array_Y_test = np.array(X_test), np.array(Y_test)
