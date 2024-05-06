@@ -115,11 +115,13 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
 # network superparams
 learn = True
 sgd = False
+sgd = True
+tensortime = 0.1  # not implemented yet
 load = False
 save = False
 layer_sizes = [784, 16, 16, 10]
-epochs = 10000
-learning_rate = 0.01
+epochs = 1000000
+learning_rate = 0.0001
 lambda_reg = 0.1
 
 # dataset params
@@ -130,7 +132,7 @@ trim_value = 4200
 # user information
 graphs = True
 normalization = "true"
-log_rate = 10
+log_rate = 10000
 nn_version = "1.4"
 
 # file locations
@@ -141,7 +143,7 @@ biases_location = "biases_keras.txt"
 
 """ network generation """
 
-print(f"(Neural Network Version {nn_version})")
+print(f"The Garden (Version {nn_version})")
 
 # load dataset
 data_values = np.array(pd.read_csv(f"data/{df_values_location}")).tolist()
@@ -221,6 +223,9 @@ if learn:
                 logged_losses_test.append(test_loss)
         else:
             # tensors
+            # input data selection
+            # add
+
             # forward pass
             nodes = forward(array_X, weights, biases)
 
@@ -230,7 +235,7 @@ if learn:
             # loss calculation
             if epoch % log_rate == 0:
                 # SSR
-                train_predicted = forward(array_X, weights, biases)[-1]
+                train_predicted = nodes[-1]
                 test_predicted = forward(array_X_test, weights, biases)[-1]
                 loss = np.sum(np.subtract(array_Y, train_predicted) ** 2) / train_len
                 test_loss = np.sum(np.subtract(array_Y_test, test_predicted) ** 2) / test_len

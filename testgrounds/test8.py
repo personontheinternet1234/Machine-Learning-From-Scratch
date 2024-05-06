@@ -24,10 +24,8 @@ ins = 2
 hls = 3
 ots = 2
 
-X = [np.array([[0, 0]]), np.array([[0, 1]]), np.array([[1, 0]]), np.array([[1, 1]])]
-Y = [np.array([[1, 1]]), np.array([[1, 0]]), np.array([[0, 1]]), np.array([[0, 0]])]
-X = np.array(X)
-Y = np.array(Y)
+X = np.array([np.array([[0, 0]]), np.array([[0, 1]]), np.array([[1, 0]]), np.array([[1, 1]])])
+Y = np.array([np.array([[1, 1]]), np.array([[1, 0]]), np.array([[0, 1]]), np.array([[0, 0]])])
 
 W0 = np.random.randn(ins, hls)
 B0 = np.zeros((1, hls))
@@ -61,11 +59,7 @@ for i in tqdm(range(ep), ncols=150):
     B1 = B1 - lr * np.sum(dB1, axis=0) / len(X)
 
     # e
-    X1 = l_relu(np.matmul(X, W0) + B0)
-    X2 = l_relu(np.matmul(X1, W1) + B1)
-    L = np.sum(np.subtract(Y, X2) ** 2) / len(X)
-
-    # s
+    L = np.sum(np.subtract(Y, A2) ** 2) / len(X)
     Ll.append(L)
 t2 = time.time()
 
@@ -75,18 +69,3 @@ plt.xlabel("Epoch")
 plt.ylabel("Loss")
 plt.title("Loss v.s. Epoch")
 plt.show()
-
-while True:
-    print("")
-    inputs = []
-    for i in range(ins):
-        inputs.append(float(input(f"{str(i)}: ")))
-
-    # f
-    A0_s = np.array(inputs)
-    A1_s = l_relu(np.matmul(A0_s, W0) + B0)
-    A2_s = l_relu(np.matmul(A1_s, W1) + B1)
-
-    # r
-    print("")
-    print(A2_s)
