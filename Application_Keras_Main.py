@@ -6,7 +6,6 @@ Isaac Park Verbrugge & Christian SW Host-Madsen
 import ast
 import numpy as np
 import pygame
-import time
 
 from PIL import Image
 
@@ -51,7 +50,6 @@ with open(f"saved/{biases_location}", "r") as f:
 # initialize pygame
 pygame.init()
 
-# window settings
 # background color
 background_colour = (0, 0, 0)
 # window scale
@@ -62,7 +60,7 @@ screen = pygame.display.set_mode((win_length, win_height))
 # frame rate
 frame_rate = 60
 # font type
-font = pygame.font.Font(None, 36)
+font = pygame.font.Font(None, 30)
 
 # set window title
 pygame.display.set_caption("Drawing Window")
@@ -71,10 +69,16 @@ screen.fill(background_colour)
 # update display
 pygame.display.flip()
 
-# run pygame
+# pygame running
 running = True
 # frame rate checker
 clock = pygame.time.Clock()
+# mouse position list
+mouse_pos = []
+# display preset conditionals
+wait_initial = True
+rendered_initial = False
+wait_clear = False
 
 # run pygame window
 while running:
@@ -82,25 +86,63 @@ while running:
     clock.tick(frame_rate)
     for event in pygame.event.get():
         # show directions
-        # rendered_text = font.render("C to clear", True, (0, 255, 0))
-        # screen.blit(rendered_text, (0, 0))
-        # rendered_text = font.render("S to evaluate", True, (0, 255, 0))
-        # screen.blit(rendered_text, (0, 40))
-        # pygame.display.flip()
+        if wait_initial:
+            # if not already rendered
+            if not rendered_initial:
+                # render all texts
+                screen.fill(background_colour)
+                rendered_text = font.render("C to clear", True, (0, 255, 0))
+                screen.blit(rendered_text, (0, 0))
+                rendered_text = font.render("S to save & evaluate", True, (0, 255, 0))
+                screen.blit(rendered_text, (0, 20))
+                rendered_text = font.render("D to reshow directions", True, (0, 255, 0))
+                screen.blit(rendered_text, (0, 40))
+                # update screen
+                pygame.display.flip()
+                # signal rendered
+                rendered_initial = True
+            # wait until mouse down
+            if pygame.mouse.get_pressed()[0]:
+                # clear and end waiting loop
+                wait_initial = False
+                screen.fill(background_colour)
+                pygame.display.flip()
+        # waiting for next user input after evaluation
+        if wait_clear:
+            # wait until mouse down
+            if pygame.mouse.get_pressed()[0]:
+                # clear and end waiting loop
+                wait_clear = False
+                screen.fill(background_colour)
+                pygame.display.flip()
         # check if mouse down
         if pygame.mouse.get_pressed()[0]:
-            # find mouse
-            m_x, m_y = event.pos
+            # find mouse and reference last pos
+            mouse_pos.append(event.pos)
+            mouse_pos.append(event.pos)
+            mouse_pos[1] = mouse_pos[0]
+            mouse_pos[0] = event.pos
             # draw circle on mouse
-            pygame.draw.circle(screen, (255, 255, 255), (m_x, m_y), 10)
+            pygame.draw.circle(screen, (255, 255, 255), mouse_pos[0], 10)
+            # draw connecting line
+            pygame.draw.line(screen, (255, 255, 255), mouse_pos[1], mouse_pos[0], 21)
+            mouse_pos = mouse_pos[0:2]
             # update display
             pygame.display.flip()
+        # check if mouse not down
+        if not pygame.mouse.get_pressed()[0]:
+            # reset mouse positions
+            mouse_pos = []
         # check if key pressed
         if event.type == pygame.KEYDOWN:
             # clear screen
             if event.key == pygame.K_c:
                 screen.fill(background_colour)
                 pygame.display.flip()
+            # set conditionals for program directions
+            if event.key == pygame.K_d:
+                wait_initial = True
+                rendered_initial = False
             # evaluate image
             if event.key == pygame.K_s:
                 # save image
@@ -120,18 +162,16 @@ while running:
 
                 # show output on pygame window
                 rendered_text = font.render(text, True, (0, 255, 0))
-                screen.blit(rendered_text, (0, 0))
+                screen.blit(rendered_text, (260, 260))
                 pygame.display.flip()
+                # wait until input to clear screen
+                wait_clear = True
 
                 # print technical output in python terminal
                 for i in range(len(list(output[0]))):
                     print(f"{i}: {output[0][i]:.5f}")
                 print("-------------------------")
-                # wait until acknowledged
-                # while not pygame.mouse.get_pressed()[0]:
-                #     time.sleep(1 / frame_rate)
-                # screen.fill(background_colour)
-                # pygame.display.flip()
+
         # closed window
         if event.type == pygame.QUIT:
             # end running program
