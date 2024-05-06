@@ -28,6 +28,11 @@ def forward(inputs, weights, biases):
     return nodes
 
 
+# softmax activator
+def softmax(values):
+    return np.exp(values) / np.sum(np.exp(values))
+
+
 """ load files """
 
 # file locations
@@ -79,6 +84,9 @@ mouse_pos = []
 wait_initial = True
 rendered_initial = False
 wait_clear = False
+
+# print initial text break
+print("-------------------------")
 
 # run pygame window
 while running:
@@ -148,7 +156,6 @@ while running:
                 # save image
                 scaled_screen = pygame.transform.scale(screen, (win_length * downscale_factor, win_height * downscale_factor))
                 pygame.image.save(scaled_screen, f"saved/{image_location}")
-
                 # open saved image
                 img = Image.open(f"saved/{image_location}")
                 # grayscale image
@@ -159,6 +166,8 @@ while running:
                 # forward pass and argmax of image
                 output = forward(forward_layer, weights, biases)[-1]
                 text = str(np.nanargmax(output))
+                # softmax output
+                smax_output = softmax(output)
 
                 # show output on pygame window
                 rendered_text = font.render(text, True, (0, 255, 0))
@@ -167,9 +176,9 @@ while running:
                 # wait until input to clear screen
                 wait_clear = True
 
-                # print technical output in python terminal
-                for i in range(len(list(output[0]))):
-                    print(f"{i}: {output[0][i]:.5f}")
+                # print certainties in terminal
+                for i in range(len(list(smax_output[0]))):
+                    print(f"{i}: {(smax_output[0][i] * 100):.5f}%")
                 print("-------------------------")
 
         # closed window
