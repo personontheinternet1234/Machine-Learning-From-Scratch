@@ -114,7 +114,6 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
 
 # network superparams
 learn = True
-sgd = False
 sgd = True
 tensortime = 0.1  # not implemented yet
 load = False
