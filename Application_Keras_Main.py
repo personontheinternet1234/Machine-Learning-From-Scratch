@@ -171,7 +171,7 @@ while running:
 
                 # show output on pygame window
                 rendered_text = font.render(text, True, (0, 255, 0))
-                screen.blit(rendered_text, (260, 260))
+                screen.blit(rendered_text, (265, 260))
                 pygame.display.flip()
                 # wait until input to clear screen
                 wait_clear = True
