@@ -1,5 +1,5 @@
 """
-MNIST Neural Network Application
+MNIST Neural Network application
 Isaac Park Verbrugge & Christian SW Host-Madsen
 """
 

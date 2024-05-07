@@ -1,3 +1,8 @@
+"""
+Loading MNIST data
+Isaac Park Verbrugge & Christian SW Host-Madsen
+"""
+
 import numpy as np
 from tqdm import tqdm
 
