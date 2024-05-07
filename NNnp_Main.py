@@ -145,15 +145,15 @@ biases_location = "biases_keras.txt"
 print(f"The Garden (Version {nn_version})")
 
 # load dataset
-data_values = np.array(pd.read_csv(f"data/{df_values_location}")).tolist()
-for i in tqdm(range(len(data_values)), ncols=150, desc="Reformatting Data Values"):
-    data_values[i] = np.array([data_values[i]])
-data_labels = np.array(pd.read_csv(f"data/{df_labels_location}")).tolist()
-for i in tqdm(range(len(data_labels)), ncols=150, desc="Reformatting Data Labels"):
-    data_labels[i] = np.array([data_labels[i]])
+df_values = np.array(pd.read_csv(f"data/{df_values_location}")).tolist()
+for i in tqdm(range(len(df_values)), ncols=150, desc="Reformatting Data Values"):
+    df_values[i] = np.array([df_values[i]])
+df_labels = np.array(pd.read_csv(f"data/{df_labels_location}")).tolist()
+for i in tqdm(range(len(df_labels)), ncols=150, desc="Reformatting Data Labels"):
+    df_labels[i] = np.array([df_labels[i]])
 
 # split training and testing data
-train, test = test_train_split(list(zip(data_values, data_labels)), test_size=test_frac)
+train, test = test_train_split(list(zip(df_values, df_labels)), test_size=test_frac)
 # unzip training and testing data
 X, Y = zip(*train)
 X_test, Y_test = zip(*test)
@@ -267,7 +267,8 @@ loss_test = np.sum(np.subtract(Y_test, test_predicted) ** 2) / test_len
 accu = 0
 for i in tqdm(range(len(X)), ncols=150, desc="Calculating Training Accuracy"):
     predicted = forward(X[i], weights, biases)[-1]
-    if np.nanargmax(predicted) == np.nanargmax(Y[i]):
+    expected = Y[i]
+    if np.nanargmax(predicted) == np.nanargmax(expected):
         accu += 1
 accu /= train_len
 
@@ -275,7 +276,8 @@ accu /= train_len
 accu_test = 0
 for i in tqdm(range(len(X_test)), ncols=150, desc="Calculating Testing Accuracy"):
     predicted = forward(X_test[i], weights, biases)[-1]
-    if np.nanargmax(predicted) == np.nanargmax(Y_test[i]):
+    expected = Y_test[i]
+    if np.nanargmax(predicted) == np.nanargmax(expected):
         accu_test += 1
 accu_test /= test_len
 
