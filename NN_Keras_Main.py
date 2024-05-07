@@ -34,6 +34,37 @@ def softmax(values):
     output = np.exp(values) / np.sum(np.exp(values))
     return output
 
+def predict():
+    global wait_clear
+
+    # save image
+    scaled_screen = pygame.transform.scale(screen, (win_length * downscale_factor, win_height * downscale_factor))
+    pygame.image.save(scaled_screen, f"saved/{image_location}")
+    # open saved image
+    img = Image.open(f"saved/{image_location}")
+    # grayscale image
+    gray_img = img.convert("L")
+    # convert to numpy array
+    forward_layer = np.array(list(gray_img.getdata())) / 255
+
+    # forward pass and argmax of image
+    output = forward(forward_layer, weights, biases)[-1]
+    text = str(np.nanargmax(output))
+    # softmax output
+    smax_output = softmax(output)
+
+    # show output on pygame window
+    rendered_text = font.render(text, True, (0, 255, 0))
+    screen.blit(rendered_text, (265, 260))
+    pygame.display.flip()
+    # wait until input to clear screen
+    wait_clear = True
+
+    # print certainties in terminal
+    for i in range(len(list(smax_output[0]))):
+        print(f"{i}: {(smax_output[0][i] * 100):.5f}%")
+    print("-------------------------")
+
 
 """ load files """
 
@@ -64,6 +95,7 @@ win_height = 280
 win_length = 280
 downscale_factor = 0.1
 screen = pygame.display.set_mode((win_length, win_height))
+
 # frame rate
 frame_rate = 60
 # font type
@@ -86,6 +118,7 @@ mouse_pos = []
 wait_initial = True
 rendered_initial = False
 wait_clear = False
+should_predict = False
 
 # print initial text break
 print("-------------------------")
@@ -123,7 +156,12 @@ while running:
             if pygame.mouse.get_pressed()[0]:
                 # clear and end waiting loop
                 wait_clear = False
-                screen.fill(background_colour)
+                # screen.fill(background_colour)
+
+                # clear the old number thingy
+                rect_x = win_length - 25
+                rect_y = win_height - 25
+                pygame.draw.rect(screen, (0,0,0), (rect_x, rect_y, 25, 25))
                 pygame.display.flip()
         # check if mouse down
         if pygame.mouse.get_pressed()[0]:
@@ -139,10 +177,16 @@ while running:
             mouse_pos = mouse_pos[0:2]
             # update display
             pygame.display.flip()
+
+            should_predict = True
         # check if mouse not down
         if not pygame.mouse.get_pressed()[0]:
             # reset mouse positions
             mouse_pos = []
+
+            if(should_predict):
+                predict()
+                should_predict = False;
         # check if key pressed
         if event.type == pygame.KEYDOWN:
             # clear screen
@@ -155,33 +199,7 @@ while running:
                 rendered_initial = False
             # evaluate image
             if event.key == pygame.K_s:
-                # save image
-                scaled_screen = pygame.transform.scale(screen, (win_length * downscale_factor, win_height * downscale_factor))
-                pygame.image.save(scaled_screen, f"saved/{image_location}")
-                # open saved image
-                img = Image.open(f"saved/{image_location}")
-                # grayscale image
-                gray_img = img.convert("L")
-                # convert to numpy array
-                forward_layer = np.array(list(gray_img.getdata())) / 255
-
-                # forward pass and argmax of image
-                output = forward(forward_layer, weights, biases)[-1]
-                text = str(np.nanargmax(output))
-                # softmax output
-                smax_output = softmax(output)
-
-                # show output on pygame window
-                rendered_text = font.render(text, True, (0, 255, 0))
-                screen.blit(rendered_text, (265, 260))
-                pygame.display.flip()
-                # wait until input to clear screen
-                wait_clear = True
-
-                # print certainties in terminal
-                for i in range(len(list(smax_output[0]))):
-                    print(f"{i}: {(smax_output[0][i] * 100):.5f}%")
-                print("-------------------------")
+                predict()
 
         # closed window
         if event.type == pygame.QUIT:
