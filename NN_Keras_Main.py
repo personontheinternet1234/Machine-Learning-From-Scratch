@@ -161,7 +161,7 @@ while running:
                 # clear the old number thingy
                 rect_x = win_length - 25
                 rect_y = win_height - 25
-                pygame.draw.rect(screen, (0,0,0), (rect_x, rect_y, 25, 25))
+                pygame.draw.rect(screen, background_colour, (rect_x, rect_y, 25, 25))
                 pygame.display.flip()
         # check if mouse down
         if pygame.mouse.get_pressed()[0]:
@@ -183,10 +183,9 @@ while running:
         if not pygame.mouse.get_pressed()[0]:
             # reset mouse positions
             mouse_pos = []
-
-            if(should_predict):
+            if should_predict:
                 predict()
-                should_predict = False;
+                should_predict = False
         # check if key pressed
         if event.type == pygame.KEYDOWN:
             # clear screen
