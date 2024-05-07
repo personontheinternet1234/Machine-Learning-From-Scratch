@@ -30,7 +30,8 @@ def forward(inputs, weights, biases):
 
 # softmax activator
 def softmax(values):
-    return np.exp(values) / np.sum(np.exp(values))
+    output = np.exp(values) / np.sum(np.exp(values))
+    return output
 
 
 """ load files """
