@@ -85,16 +85,16 @@ def tensor_backward(nodes, expected, weights, biases):
     d_b = -2 * (expected - nodes[-1])
     d_biases.insert(0, d_b)
     for layer in range(-1, -len(nodes) + 1, -1):
-        d_w = np.reshape(nodes[layer - 1], (train_len, layer_sizes[layer - 1], 1)) * d_b
+        d_w = np.reshape(nodes[layer - 1], (tensortime, layer_sizes[layer - 1], 1)) * d_b
         d_weights.insert(0, d_w)
-        d_b = np.reshape(np.array([np.sum(weights[layer] * d_b, axis=2)]), (train_len, 1, layer_sizes[layer - 1]))
+        d_b = np.reshape(np.array([np.sum(weights[layer] * d_b, axis=2)]), (tensortime, 1, layer_sizes[layer - 1]))
         d_biases.insert(0, d_b)
-    d_w = np.reshape(nodes[0], (train_len, layer_sizes[0], 1)) * d_b
+    d_w = np.reshape(nodes[0], (tensortime, layer_sizes[0], 1)) * d_b
     d_weights.insert(0, d_w)
 
     for layer in range(len(nodes) - 1):
-        weights[layer] -= learning_rate * np.sum((d_weights[layer] + (lambda_reg / train_len) * weights[layer]), axis=0) / train_len
-        biases[layer] -= learning_rate * np.sum(d_biases[layer], axis=0) / train_len
+        weights[layer] -= learning_rate * np.sum((d_weights[layer] + (lambda_reg / tensortime) * weights[layer]), axis=0) / tensortime
+        biases[layer] -= learning_rate * np.sum(d_biases[layer], axis=0) / tensortime
 
     return weights, biases
 
@@ -115,17 +115,17 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
 # network superparams
 learn = True
 sgd = True
-tensortime = 0.1  # not implemented yet
+tensortime = 420000
 load = False
 save = False
 layer_sizes = [784, 16, 16, 10]
-epochs = 1000000
-learning_rate = 0.0001
+epochs = 100000
+learning_rate = 0.001
 lambda_reg = 0.1
 
 # dataset params
 test_frac = 0.3
-trim = False
+trim = True
 trim_value = 4200
 
 # user information
@@ -222,19 +222,20 @@ if learn:
                 logged_losses_test.append(test_loss)
         else:
             # tensors
-            # input data selection
-            # add
+            tc = random.randint(tensortime, train_len)
+            inputs = array_X[tc - tensortime:tc]
+            expected = array_Y[tc - tensortime:tc]
 
             # forward pass
-            nodes = forward(array_X, weights, biases)
+            nodes = forward(inputs, weights, biases)
 
             # backpropagation
-            weights, biases = tensor_backward(nodes, array_Y, weights, biases)
+            weights, biases = tensor_backward(nodes, expected, weights, biases)
 
             # loss calculation
             if epoch % log_rate == 0:
                 # SSR
-                train_predicted = nodes[-1]
+                train_predicted = forward(array_X, weights, biases)[-1]
                 test_predicted = forward(array_X_test, weights, biases)[-1]
                 loss = np.sum(np.subtract(array_Y, train_predicted) ** 2) / train_len
                 test_loss = np.sum(np.subtract(array_Y_test, test_predicted) ** 2) / test_len
