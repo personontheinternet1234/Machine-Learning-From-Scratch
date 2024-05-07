@@ -115,7 +115,7 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
 # network superparams
 learn = True
 sgd = True
-tensortime = 420000
+tensortime = 42000
 load = False
 save = False
 layer_sizes = [784, 16, 16, 10]
@@ -222,6 +222,7 @@ if learn:
                 logged_losses_test.append(test_loss)
         else:
             # tensors
+            # data selection
             tc = random.randint(tensortime, train_len)
             inputs = array_X[tc - tensortime:tc]
             expected = array_Y[tc - tensortime:tc]
