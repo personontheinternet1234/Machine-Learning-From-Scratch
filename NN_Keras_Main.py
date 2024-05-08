@@ -186,7 +186,7 @@ while running:
                     print("-------------------------")
                 else:
                     if not rendered_error:
-                        rendered_text = font.render("Please clear screen (C)", True, (0, 255, 0))
+                        rendered_text = font.render("No new image to evaluate", True, (0, 255, 0))
                         screen.blit(rendered_text, (0, 260))
                         pygame.display.flip()
                         rendered_error = True
