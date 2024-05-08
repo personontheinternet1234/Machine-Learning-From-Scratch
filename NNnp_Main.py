@@ -125,7 +125,7 @@ lambda_reg = 0.1
 
 # dataset params
 test_frac = 0.3
-trim = True
+trim = False
 trim_value = 4200
 
 # user information

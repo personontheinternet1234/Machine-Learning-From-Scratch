@@ -85,6 +85,7 @@ mouse_pos = []
 wait_initial = True
 rendered_initial = False
 wait_clear = False
+rendered_error = False
 
 # print initial text break
 print("-------------------------")
@@ -154,33 +155,41 @@ while running:
                 rendered_initial = False
             # evaluate image
             if event.key == pygame.K_s:
-                # save image
-                scaled_screen = pygame.transform.scale(screen, (win_length * downscale_factor, win_height * downscale_factor))
-                pygame.image.save(scaled_screen, f"saved/{image_location}")
-                # open saved image
-                img = Image.open(f"saved/{image_location}")
-                # grayscale image
-                gray_img = img.convert("L")
-                # convert to numpy array
-                forward_layer = np.array(list(gray_img.getdata())) / 255
+                if not wait_initial and not wait_clear:
+                    # save image
+                    scaled_screen = pygame.transform.scale(screen, (win_length * downscale_factor, win_height * downscale_factor))
+                    pygame.image.save(scaled_screen, f"saved/{image_location}")
+                    # open saved image
+                    img = Image.open(f"saved/{image_location}")
+                    # grayscale image
+                    gray_img = img.convert("L")
+                    # convert to numpy array
+                    forward_layer = np.array(list(gray_img.getdata())) / 255
 
-                # forward pass and argmax of image
-                output = forward(forward_layer, weights, biases)[-1]
-                text = str(np.nanargmax(output))
-                # softmax output
-                smax_output = softmax(output)
+                    # forward pass and argmax of image
+                    output = forward(forward_layer, weights, biases)[-1]
+                    text = str(np.nanargmax(output))
+                    # softmax output
+                    smax_output = softmax(output)
 
-                # show output on pygame window
-                rendered_text = font.render(text, True, (0, 255, 0))
-                screen.blit(rendered_text, (265, 260))
-                pygame.display.flip()
-                # wait until input to clear screen
-                wait_clear = True
+                    # show output on pygame window
+                    rendered_text = font.render(text, True, (0, 255, 0))
+                    screen.blit(rendered_text, (265, 260))
+                    pygame.display.flip()
+                    # wait until input to clear screen
+                    wait_clear = True
+                    rendered_error = False
 
-                # print certainties in terminal
-                for i in range(len(list(smax_output[0]))):
-                    print(f"{i}: {(smax_output[0][i] * 100):.5f}%")
-                print("-------------------------")
+                    # print certainties in terminal
+                    for i in range(len(list(smax_output[0]))):
+                        print(f"{i}: {(smax_output[0][i] * 100):.5f}%")
+                    print("-------------------------")
+                else:
+                    if not rendered_error:
+                        rendered_text = font.render("Please clear screen (C)", True, (0, 255, 0))
+                        screen.blit(rendered_text, (0, 260))
+                        pygame.display.flip()
+                        rendered_error = True
 
         # closed window
         if event.type == pygame.QUIT:
