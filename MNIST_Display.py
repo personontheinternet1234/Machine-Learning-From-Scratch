@@ -1,4 +1,6 @@
 import random
+import sys
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -9,15 +11,17 @@ import keras
 def update(frame):
     global ax
     ax.clear()
-    tc = random.randint(0, data_len - 1)
-    ax.imshow(values[tc], cmap="gray")
-    ax.set_title(labels[tc])
+    tc = random.randint(0, display_length - 1)
+    ax.imshow(display_values[tc], cmap="gray")
+    ax.set_title(display_labels[tc])
     ax.axis("off")
 
 
 # params
 frames = 10000
-time_interval = 250
+time_interval = 17
+number = "random"
+val_numbers = list("0123456789")
 
 # load
 (values, labels), (values_2, labels_2) = keras.datasets.mnist.load_data()
@@ -25,11 +29,28 @@ time_interval = 250
 # combine train & test
 values = np.append(values, values_2, axis=0)
 labels = np.append(labels, labels_2, axis=0)
-data_len = len(values)
+
+display_values = []
+display_labels = []
+
+if number == "random":
+    display_values = values
+    display_labels = labels
+elif number in val_numbers:
+    for i in range(len(labels)):
+        if str(labels[i]) == number:
+            display_values.append(values[i])
+            display_labels.append(labels[i])
+    display_values = np.array(display_values)
+    display_labels = np.array(display_labels)
+else:
+    print("Invalid number")
+    sys.exit(1)
+display_length = len(display_values)
 
 # instantiate plot
 fig, ax = plt.subplots()
-ax.set_title("MNIST")
+ax.set_title(f"{number} values of MNIST")
 ax.axis("off")
 
 # animate plot
