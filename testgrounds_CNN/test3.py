@@ -142,7 +142,11 @@ for i in tqdm(range(eps), ncols=150):
     # backward
     dA1 = -2 * (E - A1)
     dB0 = dA1
-    dW0 = A1.T * dB0
+    dW0 = A0.T * dB0
+
+    # optimize (i can't believe i forgot to do this what am i doing)
+    W0 = W0 - lr * dW0
+    B0 = B0 - lr * dB0
 
     # loss
     L = np.sum(np.subtract(E, A1) ** 2)
