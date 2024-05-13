@@ -59,7 +59,7 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
 ins = 100
 ots = 10
 eps = 100000
-lr = 0.01
+lr = 0.001
 
 """ image data """
 
@@ -97,7 +97,7 @@ kernel_2_2_4 = np.array([[-0.016, 0.099, -0.688], [0.005, -0.157, -0.238], [-0.0
 
 """ training """
 Ll = []
-for i in tqdm(range(eps), ncols=150):
+for i in tqdm(range(eps), ncols=150, desc="Training"):
     # test choice
     tc = random.randint(0, len(X) - 1)
     img = X[tc]
