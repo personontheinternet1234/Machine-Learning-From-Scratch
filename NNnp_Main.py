@@ -70,7 +70,7 @@ def sgd_backward(nodes, expected, weights, biases):
     d_weights.insert(0, d_w)
 
     for layer in range(len(nodes) - 1):
-        weights[layer] -= learning_rate * (d_weights[layer] + (lambda_reg / train_len) * weights[layer])
+        weights[layer] -= learning_rate * (d_weights[layer] + (alpha / train_len) * weights[layer])
         biases[layer] -= learning_rate * d_biases[layer]
 
     return weights, biases
@@ -93,7 +93,7 @@ def tensor_backward(nodes, expected, weights, biases):
     d_weights.insert(0, d_w)
 
     for layer in range(len(nodes) - 1):
-        weights[layer] -= learning_rate * np.sum((d_weights[layer] + (lambda_reg / tensortime) * weights[layer]), axis=0) / tensortime
+        weights[layer] -= learning_rate * np.sum((d_weights[layer] + (alpha / tensortime) * weights[layer]), axis=0) / tensortime
         biases[layer] -= learning_rate * np.sum(d_biases[layer], axis=0) / tensortime
 
     return weights, biases
@@ -121,7 +121,7 @@ save = False
 layer_sizes = [784, 16, 16, 10]
 epochs = 100000
 learning_rate = 0.001
-lambda_reg = 0.1
+alpha = 0.1
 
 # dataset params
 test_frac = 0.3
@@ -130,6 +130,7 @@ trim_value = 4200
 
 # user information
 graphs = True
+messy_plot = True
 normalization = "true"
 log_rate = 10000
 nn_version = "1.4"
@@ -214,10 +215,17 @@ if learn:
             # loss calculation
             if epoch % log_rate == 0:
                 # SSR
-                train_predicted = forward(array_X, weights, biases)[-1]
-                test_predicted = forward(array_X_test, weights, biases)[-1]
-                loss = np.sum(np.subtract(array_Y, train_predicted) ** 2) / train_len
-                test_loss = np.sum(np.subtract(array_Y_test, test_predicted) ** 2) / test_len
+                if messy_plot:
+                    tc_test = random.randint(0, test_len - 1)
+                    train_predicted = nodes[-1]
+                    test_predicted = forward(X_test[tc_test], weights, biases)[-1]
+                    loss = np.sum(np.subtract(Y[tc], train_predicted) ** 2)
+                    test_loss = np.sum(np.subtract(Y_test[tc_test], test_predicted) ** 2)
+                else:
+                    train_predicted = forward(array_X, weights, biases)[-1]
+                    test_predicted = forward(array_X_test, weights, biases)[-1]
+                    loss = np.sum(np.subtract(array_Y, train_predicted) ** 2) / train_len
+                    test_loss = np.sum(np.subtract(array_Y_test, test_predicted) ** 2) / test_len
                 logged_losses.append(loss)
                 logged_losses_test.append(test_loss)
         else:
@@ -236,10 +244,17 @@ if learn:
             # loss calculation
             if epoch % log_rate == 0:
                 # SSR
-                train_predicted = forward(array_X, weights, biases)[-1]
-                test_predicted = forward(array_X_test, weights, biases)[-1]
-                loss = np.sum(np.subtract(array_Y, train_predicted) ** 2) / train_len
-                test_loss = np.sum(np.subtract(array_Y_test, test_predicted) ** 2) / test_len
+                if messy_plot:
+                    tc_test = tc = random.randint(tensortime, test_len)
+                    train_predicted = nodes[-1]
+                    test_predicted = forward(array_X_test[tc_test - tensortime * test_frac:tc_test], weights, biases)[-1]
+                    loss = np.sum(np.subtract(array_Y, train_predicted) ** 2) / train_len
+                    test_loss = np.sum(np.subtract(array_Y_test, test_predicted) ** 2) / test_len
+                else:
+                    train_predicted = forward(array_X, weights, biases)[-1]
+                    test_predicted = forward(array_X_test, weights, biases)[-1]
+                    loss = np.sum(np.subtract(array_Y, train_predicted) ** 2) / train_len
+                    test_loss = np.sum(np.subtract(array_Y_test, test_predicted) ** 2) / test_len
                 logged_losses.append(loss)
                 logged_losses_test.append(test_loss)
 

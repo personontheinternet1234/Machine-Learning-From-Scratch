@@ -207,4 +207,4 @@ for i in tqdm(range(len(X)), ncols=150, desc="Generating CM"):
     y_pred.append(np.nanargmax(E))
 
 cm = confusion_matrix(y_true, y_pred, normalize="true")
-plot_cm(cm, title="Train Results")
+plot_cm(cm, title="CNN Train Results")
