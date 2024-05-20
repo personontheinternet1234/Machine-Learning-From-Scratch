@@ -130,7 +130,7 @@ trim_value = 4200
 
 # user information
 graphs = True
-messy_plot = True
+messy_plot = False
 normalization = "true"
 log_rate = 10000
 nn_version = "1.4"
@@ -202,9 +202,9 @@ if learn:
         if sgd:
             # SGD
             # test choice
-            training_choice = random.randint(0, train_len - 1)
-            inputs = X[training_choice]
-            expected = Y[training_choice]
+            tc = random.randint(0, train_len - 1)
+            inputs = X[tc]
+            expected = Y[tc]
 
             # forward pass
             nodes = forward(inputs, weights, biases)
@@ -219,7 +219,7 @@ if learn:
                     tc_test = random.randint(0, test_len - 1)
                     train_predicted = nodes[-1]
                     test_predicted = forward(X_test[tc_test], weights, biases)[-1]
-                    loss = np.sum(np.subtract(Y[tc], train_predicted) ** 2)
+                    loss = np.sum(np.subtract(expected, train_predicted) ** 2)
                     test_loss = np.sum(np.subtract(Y_test[tc_test], test_predicted) ** 2)
                 else:
                     train_predicted = forward(array_X, weights, biases)[-1]
@@ -245,11 +245,11 @@ if learn:
             if epoch % log_rate == 0:
                 # SSR
                 if messy_plot:
-                    tc_test = tc = random.randint(tensortime, test_len)
+                    tc_test = random.randint(tensortime, test_len)
                     train_predicted = nodes[-1]
-                    test_predicted = forward(array_X_test[tc_test - tensortime * test_frac:tc_test], weights, biases)[-1]
-                    loss = np.sum(np.subtract(array_Y, train_predicted) ** 2) / train_len
-                    test_loss = np.sum(np.subtract(array_Y_test, test_predicted) ** 2) / test_len
+                    test_predicted = forward(array_X_test[math.floor(tc_test - tensortime * test_frac):tc_test], weights, biases)[-1]
+                    loss = np.sum(np.subtract(expected, train_predicted) ** 2) / tensortime
+                    test_loss = np.sum(np.subtract(array_Y_test[math.floor(tc_test - tensortime * test_frac):tc_test], test_predicted) ** 2) / tensortime
                 else:
                     train_predicted = forward(array_X, weights, biases)[-1]
                     test_predicted = forward(array_X_test, weights, biases)[-1]
