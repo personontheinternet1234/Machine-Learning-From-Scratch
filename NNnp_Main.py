@@ -85,16 +85,16 @@ def tensor_backward(nodes, expected, weights, biases):
     d_b = -2 * (expected - nodes[-1])
     d_biases.insert(0, d_b)
     for layer in range(-1, -len(nodes) + 1, -1):
-        d_w = np.reshape(nodes[layer - 1], (tensortime, layer_sizes[layer - 1], 1)) * d_b
+        d_w = np.reshape(nodes[layer - 1], (tensor_time, layer_sizes[layer - 1], 1)) * d_b
         d_weights.insert(0, d_w)
-        d_b = np.reshape(np.array([np.sum(weights[layer] * d_b, axis=2)]), (tensortime, 1, layer_sizes[layer - 1]))
+        d_b = np.reshape(np.array([np.sum(weights[layer] * d_b, axis=2)]), (tensor_time, 1, layer_sizes[layer - 1]))
         d_biases.insert(0, d_b)
-    d_w = np.reshape(nodes[0], (tensortime, layer_sizes[0], 1)) * d_b
+    d_w = np.reshape(nodes[0], (tensor_time, layer_sizes[0], 1)) * d_b
     d_weights.insert(0, d_w)
 
     for layer in range(len(nodes) - 1):
-        weights[layer] -= learning_rate * np.sum((d_weights[layer] + (alpha / tensortime) * weights[layer]), axis=0) / tensortime
-        biases[layer] -= learning_rate * np.sum(d_biases[layer], axis=0) / tensortime
+        weights[layer] -= learning_rate * np.sum((d_weights[layer] + (alpha / tensor_time) * weights[layer]), axis=0) / tensor_time
+        biases[layer] -= learning_rate * np.sum(d_biases[layer], axis=0) / tensor_time
 
     return weights, biases
 
@@ -114,12 +114,12 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
 
 # network superparams
 learn = True
-sgd = True
-tensortime = 42000
+sgd = False
+tensor_time = 42
 load = False
 save = False
 layer_sizes = [784, 16, 16, 10]
-epochs = 100000
+epochs = 10000
 learning_rate = 0.001
 alpha = 0.1
 
@@ -130,9 +130,10 @@ trim_value = 4200
 
 # user information
 graphs = True
-messy_plot = False
+messy_plot = True
+messy_plot_time = 5
 normalization = "true"
-log_rate = 10000
+log_rate = 10
 nn_version = "1.4"
 
 # file locations
@@ -231,9 +232,9 @@ if learn:
         else:
             # tensors
             # data selection
-            tc = random.randint(tensortime, train_len)
-            inputs = array_X[tc - tensortime:tc]
-            expected = array_Y[tc - tensortime:tc]
+            tc = random.randint(tensor_time, train_len)
+            inputs = array_X[tc - tensor_time:tc]
+            expected = array_Y[tc - tensor_time:tc]
 
             # forward pass
             nodes = forward(inputs, weights, biases)
@@ -245,11 +246,11 @@ if learn:
             if epoch % log_rate == 0:
                 # SSR
                 if messy_plot:
-                    tc_test = random.randint(tensortime, test_len)
+                    tc_test = random.randint(tensor_time, test_len)
                     train_predicted = nodes[-1]
-                    test_predicted = forward(array_X_test[math.floor(tc_test - tensortime * test_frac):tc_test], weights, biases)[-1]
-                    loss = np.sum(np.subtract(expected, train_predicted) ** 2) / tensortime
-                    test_loss = np.sum(np.subtract(array_Y_test[math.floor(tc_test - tensortime * test_frac):tc_test], test_predicted) ** 2) / tensortime
+                    test_predicted = forward(array_X_test[math.floor(tc_test - tensor_time * test_frac):tc_test], weights, biases)[-1]
+                    loss = np.sum(np.subtract(expected, train_predicted) ** 2) / tensor_time
+                    test_loss = np.sum(np.subtract(array_Y_test[math.floor(tc_test - tensor_time * test_frac):tc_test], test_predicted) ** 2) / math.ceil(tensor_time * test_frac)
                 else:
                     train_predicted = forward(array_X, weights, biases)[-1]
                     test_predicted = forward(array_X_test, weights, biases)[-1]
@@ -335,8 +336,8 @@ if graphs:
     plot_cm(cm_test, title="Test Results", labels=label_names)
 
     # graph loss vs epoch
-    plt.plot(range(0, epochs, log_rate), logged_losses, color="blue", label="Train")
-    plt.plot(range(0, epochs, log_rate), logged_losses_test, color="red", label="Test")
+    plt.plot(range(0, epochs, log_rate), logged_losses, color="blue", alpha=0.5, label="Train")
+    plt.plot(range(0, epochs, log_rate), logged_losses_test, color="red", alpha=0.5, label="Test")
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.title("Loss v.s. Epoch")
