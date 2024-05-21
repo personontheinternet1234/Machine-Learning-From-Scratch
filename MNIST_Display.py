@@ -19,7 +19,7 @@ def update(frame):
 
 # params
 frames = 10000
-time_interval = 17
+time_interval = 150
 number = "random"
 val_numbers = list("0123456789")
 
