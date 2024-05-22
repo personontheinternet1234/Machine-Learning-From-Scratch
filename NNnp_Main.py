@@ -110,7 +110,7 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
     plt.show()
 
 
-""" network settings """
+""" program settings """
 
 # network hyperparameters
 # learn = True
@@ -130,7 +130,7 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
 # labels_file_path = "data_labels_keras.csv"
 
 # output configuration
-# graphs = True
+# graph_results = True
 # cm_normalization = "true"
 # eval_batching = True
 # eval_batch_size = 5
