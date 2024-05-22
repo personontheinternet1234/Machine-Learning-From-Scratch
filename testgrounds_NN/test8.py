@@ -19,7 +19,7 @@ def tb():
 
 
 lr = 0.01
-ep = 10000
+ep = 100000
 ins = 2
 hls = 3
 ots = 2
@@ -49,6 +49,7 @@ for i in tqdm(range(ep), ncols=150):
     dW1 = A1_s.T * dB1
     # l1
     dA1 = np.array([np.sum(W1 * dB1, axis=1)])
+    # dA1 = np.dot(W1, dB1.T).T  # this works, but slower somehow
     dB0 = dA1
     dW0 = A0_s.T * dB0
 
