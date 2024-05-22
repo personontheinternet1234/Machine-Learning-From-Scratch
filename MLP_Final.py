@@ -48,3 +48,9 @@ class MLP:
 
     def forward(self, inputs, activation):
         self.activation = activations[activation]
+
+    def backward(self, solver):
+        if solver == "Mini-batch":
+            ...
+        elif solver == "Stochastic":
+            ...
