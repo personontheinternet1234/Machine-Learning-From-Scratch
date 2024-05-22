@@ -120,6 +120,7 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
 # max_iter = 10000
 # learning_rate = 0.001
 # alpha = 0.1
+# momentum? = 0.9
 # batch_size = 42
 # validation_frac = 0.3
 
