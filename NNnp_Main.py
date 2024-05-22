@@ -112,6 +112,37 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
 
 """ network settings """
 
+# network hyperparameters
+# learn = True
+# activation = "Leaky ReLU"
+# solver = "SGD"
+# hidden_layer_sizes = [16, 16]
+# max_iter = 10000
+# learning_rate = 0.001
+# alpha = 0.1
+# batch_size = 42
+# validation_frac = 0.3
+
+# dataset parameters
+# trim_dataset = False
+# trim_frac = 0.1
+# values_file_path = "data_values_keras.csv"
+# labels_file_path = "data_labels_keras.csv"
+
+# output configuration
+# graphs = True
+# cm_normalization = "true"
+# eval_batching = True
+# eval_batch_size = 5
+# eval_interval = 10
+
+# model settings
+# network_version = "1.5"
+# load_trained = False
+# save_trained = False
+# weights_location = "weights_keras.txt"
+# biases_location = "biases_keras.txt"
+
 # network superparams
 learn = True
 sgd = False
@@ -144,7 +175,7 @@ biases_location = "biases_keras.txt"
 
 """ network generation """
 
-print(f"The Garden (Version {nn_version})")
+print(f"Neural Network From Scratch (Version {nn_version})")
 
 # load dataset
 df_values = np.array(pd.read_csv(f"data/{df_values_location}")).tolist()
