@@ -57,34 +57,36 @@ class MLP:
             working_nodes.append(activations)
         self.nodes = working_nodes
 
-    def sgd_backward(self, nodes, expected, weights, biases, solver, learning_rate, alpha):
+    def sgd_backward(self, expected, learning_rate, alpha, train_len):
         # initialize gradient lists
         d_weights = []
         d_biases = []
 
-        d_b = -2 * (expected - nodes[-1])
+        d_b = -2 * (expected - self.nodes[-1])
         d_biases.insert(0, d_b)
-        for layer in range(-1, -len(nodes) + 1, -1):
-            d_w = nodes[layer - 1].T * d_b
+        for layer in range(-1, -len(self.nodes) + 1, -1):
+            d_w = self.nodes[layer - 1].T * d_b
             d_weights.insert(0, d_w)
-            d_b = np.array([np.sum(weights[layer] * d_b, axis=1)])
+            d_b = np.array([np.sum(self.weights[layer] * d_b, axis=1)])
             d_biases.insert(0, d_b)
-        d_w = nodes[0].T * d_b
+        d_w = self.nodes[0].T * d_b
         d_weights.insert(0, d_w)
 
-        for layer in range(len(nodes) - 1):
-            weights[layer] -= learning_rate * (d_weights[layer] + (alpha / train_len) * weights[layer])
-            biases[layer] -= learning_rate * d_biases[layer]
+        # haven't tried it yet-- this code could cause problems.
+        for layer in range(len(self.nodes) - 1):
+            self.weights[layer] -= learning_rate * (d_weights[layer] + (alpha / train_len) * self.weights[layer])
+            self.biases[layer] -= learning_rate * d_biases[layer]
 
-        return weights, biases
-
-    def fit(self, data_samples_and_answers, max_iter, solver, learning_rate, alpha, momentum, batch_size=200):
+    def fit(self, data_samples_and_answers, max_iter, solver, learning_rate, alpha, momentum, train_len, batch_size=200):
         train_len = len(data_samples_and_answers)
 
         if solver == "Mini-batch":
             ...
         elif solver == "Stochastic":
-            ...
+            for i in range(len(max_iter)):
+                # replace data_samples_and_answers[0], [1] with whatever the real answers are yk
+                self.forward(self, data_samples_and_answers[0])
+                self.sgd_backward(data_samples_and_answers[1], learning_rate, alpha, train_len)
 
 neural_net = MLP()
 
