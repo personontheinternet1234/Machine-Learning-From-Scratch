@@ -41,16 +41,28 @@ activations = {
 
 
 class MLP:
-    def __init__(self, weights, biases, hidden_layer_sizes):
+    def __init__(self, weights, biases, activation, hidden_layer_sizes):
         self.weights = weights
         self.biases = biases
         self.hidden_layer_sizes = hidden_layer_sizes
+        self.activation = activation
 
-    def forward(self, inputs, activation):
-        self.activation = activations[activation]
+    def _get_activation(self):
+        ...
 
-    def backward(self, solver):
+    def forward(self, inputs):
+        ...
+
+    def backward(self):
+        ...
+
+    def fit(self, solver, max_iter, learning_rate, alpha, momentum, batch_size):
         if solver == "Mini-batch":
             ...
         elif solver == "Stochastic":
             ...
+
+neural_net = MLP()
+
+neural_net.forward()
+neural_net.backward()
