@@ -23,28 +23,27 @@ with open(f"saved/biases_keras.txt", "r") as f:
 
 
 class MLP:
-    def __init__(self, load=False, weights_loc="none", biases_loc="none", layer_sizes=[784, 100, 10], activation="ReLU"):
-        self.version = "1.5"
+    def __init__(self, load=False, weights="none", biases="none", layer_sizes=[784, 100, 10], activation="ReLU"):
+        self.version = "1.6"
         self.load = load
-        self.weights, self.biases = self._get_parameters(weights_loc, biases_loc, layer_sizes)
+        self.weights, self.biases = self._get_parameters(weights, biases, layer_sizes)
         self.layer_sizes = layer_sizes
         self.activation = self._get_activation(activation)
-        self.solver = self._get_solver(solver)
-        self.alpha = alpha
-        self.batch_size = batch_size
-        self.learning_rate = learning_rate
-        self.max_iter = max_iter
-        self.momentum = momentum
+        self.graph_results = False
 
-    def _get_parameters(self, weights_loc, biases_loc, layer_sizes):
-        if weights_loc == "none":
-            weights = "a"
+    def _get_parameters(self, weights, biases):
+        if weights == "none":
+            weights=[]
+            for i in range(len(self.layer_sizes) - 1):
+                weights.append(self.xavier_initialize(self.layer_sizes[i], self.layer_sizes[i + 1]))
         else:
-            weights = "b"
-        if biases_loc == "none":
-            biases = "a"
+            weights = weights
+        if biases == "none":
+            biases = biases
         else:
-            biases="b"
+            biases=[]
+            for i in range(len(self.layer_sizes) - 1):
+                biases.append(np.zeros((1, self.layer_sizes[i + 1])))
         return weights, biases
 
 
@@ -80,6 +79,10 @@ class MLP:
         else:
             raise ValueError(f"'{name}' is an invalid solving method.")
 
+    def xavier_initialize(self, length, width):
+        array = np.random.randn(length, width) * math.sqrt(2 / length)
+        return array
+
     def forward(self, inputs):
         nodes = [inputs]
         for layer in range(len(self.layer_sizes) - 1):
@@ -114,9 +117,10 @@ class MLP:
     def set_hyperparameters(self):
 
     def set_output_configuration(self, graph_results=False, cm_normalization="true", eval_batching=True, eval_batch_size=5, eval_interval=10):
-
+        self.graph_results = graph_results
 
     def fit(self, values, labels, solver="Mini-Batch", alpha=0.1, batch_size="auto", learning_rate=0.001, max_iter=200, momentum=0.9):
+        self.solver = self._get_solver(solver)
         for epoch in range(self.max_iter):
             nodes = self.forward()
 
