@@ -22,19 +22,22 @@ with open(f"saved/biases_keras.txt", "r") as f:
         keras_biases.append(np.array(ast.literal_eval(line)))
 
 
-def l_relu(values):
-    output = np.maximum(0.1 * values, values)
-    return output
-
-
 class MLP:
-    def __init__(self, weights, biases, layer_sizes, activation, solver, alpha, batch_size, learning_rate, max_iter, momentum):
+    def __init__(self, load=False, weights=[], biases=[], layer_sizes=[100], activation="ReLU"):
         self.version = "1.5"
+        self.load = load
         self.weights = weights
         self.biases = biases
         self.layer_sizes = layer_sizes
+        self.activation = self._get_activation(activation)
+        self.solver = self._get_solver(solver)
+        self.alpha = alpha
+        self.batch_size = batch_size
+        self.learning_rate = learning_rate
+        self.max_iter = max_iter
+        self.momentum = momentum
 
-    def activation_function(self, name):
+    def _get_activation(self, name):
         if name == "Sigmoid":
             return {
                 "normal": lambda x: 1 / (1 + np.exp(-x)),
@@ -58,7 +61,9 @@ class MLP:
         else:
             raise ValueError(f"[{name}] is an invalid activation function.")
 
-    def forward(self, inputs, activation_name):
+    def _get_solver(self, name):
+
+    def forward(self, inputs):
         nodes = [inputs]
         for layer in range(len(self.layer_sizes) - 1):
             node_layer = self.activation_function(activation_name)["normal"](np.matmul(nodes[-1], self.weights[layer]) + self.biases[layer])  # consider renaming
@@ -69,7 +74,7 @@ class MLP:
         predicted = np.nanargmax(self.forward(inputs)[-1])
         return predicted
 
-    def sgd_backward(self, expected, learning_rate, alpha, train_len):
+    def sgd_backward(self, values, predicted, expected):
         # initialize gradient lists
         d_weights = []
         d_biases = []
@@ -89,17 +94,9 @@ class MLP:
             self.weights[layer] -= learning_rate * (d_weights[layer] + (alpha / train_len) * self.weights[layer])
             self.biases[layer] -= learning_rate * d_biases[layer]
 
-    def fit(self, data_samples_and_answers, max_iter, solver, learning_rate, alpha, momentum, train_len,
-            batch_size=200):
-        train_len = len(data_samples_and_answers)
-
-        if solver == "Mini-batch":
-            ...
-        elif solver == "Stochastic":
-            for i in range(len(max_iter)):
-                # replace data_samples_and_answers[0], [1] with whatever the real answers are yk
-                self.forward(self, data_samples_and_answers[0])
-                self.sgd_backward(data_samples_and_answers[1], learning_rate, alpha, train_len)
+    def fit(self, values, labels, solver="Mini-Batch", alpha=0.1, batch_size="auto", learning_rate=0.001, max_iter=200, momentum=0.9):
+        for epoch in range(self.max_iter):
+            nodes = self.forward()
 
 
 neural_net = MLP(weights=keras_weights, biases=keras_biases, layer_sizes=[784, 16, 16, 10])
