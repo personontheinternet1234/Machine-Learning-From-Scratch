@@ -10,52 +10,64 @@ from matplotlib import pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from tqdm import tqdm
 
+from PIL import Image
+
+keras_weights = []
+keras_biases = []
+with open(f"saved/weights_keras.txt", "r") as f:
+    for line in f:
+        keras_weights.append(np.array(ast.literal_eval(line)))
+with open(f"saved/biases_keras.txt", "r") as f:
+    for line in f:
+        keras_biases.append(np.array(ast.literal_eval(line)))
+
 
 def l_relu(values):
-    return {
-        "function": np.maximum(0.1 * values, values),
-        "derivative": np.where(values > 0, 1, 0.1)
-    }
-
-def relu(values):
-    output = np.maximum(0, values)
+    output = np.maximum(0.1 * values, values)
     return output
-
-
-def sigmoid(values):
-    output = 1 / (1 + np.exp(-1 * values))
-    return output
-
-
-def tanh(values):
-    output = np.tanh(values)
-    return output
-
-
-activations = {
-    "Leaky ReLU": l_relu,
-    "ReLU": relu,
-    "Sigmoid": sigmoid,
-    "Tanh": tanh
-}
 
 
 class MLP:
-    def __init__(self, weights, biases, layer_sizes):
+    def __init__(self, weights, biases, layer_sizes, activation, solver, max_iter, learning_rate, alpha, momentum, batch_size, ):
+        self.version = "1.5"
         self.weights = weights
         self.biases = biases
         self.layer_sizes = layer_sizes
-        self.nodes = []
 
-    def _get_activation(self):
-        ...
+    def activation_function(self, name):
+        if name == "Sigmoid":
+            return {
+                "normal": lambda x: 1 / (1 + np.exp(-x)),
+                "derivative": lambda x: x * (1 - x)
+            }
+        elif name == "Tanh":
+            return {
+                "normal": lambda x: np.tanh(x),
+                "derivative": lambda x: (np.cosh(x)) ** -2
+            }
+        elif name == "ReLU":
+            return {
+                "normal": lambda x: np.maximum(0, x),
+                "derivative": lambda x: np.where(x > 0, 1, 0)
+            }
+        elif name == "Leaky ReLU":
+            return {
+                "normal": lambda x: np.maximum(0.1 * x, x),
+                "derivative": lambda x: np.where(x > 0, 1, 0.1)
+            }
+        else:
+            raise ValueError(f"[{name}] is an invalid activation function.")
 
-    def forward(self, inputs):
-        working_nodes = [inputs]
+    def forward(self, inputs, activation_name):
+        nodes = [inputs]
         for layer in range(len(self.layer_sizes) - 1):
-            activations = l_relu(np.matmul(working_nodes[-1], self.weights[layer]) + self.biases[layer])  # consider renaming
-            working_nodes.append(activations)
-        self.nodes = working_nodes
+            node_layer = self.activation_function(activation_name)["normal"](np.matmul(nodes[-1], self.weights[layer]) + self.biases[layer])  # consider renaming
+            nodes.append(node_layer)
+        return nodes
+
+    def predict(self, inputs):
+        predicted = np.nanargmax(self.forward(inputs)[-1])
+        return predicted
 
     def sgd_backward(self, expected, learning_rate, alpha, train_len):
         # initialize gradient lists
@@ -77,7 +89,8 @@ class MLP:
             self.weights[layer] -= learning_rate * (d_weights[layer] + (alpha / train_len) * self.weights[layer])
             self.biases[layer] -= learning_rate * d_biases[layer]
 
-    def fit(self, data_samples_and_answers, max_iter, solver, learning_rate, alpha, momentum, train_len, batch_size=200):
+    def fit(self, data_samples_and_answers, max_iter, solver, learning_rate, alpha, momentum, train_len,
+            batch_size=200):
         train_len = len(data_samples_and_answers)
 
         if solver == "Mini-batch":
@@ -88,7 +101,15 @@ class MLP:
                 self.forward(self, data_samples_and_answers[0])
                 self.sgd_backward(data_samples_and_answers[1], learning_rate, alpha, train_len)
 
-neural_net = MLP()
 
-neural_net.forward()
-neural_net.backward()
+neural_net = MLP(weights=keras_weights, biases=keras_biases, layer_sizes=[784, 16, 16, 10])
+
+img = Image.open(f"saved/user_number.jpeg")
+# grayscale image
+gray_img = img.convert("L")
+# convert to numpy array
+forward_layer = np.array(list(gray_img.getdata())) / 255
+
+print(neural_net.forward(forward_layer, activation_name="LeakyReLU")[-1])
+
+print(neural_net.predict(forward_layer))
