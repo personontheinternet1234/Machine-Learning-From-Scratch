@@ -23,11 +23,10 @@ with open(f"saved/biases_keras.txt", "r") as f:
 
 
 class MLP:
-    def __init__(self, load=False, weights=[], biases=[], layer_sizes=[100], activation="ReLU"):
+    def __init__(self, load=False, weights_loc="none", biases_loc="none", layer_sizes=[784, 100, 10], activation="ReLU"):
         self.version = "1.5"
         self.load = load
-        self.weights = weights
-        self.biases = biases
+        self.weights, self.biases = self._get_parameters(weights_loc, biases_loc, layer_sizes)
         self.layer_sizes = layer_sizes
         self.activation = self._get_activation(activation)
         self.solver = self._get_solver(solver)
@@ -37,36 +36,54 @@ class MLP:
         self.max_iter = max_iter
         self.momentum = momentum
 
+    def _get_parameters(self, weights_loc, biases_loc, layer_sizes):
+        if weights_loc == "none":
+            weights = "a"
+        else:
+            weights = "b"
+        if biases_loc == "none":
+            biases = "a"
+        else:
+            biases="b"
+        return weights, biases
+
+
     def _get_activation(self, name):
         if name == "Sigmoid":
             return {
-                "normal": lambda x: 1 / (1 + np.exp(-x)),
+                "forward": lambda x: 1 / (1 + np.exp(-x)),
                 "derivative": lambda x: x * (1 - x)
             }
         elif name == "Tanh":
             return {
-                "normal": lambda x: np.tanh(x),
+                "forward": lambda x: np.tanh(x),
                 "derivative": lambda x: (np.cosh(x)) ** -2
             }
         elif name == "ReLU":
             return {
-                "normal": lambda x: np.maximum(0, x),
+                "forward": lambda x: np.maximum(0, x),
                 "derivative": lambda x: np.where(x > 0, 1, 0)
             }
         elif name == "Leaky ReLU":
             return {
-                "normal": lambda x: np.maximum(0.1 * x, x),
+                "forward": lambda x: np.maximum(0.1 * x, x),
                 "derivative": lambda x: np.where(x > 0, 1, 0.1)
             }
         else:
-            raise ValueError(f"[{name}] is an invalid activation function.")
+            raise ValueError(f"'{name}' is an invalid activation function.")
 
     def _get_solver(self, name):
+        if name == "SGD":
+            ...
+        elif name == "Mini-Batch":
+            ...
+        else:
+            raise ValueError(f"'{name}' is an invalid solving method.")
 
     def forward(self, inputs):
         nodes = [inputs]
         for layer in range(len(self.layer_sizes) - 1):
-            node_layer = self.activation_function(activation_name)["normal"](np.matmul(nodes[-1], self.weights[layer]) + self.biases[layer])  # consider renaming
+            node_layer = self.activation["forward"](np.matmul(nodes[-1], self.weights[layer]) + self.biases[layer])  # consider renaming
             nodes.append(node_layer)
         return nodes
 
@@ -93,6 +110,11 @@ class MLP:
         for layer in range(len(self.nodes) - 1):
             self.weights[layer] -= learning_rate * (d_weights[layer] + (alpha / train_len) * self.weights[layer])
             self.biases[layer] -= learning_rate * d_biases[layer]
+
+    def set_hyperparameters(self):
+
+    def set_output_configuration(self, graph_results=False, cm_normalization="true", eval_batching=True, eval_batch_size=5, eval_interval=10):
+
 
     def fit(self, values, labels, solver="Mini-Batch", alpha=0.1, batch_size="auto", learning_rate=0.001, max_iter=200, momentum=0.9):
         for epoch in range(self.max_iter):
