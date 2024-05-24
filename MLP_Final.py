@@ -28,7 +28,7 @@ def l_relu(values):
 
 
 class MLP:
-    def __init__(self, weights, biases, layer_sizes, activation, solver, max_iter, learning_rate, alpha, momentum, batch_size, ):
+    def __init__(self, weights, biases, layer_sizes, activation, solver, alpha, batch_size, learning_rate, max_iter, momentum):
         self.version = "1.5"
         self.weights = weights
         self.biases = biases
