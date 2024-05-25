@@ -156,7 +156,33 @@ img = Image.open(f"saved/user_number.jpeg")
 gray_img = img.convert("L")
 test_input = np.array(list(gray_img.getdata())) / 255
 
+# load MNIST data
+df_values = np.array(pd.read_csv(f"data/data_values_keras.csv")).tolist()
+for i in tqdm(range(len(df_values)), ncols=150, desc="Reformatting Data Values"):
+    df_values[i] = np.array([df_values[i]])
+df_labels = np.array(pd.read_csv(f"data/data_labels_keras.csv")).tolist()
+for i in tqdm(range(len(df_labels)), ncols=150, desc="Reformatting Data Labels"):
+    df_labels[i] = np.array([df_labels[i]])
+
+def test_train_split(data, test_size):
+    random.shuffle(data)
+    test = data[0:round(len(data) * test_size)]
+    train = data[round(len(data) * test_size):]
+    return train, test
+
+# split training and testing data
+train, test = test_train_split(list(zip(df_values, df_labels)), test_size=0.3)
+# unzip training and testing data
+X, Y = zip(*train)
+X_test, Y_test = zip(*test)
+X, Y = list(X), list(Y)
+# reformat training and testing data
+X_test, Y_test = list(X_test), list(Y_test)
+array_X, array_Y = np.array(X), np.array(Y)
+array_X_test, array_Y_test = np.array(X_test), np.array(Y_test)
+
 # class testing
 neural_net = MLP(weights=keras_weights, biases=keras_biases, layer_sizes=[784, 16, 16, 10], activation="Leaky ReLU")
+neural_net.fit(X, Y)
 print(neural_net.forward(test_input)[-1])
 print(neural_net.predict(test_input))
