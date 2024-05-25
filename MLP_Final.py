@@ -61,7 +61,7 @@ class MLP:
 
     def _get_solver(self, name):
         if name == "SGD":
-            def update(nodes, Y, weights, biases):
+            def update(nodes, Y, weights, biases, learning_rate, alpha, momentum):
                 d_weights = []
                 d_biases = []
 
@@ -76,13 +76,31 @@ class MLP:
                 d_weights.insert(0, d_w)
 
                 for layer in range(len(nodes) - 1):
-                    weights[layer] -= learning_rate * (d_weights[layer] + (alpha / train_len) * weights[layer])
+                    weights[layer] -= learning_rate * (d_weights[layer] + (alpha / self.train_len) * weights[layer])
                     biases[layer] -= learning_rate * d_biases[layer]
 
                 return weights, biases
+
         elif name == "Mini-Batch":
-            def update():
-                ...
+            def update(nodes, Y, weights, biases, learning_rate, alpha, momentum):
+                d_weights = []
+                d_biases = []
+
+                d_b = -2 * (Y - nodes[-1])
+                d_biases.insert(0, d_b)
+                for layer in range(-1, -len(nodes) + 1, -1):
+                    d_w = np.reshape(nodes[layer - 1], (self.batch_size, self.layer_sizes[layer - 1], 1)) * d_b
+                    d_weights.insert(0, d_w)
+                    d_b = np.reshape(np.array([np.sum(weights[layer] * d_b, axis=2)]), (self.batch_size, 1, self.layer_sizes[layer - 1]))
+                    d_biases.insert(0, d_b)
+                d_w = np.reshape(nodes[0], (self.batch_size, self.layer_sizes[0], 1)) * d_b
+                d_weights.insert(0, d_w)
+
+                for layer in range(len(nodes) - 1):
+                    weights[layer] -= learning_rate * np.sum((d_weights[layer] + (alpha / self.batch_size) * weights[layer]), axis=0) / self.batch_size
+                    biases[layer] -= learning_rate * np.sum(d_biases[layer], axis=0) / self.batch_size
+
+                return weights, biases
         else:
             raise ValueError(f"'{name}' is an invalid solving method.")
 
@@ -93,18 +111,15 @@ class MLP:
     def forward(self, inputs):
         nodes = [inputs]
         for layer in range(len(self.layer_sizes) - 1):
-            node_layer = self.activation["forward"](np.matmul(nodes[-1], self.weights[layer]) + self.biases[layer])  # consider renaming
+            node_layer = self.activation["forward"](np.matmul(nodes[-1], self.weights[layer]) + self.biases[layer])
             nodes.append(node_layer)
         return nodes
-
-    def backward(self, values, predicted, expected):
-        ...
 
     def predict(self, inputs):
         predicted = np.nanargmax(self.forward(inputs)[-1])
         return predicted
 
-    def set_output_configuration(self, graph_results=False, cm_normalization="true", eval_batching=True, eval_batch_size=5, eval_interval=10):
+    def set_output_configuration(self, graph_results=False, cm_normalization="true", eval_batching=True, eval_batch_size="auto", eval_interval=10):
         self.graph_results = graph_results
         self.cm_normalization = cm_normalization
         self.eval_batching = eval_batching
@@ -113,13 +128,18 @@ class MLP:
 
     def fit(self, X, Y, solver="Mini-Batch", alpha=0.1, batch_size="auto", learning_rate=0.001, max_iter=200, momentum=0.9):
         self.solver = self._get_solver(solver)
+        self.train_len = len(X)
+        if batch_size == "auto":
+            self.batch_size = min(20, len(X))
+        else:
+            self.batch_size = batch_size
         train_len = len(X)
         for epoch in range(max_iter):
             tc = random.randint(0, train_len - 1)
             inputs = X[tc]
             expected = Y[tc]
-            nodes = self.forward()
-            self.weights, self.biases = self.backward()
+            nodes = self.forward(inputs)
+            self.weights, self.biases = self.solver["update"](nodes, expected, self.weights, self.biases, learning_rate, alpha, momentum)
 
 
 # loading data for testing
