@@ -12,15 +12,20 @@ from tqdm import tqdm
 
 
 class MLP:
-    def __init__(self, load=False, weights="none", biases="none", layer_sizes=[784, 100, 10], activation="ReLU"):
+
+    def __init__(self, load=False, weights="none", biases="none", layer_sizes="auto", activation="ReLU"):
         self.version = "1.6"
         self.load = load
-        self.weights, self.biases = self._get_parameters(weights, biases)
-        self.layer_sizes = layer_sizes
+        self.weights, self.biases = self.set_parameters(weights, biases)
+        if layer_sizes == "auto":
+            self.layer_sizes = [784, 100, 10]
+        else:
+            self.layer_sizes = layer_sizes
         self.activation = self._get_activation(activation)
         self.graph_results = False
+        self.solver = False
 
-    def _get_parameters(self, weights, biases):
+    def set_parameters(self, weights, biases):
         if weights == "none":
             weights = []
             for i in range(len(self.layer_sizes) - 1):
@@ -34,6 +39,10 @@ class MLP:
         else:
             biases = biases
         return weights, biases
+
+    def xavier_initialize(self, length, width):
+        array = np.random.randn(length, width) * math.sqrt(2 / length)
+        return array
 
     def _get_activation(self, name):
         if name == "Sigmoid":
@@ -81,6 +90,7 @@ class MLP:
 
                 return weights, biases
 
+            return {"update": update}
         elif name == "Mini-Batch":
             def update(nodes, Y, weights, biases, learning_rate, alpha, momentum):
                 d_weights = []
@@ -91,22 +101,22 @@ class MLP:
                 for layer in range(-1, -len(nodes) + 1, -1):
                     d_w = np.reshape(nodes[layer - 1], (self.batch_size, self.layer_sizes[layer - 1], 1)) * d_b
                     d_weights.insert(0, d_w)
-                    d_b = np.reshape(np.array([np.sum(weights[layer] * d_b, axis=2)]), (self.batch_size, 1, self.layer_sizes[layer - 1]))
+                    d_b = np.reshape(np.array([np.sum(weights[layer] * d_b, axis=2)]),
+                                     (self.batch_size, 1, self.layer_sizes[layer - 1]))
                     d_biases.insert(0, d_b)
                 d_w = np.reshape(nodes[0], (self.batch_size, self.layer_sizes[0], 1)) * d_b
                 d_weights.insert(0, d_w)
 
                 for layer in range(len(nodes) - 1):
-                    weights[layer] -= learning_rate * np.sum((d_weights[layer] + (alpha / self.batch_size) * weights[layer]), axis=0) / self.batch_size
+                    weights[layer] -= learning_rate * np.sum(
+                        (d_weights[layer] + (alpha / self.batch_size) * weights[layer]), axis=0) / self.batch_size
                     biases[layer] -= learning_rate * np.sum(d_biases[layer], axis=0) / self.batch_size
 
                 return weights, biases
+
+            return {"update": update}
         else:
             raise ValueError(f"'{name}' is an invalid solving method.")
-
-    def xavier_initialize(self, length, width):
-        array = np.random.randn(length, width) * math.sqrt(2 / length)
-        return array
 
     def forward(self, inputs):
         nodes = [inputs]
@@ -119,14 +129,8 @@ class MLP:
         predicted = np.nanargmax(self.forward(inputs)[-1])
         return predicted
 
-    def set_output_configuration(self, graph_results=False, cm_normalization="true", eval_batching=True, eval_batch_size="auto", eval_interval=10):
-        self.graph_results = graph_results
-        self.cm_normalization = cm_normalization
-        self.eval_batching = eval_batching
-        self.eval_batch_size = eval_batch_size
-        self.eval_interval = eval_interval
-
-    def fit(self, X, Y, solver="Mini-Batch", alpha=0.1, batch_size="auto", learning_rate=0.001, max_iter=200, momentum=0.9):
+    def fit(self, X, Y, solver="Mini-Batch", alpha=0.1, batch_size="auto", learning_rate=0.001, max_iter=200,
+            momentum=0.9):
         self.solver = self._get_solver(solver)
         self.train_len = len(X)
         if batch_size == "auto":
@@ -134,16 +138,26 @@ class MLP:
         else:
             self.batch_size = batch_size
         train_len = len(X)
-        for epoch in range(max_iter):
+        for epoch in tqdm(range(max_iter)):
             tc = random.randint(0, train_len - 1)
             inputs = X[tc]
             expected = Y[tc]
             nodes = self.forward(inputs)
-            self.weights, self.biases = self.solver["update"](nodes, expected, self.weights, self.biases, learning_rate, alpha, momentum)
+            self.weights, self.biases = self.solver["update"](nodes, expected, self.weights, self.biases, learning_rate,
+                                                              alpha, momentum)
+
+    def configure_output(self, graph_results=False, cm_normalization="true", eval_batching=True, eval_batch_size="auto",
+                         eval_interval=10):
+        self.graph_results = graph_results
+        self.cm_normalization = cm_normalization
+        self.eval_batching = eval_batching
+        self.eval_batch_size = eval_batch_size
+        self.eval_interval = eval_interval
 
 
 # loading data for testing
 from PIL import Image
+
 keras_weights = []
 keras_biases = []
 with open(f"saved/weights_keras.txt", "r") as f:
@@ -164,11 +178,13 @@ df_labels = np.array(pd.read_csv(f"data/data_labels_keras.csv")).tolist()
 for i in tqdm(range(len(df_labels)), ncols=150, desc="Reformatting Data Labels"):
     df_labels[i] = np.array([df_labels[i]])
 
+
 def test_train_split(data, test_size):
     random.shuffle(data)
     test = data[0:round(len(data) * test_size)]
     train = data[round(len(data) * test_size):]
     return train, test
+
 
 # split training and testing data
 train, test = test_train_split(list(zip(df_values, df_labels)), test_size=0.3)
@@ -183,6 +199,6 @@ array_X_test, array_Y_test = np.array(X_test), np.array(Y_test)
 
 # class testing
 neural_net = MLP(weights=keras_weights, biases=keras_biases, layer_sizes=[784, 16, 16, 10], activation="Leaky ReLU")
-neural_net.fit(X, Y)
+neural_net.fit(X, Y, solver="SGD")
 print(neural_net.forward(test_input)[-1])
 print(neural_net.predict(test_input))
