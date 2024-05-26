@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 class MLP:
 
-    def __init__(self, load=False, weights="none", biases="none", layer_sizes="auto", activation="ReLU"):
+    def __init__(self, load=False, weights="none", biases="none", layer_sizes="auto", activation="relu"):
         self.version = "1.6"
         self.load = load
         self.weights, self.biases = self.set_parameters(weights, biases)
@@ -22,8 +22,13 @@ class MLP:
         else:
             self.layer_sizes = layer_sizes
         self.activation = self._get_activation(activation)
-        self.graph_results = False
         self.solver = False
+        self.batch_size = None
+        self.train_len = 1
+        self.loss_reporting = False
+        self.eval_batching = False
+        self.eval_batch_size = None
+        self.eval_interval = None
 
     def set_parameters(self, weights, biases):
         if weights == "none":
@@ -45,31 +50,31 @@ class MLP:
         return array
 
     def _get_activation(self, name):
-        if name == "Sigmoid":
+        if name == "sigmoid":
             return {
                 "forward": lambda x: 1 / (1 + np.exp(-x)),
                 "derivative": lambda x: x * (1 - x)
             }
-        elif name == "Tanh":
+        elif name == "tanh":
             return {
                 "forward": lambda x: np.tanh(x),
                 "derivative": lambda x: 1 - np.tanh(x) ** 2
             }
-        elif name == "ReLU":
+        elif name == "relu":
             return {
                 "forward": lambda x: np.maximum(0, x),
                 "derivative": lambda x: np.where(x > 0, 1, 0)
             }
-        elif name == "Leaky ReLU":
+        elif name == "leaky relu":
             return {
                 "forward": lambda x: np.maximum(0.1 * x, x),
                 "derivative": lambda x: np.where(x > 0, 1, 0.1)
             }
         else:
-            raise ValueError(f'"{name}" is an invalid activation function.')
+            raise ValueError(f"'{name}' is an invalid activation function")
 
     def _get_solver(self, name):
-        if name == "SGD":
+        if name == "sgd":
             def update(nodes, Y, weights, biases, learning_rate, alpha, momentum):
                 d_weights = []
                 d_biases = []
@@ -91,7 +96,7 @@ class MLP:
                 return weights, biases
 
             return {"update": update}
-        elif name == "Mini-Batch":
+        elif name == "mini-batch":
             def update(nodes, Y, weights, biases, learning_rate, alpha, momentum):
                 d_weights = []
                 d_biases = []
@@ -101,22 +106,20 @@ class MLP:
                 for layer in range(-1, -len(nodes) + 1, -1):
                     d_w = np.reshape(nodes[layer - 1], (self.batch_size, self.layer_sizes[layer - 1], 1)) * d_b
                     d_weights.insert(0, d_w)
-                    d_b = np.reshape(np.array([np.sum(weights[layer] * d_b, axis=2)]),
-                                     (self.batch_size, 1, self.layer_sizes[layer - 1]))
+                    d_b = np.reshape(np.array([np.sum(weights[layer] * d_b, axis=2)]), (self.batch_size, 1, self.layer_sizes[layer - 1]))
                     d_biases.insert(0, d_b)
                 d_w = np.reshape(nodes[0], (self.batch_size, self.layer_sizes[0], 1)) * d_b
                 d_weights.insert(0, d_w)
 
                 for layer in range(len(nodes) - 1):
-                    weights[layer] -= learning_rate * np.sum(
-                        (d_weights[layer] + (alpha / self.batch_size) * weights[layer]), axis=0) / self.batch_size
+                    weights[layer] -= learning_rate * np.sum((d_weights[layer] + (alpha / self.batch_size) * weights[layer]), axis=0) / self.batch_size
                     biases[layer] -= learning_rate * np.sum(d_biases[layer], axis=0) / self.batch_size
 
                 return weights, biases
 
             return {"update": update}
         else:
-            raise ValueError(f"'{name}' is an invalid solving method.")
+            raise ValueError(f"'{name}' is an invalid solving method")
 
     def forward(self, inputs):
         nodes = [inputs]
@@ -125,33 +128,43 @@ class MLP:
             nodes.append(node_layer)
         return nodes
 
+    def loss(self, ):
+
     def predict(self, inputs):
         predicted = np.nanargmax(self.forward(inputs)[-1])
         return predicted
 
-    def fit(self, X, Y, solver="Mini-Batch", alpha=0.1, batch_size="auto", learning_rate=0.001, max_iter=200,
-            momentum=0.9):
+    def fit(self, X, Y, solver="mini-batch", alpha=0.1, batch_size="auto", learning_rate=0.001, max_iter=200, momentum=0.9):
         self.solver = self._get_solver(solver)
         self.train_len = len(X)
         if batch_size == "auto":
             self.batch_size = min(20, len(X))
+        elif (not isinstance(batch_size, int)) or batch_size <= 1:
+            raise ValueError(f"'{batch_size}' isn't a valid batch size")
         else:
             self.batch_size = batch_size
         train_len = len(X)
-        for epoch in tqdm(range(max_iter)):
-            tc = random.randint(0, train_len - 1)
-            inputs = X[tc]
-            expected = Y[tc]
+        for epoch in tqdm(range(max_iter), ncols=100, desc='fitting'):
+            if solver == "mini-batch":
+                tc = random.randint(self.batch_size, train_len)
+                inputs = array_X[tc - self.batch_size:tc]
+                expected = array_Y[tc - self.batch_size:tc]
+            elif solver == "sgd":
+                tc = random.randint(0, train_len - 1)
+                inputs = X[tc]
+                expected = Y[tc]
             nodes = self.forward(inputs)
-            self.weights, self.biases = self.solver["update"](nodes, expected, self.weights, self.biases, learning_rate,
-                                                              alpha, momentum)
+            self.weights, self.biases = self.solver["update"](nodes, expected, self.weights, self.biases, learning_rate, alpha, momentum)
 
-    def configure_output(self, graph_results=False, cm_normalization="true", eval_batching=True, eval_batch_size="auto",
-                         eval_interval=10):
-        self.graph_results = graph_results
-        self.cm_normalization = cm_normalization
+    def configure_reporting(self, loss_reporting=False, eval_batching=True, eval_batch_size="auto", eval_interval=10):
+        self.loss_reporting = loss_reporting
         self.eval_batching = eval_batching
-        self.eval_batch_size = eval_batch_size
+        if eval_batch_size == "auto":
+            self.eval_batch_size = min(5, self.train_len)
+        elif (not isinstance(eval_batch_size, int)) or eval_batch_size <= 0:
+            raise ValueError(f"'{eval_batch_size}' isn't a valid evaluation batch size")
+        else:
+            self.eval_batch_size = eval_batch_size
         self.eval_interval = eval_interval
 
 
@@ -198,7 +211,7 @@ array_X, array_Y = np.array(X), np.array(Y)
 array_X_test, array_Y_test = np.array(X_test), np.array(Y_test)
 
 # class testing
-neural_net = MLP(weights=keras_weights, biases=keras_biases, layer_sizes=[784, 16, 16, 10], activation="Leaky ReLU")
-neural_net.fit(X, Y, solver="SGD")
+neural_net = MLP(weights=keras_weights, biases=keras_biases, layer_sizes=[784, 16, 16, 10], activation="leaky relu")
+neural_net.fit(X, Y, solver="mini-batch")
 print(neural_net.forward(test_input)[-1])
 print(neural_net.predict(test_input))
