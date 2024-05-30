@@ -1,13 +1,10 @@
-import ast
 import math
 import random
 import time
 
 import numpy as np
-import pandas as pd
 
-from matplotlib import pyplot as plt
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import confusion_matrix
 from tqdm import tqdm
 
 
@@ -15,23 +12,30 @@ class MLP:
 
     def __init__(self, load=False, weights='none', biases='none', layer_sizes='auto', activation='relu'):
         self.version = '1.6'
-        self.load = load
-        self.weights, self.biases = self.set_parameters(weights, biases)
         if layer_sizes == 'auto':
             self.layer_sizes = [784, 100, 10]
         else:
             self.layer_sizes = layer_sizes
+        self.load = load
+        self.weights, self.biases = self.set_parameters(weights, biases)
         self.activation = self._get_activation(activation)
         self.X = None
         self.Y = None
+        self.array_X = None
+        self.array_Y = None
+        self.set_valid = False
         self.valid_X = None
         self.valid_Y = None
+        self.array_valid_X = None
+        self.array_valid_Y = None
         self.solver = False
         self.batch_size = None
-        self.train_len = 0
-        self.valid_len = 0
+        self.alpha = None
+        self.learning_rate = None
+        self.max_iter = None
+        self.train_len = None
+        self.valid_len = None
         self.loss_reporting = False
-        self.eval_batching = False
         self.eval_batch_size = None
         self.eval_interval = None
         self.train_losses = None
@@ -115,13 +119,15 @@ class MLP:
                 for layer in range(-1, -len(nodes) + 1, -1):
                     d_w = np.reshape(nodes[layer - 1], (self.batch_size, self.layer_sizes[layer - 1], 1)) * d_b
                     d_weights.insert(0, d_w)
-                    d_b = np.reshape(np.array([np.sum(weights[layer] * d_b, axis=2)]), (self.batch_size, 1, self.layer_sizes[layer - 1]))
+                    d_b = np.reshape(np.array([np.sum(weights[layer] * d_b, axis=2)]),
+                                     (self.batch_size, 1, self.layer_sizes[layer - 1]))
                     d_biases.insert(0, d_b)
                 d_w = np.reshape(nodes[0], (self.batch_size, self.layer_sizes[0], 1)) * d_b
                 d_weights.insert(0, d_w)
 
                 for layer in range(len(nodes) - 1):
-                    weights[layer] -= learning_rate * np.sum((d_weights[layer] + (alpha / self.batch_size) * weights[layer]), axis=0) / self.batch_size
+                    weights[layer] -= learning_rate * np.sum(
+                        (d_weights[layer] + (alpha / self.batch_size) * weights[layer]), axis=0) / self.batch_size
                     biases[layer] -= learning_rate * np.sum(d_biases[layer], axis=0) / self.batch_size
 
                 return weights, biases
@@ -145,23 +151,33 @@ class MLP:
         predicted = np.nanargmax(self.forward(inputs)[-1])
         return predicted
 
-    def set_valid(self, valid_X, valid_Y):
+    def valid(self, valid_X, valid_Y):
+        self.set_valid = True
         self.valid_X = valid_X
         self.valid_Y = valid_Y
+        self.array_valid_X = np.array(valid_X)
+        self.array_valid_Y = np.array(valid_Y)
         self.valid_len = len(self.valid_X)
 
-    def fit(self, X, Y, solver='mini-batch', alpha=0.1, batch_size='auto', learning_rate=0.001, max_iter=2000, momentum=0.9):
+    def fit(self, X, Y, solver='mini-batch', alpha=0.1, batch_size='auto', learning_rate=0.001, max_iter=20000, momentum=0.9):
         self.solver = self._get_solver(solver)
         self.X = X
         self.Y = Y
+        self.array_X = np.array(X)
+        self.array_Y = np.array(Y)
         self.train_len = len(self.X)
+        self.alpha = alpha
+        self.learning_rate = learning_rate
+        self.max_iter = max_iter
         if batch_size == 'auto':
             self.batch_size = min(20, len(self.X))
         elif (not isinstance(batch_size, int)) or batch_size <= 1:
             raise ValueError(f"'{batch_size}' isn't a valid batch size")
         else:
             self.batch_size = batch_size
-        if self.eval_batch_size == 'auto':
+        if self.eval_batch_size == 'auto' and self.set_valid:
+            self.eval_batch_size = min(20, len(self.valid_X))
+        elif self.eval_batch_size == 'auto':
             self.eval_batch_size = min(20, len(self.X))
         train_losses = []
         valid_losses = []
@@ -169,53 +185,82 @@ class MLP:
         for epoch in tqdm(range(max_iter), ncols=100, desc='fitting'):
             if solver == 'mini-batch':
                 tc = random.randint(self.batch_size, self.train_len)
-                inputs = array_X[tc - self.batch_size:tc]
-                expected = array_Y[tc - self.batch_size:tc]
+                inputs = self.array_X[tc - self.batch_size:tc]
+                expected = self.array_Y[tc - self.batch_size:tc]
             elif solver == 'sgd':
                 tc = random.randint(0, self.train_len - 1)
                 inputs = X[tc]
                 expected = Y[tc]
             nodes = self.forward(inputs)
-            self.weights, self.biases = self.solver['update'](nodes, expected, self.weights, self.biases, learning_rate, alpha, momentum)
+            self.weights, self.biases = self.solver['update'](nodes, expected, self.weights, self.biases, learning_rate,
+                                                              alpha, momentum)
             if self.loss_reporting and epoch % self.eval_interval == 0:
                 tc = random.randint(self.eval_batch_size, self.train_len)
-                valid_tc = random.randint(self.eval_batch_size, self.valid_len)
                 train_pred = self.forward(self.X[tc - self.eval_batch_size:tc])[-1]
-                valid_pred = self.forward(self.valid_X[valid_tc - self.eval_batch_size:valid_tc])[-1]
                 train_loss = self.loss(train_pred, self.Y[tc - self.eval_batch_size:tc])
-                valid_loss = self.loss(valid_pred, self.valid_Y[valid_tc - self.eval_batch_size:valid_tc])
                 train_losses.append(train_loss)
-                valid_losses.append(valid_loss)
+                if self.set_valid:
+                    valid_tc = random.randint(self.eval_batch_size, self.valid_len)
+                    valid_pred = self.forward(self.valid_X[valid_tc - self.eval_batch_size:valid_tc])[-1]
+                    valid_loss = self.loss(valid_pred, self.valid_Y[valid_tc - self.eval_batch_size:valid_tc])
+                    valid_losses.append(valid_loss)
         self.end_time = time.time()
 
         self.train_losses = train_losses
         self.valid_losses = valid_losses
 
-    def results(self):
-        loss = np.sum(np.subtract(self.Y, self.forward(X)[-1]) ** 2) / self.train_len
-        val_loss = np.sum(np.subtract(self.valid_Y, self.forward(self.valid_X)[-1]) ** 2) / self.valid_len
+    def get_results(self, cm_norm='true'):
+        loss = np.sum(np.subtract(self.Y, self.forward(self.X)[-1]) ** 2) / self.train_len
+        val_loss = 0
+        if self.set_valid:
+            val_loss = np.sum(np.subtract(self.valid_Y, self.forward(self.valid_X)[-1]) ** 2) / self.valid_len
+
         accu = 0
+        Y_pred = []
+        Y_true = []
         for i in tqdm(range(self.train_len), ncols=100, desc='calculating train accu'):
-            predicted = self.forward(self.X[i])[-1]
-            expected = self.Y[i]
-            if np.nanargmax(predicted) == np.nanargmax(expected):
+            predicted = self.predict(self.X[i])
+            expected = np.nanargmax(self.Y[i])
+            Y_pred.append(predicted)
+            Y_true.append(expected)
+            if predicted == expected:
                 accu += 1
         accu /= self.train_len
         val_accu = 0
-        for i in tqdm(range(self.valid_len), ncols=100, desc='calculating val accu'):
-            predicted = self.forward(self.valid_X[i],)[-1]
-            expected = self.valid_Y[i]
-            if np.nanargmax(predicted) == np.nanargmax(expected):
-                val_accu += 1
-        val_accu /= self.valid_len
+        Y_valid_pred = []
+        Y_valid_true = []
+        if self.set_valid:
+            for i in tqdm(range(self.valid_len), ncols=100, desc='calculating val accu'):
+                predicted = self.predict(self.valid_X[i])
+                expected = np.nanargmax(self.valid_Y[i])
+                Y_valid_pred.append(predicted)
+                Y_valid_true.append(expected)
+                if predicted == expected:
+                    val_accu += 1
+            val_accu /= self.valid_len
+        cm_train = confusion_matrix(Y_true, Y_pred, normalize=cm_norm)
+        cm_valid = confusion_matrix(Y_valid_true, Y_valid_pred, normalize=cm_norm)
+
         elapsed_time = self.end_time - self.start_time
 
-        return loss, val_loss, accu, val_accu, elapsed_time
+        results = {
+            'loss': loss,
+            'validation loss': val_loss,
+            'accuracy': accu,
+            'validation accuracy': val_accu,
+            'elapsed time': elapsed_time,
+            'confusion matrix train': cm_train,
+            'confusion matrix validation': cm_valid,
+            'train logged': range(0, self.max_iter, self.eval_interval),
+            'validation logged': range(0, self.max_iter, self.eval_interval),
+            'train losses': self.train_losses,
+            'validation losses': self.valid_losses
+        }
 
+        return results
 
-    def configure_reporting(self, loss_reporting=False, eval_batching=True, eval_batch_size="auto", eval_interval=10):
+    def configure_reporting(self, loss_reporting=False, eval_batch_size="auto", eval_interval=10):
         self.loss_reporting = loss_reporting
-        self.eval_batching = eval_batching
         if eval_batch_size == 'auto':
             self.eval_batch_size = 'auto'
         elif (not isinstance(eval_batch_size, int)) or eval_batch_size <= 0:
@@ -223,53 +268,3 @@ class MLP:
         else:
             self.eval_batch_size = eval_batch_size
         self.eval_interval = eval_interval
-
-
-# loading data for testing
-from PIL import Image
-
-keras_weights = []
-keras_biases = []
-with open(f"saved/weights_keras.txt", "r") as f:
-    for line in f:
-        keras_weights.append(np.array(ast.literal_eval(line)))
-with open(f"saved/biases_keras.txt", "r") as f:
-    for line in f:
-        keras_biases.append(np.array(ast.literal_eval(line)))
-img = Image.open(f"saved/user_number.jpeg")
-gray_img = img.convert("L")
-test_input = np.array(list(gray_img.getdata())) / 255
-
-# load MNIST data
-df_values = np.array(pd.read_csv(f"data/data_values_keras.csv")).tolist()
-for i in tqdm(range(len(df_values)), ncols=150, desc="Reformatting Data Values"):
-    df_values[i] = np.array([df_values[i]])
-df_labels = np.array(pd.read_csv(f"data/data_labels_keras.csv")).tolist()
-for i in tqdm(range(len(df_labels)), ncols=150, desc="Reformatting Data Labels"):
-    df_labels[i] = np.array([df_labels[i]])
-
-
-def test_train_split(data, test_size):
-    random.shuffle(data)
-    test = data[0:round(len(data) * test_size)]
-    train = data[round(len(data) * test_size):]
-    return train, test
-
-
-# split training and testing data
-train, test = test_train_split(list(zip(df_values, df_labels)), test_size=0.3)
-# unzip training and testing data
-X, Y = zip(*train)
-X_test, Y_test = zip(*test)
-X, Y = list(X), list(Y)
-# reformat training and testing data
-X_test, Y_test = list(X_test), list(Y_test)
-array_X, array_Y = np.array(X), np.array(Y)
-array_X_test, array_Y_test = np.array(X_test), np.array(Y_test)
-
-# class testing
-neural_net = MLP(weights=keras_weights, biases=keras_biases, layer_sizes=[784, 16, 16, 10], activation="leaky relu")
-neural_net.fit(X, Y, solver="mini-batch")
-print(neural_net.results)
-print(neural_net.forward(test_input)[-1])
-print(neural_net.predict(test_input))
