@@ -1,4 +1,4 @@
 
-data/data_values_keras.csv
-data/data_labels_keras.csv
-saved/user_number.jpeg
+assets/data/data_values_keras.csv
+assets/data/data_labels_keras.csv
+assets/saved/user_number.jpeg

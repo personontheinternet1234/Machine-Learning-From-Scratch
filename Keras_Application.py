@@ -44,10 +44,10 @@ image_location = "user_number.jpeg"
 # load weights and biases
 weights = []
 biases = []
-with open(f"saved/{weights_location}", "r") as f:
+with open(f"assets/saved/{weights_location}", "r") as f:
     for line in f:
         weights.append(np.array(ast.literal_eval(line)))
-with open(f"saved/{biases_location}", "r") as f:
+with open(f"assets/saved/{biases_location}", "r") as f:
     for line in f:
         biases.append(np.array(ast.literal_eval(line)))
 
@@ -158,9 +158,9 @@ while running:
                 if not wait_initial and not wait_clear:
                     # save image
                     scaled_screen = pygame.transform.scale(screen, (win_length * downscale_factor, win_height * downscale_factor))
-                    pygame.image.save(scaled_screen, f"saved/{image_location}")
+                    pygame.image.save(scaled_screen, f"assets/saved/{image_location}")
                     # open saved image
-                    img = Image.open(f"saved/{image_location}")
+                    img = Image.open(f"assets/saved/{image_location}")
                     # grayscale image
                     gray_img = img.convert("L")
                     # convert to numpy array

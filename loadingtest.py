@@ -9,27 +9,30 @@ import random
 from matplotlib import pyplot as plt
 from sklearn.metrics import ConfusionMatrixDisplay
 import seaborn as sns
+from sklearn.neural_network import MLPClassifier
 
 keras_weights = []
 keras_biases = []
-with open(f"saved/weights_keras.txt", "r") as f:
+with open(f"assets/saved/weights_keras.txt", "r") as f:
     for line in f:
         keras_weights.append(np.array(ast.literal_eval(line)))
-with open(f"saved/biases_keras.txt", "r") as f:
+with open(f"assets/saved/biases_keras.txt", "r") as f:
     for line in f:
         keras_biases.append(np.array(ast.literal_eval(line)))
-img = Image.open(f"saved/user_number.jpeg")
+img = Image.open(f"assets/saved/user_number.jpeg")
 gray_img = img.convert("L")
 test_input = np.array(list(gray_img.getdata())) / 255
 
 # load MNIST data
-df_values = np.array(pd.read_csv(f"data/data_values_keras.csv")).tolist()
+df_values = np.array(pd.read_csv(f"assets/data/data_values_keras.csv")).tolist()
 for i in tqdm(range(len(df_values)), ncols=150, desc="Reformatting Data Values"):
     df_values[i] = np.array([df_values[i]])
-df_labels = np.array(pd.read_csv(f"data/data_labels_keras.csv")).tolist()
+df_labels = np.array(pd.read_csv(f"assets/data/data_labels_keras.csv")).tolist()
 for i in tqdm(range(len(df_labels)), ncols=150, desc="Reformatting Data Labels"):
     df_labels[i] = np.array([df_labels[i]])
 
+# df_values = pd.read_csv(f'assets/data/data_values_keras.csv')
+# df_labels = pd.read_csv(f'assets/data/data_labels_keras.csv')
 
 def test_train_split(data, test_size):
     random.shuffle(data)
@@ -51,17 +54,15 @@ X_test, Y_test = zip(*test)
 X, Y = list(X), list(Y)
 # reformat training and testing data
 X_test, Y_test = list(X_test), list(Y_test)
-array_X, array_Y = np.array(X), np.array(Y)
-array_X_test, array_Y_test = np.array(X_test), np.array(Y_test)
 
 # class loading
 neural_net = nnet(layer_sizes=[784, 16, 16, 10], activation="leaky relu")
 neural_net.configure_reporting(loss_reporting=True)
-neural_net.valid(valid_X=X_test, valid_Y=Y_test)
-neural_net.fit(X, Y, max_iter=100000)
+neural_net.validation(valid_x=X_test, valid_y=Y_test)
+neural_net.fit(X, Y, max_iter=10000)
 # class results
 results = neural_net.get_results()
-print(results['loss'], results['validation loss'], results['accuracy'], results['validation accuracy'])
+print(results['mean loss'], results['mean validation loss'], results['accuracy'], results['validation accuracy'])
 
 # confusion matrices
 disp = ConfusionMatrixDisplay(
@@ -79,7 +80,7 @@ plt.show()
 
 # plotting
 plt.plot(results['train logged'], results['train losses'], color="blue", alpha=0.5, label="Train")
-plt.plot(results['validation logged'], results['validation losses'], color="red", alpha=0.5, label="Test")
+plt.plot(results['validation logged'], results['mean validation losses'], color="red", alpha=0.5, label="Test")
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
 plt.title("Loss v.s. Epoch")
