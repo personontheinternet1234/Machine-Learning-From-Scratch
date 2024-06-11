@@ -59,28 +59,30 @@ X_test, Y_test = list(X_test), list(Y_test)
 neural_net = nnet(layer_sizes=[784, 16, 16, 10], activation="leaky relu")
 neural_net.configure_reporting(loss_reporting=True)
 neural_net.validation(valid_x=X_test, valid_y=Y_test)
-neural_net.fit(X, Y, max_iter=10000)
+neural_net.fit(X, Y, max_iter=1000)
 # class results
 results = neural_net.get_results()
-print(results['mean loss'], results['mean validation loss'], results['accuracy'], results['validation accuracy'])
+# print(results['mean loss'], results['mean validation loss'], results['accuracy'], results['validation accuracy'])
+# print(results['validation outcomes']['loss'])
+# print(results['validation confusion matrix'])
 
 # confusion matrices
 disp = ConfusionMatrixDisplay(
-        confusion_matrix=results['confusion matrix train'],
+        confusion_matrix=results['training confusion matrix'],
     )
 disp.plot(cmap='Blues')
 disp.ax_.set_title('training confusion matrix')
 plt.show()
 disp = ConfusionMatrixDisplay(
-        confusion_matrix=results['confusion matrix validation'],
+        confusion_matrix=results['validation confusion matrix'],
     )
 disp.plot(cmap='Blues')
 disp.ax_.set_title('validation confusion matrix')
 plt.show()
 
 # plotting
-plt.plot(results['train logged'], results['train losses'], color="blue", alpha=0.5, label="Train")
-plt.plot(results['validation logged'], results['mean validation losses'], color="red", alpha=0.5, label="Test")
+plt.plot(results['logged points'], results['train losses'], color="blue", alpha=0.5, label="Train")
+plt.plot(results['logged points'], results['validation losses'], color="red", alpha=0.5, label="Test")
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
 plt.title("Loss v.s. Epoch")
@@ -117,3 +119,5 @@ sns.violinplot(data=df, x='label', y='pred', hue='cor', split=True, gap=.1, inne
 plt.show()
 sns.violinplot(data=df, x='label', y='cor_pred', hue='cor', split=True, gap=.1, inner='quart', density_norm='count')
 plt.show()
+
+neural_net.print_credits()

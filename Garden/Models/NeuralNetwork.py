@@ -1,7 +1,8 @@
 """
+Neural Network from scratch
 Authors:
-    Isaac Park Verbrugge CO '25 <iverbrugge25@punahou.edu>
     Christian SW Host-Madsen CO '25 <chost-madsen25@punahou.edu>
+    Isaac Park Verbrugge CO '25 <iverbrugge25@punahou.edu>
 """
 
 import math
@@ -11,9 +12,11 @@ import time
 import numpy as np
 import pandas as pd
 
-from sklearn.metrics import confusion_matrix
-from tqdm import tqdm
+from ..Functions.Functional import ssr, softmax
+from ..Functions.Metrics import generate_cm
+
 from colorama import Fore, Style
+from tqdm import tqdm
 
 
 class NeuralNetwork:
@@ -175,7 +178,8 @@ class NeuralNetwork:
 
                 # optimize parameters
                 for layer in range(len(nodes) - 1):
-                    weights[layer] -= learning_rate * np.sum((d_weights[layer] + (alpha / self.batch_size) * weights[layer]), axis=0) / self.batch_size
+                    weights[layer] -= learning_rate * np.sum(
+                        (d_weights[layer] + (alpha / self.batch_size) * weights[layer]), axis=0) / self.batch_size
                     biases[layer] -= learning_rate * np.sum(d_biases[layer], axis=0) / self.batch_size
 
                 # return optimized parameters
@@ -185,18 +189,6 @@ class NeuralNetwork:
         else:
             # invalid solving method
             raise ValueError(f"'{name}' is an invalid solving method")
-
-    @staticmethod
-    def ssr(expected, predicted):
-        """ calculate loss using the sum of the squared residuals """
-        loss = np.sum(np.subtract(expected, predicted) ** 2)
-        return loss
-
-    @staticmethod
-    def softmax(values):
-        """ calculate outcome probabilities using softmax """
-        output = np.exp(values) / np.sum(np.exp(values))
-        return output
 
     def forward(self, inputs):
         """ pass inputs through the model """
@@ -258,12 +250,12 @@ class NeuralNetwork:
             if self.loss_reporting and batch % self.eval_interval == 0:
                 tc = random.randint(self.eval_batch_size, self.train_len)
                 train_pred = self.forward(self.x[tc - self.eval_batch_size:tc])[-1]
-                train_loss = self.ssr(train_pred, self.y[tc - self.eval_batch_size:tc])
+                train_loss = ssr(train_pred, self.y[tc - self.eval_batch_size:tc]) / self.eval_batch_size
                 self.train_losses.append(train_loss)
                 if self.set_valid:
                     valid_tc = random.randint(self.eval_batch_size, self.valid_len)
                     valid_pred = self.forward(self.valid_x[valid_tc - self.eval_batch_size:valid_tc])[-1]
-                    valid_loss = self.ssr(valid_pred, self.valid_y[valid_tc - self.eval_batch_size:valid_tc])
+                    valid_loss = ssr(valid_pred, self.valid_y[valid_tc - self.eval_batch_size:valid_tc]) / self.eval_batch_size
                     self.valid_losses.append(valid_loss)
 
         # calculate elapsed time
@@ -298,72 +290,92 @@ class NeuralNetwork:
         else:
             self.eval_batch_size = eval_batch_size
 
-    # todo
-    def get_results(self, cm_norm='true'):
+    def get_results(self, cm_norm=True):
         """ return network results to the user """
-        # calculate training dataset loss
-        mean_loss = self.ssr(self.y, self.forward(self.x)[-1]) / self.train_len
+        # calculate training dataset loss using MSE
+        mean_train_loss = ssr(self.y, self.forward(self.x)[-1]) / self.train_len
         # calculate validation dataset loss
-        mean_val_loss = 0
+        mean_val_loss = None
         if self.set_valid:
-            mean_val_loss = self.ssr(self.valid_y, self.forward(self.valid_x)[-1]) / self.valid_len
+            mean_val_loss = ssr(self.valid_y, self.forward(self.valid_x)[-1]) / self.valid_len
 
+        # instantiate training dataset dictionary
         train_outcomes = {
             'label': [],
-            'correct': [],
-            'losses': [],
-            'probabilities': []
+            'predicted': [],
+            'accurate': [],
+            'loss': [],
+            'probability': []
         }
-        # calculate training dataset loss
-        accu = 0
-        y_pred = []
-        y_true = []
         for i in tqdm(range(self.train_len), ncols=100, desc='train results', disable=self.status, bar_format=self.color):
-            predicted = self.predict(self.x[i])
-            expected = np.nanargmax(self.y[i])
-            train_outcomes['label'].append(expected)
-            train_outcomes['correct'].append(predicted == expected)
-            y_pred.append(predicted)
-            y_true.append(expected)
-            if predicted == expected:
-                accu += 1
-        accu /= self.train_len
+            # calculate training dataset results
+            expected = self.y[i]
+            predicted = self.forward(self.x[i])[-1]
+            train_outcomes['label'].append(np.nanargmax(expected))
+            train_outcomes['predicted'].append(np.nanargmax(predicted))
+            train_outcomes['accurate'].append(np.nanargmax(expected) == np.nanargmax(predicted))
+            train_outcomes['loss'].append(ssr(expected, predicted))
+            train_outcomes['probability'].append(softmax(predicted)[0])
+        train_accu = np.sum(train_outcomes['accurate']) / self.train_len
 
-        # calculate validation dataset loss
-        val_accu = 0
-        y_valid_pred = []
-        y_valid_true = []
+        val_outcomes = None
+        val_accu = None
         if self.set_valid:
-            for i in tqdm(range(self.valid_len), ncols=100, desc='val results', disable=self.status, bar_format=self.color):
-                predicted = self.predict(self.valid_x[i])
-                expected = np.nanargmax(self.valid_y[i])
-                y_valid_pred.append(predicted)
-                y_valid_true.append(expected)
-                if predicted == expected:
-                    val_accu += 1
-            val_accu /= self.valid_len
+            # instantiate validation dataset dictionary
+            val_outcomes = {
+                'label': [],
+                'predicted': [],
+                'accurate': [],
+                'loss': [],
+                'probability': []
+            }
+            for i in tqdm(range(self.valid_len), ncols=100, desc='valid results', disable=self.status, bar_format=self.color):
+                # calculate validation dataset results
+                expected = self.valid_y[i]
+                predicted = self.forward(self.valid_x[i])[-1]
+                val_outcomes['label'].append(np.nanargmax(expected))
+                val_outcomes['predicted'].append(np.nanargmax(predicted))
+                val_outcomes['accurate'].append(np.nanargmax(expected) == np.nanargmax(predicted))
+                val_outcomes['loss'].append(ssr(expected, predicted))
+                val_outcomes['probability'].append(softmax(predicted)[0])
+            val_accu = np.sum(val_outcomes['accurate']) / self.valid_len
 
         # generate training and validation confusion matrices
-        cm_train = confusion_matrix(y_true, y_pred, normalize=cm_norm)
-        cm_valid = confusion_matrix(y_valid_true, y_valid_pred, normalize=cm_norm)
+        cm_train = generate_cm(train_outcomes['label'], train_outcomes['predicted'], normalize=cm_norm)
+        cm_valid = None
+        if self.set_valid:
+            cm_valid = generate_cm(val_outcomes['label'], val_outcomes['predicted'], normalize=cm_norm)
 
-        # combine results into a dictionary
+        # reformat outcomes to pandas dataframe
+        train_outcomes = pd.DataFrame(train_outcomes)
+        if self.set_valid:
+            val_outcomes = pd.DataFrame(val_outcomes)
+
+        # formal results dictionary
         results = {
-            'mean loss': mean_loss,
+            'mean training loss': mean_train_loss,
             'mean validation loss': mean_val_loss,
-            'accuracy': accu,
+            'training accuracy': train_accu,
             'validation accuracy': val_accu,
             'elapsed training time': self.elapsed_time,
             'training confusion matrix': cm_train,
             'validation confusion matrix': cm_valid,
             'train losses': self.train_losses,
             'validation losses': self.valid_losses,
-            'logged points': range(0, self.max_iter, self.eval_interval)
+            'logged points': range(0, self.max_iter, self.eval_interval),
+            'training outcomes': train_outcomes,
+            'validation outcomes': val_outcomes
         }
 
         # return results dictionary
         return results
 
-    def print_version(self):
-        """ print neural network version """
-        print(f'{self.version}')
+    def print_info(self):
+        """ print neural network information """
+        # define color printing
+        def print_color(text, color_code):
+            print(f'{color_code}{text}\033[0m')
+        # print information
+        print_color('"""', '\033[32m')
+        print_color(f'Fully Connected Neural Network Version {self.version}', '\033[32m')
+        print_color('"""', '\033[32m')
