@@ -5,7 +5,6 @@ Authors:
     Isaac Park Verbrugge CO '25 <iverbrugge25@punahou.edu>
 """
 
-
 import ast
 
 import numpy as np
@@ -21,7 +20,7 @@ def format_parameters(file_path):
     """ format parameters from a .txt file"""
     # find errors
     if file_path[-4:] != '.txt':
-        raise ValueError('file is not a .txt file')
+        raise ValueError(f'{file_path} is not a .txt file')
     # instantiate parameters list
     parameters = []
     # load parameters
@@ -34,10 +33,10 @@ def format_parameters(file_path):
 
 
 def format_data(file_path, status_bars=True):
+    """ format data from a .csv file """
     # find errors
     if file_path[-4:] != '.csv':
-        raise ValueError('file is not a .csv file')
-    """ format data from a .csv file """
+        raise ValueError(f'{file_path} is not a .csv file')
     # load data
     df = np.array(pd.read_csv(file_path)).tolist()
     # reformat data
@@ -45,3 +44,14 @@ def format_data(file_path, status_bars=True):
         df[i] = np.array([df[i]])
     # return data
     return df
+
+
+def save_parameters(file_path, parameters, status_bars=True):
+    """ save parameters into a .txt file """
+    # find errors
+    if file_path[-4:] != '.txt':
+        raise ValueError(f'{file_path} is not a .csv file')
+    # save parameters
+    with open(file_path, 'w') as f:
+        for layer in tqdm(range(len(parameters)), ncols=100, desc='saving', disable=not status_bars, bar_format=tqdm_color):
+            f.write(str(parameters[layer].tolist()) + "\n")

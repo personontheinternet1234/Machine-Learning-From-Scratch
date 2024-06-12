@@ -1,19 +1,27 @@
 """
-Neural Network from scratch
+Neural network from scratch (no ML libraries)
 Authors:
     Christian SW Host-Madsen CO '25 <chost-madsen25@punahou.edu>
     Isaac Park Verbrugge CO '25 <iverbrugge25@punahou.edu>
 """
 
-import math
 import random
 import time
 
 import numpy as np
 import pandas as pd
 
-from ..Functions.Functional import ssr, softmax
-from ..Functions.Metrics import generate_cm
+from ..Functions.Functional import (
+    xavier_initialize,
+    ssr,
+    softmax,
+    activations,
+    derivative_activations
+)
+from ..Functions.Metrics import (
+    generate_cm,
+    print_color
+)
 
 from colorama import Fore, Style
 from tqdm import tqdm
@@ -21,33 +29,34 @@ from tqdm import tqdm
 
 class NeuralNetwork:
     """
-    Fully connected neural network (FNN).
+    Fully connected neural network (FNN)
     """
-
-    def __init__(self, weights='none', biases='none', layer_sizes='auto', activation='relu', status_bars=True):
+    def __init__(self, weights=None, biases=None, layer_sizes='auto', activation='relu', status_bars=True):
         """ model variables """
         # model version
-        self.version = '1.7.0'
+        self.version = '1.8.0'
+
         # model hyperparameters
         if layer_sizes == 'auto':
             self.layer_sizes = [784, 100, 10]
         elif not isinstance(layer_sizes, list):
             raise ValueError(f"'{layer_sizes}' is not a list")
         elif len(layer_sizes) <= 2:
-            raise ValueError(f"'{layer_sizes}' does not have the valid amount of layer sizes (2)")
+            raise ValueError(f"'{layer_sizes}' does not have the minimum amount of layer sizes (2)")
         elif not all(isinstance(i, int) for i in layer_sizes):
             raise ValueError(f"'{layer_sizes}' must only include integers")
         else:
             self.layer_sizes = layer_sizes
         self.weights, self.biases = self.set_parameters(weights, biases)
         self.activation = self._get_activation(activation)
+
         # training hyperparameters
         self.solver = None
         self.batch_size = None
-        self.learning_rate = None
+        self.lr = None
         self.max_iter = None
         self.alpha = None
-        self.momentum = None
+
         # dataset parameters
         self.x = None
         self.y = None
@@ -60,6 +69,7 @@ class NeuralNetwork:
         self.array_valid_x = None
         self.array_valid_y = None
         self.valid_len = None
+
         # output settings
         self.loss_reporting = False
         self.eval_interval = None
@@ -67,24 +77,25 @@ class NeuralNetwork:
         self.train_losses = None
         self.valid_losses = None
         self.elapsed_time = None
+
         # status bar settings
         self.status = not status_bars
         self.color = f'{Fore.GREEN}{{l_bar}}{{bar}}{{r_bar}}{Style.RESET_ALL}'
 
     def set_parameters(self, weights, biases):
         """ set model parameters """
-        if weights == 'none':
+        if weights is None:
             # generate weights
             weights = []
             for i in range(len(self.layer_sizes) - 1):
                 length = int(self.layer_sizes[i])
                 width = int(self.layer_sizes[i + 1])
-                weights.append(np.random.randn(length, width) * math.sqrt(2 / length))
+                weights.append(xavier_initialize(length, width))
         else:
             # load weights
             weights = weights
 
-        if biases == 'none':
+        if biases is None:
             # generate biases
             biases = []
             for i in range(len(self.layer_sizes) - 1):
@@ -101,29 +112,35 @@ class NeuralNetwork:
     @staticmethod
     def _get_activation(name):
         """ set model activation function """
-        if name == 'sigmoid':
-            # sigmoid activation function
-            return {
-                'forward': lambda x: 1 / (1 + np.exp(-x)),
-                'derivative': lambda x: x * (1 - x)
-            }
-        elif name == 'tanh':
-            # hyperbolic tan activation function
-            return {
-                'forward': lambda x: np.tanh(x),
-                'derivative': lambda x: 1 - np.tanh(x) ** 2
-            }
-        elif name == 'relu':
+        if name == 'relu':
             # rectified linear unit activation function
             return {
-                'forward': lambda x: np.maximum(0, x),
-                'derivative': lambda x: np.where(x > 0, 1, 0)
+                'forward': activations('relu'),
+                'derivative': derivative_activations('relu')
             }
         elif name == 'leaky relu':
             # leaky rectified linear unit activation function
             return {
-                'forward': lambda x: np.maximum(0.1 * x, x),
-                'derivative': lambda x: np.where(x > 0, 1, 0.1)
+                'forward': activations('leaky relu'),
+                'derivative': derivative_activations('leaky relu')
+            }
+        elif name == 'sigmoid':
+            # sigmoid activation function
+            return {
+                'forward': activations('sigmoid'),
+                'derivative': derivative_activations('sigmoid')
+            }
+        elif name == 'tanh':
+            # hyperbolic tan activation function
+            return {
+                'forward': activations('tanh'),
+                'derivative': derivative_activations('tanh')
+            }
+        elif name == 'softplus':
+            # softplus activation function
+            return {
+                'forward': activations('softplus'),
+                'derivative': derivative_activations('softplus')
             }
         else:
             # invalid activation function
@@ -131,36 +148,9 @@ class NeuralNetwork:
 
     def _get_solver(self, name):
         """ set model solving method """
-        if name == 'sgd':
-            # stochastic gradient descent
-            def update(nodes, y, weights, biases, learning_rate, alpha, momentum):
-                # instantiate gradients list
-                d_weights = []
-                d_biases = []
-
-                # calculate gradients
-                d_b = -2 * (y - nodes[-1])
-                d_biases.insert(0, d_b)
-                for layer in range(-1, -len(nodes) + 1, -1):
-                    d_w = nodes[layer - 1].T * d_b
-                    d_weights.insert(0, d_w)
-                    d_b = np.array([np.sum(weights[layer] * d_b, axis=1)])
-                    d_biases.insert(0, d_b)
-                d_w = nodes[0].T * d_b
-                d_weights.insert(0, d_w)
-
-                # optimize parameters
-                for layer in range(len(nodes) - 1):
-                    weights[layer] -= learning_rate * (d_weights[layer] + (alpha / self.train_len) * weights[layer])
-                    biases[layer] -= learning_rate * d_biases[layer]
-
-                # return optimized parameters
-                return weights, biases
-
-            return {'update': update}
-        elif name == 'mini-batch':
+        if name == 'mini-batch':
             # mini-batch gradient descent
-            def update(nodes, y, weights, biases, learning_rate, alpha, momentum):
+            def update(nodes, y):
                 # instantiate gradients list
                 d_weights = []
                 d_biases = []
@@ -171,20 +161,42 @@ class NeuralNetwork:
                 for layer in range(-1, -len(nodes) + 1, -1):
                     d_w = np.reshape(nodes[layer - 1], (self.batch_size, self.layer_sizes[layer - 1], 1)) * d_b
                     d_weights.insert(0, d_w)
-                    d_b = np.reshape(np.array([np.sum(weights[layer] * d_b, axis=2)]), (self.batch_size, 1, self.layer_sizes[layer - 1]))
+                    d_b = np.reshape(np.array([np.sum(self.weights[layer] * d_b, axis=2)]), (self.batch_size, 1, self.layer_sizes[layer - 1]))
                     d_biases.insert(0, d_b)
                 d_w = np.reshape(nodes[0], (self.batch_size, self.layer_sizes[0], 1)) * d_b
                 d_weights.insert(0, d_w)
 
                 # optimize parameters
                 for layer in range(len(nodes) - 1):
-                    weights[layer] -= learning_rate * np.sum(
-                        (d_weights[layer] + (alpha / self.batch_size) * weights[layer]), axis=0) / self.batch_size
-                    biases[layer] -= learning_rate * np.sum(d_biases[layer], axis=0) / self.batch_size
+                    self.weights[layer] -= self.lr * np.sum((d_weights[layer] + (self.alpha / self.batch_size) * self.weights[layer]), axis=0) / self.batch_size
+                    self.biases[layer] -= self.lr * np.sum(d_biases[layer], axis=0) / self.batch_size
 
-                # return optimized parameters
-                return weights, biases
+            # return solver
+            return {'update': update}
+        elif name == 'sgd':
+            # stochastic gradient descent
+            def update(nodes, y):
+                # instantiate gradients list
+                d_weights = []
+                d_biases = []
 
+                # calculate gradients
+                d_b = -2 * (y - nodes[-1])
+                d_biases.insert(0, d_b)
+                for layer in range(-1, -len(nodes) + 1, -1):
+                    d_w = nodes[layer - 1].T * d_b
+                    d_weights.insert(0, d_w)
+                    d_b = np.array([np.sum(self.weights[layer] * d_b, axis=1)])
+                    d_biases.insert(0, d_b)
+                d_w = nodes[0].T * d_b
+                d_weights.insert(0, d_w)
+
+                # optimize parameters
+                for layer in range(len(nodes) - 1):
+                    self.weights[layer] -= self.lr * (d_weights[layer] + (self.alpha / self.train_len) * self.weights[layer])
+                    self.biases[layer] -= self.lr * d_biases[layer]
+
+            # return solver
             return {'update': update}
         else:
             # invalid solving method
@@ -198,7 +210,7 @@ class NeuralNetwork:
             nodes.append(node_layer)
         return nodes
 
-    def fit(self, x, y, solver='mini-batch', alpha=0.0001, batch_size='auto', learning_rate=0.001, max_iter=20000, momentum=0.9):
+    def fit(self, x, y, solver='mini-batch', batch_size='auto', learning_rate=0.001, max_iter=20000, alpha=0.0001):
         """ optimize model """
         # set training hyperparameters
         self.x = x
@@ -207,10 +219,9 @@ class NeuralNetwork:
         self.array_x = np.array(x)
         self.array_y = np.array(y)
         self.train_len = len(self.x)
-        self.alpha = alpha
-        self.momentum = momentum
-        self.learning_rate = learning_rate
+        self.lr = learning_rate
         self.max_iter = max_iter
+        self.alpha = alpha
         if batch_size == 'auto':
             self.batch_size = min(20, len(self.x))
         elif (not isinstance(batch_size, int)) or batch_size <= 1:
@@ -244,7 +255,7 @@ class NeuralNetwork:
 
             # optimize network
             nodes = self.forward(in_n)
-            self.weights, self.biases = self.solver['update'](nodes, out_n, self.weights, self.biases, learning_rate, alpha, momentum)
+            self.solver['update'](nodes, out_n)
 
             # loss calculation
             if self.loss_reporting and batch % self.eval_interval == 0:
@@ -307,7 +318,7 @@ class NeuralNetwork:
             'loss': [],
             'probability': []
         }
-        for i in tqdm(range(self.train_len), ncols=100, desc='train results', disable=self.status, bar_format=self.color):
+        for i in tqdm(range(self.train_len), ncols=100, desc='train', disable=self.status, bar_format=self.color):
             # calculate training dataset results
             expected = self.y[i]
             predicted = self.forward(self.x[i])[-1]
@@ -329,7 +340,7 @@ class NeuralNetwork:
                 'loss': [],
                 'probability': []
             }
-            for i in tqdm(range(self.valid_len), ncols=100, desc='valid results', disable=self.status, bar_format=self.color):
+            for i in tqdm(range(self.valid_len), ncols=100, desc='valid', disable=self.status, bar_format=self.color):
                 # calculate validation dataset results
                 expected = self.valid_y[i]
                 predicted = self.forward(self.valid_x[i])[-1]
@@ -351,20 +362,38 @@ class NeuralNetwork:
         if self.set_valid:
             val_outcomes = pd.DataFrame(val_outcomes)
 
+        # reformat logged losses to pandas dataframe
+        logged_losses = {
+            'logged points': range(0, self.max_iter, self.eval_interval),
+            'training losses': self.train_losses
+        }
+        if self.set_valid:
+            logged_losses['validation losses'] = self.valid_losses
+        logged_losses = pd.DataFrame(logged_losses)
+
+        # reformat single results into singular pandas dataframe
+        final_results = {
+            'label': ['mean training loss', 'training accuracy'],
+            'result': [mean_train_loss, train_accu]
+        }
+        if self.set_valid:
+            final_results['label'].append('mean validation loss')
+            final_results['label'].append('validation accuracy')
+            final_results['result'].append(mean_val_loss)
+            final_results['result'].append(val_accu)
+        final_results = pd.DataFrame(final_results)
+
         # formal results dictionary
         results = {
-            'mean training loss': mean_train_loss,
-            'mean validation loss': mean_val_loss,
-            'training accuracy': train_accu,
-            'validation accuracy': val_accu,
-            'elapsed training time': self.elapsed_time,
+            'final results': final_results,
             'training confusion matrix': cm_train,
             'validation confusion matrix': cm_valid,
-            'train losses': self.train_losses,
-            'validation losses': self.valid_losses,
-            'logged points': range(0, self.max_iter, self.eval_interval),
+            'logged losses': logged_losses,
             'training outcomes': train_outcomes,
-            'validation outcomes': val_outcomes
+            'validation outcomes': val_outcomes,
+            'elapsed training time': self.elapsed_time,
+            'weights': self.weights,
+            'biases': self.biases
         }
 
         # return results dictionary
@@ -372,10 +401,7 @@ class NeuralNetwork:
 
     def print_info(self):
         """ print neural network information """
-        # define color printing
-        def print_color(text, color_code):
-            print(f'{color_code}{text}\033[0m')
         # print information
-        print_color('"""', '\033[32m')
-        print_color(f'Fully Connected Neural Network Version {self.version}', '\033[32m')
-        print_color('"""', '\033[32m')
+        print_color('"""')
+        print_color(f'Fully Connected Neural Network Version {self.version}')
+        print_color('"""')

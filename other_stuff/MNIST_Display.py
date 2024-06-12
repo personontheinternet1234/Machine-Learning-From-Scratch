@@ -17,7 +17,7 @@ def update(frame):
     ax.axis("off")
 
 
-# params
+# parameters
 frames = 10000
 time_interval = 150
 number = "random"

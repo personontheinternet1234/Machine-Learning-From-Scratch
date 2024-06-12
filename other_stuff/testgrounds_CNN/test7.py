@@ -1,25 +1,26 @@
 import seaborn as sns
 import matplotlib.pyplot as plt
+import pandas as pd
 import numpy as np
 
-# Create some data
-data = np.random.rand(10, 10)
+# Create example data
+np.random.seed(10)
+time = np.tile(np.arange(10), 3)
+value = np.random.randn(30).cumsum()
+category = np.repeat(['A', 'B', 'C'], 10)
 
-# Create labels for each axis point
-x_labels = [f'X{i}' for i in range(1, 11)]
-y_labels = [f'Y{i}' for i in range(1, 11)]
+data = pd.DataFrame({'Time': time, 'Value': value, 'Category': category})
 
-# Create the heatmap
-ax = sns.heatmap(data, xticklabels=x_labels, yticklabels=y_labels)
+# Display the data
+print(data)
+
+# Plot multiple lines
+sns.lineplot(x='Time', y='Value', hue='Category', data=data)
 
 # Set the axis labels and title
-ax.set_xlabel('X Axis Label')
-ax.set_ylabel('Y Axis Label')
-ax.set_title('Heatmap Title')
-
-# Optionally, rotate the x-axis labels for better readability
-# ax.set_xticklabels(ax.get_xticklabels(), ha='right')
+plt.xlabel('Time')
+plt.ylabel('Value')
+plt.title('Multiple Lines Plot')
 
 # Show the plot
-# plt.tight_layout()  # Adjust layout to make room for rotated x-axis labels
 plt.show()

@@ -13,21 +13,21 @@ from sklearn.neural_network import MLPClassifier
 
 keras_weights = []
 keras_biases = []
-with open(f"assets/saved/weights_keras.txt", "r") as f:
+with open(f"../../assets/saved/weights_keras.txt", "r") as f:
     for line in f:
         keras_weights.append(np.array(ast.literal_eval(line)))
-with open(f"assets/saved/biases_keras.txt", "r") as f:
+with open(f"../../assets/saved/biases_keras.txt", "r") as f:
     for line in f:
         keras_biases.append(np.array(ast.literal_eval(line)))
-img = Image.open(f"assets/saved/user_number.jpeg")
+img = Image.open(f"../../assets/saved/user_number.jpeg")
 gray_img = img.convert("L")
 test_input = np.array(list(gray_img.getdata())) / 255
 
 # load MNIST data
-df_values = np.array(pd.read_csv(f"assets/data/data_values_keras.csv")).tolist()
+df_values = np.array(pd.read_csv(f"../../assets/data/data_values_keras.csv")).tolist()
 for i in tqdm(range(len(df_values)), ncols=150, desc="Reformatting Data Values"):
     df_values[i] = np.array([df_values[i]])
-df_labels = np.array(pd.read_csv(f"assets/data/data_labels_keras.csv")).tolist()
+df_labels = np.array(pd.read_csv(f"../../assets/data/data_labels_keras.csv")).tolist()
 for i in tqdm(range(len(df_labels)), ncols=150, desc="Reformatting Data Labels"):
     df_labels[i] = np.array([df_labels[i]])
 

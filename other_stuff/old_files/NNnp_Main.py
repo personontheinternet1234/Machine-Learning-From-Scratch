@@ -112,38 +112,6 @@ def plot_cm(cm, title=None, labels=None, color="Blues"):
 
 """ program settings """
 
-# network hyperparameters
-# learn = True
-# activation = "Leaky ReLU"
-# solver = "SGD"
-# hidden_layer_sizes = [16, 16]
-# max_iter = 10000
-# learning_rate = 0.001
-# alpha = 0.1
-# momentum = 0.9  # this is cool but complicated
-# batch_size = 42
-# validation_frac = 0.3
-
-# dataset parameters
-# trim_dataset = False
-# trim_frac = 0.1
-# values_file_path = "data_values_keras.csv"
-# labels_file_path = "data_labels_keras.csv"
-
-# output configuration
-# graph_results = True
-# cm_normalization = "true"
-# eval_batching = True
-# eval_batch_size = 5
-# eval_interval = 10
-
-# model settings
-# network_version = "1.5"
-# load_trained = False
-# save_trained = False
-# weights_location = "weights_keras.txt"
-# biases_location = "biases_keras.txt"
-
 # network superparams
 learn = True
 sgd = False
@@ -211,10 +179,10 @@ weights = []
 biases = []
 if load:
     # load weights and biases
-    with open(f"saved/{weights_location}", "r") as f:
+    with open(f"assets/saved/{weights_location}", "r") as f:
         for line in f:
             weights.append(np.array(ast.literal_eval(line)))
-    with open(f"saved/{biases_location}", "r") as f:
+    with open(f"assets/saved/{biases_location}", "r") as f:
         for line in f:
             biases.append(np.array(ast.literal_eval(line)))
 else:
@@ -297,10 +265,10 @@ end_time = time.time()
 
 # save optimized weights and biases
 if save:
-    with open(f"saved/{weights_location}", "w") as f:
+    with open(f"assets/saved/{weights_location}", "w") as f:
         for array in tqdm(range(len(weights)), ncols=150, desc="Saving Weights"):
             f.write(str(weights[array].tolist()) + "\n")
-    with open(f"saved/{biases_location}", "w") as f:
+    with open(f"assets/saved/{biases_location}", "w") as f:
         for array in tqdm(range(len(biases)), ncols=150, desc="Saving Biases"):
             f.write(str(biases[array].tolist()) + "\n")
 
