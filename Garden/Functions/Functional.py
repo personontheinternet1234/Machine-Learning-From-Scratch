@@ -5,7 +5,6 @@ Authors:
     Isaac Park Verbrugge CO '25 <iverbrugge25@punahou.edu>
 """
 
-import math
 import random
 
 import numpy as np
@@ -25,7 +24,7 @@ def softmax(values):
 
 def xavier_initialize(length, width):
     """ initialize a random array using xavier initialization """
-    array = np.random.randn(length, width) * math.sqrt(2 / length)
+    array = np.random.randn(length, width) * np.sqrt(2 / length)
     return array
 
 
@@ -36,12 +35,19 @@ def activations(name):
         'leaky relu': lambda x: np.maximum(0.1 * x, x),
         'sigmoid': lambda x: 1 / (1 + np.exp(-x)),
         'tanh': lambda x: np.tanh(x),
-        'softplus': lambda x: math.log(1 + np.exp(x))
+        'softplus': lambda x: np.log(1 + np.exp(x)),
+        'mish': lambda x: x * np.tanh(np.log(1 + np.exp(x)))
     }
     if name in functions:
         return functions[name]
     else:
-        raise ValueError(f"'{name}' is an invalid activation function")
+        possible_functions = []
+        for key, value in functions.items():
+            possible_functions.append(key)
+        raise ValueError(
+            f"'{name}' is an invalid activation function, "
+            f"choose from: {possible_functions}"
+        )
 
 
 def derivative_activations(name):
@@ -51,12 +57,19 @@ def derivative_activations(name):
         'leaky relu': lambda x: np.where(x > 0, 1, 0.1),
         'sigmoid': lambda x: np.exp(-x) / ((1 + np.exp(-x)) ** 2),
         'tanh': lambda x: 1 - np.tanh(x) ** 2,
-        'softplus': lambda x: 1 / (1 + np.exp(-x))
+        'softplus': lambda x: 1 / (1 + np.exp(-x)),
+        'mish': lambda x: np.tanh(np.log(1 + np.exp(x))) + (x * np.exp(x) - x * np.exp(x) * (np.tanh(np.log(1 + np.exp(x)))) ** 2) / (1 + np.exp(x))
     }
     if name in derivatives:
         return derivatives[name]
     else:
-        raise ValueError(f"'{name}' is an invalid activation function")
+        possible_functions = []
+        for key, value in derivatives.items():
+            possible_functions.append(key)
+        raise ValueError(
+            f"'{name}' is an invalid activation function, "
+            f"choose from: {possible_functions}"
+        )
 
 
 def trim(data, trim_frac=0.5):

@@ -74,6 +74,7 @@ class NeuralNetwork:
         self.loss_reporting = False
         self.eval_interval = None
         self.eval_batch_size = None
+        self.valid_batch_size = None
         self.train_losses = None
         self.valid_losses = None
         self.elapsed_time = None
@@ -112,39 +113,10 @@ class NeuralNetwork:
     @staticmethod
     def _get_activation(name):
         """ set model activation function """
-        if name == 'relu':
-            # rectified linear unit activation function
-            return {
-                'forward': activations('relu'),
-                'derivative': derivative_activations('relu')
-            }
-        elif name == 'leaky relu':
-            # leaky rectified linear unit activation function
-            return {
-                'forward': activations('leaky relu'),
-                'derivative': derivative_activations('leaky relu')
-            }
-        elif name == 'sigmoid':
-            # sigmoid activation function
-            return {
-                'forward': activations('sigmoid'),
-                'derivative': derivative_activations('sigmoid')
-            }
-        elif name == 'tanh':
-            # hyperbolic tan activation function
-            return {
-                'forward': activations('tanh'),
-                'derivative': derivative_activations('tanh')
-            }
-        elif name == 'softplus':
-            # softplus activation function
-            return {
-                'forward': activations('softplus'),
-                'derivative': derivative_activations('softplus')
-            }
-        else:
-            # invalid activation function
-            raise ValueError(f"'{name}' is an invalid activation function")
+        return {
+            'forward': activations(name),
+            'derivative': derivative_activations(name)
+        }
 
     def _get_solver(self, name):
         """ set model solving method """
@@ -223,15 +195,21 @@ class NeuralNetwork:
         self.max_iter = max_iter
         self.alpha = alpha
         if batch_size == 'auto':
-            self.batch_size = min(20, len(self.x))
+            self.batch_size = min(20, self.train_len)
+        elif batch_size == 'all':
+            self.batch_size = self.train_len
         elif (not isinstance(batch_size, int)) or batch_size <= 1:
             raise ValueError(f"'{batch_size}' is an invalid batch size")
         else:
             self.batch_size = batch_size
         if self.eval_batch_size == 'auto' and self.set_valid:
-            self.eval_batch_size = min(20, len(self.valid_x))
-        elif self.eval_batch_size == 'auto':
-            self.eval_batch_size = min(20, len(self.x))
+            self.eval_batch_size = min(20, self.valid_len)
+            self.valid_batch_size = self.eval_batch_size
+        elif self.eval_batch_size == 'all' and self.set_valid:
+            self.eval_batch_size = self.train_len
+            self.valid_batch_size = self.valid_len
+        elif self.set_valid:
+            self.valid_batch_size = self.eval_batch_size
 
         # reset loss lists
         self.train_losses = []
@@ -264,9 +242,9 @@ class NeuralNetwork:
                 train_loss = ssr(train_pred, self.y[tc - self.eval_batch_size:tc]) / self.eval_batch_size
                 self.train_losses.append(train_loss)
                 if self.set_valid:
-                    valid_tc = random.randint(self.eval_batch_size, self.valid_len)
-                    valid_pred = self.forward(self.valid_x[valid_tc - self.eval_batch_size:valid_tc])[-1]
-                    valid_loss = ssr(valid_pred, self.valid_y[valid_tc - self.eval_batch_size:valid_tc]) / self.eval_batch_size
+                    valid_tc = random.randint(self.valid_batch_size, self.valid_len)
+                    valid_pred = self.forward(self.valid_x[valid_tc - self.valid_batch_size:valid_tc])[-1]
+                    valid_loss = ssr(valid_pred, self.valid_y[valid_tc - self.valid_batch_size:valid_tc]) / self.valid_batch_size
                     self.valid_losses.append(valid_loss)
 
         # calculate elapsed time
@@ -296,6 +274,8 @@ class NeuralNetwork:
         # set evaluation batch sizes for loss reporting
         if eval_batch_size == 'auto':
             self.eval_batch_size = 'auto'
+        elif eval_batch_size == 'all':
+            self.eval_batch_size = 'all'
         elif (not isinstance(eval_batch_size, int)) or eval_batch_size <= 0:
             raise ValueError(f"'{eval_batch_size}' is an invalid evaluation batch size")
         else:
