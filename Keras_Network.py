@@ -94,6 +94,5 @@ save_parameters = Mtr.input_color("input 's' to save parameters: ")
 if save_parameters.lower() == 's':
     Fmr.save_parameters(weights_location, keras_results['weights'])
     Fmr.save_parameters(biases_location, keras_results['biases'])
-    Mtr.print_color('parameters saved')
 else:
     Mtr.print_color('parameters not saved')
