@@ -60,8 +60,6 @@ class NeuralNetwork:
         # dataset parameters
         self.x = None
         self.y = None
-        self.array_x = None
-        self.array_y = None
         self.train_len = None
         self.set_valid = False
         self.valid_x = None
@@ -185,11 +183,9 @@ class NeuralNetwork:
     def fit(self, x, y, solver='mini-batch', batch_size='auto', learning_rate=0.001, max_iter=20000, alpha=0.0001):
         """ optimize model """
         # set training hyperparameters
-        self.x = x
-        self.y = y
+        self.x = np.array(x)
+        self.y = np.array(y)
         self.solver = self._get_solver(solver)
-        self.array_x = np.array(x)
-        self.array_y = np.array(y)
         self.train_len = len(self.x)
         self.lr = learning_rate
         self.max_iter = max_iter
@@ -222,8 +218,8 @@ class NeuralNetwork:
             # set input batches
             if solver == 'mini-batch':
                 tc = random.randint(self.batch_size, self.train_len)
-                in_n = self.array_x[tc - self.batch_size:tc]
-                out_n = self.array_y[tc - self.batch_size:tc]
+                in_n = self.x[tc - self.batch_size:tc]
+                out_n = self.y[tc - self.batch_size:tc]
             elif solver == 'sgd':
                 tc = random.randint(0, self.train_len - 1)
                 in_n = x[tc]
