@@ -10,13 +10,15 @@ import ast
 import numpy as np
 import pandas as pd
 
+from ..Functions.Metrics import print_color
+
 from colorama import Fore, Style
 from tqdm import tqdm
 
 tqdm_color = f'{Fore.GREEN}{{l_bar}}{{bar}}{{r_bar}}{Style.RESET_ALL}'
 
 
-def format_parameters(file_path):
+def format_parameters(file_path, status_bars=True):
     """ format parameters from a .txt file"""
     # find errors
     if file_path[-4:] != '.txt':
@@ -24,6 +26,8 @@ def format_parameters(file_path):
     # instantiate parameters list
     parameters = []
     # load parameters
+    if status_bars:
+        print_color('formatting parameters...')
     with open(file_path, 'r') as f:
         for line in f:
             # reformat parameters
@@ -38,6 +42,8 @@ def format_data(file_path, status_bars=True):
     if file_path[-4:] != '.csv':
         raise ValueError(f'{file_path} is not a .csv file')
     # load data
+    if status_bars:
+        print_color('loading dataframe...')
     df = np.array(pd.read_csv(file_path)).tolist()
     # reformat data
     for i in tqdm(range(len(df)), ncols=100, desc='formatting', disable=not status_bars, bar_format=tqdm_color):

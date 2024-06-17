@@ -139,9 +139,9 @@ def print_final_results(results_df, round_value=5):
     print_color(f"Results - Train Loss: {train_loss} - Valid Loss: {val_loss} - Train Accuracy: {train_accu} - Valid Accuracy: {val_accu} - Training Time: {elapsed_time}s")
 
 
-def print_color(text, color_code='\033[32m'):
+def print_color(text, color_code='\033[32m', end='\n'):
     """ print text in color """
-    print(f'{color_code}{text}\033[0m')
+    print(f'{color_code}{text}\033[0m', end=end)
 
 
 def input_color(text, color_code='\033[32m'):
