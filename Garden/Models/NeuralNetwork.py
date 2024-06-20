@@ -207,7 +207,7 @@ class NeuralNetwork:
         elif self.set_valid:
             self.valid_batch_size = self.eval_batch_size
 
-        # reset loss lists
+        # set loss lists
         self.train_losses = []
         self.valid_losses = []
         # start timer
@@ -244,8 +244,7 @@ class NeuralNetwork:
                     self.valid_losses.append(valid_loss)
 
         # calculate elapsed time
-        end_time = time.time()
-        self.elapsed_time = end_time - start_time
+        self.elapsed_time = time.time() - start_time
 
     def predict(self, inputs):
         """ predict outputs based on the model """
