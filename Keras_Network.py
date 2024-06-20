@@ -20,12 +20,12 @@ learning_rate = 0.001
 max_iter = 5000
 alpha = 0.001
 trim_data = False
-trim_frac = 0.5
+trim_frac = 0.01
 set_validation = True
 val_frac = 0.3
 loss_reporting = True
 eval_batch_size = 60
-eval_interval = max(1, round(max_iter * 0.01))
+eval_interval = max(1, round(max_iter * 0.001))
 load_parameters = False
 weights_location = 'assets/saved/weights_keras.txt'
 biases_location = 'assets/saved/biases_keras.txt'
@@ -76,6 +76,7 @@ keras_network.fit(
 
 # get model results
 keras_results = keras_network.get_results(cm_norm=conf_mat_normal)
+# Mtr.print_color(keras_results)
 Mtr.print_final_results(keras_results)
 # graph results
 if conf_mat_normal:
@@ -85,6 +86,7 @@ else:
     Mtr.num_visual_cm((keras_results['training confusion matrix']), title='Training Results')
     Mtr.num_visual_cm((keras_results['validation confusion matrix']), title='Validation Results')
 Mtr.loss_graph(keras_results['logged losses'])
+Mtr.kde_loss_graph(keras_results['logged losses'])
 Mtr.prob_violin_plot(keras_results['training outcomes'], title='Training Violin Plot')
 if set_validation:
     Mtr.prob_violin_plot(keras_results['validation outcomes'], title='Validation Violin Plot')

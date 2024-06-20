@@ -11,14 +11,14 @@ import time
 import numpy as np
 import pandas as pd
 
-from ..Functions.Functional import (
+from Garden.Functions.Functional import (
     xavier_initialize,
     ssr,
     softmax,
     activations,
     derivative_activations
 )
-from ..Functions.Metrics import (
+from Garden.Functions.Metrics import (
     generate_cm,
     print_color
 )
@@ -334,8 +334,7 @@ class NeuralNetwork:
 
         # reformat outcomes to pandas dataframe
         train_outcomes = pd.DataFrame(train_outcomes)
-        if self.set_valid:
-            val_outcomes = pd.DataFrame(val_outcomes)
+        val_outcomes = pd.DataFrame(val_outcomes)
 
         # reformat logged losses to pandas dataframe
         logged_losses = {
@@ -356,9 +355,12 @@ class NeuralNetwork:
             final_results['label'].append('validation accuracy')
             final_results['result'].append(mean_val_loss)
             final_results['result'].append(val_accu)
-        final_results = pd.DataFrame(final_results)
+        final_results['label'].append('elapsed training time')
+        final_results['result'].append(self.elapsed_time)
+        final_results = dict(zip(final_results['label'], final_results['result']))
+        final_results = pd.Series(final_results)
 
-        # formal results dictionary
+        # format results dictionary
         results = {
             'final results': final_results,
             'training confusion matrix': cm_train,
@@ -366,7 +368,6 @@ class NeuralNetwork:
             'logged losses': logged_losses,
             'training outcomes': train_outcomes,
             'validation outcomes': val_outcomes,
-            'elapsed training time': self.elapsed_time,
             'weights': self.weights,
             'biases': self.biases
         }
