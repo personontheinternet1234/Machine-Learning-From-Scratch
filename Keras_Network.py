@@ -86,7 +86,7 @@ else:
     Mtr.num_visual_cm((keras_results['training confusion matrix']), title='Training Results')
     Mtr.num_visual_cm((keras_results['validation confusion matrix']), title='Validation Results')
 Mtr.loss_graph(keras_results['logged losses'])
-Mtr.kde_loss_graph(keras_results['logged losses'])
+Mtr.reg_loss_graph(keras_results['logged losses'])
 Mtr.prob_violin_plot(keras_results['training outcomes'], title='Training Violin Plot')
 if set_validation:
     Mtr.prob_violin_plot(keras_results['validation outcomes'], title='Validation Violin Plot')

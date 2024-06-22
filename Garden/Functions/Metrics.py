@@ -10,8 +10,7 @@ import pandas as pd
 
 from matplotlib import pyplot as plt
 import seaborn as sns
-import statsmodels
-
+import statsmodels.api as sm
 
 GREEN = '\033[32m'
 
@@ -55,7 +54,7 @@ def generate_cm(label, predicted, normalize=True):
     return cm
 
 
-def loss_graph(logged_losses, title='Loss vs. Iteration', x_axis='Iteration', y_axis='Loss', start_zero=True):
+def loss_graph(logged_losses, title='Loss vs. Iteration', x_axis='Iteration', y_axis='Loss', limits='auto'):
     """ loss vs iteration graph from results dataframe """
     # initialize data dictionary
     data = {
@@ -71,10 +70,16 @@ def loss_graph(logged_losses, title='Loss vs. Iteration', x_axis='Iteration', y_
             data['Loss'].append(logged_losses['validation losses'].tolist()[i])
     data = pd.DataFrame(data)
     # make graph
-    ax = sns.lineplot(data, x='Iteration', y='Loss', hue='Label', style='Label', alpha=1, palette='Greens_d')
+    ax = sns.lineplot(data, x='Iteration', y='Loss', hue='Label', style='Label', alpha=0.75, palette='Greens_d')
     # set graph limits
-    if start_zero:
-        ax.set_ylim(0)
+    if limits == 'auto':
+        limits = [[None, 0], [None, None]]
+    elif isinstance(limits, list):
+        limits = limits
+    else:
+        raise TypeError(f'{limits} is not properly formatted')
+    ax.set_ylim(limits[0][1], limits[1][1])
+    ax.set_xlim(limits[0][0], limits[1][0])
     # set axis labels
     ax.set_xlabel(x_axis)
     ax.set_ylabel(y_axis)
@@ -83,30 +88,50 @@ def loss_graph(logged_losses, title='Loss vs. Iteration', x_axis='Iteration', y_
     plt.show()
 
 
-def kde_loss_graph(logged_losses, title='Loss vs. Iteration', x_axis='Iteration', y_axis='Loss', start_zero=True):
-    """ kernel density estimate of loss vs iteration graph from results dataframe """
+def reg_loss_graph(logged_losses, title='Loss vs. Iteration Regression Fit', x_axis='Iteration', y_axis='Loss', frac=0.1, limits='auto'):
+    """ lowess regression line of loss vs iteration graph from results dataframe """
+    # set lowess predictor
+    lowess = sm.nonparametric.lowess
     # initialize data dictionary
-    data = {
+    data_train = {
         'Label': ['Training' for _ in range(len(logged_losses['logged points']))],
         'Iteration': logged_losses['logged points'].tolist(),
         'Loss': logged_losses['training losses'].tolist()
     }
+    data_valid = None
+    fit_valid = None
     # add validation if necessary
-    if 'validation losses' in logged_losses.columns:
+    has_valid = 'validation losses' in logged_losses
+    if has_valid:
         for i in range(len(logged_losses['logged points'])):
-            data['Label'].append('Validation')
-            data['Iteration'].append(logged_losses['logged points'].tolist()[i])
-            data['Loss'].append(logged_losses['validation losses'].tolist()[i])
-    data = pd.DataFrame(data)
-    # make graph
-    ax = sns.regplot(data, x='Iteration', y='Loss', lowess=True, marker='x', color='#497a4f', line_kws={'color': '#75b377'})
+            data_valid = {
+                'Iteration': logged_losses['logged points'].tolist(),
+                'Loss': logged_losses['validation losses'].tolist()
+            }
+    # make scatters and lowess predicted
+    sns.scatterplot(x=data_train['Iteration'], y=data_train['Loss'], label='Training', marker='x', linewidth=1, alpha=0.5, color='#75b377')
+    fit_train = lowess(data_train['Loss'], data_train['Iteration'], frac=frac)
+    if has_valid:
+        sns.scatterplot(x=data_valid['Iteration'], y=data_valid['Loss'], label='Validation', marker='x', linewidth=1, alpha=0.5, color='#497a4f')
+        fit_valid = lowess(data_valid['Loss'], data_train['Iteration'], frac=frac)
+    # plot lowess
+    plt.plot(fit_train[:, 0], fit_train[:, 1], label='Training', alpha=0.75, color='#75b377')
+    if has_valid:
+        plt.plot(fit_valid[:, 0], fit_valid[:, 1], label='Validation', linestyle='--', alpha=0.75, color='#497a4f')
     # set graph limits
-    if start_zero:
-        ax.set_ylim(0)
+    if limits == 'auto':
+        limits = [[None, 0], [None, None]]
+    elif isinstance(limits, list):
+        limits = limits
+    else:
+        raise TypeError(f'{limits} is not the correct datatype (list)')
+    plt.ylim(limits[0][1], limits[1][1])
+    plt.xlim(limits[0][0], limits[1][0])
     # set axis labels
-    ax.set_xlabel(x_axis)
-    ax.set_ylabel(y_axis)
-    ax.set_title(title)
+    plt.xlabel(x_axis)
+    plt.ylabel(y_axis)
+    plt.legend(title='Label')
+    plt.title(title)
     # plot graph
     plt.show()
 
