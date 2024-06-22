@@ -1,0 +1,9 @@
+# todo list
+update README.md (most incomplete)
+edit Keras_Drawing.py to utilize the Garden class instead of defining everything at the top of the line
+modernize Keras_Drawing.py (add instant evaluations, probability graph on the side, buttons, and ability to immediately save screen)
+edit Garden package to have more completed information about usage as well as return types defined near the top
+work on CNN and maybe do a CNN from scratch (this will take a long time and will be very slow to train but will be fun and cool)
+check to see if anything in the Garden file can be optimized further or restructured to be better
+figure out what to do with test files and consider moving all the completed code into another repository
+there are more things that should be fixed but i forgot, i'll update this when i remember
