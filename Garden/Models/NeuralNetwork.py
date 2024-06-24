@@ -31,10 +31,10 @@ class NeuralNetwork:
     """
     Fully connected neural network (FNN)
     """
-    def __init__(self, weights=None, biases=None, layer_sizes='auto', activation='relu', status_bars=True):
+    def __init__(self, weights=None, biases=None, layer_sizes='auto', activation='relu', beta=0.1, status_bars=True):
         """ model variables """
         # model version
-        self.version = '1.8.0'
+        self.version = '1.9.0'
 
         # model hyperparameters
         if layer_sizes == 'auto':
@@ -48,7 +48,7 @@ class NeuralNetwork:
         else:
             self.layer_sizes = layer_sizes
         self.weights, self.biases = self.set_parameters(weights, biases)
-        self.activation = self._get_activation(activation)
+        self.activation = self._get_activation(activation, beta)
 
         # training hyperparameters
         self.solver = None
@@ -109,11 +109,11 @@ class NeuralNetwork:
         return weights, biases
 
     @staticmethod
-    def _get_activation(name):
+    def _get_activation(name, beta=0.1):
         """ set model activation function """
         return {
-            'forward': activations(name),
-            'derivative': derivative_activations(name)
+            'forward': activations(name, beta),
+            'derivative': derivative_activations(name, beta)
         }
 
     def _get_solver(self, name):
