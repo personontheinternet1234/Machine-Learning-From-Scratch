@@ -55,7 +55,7 @@ def guess():
 
     # show output on pygame window
     rendered_text = font.render(text, True, (0, 255, 0))
-    screen.blit(rendered_text, (265, 260))
+    screen.blit(rendered_text, (win_length - 10, 5))
     pygame.display.flip()
     # wait until input to clear screen
     wait_clear = True
@@ -93,9 +93,9 @@ pygame.init()
 # background color
 background_colour = (0, 0, 0)
 # window scale
-win_height = 280
-win_length = 280
-downscale_factor = 0.1
+win_height = 1120
+win_length = 1120
+downscale_factor = 0.025
 screen = pygame.display.set_mode((win_length, win_height))
 # frame rate
 frame_rate = 60
@@ -147,7 +147,7 @@ def draw_button(text, font, color, rect):
 
 
 FONT = pygame.font.SysFont(None, 25)
-button_check = pygame.Rect(win_length/2 - (win_length/6), win_height - (win_length/7) - 5, win_length/3, win_length/7)
+button_check = pygame.Rect(0, win_height - (win_length/10) - 5, win_length/5, win_length/10)
 
 # run pygame window
 while running:
@@ -193,9 +193,9 @@ while running:
             mouse_pos[1] = mouse_pos[0]
             mouse_pos[0] = event.pos
             # draw circle on mouse
-            pygame.draw.circle(screen, (255, 255, 255), mouse_pos[0], 10)
+            pygame.draw.circle(screen, (255, 255, 255), mouse_pos[0], 40)
             # draw connecting line
-            pygame.draw.line(screen, (255, 255, 255), mouse_pos[1], mouse_pos[0], 21)
+            pygame.draw.line(screen, (255, 255, 255), mouse_pos[1], mouse_pos[0], 84)
             mouse_pos = mouse_pos[0:2]
             # update display
             pygame.display.flip()
