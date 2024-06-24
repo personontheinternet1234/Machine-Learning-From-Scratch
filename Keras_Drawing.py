@@ -1,6 +1,8 @@
 """
-MNIST Neural Network application
-Isaac Park Verbrugge & Christian SW Host-Madsen
+MNIST Number Drawing
+Authors:
+    Christian SW Host-Madsen CO '25 <chost-madsen25@punahou.edu>
+    Isaac Park Verbrugge CO '25 <iverbrugge25@punahou.edu>
 """
 
 import ast
