@@ -28,11 +28,11 @@ def xavier_initialize(length, width):
     return array
 
 
-def activations(name):
+def activations(name, beta=0.1):
     """ get raw activation functions """
     functions = {
         'relu': lambda x: np.maximum(0, x),
-        'leaky relu': lambda x: np.maximum(0.1 * x, x),
+        'leaky relu': lambda x: np.maximum(beta * x, x),
         'sigmoid': lambda x: 1 / (1 + np.exp(-x)),
         'tanh': lambda x: np.tanh(x),
         'softplus': lambda x: np.log(1 + np.exp(x)),
@@ -50,11 +50,11 @@ def activations(name):
         )
 
 
-def derivative_activations(name):
+def derivative_activations(name, beta=0.1):
     """ get the derivatives of raw activation functions """
     derivatives = {
         'relu': lambda x: np.where(x > 0, 1, 0),
-        'leaky relu': lambda x: np.where(x > 0, 1, 0.1),
+        'leaky relu': lambda x: np.where(x > 0, 1, beta),
         'sigmoid': lambda x: np.exp(-x) / ((1 + np.exp(-x)) ** 2),
         'tanh': lambda x: 1 - np.tanh(x) ** 2,
         'softplus': lambda x: 1 / (1 + np.exp(-x)),
