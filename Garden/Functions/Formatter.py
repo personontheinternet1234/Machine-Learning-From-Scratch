@@ -19,7 +19,26 @@ tqdm_color = f'{Fore.GREEN}{{l_bar}}{{bar}}{{r_bar}}{Style.RESET_ALL}'
 
 
 def format_parameters(file_path, status_bars=True):
-    """ format parameters from a .txt file"""
+    """
+    format parameters from a .txt file
+
+    Weights txt should look like:
+    [[a,b,c...], [d,e,f...]...]
+    [[g,h...], [i,j...], [k,l...]...]
+
+    eg:
+    [[-0.8771341087742135, 1.578797175316903, -2.421074385347355], [1.0226131651189596, -1.1367997111676496, 1.1616987542888868]]
+    [[0.8061576470339566, -0.29437974521184074], [0.909628881514868, -0.9623878282632817], [0.20515100022079089, -0.8415196464701109]]
+
+    Biases txt should look like:
+    [[a,b,c...]]
+    [[g,h...]]
+
+    eg:
+    [[0.033332371717526704, -0.512611285317706, -0.41990002117387404]]
+    [[0.06786937893477499, 0.8402237807256552]]
+    """
+
     # find errors
     if file_path[-4:] != '.txt':
         raise ValueError(f'{file_path} is not a .txt file')

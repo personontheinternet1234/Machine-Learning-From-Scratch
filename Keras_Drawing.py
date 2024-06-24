@@ -9,26 +9,15 @@ import ast
 import numpy as np
 import pygame
 import os
+from Garden.Extra import Credits
+from Garden.Models.NeuralNetwork import NeuralNetwork
+import Garden.Functions.Functional as Fnc
+import Garden.Functions.Formatter as Fmr
+import Garden.Functions.Metrics as Mtr
 
 from PIL import Image
 
 """ definitions """
-
-
-# leaky rectified linear activator
-def l_relu(values):
-    output = np.maximum(0.1 * values, values)
-    return output
-
-
-# forward pass
-def forward(inputs, weights, biases):
-    nodes = [inputs]
-    # set amount of layers
-    for layer in range(3):
-        activations = l_relu(np.matmul(nodes[-1], weights[layer]) + biases[layer])
-        nodes.append(activations)
-    return nodes
 
 
 # softmax activator
@@ -36,7 +25,8 @@ def softmax(values):
     output = np.exp(values) / np.sum(np.exp(values))
     return output
 
-def guess():
+
+def guess(network):
     # save image
     scaled_screen = pygame.transform.scale(screen, (win_length * downscale_factor, win_height * downscale_factor))
     pygame.image.save(scaled_screen, f"assets/other/{image_location}")
@@ -48,7 +38,7 @@ def guess():
     forward_layer = np.array(list(gray_img.getdata())) / 255
 
     # forward pass and argmax of image
-    output = forward(forward_layer, weights, biases)[-1]
+    output = network.forward(forward_layer)[-1][0]
     text = str(np.nanargmax(output))
     # softmax output
     smax_output = softmax(output)
@@ -62,10 +52,9 @@ def guess():
     rendered_error = False
 
     # print certainties in terminal
-    for i in range(len(list(smax_output[0]))):
-        print(f"{i}: {(smax_output[0][i] * 100):.5f}%")
+    for i in range(len(list(smax_output))):
+        print(f"{i}: {(smax_output[i] * 100):.5f}%")
     print("-------------------------")
-
 
 
 """ load files """
@@ -84,6 +73,9 @@ with open(f"assets/saved/{weights_location}", "r") as f:
 with open(f"assets/saved/{biases_location}", "r") as f:
     for line in f:
         biases.append(np.array(ast.literal_eval(line)))
+
+layer_sizes = [784, 16, 16, 10]
+network = NeuralNetwork(weights=weights, biases=biases, layer_sizes=layer_sizes, activation="leaky relu")
 
 """ application """
 
@@ -185,6 +177,11 @@ while running:
                 pygame.display.flip()
         # check if mouse down
         if pygame.mouse.get_pressed()[0]:
+            x, y = pygame.mouse.get_pos()
+            if button_check.collidepoint(x, y):
+                guess(network)
+                break
+
             # find mouse and reference last pos
             mouse_pos.append(event.pos)
             mouse_pos.append(event.pos)
@@ -197,9 +194,6 @@ while running:
             mouse_pos = mouse_pos[0:2]
             # update display
             pygame.display.flip()
-            x, y = pygame.mouse.get_pos()
-            if button_check.collidepoint(x, y):
-                guess()
         # check if mouse not down
         if not pygame.mouse.get_pressed()[0]:
             # reset mouse positions
@@ -217,7 +211,7 @@ while running:
             # evaluate image
             if event.key == pygame.K_s:
                 if not wait_initial and not wait_clear:
-                    guess()
+                    guess(network)
                 else:
                     if not rendered_error:
                         rendered_text = font.render("No new image to evaluate", True, (0, 255, 0))

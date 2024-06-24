@@ -26,11 +26,14 @@ from Garden.Functions.Metrics import (
 from colorama import Fore, Style
 from tqdm import tqdm
 
-
 class NeuralNetwork:
     """
     Fully connected neural network (FNN)
+
+    Weights is a ... x ... sized np matrix: [np.array([a,b,c...]), np.array([d,e,f...]), np.array([g,h,i...])...]
+    Biases is a ... x 1 sized np matrix: [np.array([a]), np.array([b]), np.array([c])...]
     """
+
     def __init__(self, weights=None, biases=None, layer_sizes='auto', activation='relu', beta=0.1, status_bars=True):
         """ model variables """
         # model version
