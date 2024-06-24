@@ -5,43 +5,61 @@ Authors:
     Isaac Park Verbrugge CO '25 <iverbrugge25@punahou.edu>
 """
 
+import os
+
 from Garden.Extra import Credits
 from Garden.Models.NeuralNetwork import NeuralNetwork
 import Garden.Functions.Functional as Fnc
 import Garden.Functions.Formatter as Fmr
 import Garden.Functions.Metrics as Mtr
 
+import Keras_Data_Loading
+
+# locations
+root = os.path.join(os.path.dirname(__file__), 'assets')
+saved_location = os.path.join(root, 'saved')
+data_location = os.path.join(root, 'data')
+
 # hyperparameters
 layer_sizes = [784, 16, 16, 10]
 activation = 'leaky relu'
 solver = 'mini-batch'
-batch_size = 42
+batch_size = 49
 learning_rate = 0.001
-max_iter = 100000
+max_iter = 10000
 alpha = 0.001
 trim_data = False
 trim_frac = 0.01
 set_validation = True
 val_frac = 0.3
 loss_reporting = True
-eval_batch_size = 60
+eval_batch_size = 70
 eval_interval = max(1, round(max_iter * 0.01))
 load_parameters = False
-weights_location = 'assets/saved/weights_keras.txt'
-biases_location = 'assets/saved/biases_keras.txt'
-values_location = 'assets/data/data_values_keras.csv'
-labels_location = 'assets/data/data_labels_keras.csv'
+weights_name = 'weights_keras.txt'
+biases_name = 'biases_keras.txt'
+values_name = 'data_values_keras.csv'
+labels_name = 'data_labels_keras.csv'
+
 conf_mat_normal = True
 
 # print Garden credits
 Credits.print_credits()
 
 # import assets
-keras_values = Fmr.format_data(values_location)
-keras_labels = Fmr.format_data(labels_location)
+if not (os.path.exists(os.path.join(data_location, values_name)) and os.path.exists(os.path.join(data_location, labels_name))):
+    Keras_Data_Loading.main()
+keras_values = Fmr.format_data(os.path.join(data_location, values_name))
+keras_labels = Fmr.format_data(os.path.join(data_location, labels_name))
 if load_parameters:
-    weights = Fmr.format_parameters(weights_location)
-    biases = Fmr.format_parameters(biases_location)
+    if os.path.exists(os.path.join(saved_location, weights_name)):
+        weights = Fmr.format_parameters(os.path.join(saved_location, weights_name))
+    else:
+        raise FileNotFoundError(f'{os.path.join(saved_location, weights_name)} does not exist')
+    if os.path.exists(os.path.join(saved_location, biases_name)):
+        biases = Fmr.format_parameters(os.path.join(saved_location, biases_name))
+    else:
+        raise FileNotFoundError(f'{os.path.join(saved_location, biases_name)} does not exist')
 else:
     weights = None
     biases = None
@@ -94,7 +112,7 @@ if set_validation:
 # save model
 save_parameters = Mtr.input_color("input 's' to save parameters: ")
 if save_parameters.lower() == 's':
-    Fmr.save_parameters(weights_location, keras_results['weights'])
-    Fmr.save_parameters(biases_location, keras_results['biases'])
+    Fmr.save_parameters(os.path.join(saved_location, weights_name), keras_results['weights'])
+    Fmr.save_parameters(os.path.join(saved_location, biases_name), keras_results['biases'])
 else:
     Mtr.print_color('parameters not saved')
