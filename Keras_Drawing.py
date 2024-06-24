@@ -36,6 +36,37 @@ def softmax(values):
     output = np.exp(values) / np.sum(np.exp(values))
     return output
 
+def guess():
+    # save image
+    scaled_screen = pygame.transform.scale(screen, (win_length * downscale_factor, win_height * downscale_factor))
+    pygame.image.save(scaled_screen, f"assets/other/{image_location}")
+    # open saved image
+    img = Image.open(f"assets/other/{image_location}")
+    # grayscale image
+    gray_img = img.convert("L")
+    # convert to numpy array
+    forward_layer = np.array(list(gray_img.getdata())) / 255
+
+    # forward pass and argmax of image
+    output = forward(forward_layer, weights, biases)[-1]
+    text = str(np.nanargmax(output))
+    # softmax output
+    smax_output = softmax(output)
+
+    # show output on pygame window
+    rendered_text = font.render(text, True, (0, 255, 0))
+    screen.blit(rendered_text, (265, 260))
+    pygame.display.flip()
+    # wait until input to clear screen
+    wait_clear = True
+    rendered_error = False
+
+    # print certainties in terminal
+    for i in range(len(list(smax_output[0]))):
+        print(f"{i}: {(smax_output[0][i] * 100):.5f}%")
+    print("-------------------------")
+
+
 
 """ load files """
 
@@ -93,15 +124,36 @@ rendered_error = False
 # print initial text break
 print("-------------------------")
 
-if not os.path.isdir("assets/other/"):
-    # os.mkdir(os.dirname(os.dirname(os.join('assets', 'other', 'user_number.jpeg'))))
-    # os.mkdir(os.dirname(os.join('saved', 'other', 'user_number.jpeg')))
-    os.mkdir("assets/other/")
+if not os.path.exists(os.path.dirname(os.path.join('assets', 'other', 'user_number.jpeg'))):
+    os.mkdir(os.path.dirname(os.path.join('assets', 'other', 'user_number.jpeg')))
+
+WHITE = (255, 255, 255)
+GREY = (200, 200, 200)
+BLACK = (0, 0, 0)
+FONT = pygame.font.SysFont(None, 40)
+
+
+def draw_text(text, font, color, x, y):
+    text_surface = font.render(text, True, color)
+    text_rect = text_surface.get_rect()
+    text_rect.center = (x, y)
+    screen.blit(text_surface, text_rect)
+
+
+def draw_button(text, font, color, rect):
+    pygame.draw.rect(screen, WHITE, rect)
+    pygame.draw.rect(screen, GREY, rect, width=3)
+    draw_text(text, font, color, rect.centerx, rect.centery)
+
+
+FONT = pygame.font.SysFont(None, 25)
+button_check = pygame.Rect(win_length/2 - (win_length/6), win_height - (win_length/7) - 5, win_length/3, win_length/7)
 
 # run pygame window
 while running:
     # frame rate
     clock.tick(frame_rate)
+
     for event in pygame.event.get():
         # show directions
         if wait_initial:
@@ -147,6 +199,9 @@ while running:
             mouse_pos = mouse_pos[0:2]
             # update display
             pygame.display.flip()
+            x, y = pygame.mouse.get_pos()
+            if button_check.collidepoint(x, y):
+                guess()
         # check if mouse not down
         if not pygame.mouse.get_pressed()[0]:
             # reset mouse positions
@@ -164,34 +219,7 @@ while running:
             # evaluate image
             if event.key == pygame.K_s:
                 if not wait_initial and not wait_clear:
-                    # save image
-                    scaled_screen = pygame.transform.scale(screen, (win_length * downscale_factor, win_height * downscale_factor))
-                    pygame.image.save(scaled_screen, f"assets/other/{image_location}")
-                    # open saved image
-                    img = Image.open(f"assets/other/{image_location}")
-                    # grayscale image
-                    gray_img = img.convert("L")
-                    # convert to numpy array
-                    forward_layer = np.array(list(gray_img.getdata())) / 255
-
-                    # forward pass and argmax of image
-                    output = forward(forward_layer, weights, biases)[-1]
-                    text = str(np.nanargmax(output))
-                    # softmax output
-                    smax_output = softmax(output)
-
-                    # show output on pygame window
-                    rendered_text = font.render(text, True, (0, 255, 0))
-                    screen.blit(rendered_text, (265, 260))
-                    pygame.display.flip()
-                    # wait until input to clear screen
-                    wait_clear = True
-                    rendered_error = False
-
-                    # print certainties in terminal
-                    for i in range(len(list(smax_output[0]))):
-                        print(f"{i}: {(smax_output[0][i] * 100):.5f}%")
-                    print("-------------------------")
+                    guess()
                 else:
                     if not rendered_error:
                         rendered_text = font.render("No new image to evaluate", True, (0, 255, 0))
@@ -199,7 +227,9 @@ while running:
                         pygame.display.flip()
                         rendered_error = True
 
+        draw_button("Guess?", FONT, BLACK, button_check)
+        pygame.display.flip()
+
         # closed window
         if event.type == pygame.QUIT:
-            # end running program
             running = False
