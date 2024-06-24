@@ -130,7 +130,6 @@ if not os.path.exists(os.path.dirname(os.path.join('assets', 'other', 'user_numb
 WHITE = (255, 255, 255)
 GREY = (200, 200, 200)
 BLACK = (0, 0, 0)
-FONT = pygame.font.SysFont(None, 40)
 
 
 def draw_text(text, font, color, x, y):
@@ -146,7 +145,6 @@ def draw_button(text, font, color, rect):
     draw_text(text, font, color, rect.centerx, rect.centery)
 
 
-FONT = pygame.font.SysFont(None, 25)
 button_check = pygame.Rect(0, win_height - (win_length/10) - 5, win_length/5, win_length/10)
 
 # run pygame window
@@ -227,7 +225,7 @@ while running:
                         pygame.display.flip()
                         rendered_error = True
 
-        draw_button("Guess?", FONT, BLACK, button_check)
+        draw_button("Guess?", font, BLACK, button_check)
         pygame.display.flip()
 
         # closed window
