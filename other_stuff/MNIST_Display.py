@@ -20,7 +20,7 @@ def update(frame):
 # parameters
 frames = 10000
 time_interval = 150
-number = "random"
+number = "4"
 val_numbers = list("0123456789")
 
 # load

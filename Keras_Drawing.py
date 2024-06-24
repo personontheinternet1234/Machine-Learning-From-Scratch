@@ -8,6 +8,7 @@ Authors:
 import ast
 import numpy as np
 import pygame
+import os
 
 from PIL import Image
 
@@ -91,6 +92,11 @@ rendered_error = False
 
 # print initial text break
 print("-------------------------")
+
+if not os.path.isdir("assets/other/"):
+    # os.mkdir(os.dirname(os.dirname(os.join('assets', 'other', 'user_number.jpeg'))))
+    # os.mkdir(os.dirname(os.join('saved', 'other', 'user_number.jpeg')))
+    os.mkdir("assets/other/")
 
 # run pygame window
 while running:
