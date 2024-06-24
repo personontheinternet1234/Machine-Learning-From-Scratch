@@ -7,13 +7,14 @@ Authors:
 
 import os
 
-from Garden.Extra import Credits
-from Garden.Models.NeuralNetwork import NeuralNetwork
 import Garden.Functions.Functional as Fnc
 import Garden.Functions.Formatter as Fmr
 import Garden.Functions.Metrics as Mtr
+from Garden.Models.NeuralNetwork import NeuralNetwork
 
 import Keras_Data_Loading
+
+from Garden.Extra import Credits
 
 # locations
 root = os.path.join(os.path.dirname(__file__), 'assets')

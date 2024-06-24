@@ -16,3 +16,4 @@ def print_credits():
     print_color("Christian SW Host-Madsen CO '25 <chost-madsen25@punahou.edu>")
     print_color("Isaac Park Verbrugge CO '25 <iverbrugge25@punahou.edu>")
     print_color('"""')
+    return None

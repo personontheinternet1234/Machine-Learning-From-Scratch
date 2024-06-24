@@ -248,6 +248,7 @@ class NeuralNetwork:
 
         # calculate elapsed time
         self.elapsed_time = time.time() - start_time
+        return None
 
     def predict(self, inputs):
         """ predict outputs based on the model """
@@ -262,6 +263,7 @@ class NeuralNetwork:
         self.array_valid_x = np.array(valid_x)
         self.array_valid_y = np.array(valid_y)
         self.valid_len = len(self.valid_x)
+        return None
 
     def configure_reporting(self, loss_reporting=False, eval_batch_size="auto", eval_interval=10):
         """ configure how loss reporting is done """
@@ -278,6 +280,7 @@ class NeuralNetwork:
             raise ValueError(f"'{eval_batch_size}' is an invalid evaluation batch size")
         else:
             self.eval_batch_size = eval_batch_size
+        return None
 
     def get_results(self, cm_norm=True):
         """ return network results to the user """
@@ -384,3 +387,4 @@ class NeuralNetwork:
         print_color('"""')
         print_color(f'Fully Connected Neural Network Version {self.version}')
         print_color('"""')
+        return None
