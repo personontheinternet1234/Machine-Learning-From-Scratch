@@ -83,7 +83,9 @@ network = NeuralNetwork(weights=weights, biases=biases, layer_sizes=layer_sizes,
 pygame.init()
 
 # background color
-background_colour = (0, 0, 0)
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+GREY = (200, 200, 200)
 # window scale
 win_scale = 40
 win_height = 28 * win_scale
@@ -97,7 +99,7 @@ font = pygame.font.Font(None, 30)
 # set window title
 pygame.display.set_caption("Drawing Window")
 # fill background
-screen.fill(background_colour)
+screen.fill(BLACK)
 # update display
 pygame.display.flip()
 
@@ -118,10 +120,6 @@ print("-------------------------")
 
 if not os.path.exists(os.path.dirname(os.path.join('assets', 'other', 'user_number.jpeg'))):
     os.mkdir(os.path.dirname(os.path.join('assets', 'other', 'user_number.jpeg')))
-
-WHITE = (255, 255, 255)
-GREY = (200, 200, 200)
-BLACK = (0, 0, 0)
 
 
 def draw_text(text, font, color, x, y):
@@ -150,7 +148,7 @@ while running:
             # if not already rendered
             if not rendered_initial:
                 # render all texts
-                screen.fill(background_colour)
+                screen.fill(BLACK)
                 rendered_text = font.render("C to clear", True, (0, 255, 0))
                 screen.blit(rendered_text, (0, 0))
                 rendered_text = font.render("S to save & evaluate", True, (0, 255, 0))
@@ -165,7 +163,7 @@ while running:
             if pygame.mouse.get_pressed()[0]:
                 # clear and end waiting loop
                 wait_initial = False
-                screen.fill(background_colour)
+                screen.fill(BLACK)
                 pygame.display.flip()
         # waiting for next user input after evaluation
         if wait_clear:
@@ -173,7 +171,7 @@ while running:
             if pygame.mouse.get_pressed()[0]:
                 # clear and end waiting loop
                 wait_clear = False
-                screen.fill(background_colour)
+                screen.fill(BLACK)
                 pygame.display.flip()
         # check if mouse down
         if pygame.mouse.get_pressed()[0]:
@@ -202,7 +200,7 @@ while running:
         if event.type == pygame.KEYDOWN:
             # clear screen
             if event.key == pygame.K_c:
-                screen.fill(background_colour)
+                screen.fill(BLACK)
                 pygame.display.flip()
             # set conditionals for program directions
             if event.key == pygame.K_d:
