@@ -87,7 +87,7 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GREY = (200, 200, 200)
 # window scale
-win_scale = 40
+win_scale = 20
 win_height = 28 * win_scale
 win_length = 28 * win_scale
 screen = pygame.display.set_mode((win_length, win_height))
@@ -186,9 +186,9 @@ while running:
             mouse_pos[1] = mouse_pos[0]
             mouse_pos[0] = event.pos
             # draw circle on mouse
-            pygame.draw.circle(screen, (255, 255, 255), mouse_pos[0], 40)
+            pygame.draw.circle(screen, (255, 255, 255), mouse_pos[0], 10 * int(win_scale/10))
             # draw connecting line
-            pygame.draw.line(screen, (255, 255, 255), mouse_pos[1], mouse_pos[0], 84)
+            pygame.draw.line(screen, (255, 255, 255), mouse_pos[1], mouse_pos[0], 21 * int(win_scale/10))
             mouse_pos = mouse_pos[0:2]
             # update display
             pygame.display.flip()
