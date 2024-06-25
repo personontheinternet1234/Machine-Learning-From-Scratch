@@ -28,7 +28,7 @@ def softmax(values):
 
 def guess(network):
     # save image
-    scaled_screen = pygame.transform.scale(screen, (win_length * downscale_factor, win_height * downscale_factor))
+    scaled_screen = pygame.transform.scale(screen, (win_length / win_scale, win_height / win_scale))
     pygame.image.save(scaled_screen, f"assets/other/{image_location}")
     # open saved image
     img = Image.open(f"assets/other/{image_location}")
@@ -85,9 +85,9 @@ pygame.init()
 # background color
 background_colour = (0, 0, 0)
 # window scale
-win_height = 1120
-win_length = 1120
-downscale_factor = 0.025
+win_scale = 40
+win_height = 28 * win_scale
+win_length = 28 * win_scale
 screen = pygame.display.set_mode((win_length, win_height))
 # frame rate
 frame_rate = 60
