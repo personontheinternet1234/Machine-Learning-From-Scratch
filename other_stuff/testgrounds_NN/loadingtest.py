@@ -1,6 +1,6 @@
 # loading data for testing
 from PIL import Image
-from Garden.Models.NeuralNetwork import NeuralNetwork as nnet
+from Garden.Models.FeedforwardNeuralNetwork import NeuralNetwork as nnet
 import numpy as np
 from tqdm import tqdm
 import pandas as pd

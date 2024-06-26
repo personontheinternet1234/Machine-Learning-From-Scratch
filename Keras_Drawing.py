@@ -9,11 +9,7 @@ import ast
 import numpy as np
 import pygame
 import os
-from Garden.Extra import Credits
-from Garden.Models.NeuralNetwork import NeuralNetwork
-import Garden.Functions.Functional as Fnc
-import Garden.Functions.Formatter as Fmr
-import Garden.Functions.Metrics as Mtr
+from Garden.Models.FeedforwardNeuralNetwork import FeedforwardNeuralNetwork
 
 from PIL import Image
 
@@ -75,7 +71,7 @@ with open(f"assets/saved/{biases_location}", "r") as f:
         biases.append(np.array(ast.literal_eval(line)))
 
 layer_sizes = [784, 16, 16, 10]
-network = NeuralNetwork(weights=weights, biases=biases, layer_sizes=layer_sizes, activation="leaky relu")
+network = FeedforwardNeuralNetwork(weights=weights, biases=biases, layer_sizes=layer_sizes, activation="leaky relu")
 
 """ application """
 

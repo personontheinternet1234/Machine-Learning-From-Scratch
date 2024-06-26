@@ -26,9 +26,10 @@ from Garden.Functions.Metrics import (
 from colorama import Fore, Style
 from tqdm import tqdm
 
-class NeuralNetwork:
+
+class FeedforwardNeuralNetwork:
     """
-    Fully connected neural network (FNN)
+    Feedforward neural network (FNN)
 
     Weights is a ... x ... sized np matrix: [np.array([a,b,c...]), np.array([d,e,f...]), np.array([g,h,i...])...]
     Biases is a ... x 1 sized np matrix: [np.array([a]), np.array([b]), np.array([c])...]
@@ -134,14 +135,17 @@ class NeuralNetwork:
                 for layer in range(-1, -len(nodes) + 1, -1):
                     d_w = np.reshape(nodes[layer - 1], (self.batch_size, self.layer_sizes[layer - 1], 1)) * d_b
                     d_weights.insert(0, d_w)
-                    d_b = np.reshape(np.array([np.sum(self.weights[layer] * d_b, axis=2)]), (self.batch_size, 1, self.layer_sizes[layer - 1]))
+                    d_b = np.reshape(np.array([np.sum(self.weights[layer] * d_b, axis=2)]),
+                                     (self.batch_size, 1, self.layer_sizes[layer - 1]))
                     d_biases.insert(0, d_b)
                 d_w = np.reshape(nodes[0], (self.batch_size, self.layer_sizes[0], 1)) * d_b
                 d_weights.insert(0, d_w)
 
                 # optimize parameters
                 for layer in range(len(nodes) - 1):
-                    self.weights[layer] -= self.lr * np.sum((d_weights[layer] + (self.alpha / self.batch_size) * self.weights[layer]), axis=0) / self.batch_size
+                    self.weights[layer] -= self.lr * np.sum(
+                        (d_weights[layer] + (self.alpha / self.batch_size) * self.weights[layer]),
+                        axis=0) / self.batch_size
                     self.biases[layer] -= self.lr * np.sum(d_biases[layer], axis=0) / self.batch_size
 
             # return solver
@@ -166,7 +170,8 @@ class NeuralNetwork:
 
                 # optimize parameters
                 for layer in range(len(nodes) - 1):
-                    self.weights[layer] -= self.lr * (d_weights[layer] + (self.alpha / self.train_len) * self.weights[layer])
+                    self.weights[layer] -= self.lr * (
+                                d_weights[layer] + (self.alpha / self.train_len) * self.weights[layer])
                     self.biases[layer] -= self.lr * d_biases[layer]
 
             # return solver
@@ -243,7 +248,8 @@ class NeuralNetwork:
                 if self.set_valid:
                     valid_tc = random.randint(self.valid_batch_size, self.valid_len)
                     valid_pred = self.forward(self.valid_x[valid_tc - self.valid_batch_size:valid_tc])[-1]
-                    valid_loss = ssr(valid_pred, self.valid_y[valid_tc - self.valid_batch_size:valid_tc]) / self.valid_batch_size
+                    valid_loss = ssr(valid_pred,
+                                     self.valid_y[valid_tc - self.valid_batch_size:valid_tc]) / self.valid_batch_size
                     self.valid_losses.append(valid_loss)
 
         # calculate elapsed time

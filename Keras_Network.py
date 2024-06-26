@@ -10,7 +10,7 @@ import os
 import Garden.Functions.Functional as Fnc
 import Garden.Functions.Formatter as Fmr
 import Garden.Functions.Metrics as Mtr
-from Garden.Models.NeuralNetwork import NeuralNetwork
+from Garden.Models.FeedforwardNeuralNetwork import FeedforwardNeuralNetwork
 
 import Keras_Data_Loading
 
@@ -66,7 +66,7 @@ else:
     biases = None
 
 # form network
-keras_network = NeuralNetwork(weights=weights, biases=biases, layer_sizes=layer_sizes, activation=activation)
+keras_network = FeedforwardNeuralNetwork(weights=weights, biases=biases, layer_sizes=layer_sizes, activation=activation)
 # configure loss logging
 keras_network.configure_reporting(loss_reporting=loss_reporting, eval_batch_size=eval_batch_size, eval_interval=eval_interval)
 
