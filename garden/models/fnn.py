@@ -18,9 +18,6 @@ from garden.utils.functional import (
 from garden.metrics.metrics import (
     cm
 )
-from garden.utils.helper_functions import (
-    print_color
-)
 
 from colorama import Fore, Style
 from tqdm import tqdm
@@ -46,10 +43,11 @@ class FNN:
             raise ValueError(f"'{layer_sizes}' must only include integers")
         else:
             self.layer_sizes = layer_sizes
-        self.weights, self.biases = self.set_parameters(weights, biases)
+        self.weights, self.biases = self._set_parameters(weights, biases)
         self.activation = self._get_activation(activation, beta)
 
         # training hyperparameters
+        # todo: change some of these names
         self.solver = None
         self.batch_size = None
         self.lr = None
@@ -80,7 +78,7 @@ class FNN:
         self.status = not status_bars
         self.color = f'{Fore.GREEN}{{l_bar}}{{bar}}{{r_bar}}{Style.RESET_ALL}'
 
-    def set_parameters(self, weights, biases):
+    def _set_parameters(self, weights, biases):
         """ set model parameters """
         if weights is None:
             # generate weights
@@ -117,6 +115,7 @@ class FNN:
 
     def _get_solver(self, name):
         """ set model solving method """
+        # todo: check if this math is even correct
         if name == 'mini-batch':
             # mini-batch gradient descent
             def update(nodes, y):
@@ -130,17 +129,14 @@ class FNN:
                 for layer in range(-1, -len(nodes) + 1, -1):
                     d_w = np.reshape(nodes[layer - 1], (self.batch_size, self.layer_sizes[layer - 1], 1)) * d_b
                     d_weights.insert(0, d_w)
-                    d_b = np.reshape(np.array([np.sum(self.weights[layer] * d_b, axis=2)]),
-                                     (self.batch_size, 1, self.layer_sizes[layer - 1]))
+                    d_b = np.reshape(np.array([np.sum(self.weights[layer] * d_b, axis=2)]), (self.batch_size, 1, self.layer_sizes[layer - 1]))
                     d_biases.insert(0, d_b)
                 d_w = np.reshape(nodes[0], (self.batch_size, self.layer_sizes[0], 1)) * d_b
                 d_weights.insert(0, d_w)
 
                 # optimize parameters
                 for layer in range(len(nodes) - 1):
-                    self.weights[layer] -= self.lr * np.sum(
-                        (d_weights[layer] + (self.alpha / self.batch_size) * self.weights[layer]),
-                        axis=0) / self.batch_size
+                    self.weights[layer] -= self.lr * np.sum((d_weights[layer] + (self.alpha / self.batch_size) * self.weights[layer]), axis=0) / self.batch_size
                     self.biases[layer] -= self.lr * np.sum(d_biases[layer], axis=0) / self.batch_size
 
             # return solver
@@ -174,6 +170,9 @@ class FNN:
         else:
             # invalid solving method
             raise ValueError(f"'{name}' is an invalid solving method")
+
+    def _get_loss(self, name):
+        ...
 
     def forward(self, inputs):
         """ pass inputs through the model """
@@ -249,7 +248,6 @@ class FNN:
 
         # calculate elapsed time
         self.elapsed_time = time.time() - start_time
-        return None
 
     def predict(self, inputs):
         """ predict outputs based on the model """
@@ -264,7 +262,6 @@ class FNN:
         self.array_valid_x = np.array(valid_x)
         self.array_valid_y = np.array(valid_y)
         self.valid_len = len(self.valid_x)
-        return None
 
     def configure_reporting(self, loss_reporting=False, eval_batch_size="auto", eval_interval=10):
         """ configure how loss reporting is done """
@@ -281,7 +278,6 @@ class FNN:
             raise ValueError(f"'{eval_batch_size}' is an invalid evaluation batch size")
         else:
             self.eval_batch_size = eval_batch_size
-        return None
 
     def get_results(self, cm_norm=True):
         """ return network results to the user """
@@ -381,11 +377,3 @@ class FNN:
 
         # return results dictionary
         return results
-
-    def print_info(self):
-        """ print neural network information """
-        # print information
-        print_color('"""')
-        print_color(f'Fully Connected Neural Network Version {self.version}')
-        print_color('"""')
-        return None

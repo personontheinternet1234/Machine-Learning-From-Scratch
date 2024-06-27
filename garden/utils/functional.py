@@ -7,8 +7,17 @@ import numpy as np
 
 def ssr(expected, predicted):
     """ calculate loss using the sum of the squared residuals """
-    loss = np.sum(np.subtract(expected, predicted) ** 2)
-    return loss
+    error = np.sum(np.subtract(expected, predicted) ** 2)
+    return error
+
+
+def loss(name):
+    if name == 'ssr':
+        def forward(expected, predicted):
+            return np.sum(np.subtract(expected, predicted) ** 2)
+
+        def backward():
+            ...
 
 
 def softmax(values):
