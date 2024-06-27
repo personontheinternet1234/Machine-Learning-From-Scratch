@@ -24,8 +24,7 @@ required_files = [
 # list existing files
 existing_files = []
 if os.path.exists(os.path.join(root, 'KERAS', 'raw')):
-    for file in os.listdir(os.path.join(root, 'KERAS', 'raw')):
-        existing_files.append(file)
+    existing_files = os.listdir(os.path.join(root, 'KERAS', 'raw'))
 
 # check if data is valid
 if required_files != existing_files:
@@ -47,10 +46,3 @@ if required_files != existing_files:
         download=True,
         transform=ToTensor()
     )
-
-    # # move files straight to data
-    # for file in os.listdir(os.path.join(root, 'MNIST', 'raw')):
-    #     shutil.move(os.path.join(root, 'MNIST', 'raw', file), root)
-    #
-    # # clear generated MNIST folder
-    # shutil.rmtree(os.path.join(root, 'MNIST'))

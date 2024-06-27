@@ -13,6 +13,7 @@ update data imports to use pytorch imports instead of keras (will get rid of the
 since we'll probably continue to use this repository for more ML stuff, rename git directory to machine-learning-from-scratch (maybe just artificial-intelligence-scratch in the future)
 make another github directory called like machine-learning-from-scratch-final which will exclude all of the extra files we have on here
 fix mnist display
+make data processing effective
 
 this is pretty outdated in terms of the actual file naming, so either try interpreting what i meant or wait until i fix this file
 this is also just outdated in general since i moved literally everything, i'll update this again once i figure out what i did
