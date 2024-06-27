@@ -1,0 +1,74 @@
+machine-learning-scratch/
+├── demo/
+│   ├── draw.py
+│   ├── data_display.py
+│   ├── mnist/
+│   │   ├── cnn_mnist/
+│   │   │   ├── train.py
+│   │   │   ├── data/
+│   │   │   │   └── preprocess.py
+│   │   │   └── models/
+│   │   │       ├── biases.txt
+│   │   │       ├── kernels.txt
+│   │   │       └── weights.txt
+│   │   ├── cnn_torch_mnist/
+│   │   │   ├── train.py
+│   │   │   ├── data/
+│   │   │   │   └── preprocess.py
+│   │   │   └── models/
+│   │   │       └── params.pth
+│   │   ├── fnn_mnist/
+│   │   │   ├── train.py
+│   │   │   ├── data/
+│   │   │   │   └── preprocess.py
+│   │   │   └── models/
+│   │   │       ├── biases.txt
+│   │   │       └── weights.txt
+│   │   └── fnn_torch_mnist/
+│   │       ├── train.py
+│   │       ├── data/
+│   │       │   └── preprocess.py
+│   │       └── models/
+│   │           └── params.pth
+│   └── mnist_fashion/
+│       └── ...
+├── garden/
+│   ├── functional/
+│   │   └── functional.py
+│   ├── metrics/
+│   │   ├── metrics.py
+│   │   └── visualization.py
+│   ├── models/
+│   │   ├── cnn.py
+│   │   ├── cnn_torch.py
+│   │   ├── fnn.py
+│   │   ├── fnn_torch.py
+│   │   └── ...
+│   ├── utils/
+│   │   ├── helper_functions.py
+│   │   └── data_utils.py
+│   └── __init__.py
+├── data/
+│   ├── mnist_data/
+│   │   ├── data_generator.py
+│   │   └── data/
+│   │       └── ...
+│   ├── mnist_fashion_data/
+│   │   ├── data_generator.py
+│   │   └── data/
+│   │       └── ...
+│   └── ...
+├── other/
+│   ├── credits.txt
+│   ├── file_structure.txt
+│   ├── file_structure_cleaned.txt
+│   ├── old_files/
+│   │   └── ...
+│   └── test_files/
+│       ├── test_files_cnn
+│       ├── test_files_fnn
+│       └── ...
+├── README.md
+├── requirements.txt
+├── setup.py
+└── todo.txt

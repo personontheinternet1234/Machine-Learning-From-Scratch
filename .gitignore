@@ -1,4 +1,5 @@
-
-assets/data/data_values_keras.csv
-assets/data/data_labels_keras.csv
-assets/other/user_number.jpeg
+temp/user_number.jpeg
+data/*/data/*
+!data/*/data/
+demo/*/*/data/processed_data/*
+!demo/*/*/data/processed_data/
