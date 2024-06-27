@@ -10,6 +10,17 @@ def d_l_relu(values):
     return np.where(values > 0, 1, 0.1)
 
 
+def sigmoid(values):
+    output = 1 / (1 + np.exp(-1 * values))
+    return output
+
+
+def sigmoid_prime(values):
+    # output = 1 / (1 + np.exp(-1 * values)) * (1 - 1 / (1 + np.exp(-1 * values)))
+    output = sigmoid(values) * (1 - sigmoid(values))
+    return output
+
+
 def tb():
     print("---------------")
 
@@ -36,8 +47,8 @@ A0 = np.reshape(np.array(X[tc]), (len(X[tc]), 1))
 c = np.reshape(np.array(Y[tc]), (len(Y[tc]), 1))
 
 # f
-A1 = l_relu(np.matmul(W0, A0) + B0)
-A2 = l_relu(np.matmul(W1, A1) + B1)
+A1 = sigmoid(np.matmul(W0, A0) + B0)
+A2 = sigmoid(np.matmul(W1, A1) + B1)
 tb()
 print(A1.T)
 tb()
@@ -53,7 +64,7 @@ dA2 = -2 * np.subtract(c, A2)
 tb()
 print(dA2.T)
 tb()
-dB1 = d_l_relu(np.matmul(W1, A1) + B1) * dA2
+dB1 = sigmoid_prime(np.matmul(W1, A1) + B1) * dA2
 print(dB1.T)
 tb()
 dW1 = np.multiply(np.resize(dB1, (hls, ots)).T, np.resize(A1, (ots, hls)))
@@ -64,7 +75,7 @@ dA1 = np.reshape(np.sum(np.multiply(np.resize(dB1, (hls, ots)), W1.T), axis=1), 
 print(np.sum(np.multiply(np.resize(dB1, (hls, ots)), W1.T), axis=1))
 print(dA1.T)
 tb()
-dB0 = d_l_relu(np.matmul(W0, A0) + B0) * dA1
+dB0 = sigmoid_prime(np.matmul(W0, A0) + B0) * dA1
 print(dB0.T)
 tb()
 dW0 = np.multiply(np.resize(dB0, (ins, hls)).T, np.resize(A0, (hls, ins)))

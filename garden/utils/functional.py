@@ -13,23 +13,52 @@ def ssr(expected, predicted):
 
 def loss(name):
     if name == 'ssr':
-        def forward(expected, predicted):
+        def function(expected, predicted):
             return np.sum(np.subtract(expected, predicted) ** 2)
+        return function
+    elif name == 'sar':
+        def function(expected, predicted):
+            return np.sum(np.abs(np.subtract(expected, predicted)))
+        return function
+    elif name == 'cross-entropy':
+        def function(expected, predicted):
+            if not isinstance(expected, int):
+                expected = np.nanargmax(expected)
+            predicted = softmax(predicted)
+            return -1 * np.log(predicted[expected])
+        return function
+    else:
+        raise ValueError(f"'{name}' is an invalid loss function")
 
-        def backward():
-            ...
+
+def derivative_loss(name):
+    if name == 'ssr':
+        def derivative(expected, predicted):
+            return -2 * np.subtract(expected, predicted)
+        return derivative
+    elif name == 'sar':
+        def derivative(expected, predicted):
+            return -1 * np.sign(expected - predicted)
+        return derivative
+    elif name == 'cross-entropy':
+        def derivative(expected, predicted):
+            index = np.nanargmax(expected)
+            derived = np.exp(predicted) / np.sum(np.exp(predicted))
+            derived[index] = derived[index] - 1
+            return derived
+        return derivative
+    else:
+        raise ValueError(f"'{name}' is an invalid loss function")
 
 
 def softmax(values):
     """ calculate outcome probabilities using softmax """
-    output = np.exp(values) / np.sum(np.exp(values))
-    return output
+    return np.exp(values) / np.sum(np.exp(values))
 
 
 def xavier_initialize(length, width):
     """ initialize a random array using xavier initialization """
-    array = np.random.randn(length, width) * np.sqrt(2 / length)
-    return array
+    return np.random.randn(length, width) * np.sqrt(2 / length)
 
 
 def activations(name, beta=0.1):
@@ -45,13 +74,7 @@ def activations(name, beta=0.1):
     if name in functions:
         return functions[name]
     else:
-        possible_functions = []
-        for key, value in functions.items():
-            possible_functions.append(key)
-        raise ValueError(
-            f"'{name}' is an invalid activation function, "
-            f"choose from: {possible_functions}"
-        )
+        raise ValueError(f"'{name}' is an invalid activation function")
 
 
 def derivative_activations(name, beta=0.1):
@@ -67,10 +90,4 @@ def derivative_activations(name, beta=0.1):
     if name in derivatives:
         return derivatives[name]
     else:
-        possible_functions = []
-        for key, value in derivatives.items():
-            possible_functions.append(key)
-        raise ValueError(
-            f"'{name}' is an invalid activation function, "
-            f"choose from: {possible_functions}"
-        )
+        raise ValueError(f"'{name}' is an invalid activation function")

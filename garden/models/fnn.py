@@ -13,7 +13,9 @@ from garden.utils.functional import (
     ssr,
     softmax,
     activations,
-    derivative_activations
+    derivative_activations,
+    loss,
+    derivative_loss
 )
 from garden.metrics.metrics import (
     cm
@@ -115,7 +117,7 @@ class FNN:
 
     def _get_solver(self, name):
         """ set model solving method """
-        # todo: check if this math is even correct
+        # todo: this math is wrong and needs to be fixed
         if name == 'mini-batch':
             # mini-batch gradient descent
             def update(nodes, y):
@@ -140,7 +142,7 @@ class FNN:
                     self.biases[layer] -= self.lr * np.sum(d_biases[layer], axis=0) / self.batch_size
 
             # return solver
-            return {'update': update}
+            return update
         elif name == 'sgd':
             # stochastic gradient descent
             def update(nodes, y):
@@ -166,7 +168,7 @@ class FNN:
                     self.biases[layer] -= self.lr * d_biases[layer]
 
             # return solver
-            return {'update': update}
+            return update
         else:
             # invalid solving method
             raise ValueError(f"'{name}' is an invalid solving method")
@@ -231,7 +233,7 @@ class FNN:
 
             # optimize network
             nodes = self.forward(in_n)
-            self.solver['update'](nodes, out_n)
+            self.solver(nodes, out_n)
 
             # loss calculation
             if self.loss_reporting and batch % self.eval_interval == 0:

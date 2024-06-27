@@ -12,7 +12,9 @@ from garden.utils import (
     helper_functions as hf
 )
 
-from garden.models.fnn import FNN
+from garden.models.fnn import (
+    FNN
+)
 
 import data.process as p
 
