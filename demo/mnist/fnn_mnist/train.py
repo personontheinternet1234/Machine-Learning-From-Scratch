@@ -8,8 +8,8 @@ from garden.metrics import (
     visualization as vis
 )
 from garden.utils import (
-    data_utils as d,
-    helper_functions as h
+    data_utils as du,
+    helper_functions as hf
 )
 
 from garden.models.fnn import FNN
@@ -46,7 +46,7 @@ labels_name = 'labels.csv'
 conf_mat_normal = True
 
 # print garden credits
-h.print_credits()
+hf.print_credits()
 
 # import assets
 weights = None
@@ -56,15 +56,15 @@ if not (os.path.isfile(os.path.join(data_location, values_name)) and os.path.isf
     labels_file = os.path.join(data_location, labels_name)
     keras_values, keras_labels = p.process_data(save=save_data, values_file=values_file, labels_file=labels_file)
 else:
-    keras_values = d.format_data(os.path.join(data_location, values_name))
-    keras_labels = d.format_data(os.path.join(data_location, labels_name))
+    keras_values = du.format_data(os.path.join(data_location, values_name))
+    keras_labels = du.format_data(os.path.join(data_location, labels_name))
 if load_parameters:
     if os.path.exists(os.path.join(saved_location, weights_name)):
-        weights = d.format_parameters(os.path.join(saved_location, weights_name))
+        weights = du.format_parameters(os.path.join(saved_location, weights_name))
     else:
         raise FileNotFoundError(f'{os.path.join(saved_location, weights_name)} does not exist')
     if os.path.exists(os.path.join(saved_location, biases_name)):
-        biases = d.format_parameters(os.path.join(saved_location, biases_name))
+        biases = du.format_parameters(os.path.join(saved_location, biases_name))
     else:
         raise FileNotFoundError(f'{os.path.join(saved_location, biases_name)} does not exist')
 
@@ -75,12 +75,12 @@ keras_network.configure_reporting(loss_reporting=loss_reporting, eval_batch_size
 
 # trim processed_data
 if trim_data:
-    keras_values = d.trim(keras_values, trim_frac=trim_frac)
-    keras_labels = d.trim(keras_labels, trim_frac=trim_frac)
+    keras_values = du.trim(keras_values, trim_frac=trim_frac)
+    keras_labels = du.trim(keras_labels, trim_frac=trim_frac)
 
 # set validation
 if set_validation:
-    x, y, val_x, val_y = d.test_val(keras_values, keras_labels, val_frac=val_frac)
+    x, y, val_x, val_y = du.test_val(keras_values, keras_labels, val_frac=val_frac)
     keras_network.validation(valid_x=val_x, valid_y=val_y)
 else:
     x, y = keras_values, keras_labels
@@ -99,24 +99,20 @@ keras_network.fit(
 # get model results
 keras_results = keras_network.get_results(cm_norm=conf_mat_normal)
 # Mtr.print_color(keras_results)
-vis.print_final_results(keras_results)
+vis.print_results(keras_results)
 # graph results
-if conf_mat_normal:
-    vis.prob_visual_cm((keras_results['training confusion matrix']), title='Training Results')
-    vis.prob_visual_cm((keras_results['validation confusion matrix']), title='Validation Results')
-else:
-    vis.num_visual_cm((keras_results['training confusion matrix']), title='Training Results')
-    vis.num_visual_cm((keras_results['validation confusion matrix']), title='Validation Results')
+vis.cm_disp((keras_results['training confusion matrix']), title='Training Results', normalized=conf_mat_normal)
+vis.cm_disp((keras_results['validation confusion matrix']), title='Validation Results', normalized=conf_mat_normal)
 vis.loss_graph(keras_results['logged losses'])
 vis.reg_loss_graph(keras_results['logged losses'])
-vis.prob_violin_plot(keras_results['training outcomes'], title='Training Violin Plot')
+vis.violin_plot(keras_results['training outcomes'], title='Training Violin Plot')
 if set_validation:
-    vis.prob_violin_plot(keras_results['validation outcomes'], title='Validation Violin Plot')
+    vis.violin_plot(keras_results['validation outcomes'], title='Validation Violin Plot')
 
 # save model
-save_parameters = h.input_color("input 's' to save parameters: ")
+save_parameters = hf.input_color("input 's' to save parameters: ")
 if save_parameters.lower() == 's':
-    d.save_parameters(os.path.join(saved_location, weights_name), keras_results['weights'])
-    d.save_parameters(os.path.join(saved_location, biases_name), keras_results['biases'])
+    du.save_parameters(os.path.join(saved_location, weights_name), keras_results['weights'])
+    du.save_parameters(os.path.join(saved_location, biases_name), keras_results['biases'])
 else:
-    h.print_color('parameters not saved')
+    hf.print_color('parameters not saved')

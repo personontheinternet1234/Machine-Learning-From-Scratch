@@ -31,6 +31,8 @@ def loss_graph(logged_losses, title='Loss vs. Iteration', x_axis='Iteration', y_
     # set graph limits
     if limits == 'auto':
         limits = [[None, 0], [None, None]]
+    elif limits == 'none':
+        limits = [[None, None], [None, None]]
     elif isinstance(limits, list):
         limits = limits
     else:
@@ -78,6 +80,8 @@ def reg_loss_graph(logged_losses, title='Loss vs. Iteration Regression Fit', x_a
     # set graph limits
     if limits == 'auto':
         limits = [[None, 0], [None, None]]
+    elif limits == 'none':
+        limits = [[None, None], [None, None]]
     elif isinstance(limits, list):
         limits = limits
     else:
@@ -93,8 +97,8 @@ def reg_loss_graph(logged_losses, title='Loss vs. Iteration Regression Fit', x_a
     plt.show()
 
 
-def prob_visual_cm(cm, title=None, x_labels=None, y_labels=None, x_axis='Predicted', y_axis='True', annotation=True):
-    """ visual confusion matrix from probabilities """
+def cm_disp(cm, title=None, x_labels=None, y_labels=None, x_axis='Predicted', y_axis='True', normalized=True, annotation=True):
+    """ visual confusion matrix in a heatmap """
     if cm is None:
         return 1
     # set labels
@@ -103,7 +107,10 @@ def prob_visual_cm(cm, title=None, x_labels=None, y_labels=None, x_axis='Predict
     if not y_labels:
         y_labels = [i for i in range(0, len(cm[0]))]
     # make heatmap
-    ax = sns.heatmap(cm, annot=annotation, xticklabels=x_labels, yticklabels=y_labels, linewidth=.5, cmap='Greens', vmin=0, vmax=1)
+    if normalized:
+        ax = sns.heatmap(cm, annot=annotation, xticklabels=x_labels, yticklabels=y_labels, linewidth=.5, cmap='Greens', vmin=0, vmax=1)
+    else:
+        ax = sns.heatmap(cm, annot=annotation, xticklabels=x_labels, yticklabels=y_labels, linewidth=.5, cmap='Greens')
     # set axis labels
     ax.set_xlabel(x_axis)
     ax.set_ylabel(y_axis)
@@ -112,26 +119,7 @@ def prob_visual_cm(cm, title=None, x_labels=None, y_labels=None, x_axis='Predict
     plt.show()
 
 
-def num_visual_cm(cm, title=None, x_labels=None, y_labels=None, x_axis='Predicted', y_axis='True', annotation=True):
-    """ visual confusion matrix from numbers """
-    if cm is None:
-        return 1
-    # set labels
-    if not x_labels:
-        x_labels = [i for i in range(0, len(cm))]
-    if not y_labels:
-        y_labels = [i for i in range(0, len(cm[0]))]
-    # make heatmap
-    ax = sns.heatmap(cm, annot=annotation, xticklabels=x_labels, yticklabels=y_labels, linewidth=.5, cmap='Greens')
-    # set axis labels
-    ax.set_xlabel(x_axis)
-    ax.set_ylabel(y_axis)
-    ax.set_title(title)
-    # plot heatmap
-    plt.show()
-
-
-def prob_violin_plot(df, title=None, x_axis='Label', y_axis='Maximum Probability'):
+def violin_plot(df, title=None, x_axis='Label', y_axis='Maximum Probability'):
     """ violin plot from results dataframe """
     # initialize processed_data dictionary
     data = {
@@ -154,7 +142,7 @@ def prob_violin_plot(df, title=None, x_axis='Label', y_axis='Maximum Probability
     plt.show()
 
 
-def print_final_results(results_dict, round_value=5):
+def print_results(results_dict, round_value=5):
     """ print final results of model from results dataframe """
     # evaluate final results
     results_ser = results_dict['final results']

@@ -3,6 +3,7 @@ processed_data utility functions
 """
 
 import ast
+import os
 import random
 
 import numpy as np
@@ -52,13 +53,12 @@ def shuffle(values, labels):
 
 
 def format_parameters(file_path, status_bars=True):
-    """ format parameters from a .csv file """
+    """ format parameters from a .txt file """
     # find errors
     if not file_path.endswith('.txt'):
         raise ValueError(f'{file_path} is not a .txt file')
-    # instantiate parameters list
-    parameters = []
     # load parameters
+    parameters = []
     if status_bars:
         print_color('formatting parameters...')
     with open(file_path, 'r') as f:
@@ -67,6 +67,59 @@ def format_parameters(file_path, status_bars=True):
             parameters.append(np.array(ast.literal_eval(line)))
     # return parameters
     return parameters
+
+
+def format_parameters_new(root, m_type='scratch', status_bars=True):
+    """ format parameters from file paths """
+    # check for valid model types
+    val_m_types = ['scratch', 'torch']
+    if m_type not in val_m_types:
+        raise TypeError(f'{m_type} is not a valid model type {val_m_types}')
+    if m_type == 'scratch':
+        # set valid and required file types
+        val_files = ['weights.txt', 'biases.txt', 'kernels.txt']
+        req_files = val_files[0:2]
+        files = []
+        # get list of files
+        for file in os.listdir(root):
+            files.append(file)
+        # check if dir includes required files
+        if not set(files).issubset(req_files):
+            raise TypeError(f'{files} does not include all required files {req_files}')
+        # load parameters
+        if status_bars:
+            print_color('formatting parameters...')
+        weights = []
+        biases = []
+        kernels = []
+        with open(os.path.join(root, 'weights.txt'), 'r') as f:
+            for line in f:
+                # reformat weights
+                weights.append(np.array(ast.literal_eval(line)))
+        with open(os.path.join(root, 'biases.txt'), 'r') as f:
+            for line in f:
+                # reformat biases
+                biases.append(np.array(ast.literal_eval(line)))
+        if os.path.exists(os.path.join(root, 'kernels.txt')):
+            with open(os.path.join(root, 'kernels.txt'), 'r') as f:
+                for line in f:
+                    # reformat kernels
+                    kernels.append(np.array(ast.literal_eval(line)))
+        # return parameters
+        return weights, biases, kernels if kernels else None
+    if m_type == 'torch':
+        # todo
+        # set valid and required file types
+        val_files = ['params.pth']
+        req_files = val_files
+        files = []
+        # get list of files
+        for file in os.listdir(root):
+            files.append(file)
+        # check if dir includes required files
+        if not set(files).issubset(req_files):
+            raise TypeError(f'{files} does not include all required files {req_files}')
+        raise ValueError('torch data formatting is currently unsupported')
 
 
 def format_data(file_path, status_bars=True):

@@ -8,7 +8,7 @@ import time
 import numpy as np
 import pandas as pd
 
-from garden.functional.functional import (
+from garden.utils.functional import (
     xavier_initialize,
     ssr,
     softmax,
@@ -16,7 +16,7 @@ from garden.functional.functional import (
     derivative_activations
 )
 from garden.metrics.metrics import (
-    generate_cm
+    cm
 )
 from garden.utils.helper_functions import (
     print_color
@@ -334,10 +334,10 @@ class FNN:
             val_accu = np.sum(val_outcomes['accurate']) / self.valid_len
 
         # generate training and validation confusion matrices
-        cm_train = generate_cm(train_outcomes['label'], train_outcomes['predicted'], normalize=cm_norm)
+        cm_train = cm(train_outcomes['label'], train_outcomes['predicted'], normalize=cm_norm)
         cm_valid = None
         if self.set_valid:
-            cm_valid = generate_cm(val_outcomes['label'], val_outcomes['predicted'], normalize=cm_norm)
+            cm_valid = cm(val_outcomes['label'], val_outcomes['predicted'], normalize=cm_norm)
 
         # reformat outcomes to pandas dataframe
         train_outcomes = pd.DataFrame(train_outcomes)

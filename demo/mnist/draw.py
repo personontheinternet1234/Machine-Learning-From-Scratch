@@ -1,5 +1,5 @@
 """
-MNIST model application to user-drawn numbers
+MNIST model application to user-drawn numbers - old
 """
 
 import ast
