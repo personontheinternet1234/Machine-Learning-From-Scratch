@@ -46,12 +46,12 @@ for i in tqdm(range(ep), ncols=150):
     # l2
     dA2 = -2 * (E - A2_s)
     dB1 = dA2
-    dW1 = A1_s.T * dB1
+    dW1 = A1_s.T @ dB1
     # l1
     dA1 = np.array([np.sum(W1 * dB1, axis=1)])
     # dA1 = np.dot(W1, dB1.T).T  # this works, but slower somehow
     dB0 = dA1
-    dW0 = A0_s.T * dB0
+    dW0 = A0_s.T @ dB0
 
     # o
     W0 = W0 - lr * dW0

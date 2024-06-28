@@ -15,8 +15,7 @@ def sigmoid(values):
     return output
 
 
-def sigmoid_prime(values):
-    # output = 1 / (1 + np.exp(-1 * values)) * (1 - 1 / (1 + np.exp(-1 * values)))
+def d_sigmoid(values):
     output = sigmoid(values) * (1 - sigmoid(values))
     return output
 
@@ -49,41 +48,41 @@ c = np.reshape(np.array(Y[tc]), (len(Y[tc]), 1))
 # f
 A1 = sigmoid(np.matmul(W0, A0) + B0)
 A2 = sigmoid(np.matmul(W1, A1) + B1)
-tb()
-print(A1.T)
-tb()
-print(A2.T)
-tb()
+# tb()
+# print(A1.T)
+# tb()
+# print(A2.T)
+# tb()
 
-for i in range(3):
-    print("")
+# for i in range(3):
+#     print("")
 
 # b
 # l2
+# tb()
 dA2 = -2 * np.subtract(c, A2)
+# print(dA2.T)
 tb()
-print(dA2.T)
-tb()
-dB1 = sigmoid_prime(np.matmul(W1, A1) + B1) * dA2
+dB1 = d_sigmoid(np.matmul(W1, A1) + B1) * dA2
 print(dB1.T)
 tb()
 dW1 = np.multiply(np.resize(dB1, (hls, ots)).T, np.resize(A1, (ots, hls)))
-print(dW1.T)
-tb()
+# print(dW1.T)
+# tb()
 # l1
 dA1 = np.reshape(np.sum(np.multiply(np.resize(dB1, (hls, ots)), W1.T), axis=1), (hls, 1))
-print(np.sum(np.multiply(np.resize(dB1, (hls, ots)), W1.T), axis=1))
-print(dA1.T)
-tb()
-dB0 = sigmoid_prime(np.matmul(W0, A0) + B0) * dA1
+# print(np.sum(np.multiply(np.resize(dB1, (hls, ots)), W1.T), axis=1))
+# print(dA1.T)
+# tb()
+dB0 = d_sigmoid(np.matmul(W0, A0) + B0) * dA1
 print(dB0.T)
 tb()
 dW0 = np.multiply(np.resize(dB0, (ins, hls)).T, np.resize(A0, (hls, ins)))
-print(dW0.T)
-tb()
+# print(dW0.T)
+# tb()
 
-for i in range(3):
-    print("")
+# for i in range(3):
+#     print("")
 
 # optimize
 W0 = np.subtract(W0, lr * dW0)
@@ -92,12 +91,12 @@ W1 = np.subtract(W1, lr * dW1)
 B1 = np.subtract(B1, lr * dB1)
 
 # return
-tb()
-print(W0.T)
-tb()
-print(B0.T)
-tb()
-print(W1.T)
-tb()
-print(B1.T)
-tb()
+# tb()
+# print(W0.T)
+# tb()
+# print(B0.T)
+# tb()
+# print(W1.T)
+# tb()
+# print(B1.T)
+# tb()

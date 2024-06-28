@@ -58,11 +58,11 @@ for i in range(1000):
         # b
         # l2
         dA2 = -2 * (E - A2_s)
-        dB1 = dA2
+        dB1 = d_l_relu(A1_s @ W1 + B1) * dA2
         dW1 = A1_s.T * dB1
         # l1
         dA1 = np.array([np.sum(W1 * dB1, axis=1)])
-        dB0 = dA1
+        dB0 = d_l_relu(A0_s @ W0 + B0) * dA1
         dW0 = A0_s.T * dB0
 
         dW0a += dW0
