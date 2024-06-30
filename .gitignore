@@ -3,3 +3,6 @@ data/*/data/*
 !data/*/data/
 demo/*/*/data/processed_data/*
 !demo/*/*/data/processed_data/
+.idea
+.idea/misc.xml
+.idea/NeuralNet.iml
