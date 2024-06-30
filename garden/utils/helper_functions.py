@@ -19,7 +19,7 @@ def print_credits():
     """ print garden credits """
     # print credits in alphabetical order
     print_color('"""')
-    print_color('The Garden')
+    print_color('The garden')
     print_color("Christian SW Host-Madsen CO '25 <chost-madsen25@punahou.edu>")
     print_color("Mason Morales CO '25 <mmorales25@punahou.edu>")
     print_color("Isaac Park Verbrugge CO '25 <iverbrugge25@punahou.edu>")
