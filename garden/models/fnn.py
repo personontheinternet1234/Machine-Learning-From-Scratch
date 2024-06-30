@@ -187,7 +187,7 @@ class FNN:
             nodes.append(node_layer)
         return nodes
 
-    def fit(self, x, y, solver='mini-batch', batch_size='auto', learning_rate=0.001, max_iter=20000, alpha=0.0001, shuffle=True):
+    def fit(self, x, y, solver='mini-batch', batch_size='auto', learning_rate=0.001, max_iter=20000, alpha=0.0001, shuffle=False):
         """ optimize model """
         # set training hyperparameters
         self.x = np.array(x)
