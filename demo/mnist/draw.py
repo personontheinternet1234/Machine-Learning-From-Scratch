@@ -116,7 +116,10 @@ rendered_error = False
 # print initial text break
 print("-------------------------")
 
-if not os.path.exists(os.path.join(number_file_path, image_location)):
+# if not os.path.exists(os.path.join(number_file_path)):
+#     os.mkdir(os.path.dirname(number_file_path))
+
+if not os.path.exists(os.path.join(number_file_path)):
     os.mkdir(os.path.dirname(number_file_path))
 
 
