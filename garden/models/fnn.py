@@ -10,15 +10,18 @@ import pandas as pd
 
 from garden.utils.functional import (
     xavier_initialize,
-    ssr,
-    softmax,
+    ssr,  # todo: move this to loss
+    softmax,  # todo: move this to activations
     activations,
     derivative_activations,
     loss,
-    derivative_loss
+    derivative_loss,
 )
 from garden.metrics.metrics import (
     cm
+)
+from garden.utils.data_utils import (
+    shuffle as shuf
 )
 
 from colorama import Fore, Style
@@ -184,11 +187,12 @@ class FNN:
             nodes.append(node_layer)
         return nodes
 
-    def fit(self, x, y, solver='mini-batch', batch_size='auto', learning_rate=0.001, max_iter=20000, alpha=0.0001):
+    def fit(self, x, y, solver='mini-batch', batch_size='auto', learning_rate=0.001, max_iter=20000, alpha=0.0001, shuffle=False):
         """ optimize model """
         # set training hyperparameters
         self.x = np.array(x)
         self.y = np.array(y)
+        self.x, self.y = shuf(self.x, self.y)
         self.solver = self._get_solver(solver)
         self.train_len = len(self.x)
         self.lr = learning_rate
@@ -219,6 +223,9 @@ class FNN:
 
         for batch in tqdm(range(max_iter), ncols=100, desc='fitting', disable=self.status, bar_format=self.color):
             # training loop
+            # shuffle data
+            if shuffle:
+                self.x, self.y = shuf(self.x, self.y)
             # set input batches
             if solver == 'mini-batch':
                 tc = random.randint(self.batch_size, self.train_len)
