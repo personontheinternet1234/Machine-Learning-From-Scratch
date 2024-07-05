@@ -9,19 +9,19 @@ import numpy as np
 import pandas as pd
 
 from garden.utils.functional import (
-    xavier_initialize,
-    ssr,  # todo: move this to loss
+    xavier,
+    ssr,  # todo: move this to cost
     softmax,  # todo: move this to activations
     activations,
-    derivative_activations,
-    loss,
-    derivative_loss,
+    d_activations,
+    cost,
+    d_cost,
 )
 from garden.metrics.metrics import (
     cm
 )
 from garden.utils.data_utils import (
-    shuffle as shuf
+    shuffle as mix
 )
 
 from colorama import Fore, Style
@@ -91,7 +91,7 @@ class FNN:
             for i in range(len(self.layer_sizes) - 1):
                 length = int(self.layer_sizes[i])
                 width = int(self.layer_sizes[i + 1])
-                weights.append(xavier_initialize(length, width))
+                weights.append(xavier(length, width))
         else:
             # load weights
             weights = weights
@@ -114,8 +114,15 @@ class FNN:
     def _get_activation(name, beta=0.1):
         """ set model activation function """
         return {
-            'forward': activations(name, beta),
-            'derivative': derivative_activations(name, beta)
+            'function': activations(name, beta),
+            'derivative': d_activations(name, beta)
+        }
+
+    @staticmethod
+    def _get_loss(name):
+        return {
+            'function': cost(name),
+            'derivative': d_cost(name)
         }
 
     def _get_solver(self, name):
@@ -176,14 +183,11 @@ class FNN:
             # invalid solving method
             raise ValueError(f"'{name}' is an invalid solving method")
 
-    def _get_loss(self, name):
-        ...
-
     def forward(self, inputs):
         """ pass inputs through the model """
         nodes = [inputs]
         for layer in range(len(self.layer_sizes) - 1):
-            node_layer = self.activation['forward'](np.matmul(nodes[-1], self.weights[layer]) + self.biases[layer])
+            node_layer = self.activation['function'](np.matmul(nodes[-1], self.weights[layer]) + self.biases[layer])
             nodes.append(node_layer)
         return nodes
 
@@ -192,7 +196,7 @@ class FNN:
         # set training hyperparameters
         self.x = np.array(x)
         self.y = np.array(y)
-        self.x, self.y = shuf(self.x, self.y)
+        self.x, self.y = mix(self.x, self.y)
         self.solver = self._get_solver(solver)
         self.train_len = len(self.x)
         self.lr = learning_rate
@@ -225,7 +229,7 @@ class FNN:
             # training loop
             # shuffle data
             if shuffle:
-                self.x, self.y = shuf(self.x, self.y)
+                self.x, self.y = mix(self.x, self.y)
             # set input batches
             if solver == 'mini-batch':
                 tc = random.randint(self.batch_size, self.train_len)

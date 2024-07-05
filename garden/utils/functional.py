@@ -5,13 +5,19 @@ mathematical functions
 import numpy as np
 
 
+# todo: deprecate
 def ssr(expected, predicted):
     """ calculate loss using the sum of the squared residuals """
     error = np.sum(np.subtract(expected, predicted) ** 2)
     return error
 
 
-def loss(name):
+def xavier(length, width):
+    """ initialize a random array using xavier initialization """
+    return np.random.randn(length, width) * np.sqrt(2 / length)
+
+
+def cost(name):
     if name == 'ssr':
         def function(expected, predicted):
             return np.sum(np.subtract(expected, predicted) ** 2)
@@ -31,7 +37,7 @@ def loss(name):
         raise ValueError(f"'{name}' is an invalid loss function")
 
 
-def derivative_loss(name):
+def d_cost(name):
     if name == 'ssr':
         def derivative(expected, predicted):
             return -2 * np.subtract(expected, predicted)
@@ -51,14 +57,10 @@ def derivative_loss(name):
         raise ValueError(f"'{name}' is an invalid loss function")
 
 
+# todo: move into activations and determine softmax'
 def softmax(values):
     """ calculate outcome probabilities using softmax """
     return np.exp(values) / np.sum(np.exp(values))
-
-
-def xavier_initialize(length, width):
-    """ initialize a random array using xavier initialization """
-    return np.random.randn(length, width) * np.sqrt(2 / length)
 
 
 def activations(name, beta=0.1):
@@ -77,7 +79,7 @@ def activations(name, beta=0.1):
         raise ValueError(f"'{name}' is an invalid activation function")
 
 
-def derivative_activations(name, beta=0.1):
+def d_activations(name, beta=0.1):
     """ get the derivatives of raw activation functional """
     derivatives = {
         'relu': lambda x: np.where(x > 0, 1, 0),
