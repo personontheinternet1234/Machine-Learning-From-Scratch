@@ -194,9 +194,7 @@ class FNN:
     def fit(self, x, y, solver='mini-batch', batch_size='auto', learning_rate=0.001, max_iter=20000, alpha=0.0001, shuffle=False):
         """ optimize model """
         # set training hyperparameters
-        self.x = np.array(x)
-        self.y = np.array(y)
-        self.x, self.y = mix(self.x, self.y)
+        self.x, self.y = mix(np.array(x), np.array(y))
         self.solver = self._get_solver(solver)
         self.train_len = len(self.x)
         self.lr = learning_rate
@@ -270,8 +268,7 @@ class FNN:
     def validation(self, valid_x, valid_y):
         """ set validation dataset """
         self.set_valid = True
-        self.valid_x = valid_x
-        self.valid_y = valid_y
+        self.valid_x, self.valid_y = mix(valid_x, valid_y)
         self.array_valid_x = np.array(valid_x)
         self.array_valid_y = np.array(valid_y)
         self.valid_len = len(self.valid_x)
