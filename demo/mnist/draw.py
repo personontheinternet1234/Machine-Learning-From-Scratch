@@ -135,7 +135,8 @@ def draw_text(text, font, color, x, y):
     screen.blit(text_surface, text_rect)
 
 
-def draw_button(text, font, color, rect):
+def draw_button(text, font, color, rect, x_pos=0, y_pos=0):
+    rect.center = (x_pos, y_pos)
     pygame.draw.rect(screen, WHITE, rect)
     pygame.draw.rect(screen, GREY, rect, width=3)
     draw_text(text, font, color, rect.centerx, rect.centery)
@@ -219,11 +220,12 @@ while running:
                 else:
                     if not rendered_error:
                         rendered_text = font.render("No new image to evaluate", True, (0, 255, 0))
-                        screen.blit(rendered_text, (0, 260))
+                        text_center = rendered_text.get_rect(center=(win_length/2, win_height/2))
+                        screen.blit(rendered_text, text_center)
                         pygame.display.flip()
                         rendered_error = True
 
-        draw_button("Guess?", font, BLACK, button_check)
+        draw_button("Guess?", font, BLACK, button_check, win_length//2, win_height * .95)
         pygame.display.flip()
 
         # closed window
