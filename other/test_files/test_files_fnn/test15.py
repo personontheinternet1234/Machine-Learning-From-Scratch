@@ -36,7 +36,7 @@ def tb():
 l1 = 3
 l2 = 4
 l3 = 3
-it = 1000
+it = 1
 lr = 0.1
 
 # t
@@ -65,7 +65,10 @@ for i in range(it):
     da3 = dj(a3, y1)
     dal = dg1(a2 @ w2 + b2)
     db2 = dal * da3
-    dw2 =
+    tb()
+    print(dal)
+    tb()
+    print(da3)
 
     # o
     b2 -= lr * db2
