@@ -142,7 +142,7 @@ def violin_plot(df, title=None, x_axis='Label', y_axis='Maximum Probability'):
     plt.show()
 
 
-def print_results(results_dict, round_value=5):
+def print_results(results_dict, sig_value=5):
     """ print final results of model from results dataframe """
     # evaluate final results
     results_ser = results_dict['final results']
