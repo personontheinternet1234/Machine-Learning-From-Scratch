@@ -26,10 +26,11 @@ data_location = os.path.join(root, 'data', 'processed_data')
 # hyperparameters
 layer_sizes = [784, 16, 16, 10]
 activation = 'leaky relu'
-solver = 'mini-batch'
+solver = 'sgd'
+cost_function = 'ssr'
 batch_size = 49
 learning_rate = 0.001
-max_iter = 1000
+max_iter = 10000
 alpha = 0.001
 trim_data = False
 trim_frac = 0.01
@@ -92,6 +93,7 @@ keras_network.fit(
     x=x,
     y=y,
     solver=solver,
+    cost_function=cost_function,
     batch_size=batch_size,
     learning_rate=learning_rate,
     max_iter=max_iter,

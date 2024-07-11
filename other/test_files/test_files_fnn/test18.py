@@ -38,7 +38,7 @@ def tb():
 l1 = 3
 l2 = 4
 l3 = 3
-it = 100000
+it = 1000
 lr = 0.1
 
 # t
@@ -76,6 +76,7 @@ for i in range(it):
     db2 = dg1(a2 @ w2 + b2) * da3
     dw2 = a2.T * db2
     da2 = np.sum(w2 * db2, axis=1)
+    tb()
     # l1
     db1 = dg1(a1 @ w1 + b1) * da2
     dw1 = a1.T * db1

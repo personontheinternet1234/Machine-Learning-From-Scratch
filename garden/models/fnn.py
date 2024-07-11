@@ -53,6 +53,7 @@ class FNN:
 
         # training hyperparameters
         # todo: change some of these names
+        self.j = None
         self.solver = None
         self.batch_size = None
         self.lr = None
@@ -119,7 +120,7 @@ class FNN:
         }
 
     @staticmethod
-    def _get_loss(name):
+    def _get_cost(name):
         return {
             'function': cost(name),
             'derivative': d_cost(name)
@@ -161,20 +162,21 @@ class FNN:
                 d_biases = []
 
                 # calculate gradients
-                d_b = -2 * (y - nodes[-1])
-                d_biases.insert(0, d_b)
+                d_a = self.j['derivative'](y, nodes[-1])
                 for layer in range(-1, -len(nodes) + 1, -1):
+                    d_b = self.activation['derivative'](nodes[layer - 1] @ self.weights[layer] + self.biases[layer]) * d_a
+                    d_biases.insert(0, d_b)
                     d_w = nodes[layer - 1].T * d_b
                     d_weights.insert(0, d_w)
-                    d_b = np.array([np.sum(self.weights[layer] * d_b, axis=1)])
-                    d_biases.insert(0, d_b)
+                    d_a = np.sum(self.weights[layer] * d_b, axis=1)
+                d_b = self.activation['derivative'](nodes[0] @ self.weights[0] + self.biases[0]) * d_a
+                d_biases.insert(0, d_b)
                 d_w = nodes[0].T * d_b
                 d_weights.insert(0, d_w)
 
                 # optimize parameters
                 for layer in range(len(nodes) - 1):
-                    self.weights[layer] -= self.lr * (
-                                d_weights[layer] + (self.alpha / self.train_len) * self.weights[layer])
+                    self.weights[layer] -= self.lr * (d_weights[layer] + (self.alpha / self.train_len) * self.weights[layer])
                     self.biases[layer] -= self.lr * d_biases[layer]
 
             # return solver
@@ -187,15 +189,16 @@ class FNN:
         """ pass inputs through the model """
         nodes = [inputs]
         for layer in range(len(self.layer_sizes) - 1):
-            node_layer = self.activation['function'](np.matmul(nodes[-1], self.weights[layer]) + self.biases[layer])
+            node_layer = self.activation['function'](nodes[-1] @ self.weights[layer] + self.biases[layer])
             nodes.append(node_layer)
         return nodes
 
-    def fit(self, x, y, solver='mini-batch', batch_size='auto', learning_rate=0.001, max_iter=20000, alpha=0.0001, shuffle=False):
+    def fit(self, x, y, solver='mini-batch', cost_function='ssr', batch_size='auto', learning_rate=0.001, max_iter=20000, alpha=0.0001, shuffle=False):
         """ optimize model """
         # set training hyperparameters
         self.x, self.y = mix(np.array(x), np.array(y))
         self.solver = self._get_solver(solver)
+        self.j = self._get_cost(cost_function)
         self.train_len = len(self.x)
         self.lr = learning_rate
         self.max_iter = max_iter
@@ -248,13 +251,12 @@ class FNN:
             if self.loss_reporting and batch % self.eval_interval == 0:
                 tc = random.randint(self.eval_batch_size, self.train_len)
                 train_pred = self.forward(self.x[tc - self.eval_batch_size:tc])[-1]
-                train_loss = ssr(train_pred, self.y[tc - self.eval_batch_size:tc]) / self.eval_batch_size
+                train_loss = self.j['function'](train_pred, self.y[tc - self.eval_batch_size:tc]) / self.eval_batch_size
                 self.train_losses.append(train_loss)
                 if self.set_valid:
                     valid_tc = random.randint(self.valid_batch_size, self.valid_len)
                     valid_pred = self.forward(self.valid_x[valid_tc - self.valid_batch_size:valid_tc])[-1]
-                    valid_loss = ssr(valid_pred,
-                                     self.valid_y[valid_tc - self.valid_batch_size:valid_tc]) / self.valid_batch_size
+                    valid_loss = self.j['function'](valid_pred, self.valid_y[valid_tc - self.valid_batch_size:valid_tc]) / self.valid_batch_size
                     self.valid_losses.append(valid_loss)
 
         # calculate elapsed time

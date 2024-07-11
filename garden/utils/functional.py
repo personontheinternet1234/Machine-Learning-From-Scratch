@@ -27,6 +27,7 @@ def cost(name):
             return np.sum(np.abs(np.subtract(expected, predicted)))
         return function
     elif name == 'cross-entropy':
+        # todo: the math is wrong on this and this doesn't work
         def function(expected, predicted):
             if not isinstance(expected, int):
                 expected = np.nanargmax(expected)
