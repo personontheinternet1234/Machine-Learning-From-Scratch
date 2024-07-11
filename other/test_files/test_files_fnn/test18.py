@@ -1,4 +1,5 @@
 import random
+import time
 
 import numpy as np
 
@@ -37,7 +38,7 @@ def tb():
 l1 = 3
 l2 = 4
 l3 = 3
-it = 1000
+it = 100000
 lr = 0.1
 
 # t
@@ -56,6 +57,7 @@ b1 = np.zeros((1, l2))
 w2 = np.random.randn(l2, l3)
 b2 = np.zeros((1, l3))
 
+s = time.time()
 for i in range(it):
     # ch
     tc = random.randint(0, 7)
@@ -85,5 +87,7 @@ for i in range(it):
     w1 -= lr * dw1
 
     # r
-    print(c)
-    tb()
+    # print(c)
+    # tb()
+
+print(time.time() - s)

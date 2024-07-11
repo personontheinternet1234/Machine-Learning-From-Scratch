@@ -65,20 +65,22 @@ for i in range(it):
     # f
     a1 = x[tc]
     y1 = y[tc]
-    a2 = g1(a1 @ w1 + b1)
-    a3 = g1(a2 @ w2 + b2)
+    ta2 = a1 @ w1 + b1
+    a2 = g1(ta2)
+    ta3 = a2 @ w2 + b2
+    a3 = g1(ta3)
     c = j(a3, y1)
 
     # b
     # l3
     da3 = dj(a3, y1)
     # l2
-    db2 = dg1(a2 @ w2 + b2) * da3
-    dw2 = (a2.T @ np.ones((1, l3))) * (np.ones((l2, 1)) @ db2)
-    da2 = ((w2 * (np.ones((l2, 1)) @ db2)) @ np.ones((l1, 1))).T
+    db2 = dg1(ta3) * da3
+    dw2 = a2.T * db2
+    da2 = np.sum(w2 * db2, axis=1)
     # l1
-    db1 = dg1(a1 @ w1 + b1) * da2
-    dw1 = (a1.T @ np.ones((1, l2))) * (np.ones((l1, 1)) @ db1)
+    db1 = dg1(ta2) * da2
+    dw1 = a1.T * db1
 
     # o
     b2 -= lr * db2
