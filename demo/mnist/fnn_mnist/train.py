@@ -26,11 +26,11 @@ data_location = os.path.join(root, 'data', 'processed_data')
 # hyperparameters
 layer_sizes = [784, 16, 16, 10]
 activation = 'leaky relu'
-solver = 'sgd'
+solver = 'mini-batch'
 cost_function = 'ssr'
 batch_size = 49
 learning_rate = 0.001
-max_iter = 10000
+max_iter = 100000
 alpha = 0.001
 trim_data = False
 trim_frac = 0.01

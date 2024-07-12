@@ -1,5 +1,4 @@
 import random
-import time
 
 import numpy as np
 
@@ -38,8 +37,9 @@ def tb():
 l1 = 3
 l2 = 4
 l3 = 3
-it = 1000
+it = 10000
 lr = 0.1
+bs = 8
 
 # t
 x = [[0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1], [1, 0, 0], [1, 0, 1], [1, 1, 0], [1, 1, 1]]
@@ -57,16 +57,15 @@ b1 = np.zeros((1, l2))
 w2 = np.random.randn(l2, l3)
 b2 = np.zeros((1, l3))
 
-s = time.time()
 for i in range(it):
     # ch
-    tc = random.randint(0, 7)
+    tc = random.randint(bs, 8)
+    a1 = x[tc-bs:tc]
+    y1 = y[tc-bs:tc]
 
     # f
-    a1 = x[tc]
-    y1 = y[tc]
-    a2 = g1(a1 @ w1 + b1)
-    a3 = g1(a2 @ w2 + b2)
+    a2 = g1(a1 @ w1) + b1
+    a3 = g1(a2 @ w2) + b2
     c = j(a3, y1)
 
     # b
@@ -74,20 +73,18 @@ for i in range(it):
     da3 = dj(a3, y1)
     # l2
     db2 = dg1(a2 @ w2 + b2) * da3
-    dw2 = a2.T * db2
-    da2 = np.sum(w2 * db2, axis=1)
+    dw2 = np.reshape(a2, (bs, l2, 1)) * db2
+    da2 = np.reshape(np.sum(w2 * db2, axis=2, keepdims=True), (bs, 1, l2))
     # l1
     db1 = dg1(a1 @ w1 + b1) * da2
-    dw1 = a1.T * db1
+    dw1 = np.reshape(a1, (bs, l1, 1)) * db1
 
     # o
-    b2 -= lr * db2
-    w2 -= lr * dw2
-    b1 -= lr * db1
-    w1 -= lr * dw1
+    b2 -= lr * np.sum(db2, axis=0) / bs
+    w2 -= lr * np.sum(dw2, axis=0) / bs
+    b1 -= lr * np.sum(db1, axis=0) / bs
+    w1 -= lr * np.sum(dw1, axis=0) / bs
 
-    # r
-    # print(c)
-    # tb()
-
-print(time.time() - s)
+    # # r
+    print(c)
+    tb()

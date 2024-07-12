@@ -128,7 +128,6 @@ class FNN:
 
     def _get_solver(self, name):
         """ set model solving method """
-        # todo: this math is wrong and needs to be fixed
         if name == 'mini-batch':
             # mini-batch gradient descent
             def update(nodes, y):
@@ -137,13 +136,15 @@ class FNN:
                 d_biases = []
 
                 # calculate gradients
-                d_b = -2 * (y - nodes[-1])
-                d_biases.insert(0, d_b)
+                d_a = self.j['derivative'](y, nodes[-1])
                 for layer in range(-1, -len(nodes) + 1, -1):
+                    d_b = self.activation['derivative'](nodes[layer - 1] @ self.weights[layer] + self.biases[layer]) * d_a
+                    d_biases.insert(0, d_b)
                     d_w = np.reshape(nodes[layer - 1], (self.batch_size, self.layer_sizes[layer - 1], 1)) * d_b
                     d_weights.insert(0, d_w)
-                    d_b = np.reshape(np.array([np.sum(self.weights[layer] * d_b, axis=2)]), (self.batch_size, 1, self.layer_sizes[layer - 1]))
-                    d_biases.insert(0, d_b)
+                    d_a = np.reshape(np.sum(self.weights[layer] * d_b, axis=2, keepdims=True), (self.batch_size, 1, self.layer_sizes[layer - 1]))
+                d_b = self.activation['derivative'](nodes[0] @ self.weights[0] + self.biases[0]) * d_a
+                d_biases.insert(0, d_b)
                 d_w = np.reshape(nodes[0], (self.batch_size, self.layer_sizes[0], 1)) * d_b
                 d_weights.insert(0, d_w)
 
@@ -151,7 +152,6 @@ class FNN:
                 for layer in range(len(nodes) - 1):
                     self.weights[layer] -= self.lr * np.sum((d_weights[layer] + (self.alpha / self.batch_size) * self.weights[layer]), axis=0) / self.batch_size
                     self.biases[layer] -= self.lr * np.sum(d_biases[layer], axis=0) / self.batch_size
-
             # return solver
             return update
         elif name == 'sgd':
@@ -178,7 +178,6 @@ class FNN:
                 for layer in range(len(nodes) - 1):
                     self.weights[layer] -= self.lr * (d_weights[layer] + (self.alpha / self.train_len) * self.weights[layer])
                     self.biases[layer] -= self.lr * d_biases[layer]
-
             # return solver
             return update
         else:
@@ -207,7 +206,7 @@ class FNN:
             self.batch_size = min(20, self.train_len)
         elif batch_size == 'all':
             self.batch_size = self.train_len
-        elif (not isinstance(batch_size, int)) or batch_size <= 1:
+        elif (not isinstance(batch_size, int)) or batch_size <= 0:
             raise ValueError(f"'{batch_size}' is an invalid batch size")
         else:
             self.batch_size = batch_size
@@ -234,8 +233,8 @@ class FNN:
             # set input batches
             if solver == 'mini-batch':
                 tc = random.randint(self.batch_size, self.train_len)
-                in_n = self.x[tc - self.batch_size:tc]
-                out_n = self.y[tc - self.batch_size:tc]
+                in_n = self.x[tc-self.batch_size:tc]
+                out_n = self.y[tc-self.batch_size:tc]
             elif solver == 'sgd':
                 tc = random.randint(0, self.train_len - 1)
                 in_n = x[tc]
@@ -250,8 +249,8 @@ class FNN:
             # loss calculation
             if self.loss_reporting and batch % self.eval_interval == 0:
                 tc = random.randint(self.eval_batch_size, self.train_len)
-                train_pred = self.forward(self.x[tc - self.eval_batch_size:tc])[-1]
-                train_loss = self.j['function'](train_pred, self.y[tc - self.eval_batch_size:tc]) / self.eval_batch_size
+                train_pred = self.forward(self.x[tc-self.eval_batch_size:tc])[-1]
+                train_loss = self.j['function'](train_pred, self.y[tc-self.eval_batch_size:tc]) / self.eval_batch_size
                 self.train_losses.append(train_loss)
                 if self.set_valid:
                     valid_tc = random.randint(self.valid_batch_size, self.valid_len)
