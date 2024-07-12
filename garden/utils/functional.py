@@ -17,23 +17,53 @@ def xavier(length, width):
     return np.random.randn(length, width) * np.sqrt(2 / length)
 
 
-# todo: move into activations
-def softmax(values):
+def softmax():
     """ calculate outcome probabilities using softmax """
-    return np.exp(values) / np.sum(np.exp(values))
+    f = {
+        'function': lambda x: np.exp(x) / np.sum(np.exp(x)),
+        'derivative': lambda x: x  # todo
+    }
+    return f
 
 
-def activations(name, beta=0.1):
+def initialize(name):
+    init = {
+        'gaussian': lambda length, width: np.random.randn(length, width)
+    }
+    if name in init:
+        return init[name]
+    else:
+        raise ValueError(f"'{name}' is an invalid activation function")
+
+
+def activations(name, beta='auto'):
     """ get raw activation function """
+    # set beta
+    if beta == 'auto':
+        betas = {
+            'leaky relu': 0.01,
+            'softplus': 1,
+            'mish': 1
+        }
+        if name in betas:
+            beta = betas[name]
+        else:
+            beta = 0
+    elif isinstance(beta, int):
+        beta = beta
+    else:
+        raise ValueError(f"'beta' ({beta}) must be an integer or 'auto'")
+    # set activation function
     g = {
         'softmax': lambda x: np.exp(x) / np.sum(np.exp(x)),
         'relu': lambda x: np.maximum(0, x),
-        'leaky relu': lambda x: np.maximum(beta * x, x),
+        'leaky-relu': lambda x: np.maximum(beta * x, x),
         'sigmoid': lambda x: 1 / (1 + np.exp(-x)),
         'tanh': lambda x: np.tanh(x),
-        'softplus': lambda x: np.log(1 + np.exp(x)),
-        'mish': lambda x: x * np.tanh(np.log(1 + np.exp(x)))
+        'softplus': lambda x: np.log(1 + np.exp(beta * x)) / beta,
+        'mish': lambda x: x * np.tanh(np.log(1 + np.exp(beta * x)) / beta)
     }
+    # return activation function
     if name in g:
         return g[name]
     else:
@@ -42,14 +72,29 @@ def activations(name, beta=0.1):
 
 def d_activations(name, beta=0.1):
     """ get derivative of raw activation function """
+    # set beta
+    if beta == 'auto':
+        betas = {
+            'leaky relu': 0.01,
+            'softplus': 1,
+            'mish': 1
+        }
+        if name in betas:
+            beta = betas[name]
+        else:
+            beta = 0
+    elif isinstance(beta, int):
+        beta = beta
+    else:
+        raise ValueError(f"'beta' ({beta}) must be an integer or 'auto'")
     dg = {
         'softmax': lambda x: x,  # todo
         'relu': lambda x: np.where(x > 0, 1, 0),
-        'leaky relu': lambda x: np.where(x > 0, 1, beta),
+        'leaky-relu': lambda x: np.where(x > 0, 1, beta),
         'sigmoid': lambda x: np.exp(-x) / ((1 + np.exp(-x)) ** 2),
-        'tanh': lambda x: 1 - np.tanh(x) ** 2,
-        'softplus': lambda x: 1 / (1 + np.exp(-x)),
-        'mish': lambda x: np.tanh(np.log(1 + np.exp(x))) + (x * np.exp(x) - x * np.exp(x) * (np.tanh(np.log(1 + np.exp(x)))) ** 2) / (1 + np.exp(x))
+        'tanh': lambda x: np.cosh(x) ** -2,
+        'softplus': lambda x: beta * np.exp(beta * x) / (beta + beta * np.exp(beta * x)),
+        'mish': lambda x: (np.tanh(np.log(1 + np.exp(beta * x)) / beta)) + (x * (np.cosh(np.log(1 + np.exp(beta * x)) / beta) ** -2) * (beta * np.exp(beta * x) / (beta + beta * np.exp(beta * x))))
     }
     if name in dg:
         return dg[name]
@@ -59,19 +104,13 @@ def d_activations(name, beta=0.1):
 
 def cost(name):
     """ get raw cost function """
-    if name == 'ssr':
-        def j(expected, predicted):
-            return np.sum(np.subtract(expected, predicted) ** 2)
-        return j
-    elif name == 'sar':
-        def j(expected, predicted):
-            return np.sum(np.abs(np.subtract(expected, predicted)))
-        return j
-    elif name == 'cross-entropy':
-        # todo
-        def j(expected, predicted):
-            ...
-        return j
+    j = {
+        'mse': lambda y, yhat: np.sum((y - yhat) ** 2),
+        'l1': lambda y, yhat: np.sum(np.abs(y - yhat)),
+        'cross-entropy': lambda y, yhat: ...
+    }
+    if name in j:
+        return j[name]
     else:
         raise ValueError(f"'{name}' is an invalid loss function")
 
@@ -96,6 +135,7 @@ def d_cost(name):
 
 
 def optimizer(name):
+    # todo: check how well python respects the order of operations
     if name == 'adam':
         def optim(gradient, gamma=0.001, betas=(0.9, 0.999), lambda_d=0, epsilon=1e-8):
             ...
@@ -107,7 +147,7 @@ def optimizer(name):
                 if lambda_d:
                     delta = delta + (lambda_d * thetas[t])
                 if mu and t:
-                    delta = (mu * gradients[t-1]) + ((1 - tau) * delta)
+                    delta = (mu * gradients[t-1]) + ((1 - tau) * delta)  # ?
                 thetas[t] -= gamma * delta
             return thetas
         return optim
@@ -119,13 +159,13 @@ def optimizer(name):
                 delta = gradients[t]
                 if lambda_d:
                     delta = delta + (lambda_d * thetas[t])
-                v = (alpha * v) + (1 - alpha) * (delta ** 2)
+                v = (alpha * v) + (1 - alpha) * (np.sum(delta) ** 2)
                 if mu:
                     delta = (mu * b) + (delta / (math.sqrt(v) + epsilon))
                     b = delta
                     thetas[t] -= gamma * delta
                 else:
-                    thetas[t] -= gamma * (delta / (math.sqrt(v) + epsilon))
+                    thetas[t] -= gamma * delta / (math.sqrt(v) + epsilon)
         return optim
     else:
         raise ValueError(f"'{name}' is an invalid optimizer")
