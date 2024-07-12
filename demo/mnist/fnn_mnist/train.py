@@ -23,31 +23,32 @@ root = os.path.join(os.path.dirname(__file__))
 saved_location = os.path.join(root, 'model')
 data_location = os.path.join(root, 'data', 'processed_data')
 
-# hyperparameters
-layer_sizes = [784, 16, 16, 10]
-activation = 'leaky relu'
-solver = 'mini-batch'
-cost_function = 'ssr'
-optimizing_method = 'gradient descent'
-batch_size = 49
-learning_rate = 0.001
-max_iter = 100000
-alpha = 0.001
-trim_data = False
-trim_frac = 0.01
-set_validation = True
-val_frac = 0.3
-loss_reporting = True
-eval_batch_size = 70
-eval_interval = max(1, round(max_iter * 0.01))
-load_parameters = False
-weights_name = 'weights.txt'
-biases_name = 'biases.txt'
-save_data = True
-values_name = 'values.csv'
-labels_name = 'labels.csv'
+# hyper-parameters
+# note: some hyper-parameters might have strange names as FNN gets restructured
+layer_sizes = [784, 16, 16, 10]  # network layer sizes
+activation = 'leaky-relu'  # network activation function
+solver = 'mini-batch'  # type of data batching (solver is not the correct name and should be 'batching', will be changed later)
+cost_function = 'mse'  # the loss/cost function (currently, only mse works, and l1 might work but is not very good)
+optimizing_method = 'gradient descent'  # not implemented yet, ignore for now (don't enter as an argument)
+batch_size = 49  # batch size for mini-batching
+learning_rate = 0.001  # learning rate
+max_iter = 10000  # the maximum amount of batches trained on
+alpha = 0.001  # weight decay (l2 regularization) term (incorrect name, 'lambda_d' is the correct term, will change later)
+trim_data = False  # select only a portion of the dataset (optional)
+trim_frac = 0.01  # percent of dataset taken if trimming (optional)
+set_validation = True  # set a validation set to compare results to (optional)
+val_frac = 0.3  # the fraction of data that goes to validation if there is validation set (optional)
+loss_reporting = True  # log the loss as the model trains
+eval_batch_size = 70  # batch size of the data taken for loss calculations
+eval_interval = max(1, round(max_iter * 0.01))  # how often the loss of the model is logged
+load_parameters = False  # load an existing model
+weights_name = 'weights.txt'  # the location of weights of an existing model
+biases_name = 'biases.txt'  # the location of biases of an existing model
+save_data = True  # save data to a file if the file didn't exist previously and needed to be generated
+values_name = 'values.csv'  # the location of the inputs of the data
+labels_name = 'labels.csv'  # the location of the labels of the data
 
-conf_mat_normal = True
+conf_mat_normal = True  # the type of normalization done on the confusion matrix for results
 
 # print garden credits
 hf.print_credits()
@@ -73,7 +74,7 @@ if load_parameters:
         raise FileNotFoundError(f'{os.path.join(saved_location, biases_name)} does not exist')
 
 # form network
-keras_network = FNN(weights=weights, biases=biases, layer_sizes=layer_sizes, activation=activation)
+keras_network = FNN(layer_sizes, weights=weights, biases=biases, activation=activation)
 # configure loss logging
 keras_network.configure_reporting(loss_reporting=loss_reporting, eval_batch_size=eval_batch_size, eval_interval=eval_interval)
 

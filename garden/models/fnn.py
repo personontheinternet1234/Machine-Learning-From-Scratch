@@ -33,22 +33,19 @@ class FNN:
     """
     Feedforward neural network
     """
-    def __init__(self, weights=None, biases=None, layer_sizes='auto', activation='relu', beta=0.1, status_bars=True):
+    def __init__(self, layer_sizes, weights=None, biases=None, activation='relu', beta='auto', status_bars=True):
         """ model variables """
         # model version
         self.version = '1.9.0'
 
         # model hyperparameters
-        if layer_sizes == 'auto':
-            self.layer_sizes = [784, 100, 10]
-        elif not isinstance(layer_sizes, list):
+        if not isinstance(layer_sizes, list):
             raise ValueError(f"'{layer_sizes}' is not a list")
         elif len(layer_sizes) <= 2:
             raise ValueError(f"'{layer_sizes}' does not have the minimum amount of layer sizes (2)")
         elif not all(isinstance(i, int) for i in layer_sizes):
             raise ValueError(f"'{layer_sizes}' must only include integers")
-        else:
-            self.layer_sizes = layer_sizes
+        self.layer_sizes = layer_sizes
         self.weights, self.biases = self._set_parameters(weights, biases)
         self.activation = self._get_activation(activation, beta)
 
@@ -114,7 +111,7 @@ class FNN:
         return weights, biases
 
     @staticmethod
-    def _get_activation(name, beta=0.1):
+    def _get_activation(name, beta='auto'):
         """ set model activation function """
         return {
             'function': activations(name, beta),

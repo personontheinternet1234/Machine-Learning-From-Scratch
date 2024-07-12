@@ -13,27 +13,27 @@ def ssr(expected, predicted):
 
 
 def xavier(length, width):
+    # todo: deprecate
     """ initialize a random array using xavier initialization """
     return np.random.randn(length, width) * np.sqrt(2 / length)
 
 
-def softmax():
+def softmax(x):
+    # todo: deprecate
     """ calculate outcome probabilities using softmax """
-    f = {
-        'function': lambda x: np.exp(x) / np.sum(np.exp(x)),
-        'derivative': lambda x: x  # todo
-    }
-    return f
+    return np.exp(x) / np.sum(np.exp(x))
 
 
 def initialize(name):
     init = {
-        'gaussian': lambda length, width: np.random.randn(length, width)
+        'gaussian': lambda l, w: np.random.randn(l, w),
+        'xavier': lambda l, w: np.random.randn(l, w) * np.sqrt(2 / w)  # todo: check if correct
+        # zeros and ones later
     }
     if name in init:
         return init[name]
     else:
-        raise ValueError(f"'{name}' is an invalid activation function")
+        raise ValueError(f"'{name}' is an invalid initialization method")
 
 
 def activations(name, beta='auto'):
@@ -49,10 +49,10 @@ def activations(name, beta='auto'):
             beta = betas[name]
         else:
             beta = 0
-    elif isinstance(beta, int):
+    elif isinstance(beta, float):
         beta = beta
     else:
-        raise ValueError(f"'beta' ({beta}) must be an integer or 'auto'")
+        raise ValueError(f"'beta' ({beta}) must be a float or 'auto'")
     # set activation function
     g = {
         'softmax': lambda x: np.exp(x) / np.sum(np.exp(x)),
@@ -83,10 +83,10 @@ def d_activations(name, beta=0.1):
             beta = betas[name]
         else:
             beta = 0
-    elif isinstance(beta, int):
+    elif isinstance(beta, float):
         beta = beta
     else:
-        raise ValueError(f"'beta' ({beta}) must be an integer or 'auto'")
+        raise ValueError(f"'beta' ({beta}) must be a float or 'auto'")
     dg = {
         'softmax': lambda x: x,  # todo
         'relu': lambda x: np.where(x > 0, 1, 0),
@@ -112,16 +112,17 @@ def cost(name):
     if name in j:
         return j[name]
     else:
-        raise ValueError(f"'{name}' is an invalid loss function")
+        raise ValueError(f"'{name}' is an invalid cost function")
 
 
 def d_cost(name):
     """ get derivative of raw cost function """
-    if name == 'ssr':
+    # todo: restructure to lambda functions
+    if name == 'mse':
         def dj(expected, predicted):
             return -2 * np.subtract(expected, predicted)
         return dj
-    elif name == 'sar':
+    elif name == 'l1':
         def dj(expected, predicted):
             return -1 * np.sign(expected - predicted)
         return dj
@@ -131,7 +132,7 @@ def d_cost(name):
             ...
         return dj
     else:
-        raise ValueError(f"'{name}' is an invalid loss function")
+        raise ValueError(f"'{name}' is an invalid cost function")
 
 
 def optimizer(name):
@@ -141,32 +142,40 @@ def optimizer(name):
             ...
         return optim
     elif name == 'gradient descent':
-        def optim(thetas, gradients, gamma=0.001, mu=0, tau=0, lambda_d=0):
-            for t in range(len(thetas)):
-                delta = gradients[t]
-                if lambda_d:
-                    delta = delta + (lambda_d * thetas[t])
-                if mu and t:
-                    delta = (mu * gradients[t-1]) + ((1 - tau) * delta)  # ?
-                thetas[t] -= gamma * delta
-            return thetas
+        def optim(thetas, gradients, deltas_p=None, gamma=0.001, mu=0, tau=0, lambda_d=0):
+            deltas = gradients + (lambda_d * thetas)
+            if mu and deltas_p:
+                deltas = (mu * deltas_p) + ((1 - tau) * deltas)
+            thetas -= gamma * deltas
+            return thetas, deltas
         return optim
     elif name == 'rmsprop':
-        def optim(thetas, gradients, gamma=0.01, alpha=0.99, mu=0, lambda_d=0, epsilon=1e-8):
-            v = 0
-            b = 0
-            for t in range(len(thetas)):
-                delta = gradients[t]
-                if lambda_d:
-                    delta = delta + (lambda_d * thetas[t])
-                v = (alpha * v) + (1 - alpha) * (np.sum(delta) ** 2)
-                if mu:
-                    delta = (mu * b) + (delta / (math.sqrt(v) + epsilon))
-                    b = delta
-                    thetas[t] -= gamma * delta
-                else:
-                    thetas[t] -= gamma * delta / (math.sqrt(v) + epsilon)
+        def optim(thetas, gradients, upsilons_p=None, deltas_p=None, gamma=0.01, alpha=0.99, mu=0, lambda_d=0, epsilon=1e-8):
+            deltas = gradients + (lambda_d * thetas)
+            if upsilons_p:
+                upsilons = (alpha * upsilons_p) + ((1 - alpha) * (deltas ** 2))
+            else:
+                upsilons = (1 - alpha) * (deltas ** 2)
+
+            if mu and deltas_p:
+                deltas = (mu * deltas_p) + ...
+            else:
+                thetas -= gamma * deltas / (math.sqrt(upsilons) + epsilon)
+            return thetas, deltas, upsilons
+
+            # v = 0
+            # b = 0
+            # for t in range(len(thetas)):
+            #     delta = gradients[t]
+            #     if lambda_d:
+            #         delta = delta + (lambda_d * thetas[t])
+            #     v = (alpha * v) + (1 - alpha) * (np.sum(delta) ** 2)
+            #     if mu:
+            #         delta = (mu * b) + (delta / (math.sqrt(v) + epsilon))
+            #         b = delta
+            #         thetas[t] -= gamma * delta
+            #     else:
+            #         thetas[t] -= gamma * delta / (math.sqrt(v) + epsilon)
         return optim
     else:
         raise ValueError(f"'{name}' is an invalid optimizer")
-
