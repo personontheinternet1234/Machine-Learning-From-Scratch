@@ -28,6 +28,7 @@ layer_sizes = [784, 16, 16, 10]
 activation = 'leaky relu'
 solver = 'mini-batch'
 cost_function = 'ssr'
+optimizing_method = 'gradient descent'
 batch_size = 49
 learning_rate = 0.001
 max_iter = 100000
@@ -94,6 +95,7 @@ keras_network.fit(
     y=y,
     solver=solver,
     cost_function=cost_function,
+    optimizing_method=optimizing_method,
     batch_size=batch_size,
     learning_rate=learning_rate,
     max_iter=max_iter,

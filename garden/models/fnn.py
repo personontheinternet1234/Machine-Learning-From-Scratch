@@ -16,6 +16,7 @@ from garden.utils.functional import (
     d_activations,
     cost,
     d_cost,
+    optimizer
 )
 from garden.metrics.metrics import (
     cm
@@ -54,6 +55,7 @@ class FNN:
         # training hyperparameters
         # todo: change some of these names
         self.j = None
+        self.optim = None
         self.solver = None
         self.batch_size = None
         self.lr = None
@@ -126,6 +128,10 @@ class FNN:
             'derivative': d_cost(name)
         }
 
+    @staticmethod
+    def _get_optimizer(name):
+        return optimizer(name)
+
     def _get_solver(self, name):
         """ set model solving method """
         if name == 'mini-batch':
@@ -192,12 +198,13 @@ class FNN:
             nodes.append(node_layer)
         return nodes
 
-    def fit(self, x, y, solver='mini-batch', cost_function='ssr', batch_size='auto', learning_rate=0.001, max_iter=20000, alpha=0.0001, shuffle=False):
+    def fit(self, x, y, solver='mini-batch', cost_function='ssr', optimizing_method='adam', batch_size='auto', learning_rate=0.001, max_iter=20000, alpha=0.0001, shuffle=False):
         """ optimize model """
         # set training hyperparameters
         self.x, self.y = mix(np.array(x), np.array(y))
         self.solver = self._get_solver(solver)
         self.j = self._get_cost(cost_function)
+        self.optim = self._get_optimizer(optimizing_method)
         self.train_len = len(self.x)
         self.lr = learning_rate
         self.max_iter = max_iter
@@ -225,7 +232,7 @@ class FNN:
         # start timer
         start_time = time.time()
 
-        for batch in tqdm(range(max_iter), ncols=100, desc='fitting', disable=self.status, bar_format=self.color):
+        for batch in tqdm(range(max_iter), ncols=100, desc='optimizing', disable=self.status, bar_format=self.color):
             # training loop
             # shuffle data
             if shuffle:
