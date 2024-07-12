@@ -18,4 +18,4 @@
 # if you don't know what these settings do, a large portion of the settings have automatic values that work
 # if you're unsure if there are automatic values, check the fnn script
 
-# ideally try to have a working script by monday
+# ideally try to have a working script by sunday
