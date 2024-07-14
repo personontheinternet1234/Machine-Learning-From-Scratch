@@ -9,14 +9,12 @@ import numpy as np
 import pandas as pd
 
 from garden.utils.functional import (
-    xavier,
-    ssr,  # todo: move this to cost
-    softmax,  # todo: move this to activations
-    activations,
-    d_activations,
-    cost,
-    d_cost,
-    optimizer
+    initializers,
+    activators,
+    d_activators,
+    losses,
+    d_losses,
+    optimizers
 )
 from garden.metrics.metrics import (
     cm
@@ -33,103 +31,201 @@ class FNN:
     """
     Feedforward neural network
     """
-    def __init__(self, layer_sizes, weights=None, biases=None, activation='relu', beta='auto', status_bars=True):
+    def __init__(self, status_bars=True):
         """ model variables """
         # model version
         self.version = '1.9.0'
 
         # model hyperparameters
-        if not isinstance(layer_sizes, list):
-            raise ValueError(f"'{layer_sizes}' is not a list")
-        elif len(layer_sizes) <= 2:
-            raise ValueError(f"'{layer_sizes}' does not have the minimum amount of layer sizes (2)")
-        elif not all(isinstance(i, int) for i in layer_sizes):
-            raise ValueError(f"'{layer_sizes}' must only include integers")
-        self.layer_sizes = layer_sizes
-        self.weights, self.biases = self._set_parameters(weights, biases)
-        self.activation = self._get_activation(activation, beta)
+        self.layers = None
+        self.thetas_w = []
+        self.thetas_b = []
+        self.w_init = None
+        self.b_init = None
+        self.g = None
 
-        # training hyperparameters
-        # todo: change some of these names
-        self.j = None
+        # broad training hyperparameters
         self.optim = None
-        self.solver = None
-        self.batch_size = None
-        self.lr = None
-        self.max_iter = None
-        self.alpha = None
+        self.j = None
+        self.batching = None
+        self.max_t = None
+        self.shuffle = None
+        self.update = None
 
-        # dataset parameters
+        # calculation references
+        self._w_zero_grad = []
+        self._b_zero_grad = []
+
+        # dataset
         self.x = None
         self.y = None
-        self.train_len = None
-        self.set_valid = False
-        self.valid_x = None
-        self.valid_y = None
-        self.array_valid_x = None
-        self.array_valid_y = None
-        self.valid_len = None
+        self.val_x = None
+        self.val_y = None
+        self._valid = False
+        self._xy_len = None
+        self._val_len = None
 
         # output settings
-        self.loss_reporting = False
-        self.eval_interval = None
-        self.eval_batch_size = None
-        self.valid_batch_size = None
-        self.train_losses = None
-        self.valid_losses = None
-        self.elapsed_time = None
+        self._j_logging = False
+        self.eval_batching = None
+        self.log_interval = None
+        self.xy_j_log = None
+        self.val_j_log = None
+        self.time = None
 
         # status bar settings
-        self.status = not status_bars
-        self.color = f'{Fore.GREEN}{{l_bar}}{{bar}}{{r_bar}}{Style.RESET_ALL}'
-
-    def _set_parameters(self, weights, biases):
-        """ set model parameters """
-        if weights is None:
-            # generate weights
-            weights = []
-            for i in range(len(self.layer_sizes) - 1):
-                length = int(self.layer_sizes[i])
-                width = int(self.layer_sizes[i + 1])
-                weights.append(xavier(length, width))
-        else:
-            # load weights
-            weights = weights
-
-        if biases is None:
-            # generate biases
-            biases = []
-            for i in range(len(self.layer_sizes) - 1):
-                length = 1
-                width = self.layer_sizes[i + 1]
-                biases.append(np.zeros((length, width)))
-        else:
-            # load biases
-            biases = biases
-
-        # return weights and biases
-        return weights, biases
+        self._stat = not status_bars
+        # todo: check out FORE coloring
+        self._color = f'{Fore.GREEN}{{l_bar}}{{bar}}{{r_bar}}{Style.RESET_ALL}'
 
     @staticmethod
-    def _get_activation(name, beta='auto'):
+    def _get_init(name, gain):
+        initializer = initializers(name, gain)
+        return initializer
+
+    @staticmethod
+    def _get_activator(name, beta):
         """ set model activation function """
         return {
-            'function': activations(name, beta),
-            'derivative': d_activations(name, beta)
+            'f': activators(name, beta),
+            'd': d_activators(name, beta)
         }
 
     @staticmethod
-    def _get_cost(name):
+    def _get_loss(name):
         return {
-            'function': cost(name),
-            'derivative': d_cost(name)
+            'f': losses(name),
+            'd': d_losses(name)
         }
 
     @staticmethod
-    def _get_optimizer(name):
-        return optimizer(name)
+    def _get_optimizer(name, params):
+        return optimizers(name, params)
 
-    def _get_solver(self, name):
+    # def _set_parameters(self, weights, biases):
+    #     # todo: deprecate
+    #     """ set model parameters """
+    #     if not weights:
+    #         # generate weights
+    #         weights = []
+    #         for i in range(len(self.layer_sizes) - 1):
+    #             length = int(self.layer_sizes[i])
+    #             width = int(self.layer_sizes[i + 1])
+    #             weights.append(xavier(length, width))
+    #     else:
+    #         # load weights
+    #         weights = weights
+    #
+    #     if not biases:
+    #         # generate biases
+    #         biases = []
+    #         for i in range(len(self.layer_sizes) - 1):
+    #             length = 1
+    #             width = self.layer_sizes[i + 1]
+    #             biases.append(np.zeros((length, width)))
+    #     else:
+    #         # load biases
+    #         biases = biases
+    #
+    #     # return weights and biases
+    #     return weights, biases
+
+    def _get_solver(self):
+        if self.batching == 1:
+            def backward(nodes, y):  # todo: check name for nodes
+                # instantiate gradients
+                grad_w = self._w_zero_grad
+                grad_b = self._b_zero_grad
+
+                # calculate gradients
+                grad_a = self.g['d'](y, nodes[-1])  # todo: check name for a
+                for lyr in range(-1, -len(nodes) + 1, -1):
+                    grad_b[lyr] = self.g['d'](nodes[lyr - 1] @ self.thetas_w[lyr] + self.thetas_b[lyr]) * grad_a
+                    grad_w[lyr] = nodes[lyr - 1].T * grad_b[lyr]
+                    grad_a = np.sum(self.thetas_w[lyr] * grad_b[lyr], axis=1)
+                grad_b[0] = self.g['d'](nodes[0] @ self.thetas_w[0] + self.thetas_b[0]) * grad_a
+                grad_w[0] = nodes[0].T * grad_b[0]
+
+                # return gradients
+                return grad_w, grad_b
+            # return solver
+            return backward
+        else:
+            # redefine zero gradients
+            self._w_zero_grad = np.array([self._w_zero_grad] * self.batching)
+            self._b_zero_grad = np.array([self._b_zero_grad] * self.batching)
+            def update(nodes, y):  # todo: check name for nodes
+                # instantiate gradients
+                grad_w = self._w_zero_grad
+                grad_b = self._b_zero_grad
+
+                # calculate gradients
+                grad_a = self.j['d'](y, nodes[-1])  # todo: check name for a
+                for lyr in range(-1, -len(nodes) + 1, -1):
+                    grad_b[lyr] = self.g['d'](nodes[lyr - 1] @ self.thetas_w[lyr] + self.thetas_b[lyr]) * grad_a
+                    grad_w[lyr] = np.reshape(nodes[lyr - 1], (self.batching, self.layers[lyr - 1], 1)) * grad_b
+                    grad_a = np.reshape(np.sum(self.thetas_w[lyr] * grad_b[lyr], axis=2, keepdims=True), (self.batching, 1, self.layers[lyr - 1]))
+                grad_b[0] = self.g['d'](nodes[0] @ self.thetas_w[0] + self.thetas_b[0]) * grad_a
+                grad_w[0] = np.reshape(nodes[0], (self.batching, self.layers[0], 1)) * grad_b[0]
+
+                # sum and average gradients
+                grad_w = np.sum(grad_w, axis=0) / self.batching
+                grad_b = np.sum(grad_b, axis=0) / self.batching
+
+                # return gradients
+                return grad_w, grad_b
+            # return solver
+            return update
+
+    def _get_updater(self):
+        ...
+
+    def model_hyperparameters(self, layer_sizes, activator='relu', beta='auto'):
+        # set layers
+        if not isinstance(layer_sizes, (np.ndarray, list)):
+            raise ValueError(f"'{layer_sizes}' is not a list or array")
+        elif len(layer_sizes) <= 2:
+            raise ValueError(f"'{layer_sizes}' does not have the minimum amount of layer sizes (2)")
+        elif not all(isinstance(lyr, (int, np.int64)) for lyr in layer_sizes):
+            raise ValueError(f"'{layer_sizes}' must only include integers")
+        self.layers = np.array(layer_sizes)
+        # set activation function
+        self.j = self._get_activator(activator, beta)
+
+    def initialize_model(self, weights='xavier', biases='zeros', w_gain='auto', b_gain='auto'):
+        if not isinstance(weights, np.ndarray):
+            # initialize weights
+            self.w_init = self._get_init(weights, w_gain)
+            for lyr in range(1, len(self.layers) - 1):
+                self.thetas_w.append(self.w_init(self.layers[lyr - 1], self.layers[lyr]))
+        if not isinstance(biases, np.ndarray):
+            # initialize biases
+            self.b_init = self._get_init(weights, b_gain)
+            for lyr in range(1, len(self.layers) - 1):
+                self.thetas_b.append(self.b_init(1, self.layers[lyr + 1]))
+
+        for lyr in range(1, len(self.layers) - 1):
+            # zero gradients
+            self._w_zero_grad = np.zeros((self.layers[lyr-1], self.layers[lyr]))
+            self._b_zero_grad = np.zeros((1, self.layers[lyr + 1]))
+
+    def training_hyperparameters(self, optim='adam', optim_params='auto', loss='ssr', batching='auto', max_iter=20000, shuffle=False):
+        self.optim = self._get_optimizer(optim, optim_params)
+        self.j = self._get_loss(loss)
+        if batching == 'auto':
+            self.batching = min(20, self._xy_len)
+        elif batching == 'all':
+            self.batching = self._xy_len
+        elif (not isinstance(batching, int)) or batching <= 0:
+            raise ValueError(f"'{batching}' is an invalid batching method")
+        else:
+            self.batching = batching
+        self.max_t = max_iter
+        self.shuffle = shuffle
+        self.solver = self._get_solver()
+
+    def _get_solver_o(self, name):
+        # todo: deprecate
         """ set model solving method """
         if name == 'mini-batch':
             # mini-batch gradient descent
@@ -139,14 +235,14 @@ class FNN:
                 d_biases = []
 
                 # calculate gradients
-                d_a = self.j['derivative'](y, nodes[-1])
+                d_a = self.j['d'](y, nodes[-1])
                 for layer in range(-1, -len(nodes) + 1, -1):
-                    d_b = self.activation['derivative'](nodes[layer - 1] @ self.weights[layer] + self.biases[layer]) * d_a
+                    d_b = self.activation['d'](nodes[layer - 1] @ self.weights[layer] + self.biases[layer]) * d_a
                     d_biases.insert(0, d_b)
                     d_w = np.reshape(nodes[layer - 1], (self.batch_size, self.layer_sizes[layer - 1], 1)) * d_b
                     d_weights.insert(0, d_w)
                     d_a = np.reshape(np.sum(self.weights[layer] * d_b, axis=2, keepdims=True), (self.batch_size, 1, self.layer_sizes[layer - 1]))
-                d_b = self.activation['derivative'](nodes[0] @ self.weights[0] + self.biases[0]) * d_a
+                d_b = self.activation['d'](nodes[0] @ self.weights[0] + self.biases[0]) * d_a
                 d_biases.insert(0, d_b)
                 d_w = np.reshape(nodes[0], (self.batch_size, self.layer_sizes[0], 1)) * d_b
                 d_weights.insert(0, d_w)
@@ -165,14 +261,14 @@ class FNN:
                 d_biases = []
 
                 # calculate gradients
-                d_a = self.j['derivative'](y, nodes[-1])
+                d_a = self.j['d'](y, nodes[-1])
                 for layer in range(-1, -len(nodes) + 1, -1):
-                    d_b = self.activation['derivative'](nodes[layer - 1] @ self.weights[layer] + self.biases[layer]) * d_a
+                    d_b = self.activation['d'](nodes[layer - 1] @ self.weights[layer] + self.biases[layer]) * d_a
                     d_biases.insert(0, d_b)
                     d_w = nodes[layer - 1].T * d_b
                     d_weights.insert(0, d_w)
                     d_a = np.sum(self.weights[layer] * d_b, axis=1)
-                d_b = self.activation['derivative'](nodes[0] @ self.weights[0] + self.biases[0]) * d_a
+                d_b = self.activation['d'](nodes[0] @ self.weights[0] + self.biases[0]) * d_a
                 d_biases.insert(0, d_b)
                 d_w = nodes[0].T * d_b
                 d_weights.insert(0, d_w)
@@ -191,7 +287,7 @@ class FNN:
         """ pass inputs through the model """
         nodes = [inputs]
         for layer in range(len(self.layer_sizes) - 1):
-            node_layer = self.activation['function'](nodes[-1] @ self.weights[layer] + self.biases[layer])
+            node_layer = self.activation['f'](nodes[-1] @ self.weights[layer] + self.biases[layer])
             nodes.append(node_layer)
         return nodes
 
@@ -200,7 +296,7 @@ class FNN:
         # set training hyperparameters
         self.x, self.y = mix(np.array(x), np.array(y))
         self.solver = self._get_solver(solver)
-        self.j = self._get_cost(cost_function)
+        self.j = self._get_loss(cost_function)
         self.optim = self._get_optimizer(optimizing_method)
         self.train_len = len(self.x)
         self.lr = learning_rate
@@ -254,12 +350,12 @@ class FNN:
             if self.loss_reporting and batch % self.eval_interval == 0:
                 tc = random.randint(self.eval_batch_size, self.train_len)
                 train_pred = self.forward(self.x[tc-self.eval_batch_size:tc])[-1]
-                train_loss = self.j['function'](train_pred, self.y[tc-self.eval_batch_size:tc]) / self.eval_batch_size
+                train_loss = self.j['f'](train_pred, self.y[tc-self.eval_batch_size:tc]) / self.eval_batch_size
                 self.train_losses.append(train_loss)
                 if self.set_valid:
                     valid_tc = random.randint(self.valid_batch_size, self.valid_len)
                     valid_pred = self.forward(self.valid_x[valid_tc - self.valid_batch_size:valid_tc])[-1]
-                    valid_loss = self.j['function'](valid_pred, self.valid_y[valid_tc - self.valid_batch_size:valid_tc]) / self.valid_batch_size
+                    valid_loss = self.j['f'](valid_pred, self.valid_y[valid_tc - self.valid_batch_size:valid_tc]) / self.valid_batch_size
                     self.valid_losses.append(valid_loss)
 
         # calculate elapsed time
