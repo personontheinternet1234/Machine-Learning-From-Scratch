@@ -152,6 +152,7 @@ class FNN:
             # redefine zero gradients
             self._w_zero_grad = np.array([self._w_zero_grad] * self.batching)
             self._b_zero_grad = np.array([self._b_zero_grad] * self.batching)
+
             def update(nodes, y):  # todo: check name for nodes
                 # instantiate gradients
                 grad_w = self._w_zero_grad

@@ -1,9 +1,13 @@
-from gardenpy.utils.algorithms import (
+from gardenpy.utils import (
     Initializers,
     Activators,
     Losses,
     Optimizers
 )
+
+from gardenpy.utils.helper_functions import print_credits
+
+print_credits()
 
 # algorithm settings
 initializer = Initializers('xavier')

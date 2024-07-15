@@ -30,7 +30,7 @@ class FNN:
     def __init__(self, status_bars=True):
         # hyperparameters
         self._layers = None
-        self._initializer = None
+        self._initializers = None
         self._activators = None
         self._loss = None
         self._optimizer = None
@@ -73,6 +73,7 @@ class FNN:
             }
         }
         if initialization_methods:
+            # todo: add checks
             init_mts = initialization_methods
         else:
             init_mts = default_initializers
@@ -88,10 +89,10 @@ class FNN:
                     f"'layer_sizes': must be greater than 1"
                 )
             for lyr in layer_sizes:
-                if not isinstance(lyr, (int, np.int64)):
-                    raise ValueError(f"'layer' is not an integer: {lyr}")
+                if not isinstance(lyr, (int, np.int64)) or lyr == 'auto':
+                    raise ValueError(f"'layer' is not an integer or 'auto': {lyr}")
             self._layers = layer_sizes
-        self._initializer = {
+        self._initializers = {
             'weights': self._get_initializer(
                 init_mts['weights']['algorithm'],
                 init_mts['weights']['parameters']

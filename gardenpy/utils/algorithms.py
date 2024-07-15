@@ -122,7 +122,7 @@ class Initializers:
         # return initialization algorithm
         return init_funcs[self._algorithm]
 
-    def initialize(self, rows: int, columns: int):
+    def initialize(self, rows: int, columns: int) -> np.ndarray:
         """
         'initialize' is a built-in function in the 'Initializers' class.
         This function initializes a numpy array based on the rows and columns.
@@ -326,7 +326,7 @@ class Activators:
         # return derivative of activation algorithm
         return d_act_funcs[self._algorithm]
 
-    def activate(self, x: np.ndarray):
+    def activate(self, x: np.ndarray) -> np.ndarray:
         """
         'activate' is a built-in function in the 'Activators' class.
         This function runs a numpy array through an activation algorithm.
@@ -344,7 +344,7 @@ class Activators:
         # return numpy array
         return self._activator(x)
 
-    def d_activate(self, x: np.ndarray):
+    def d_activate(self, x: np.ndarray) -> np.ndarray:
         """
         'd_activate' is a built-in function in the 'Activators' class.
         This function runs a numpy array through the derivative of an activation algorithm.
@@ -490,7 +490,7 @@ class Losses:
         # return derivative of loss algorithm
         return d_loss_funcs[self._algorithm]
 
-    def loss(self, y: np.ndarray, yhat: np.ndarray):
+    def loss(self, y: np.ndarray, yhat: np.ndarray) -> np.float64:
         """
         'loss' is a built-in function in the 'Loss' class.
         This function runs a numpy array through a loss algorithm.
@@ -512,7 +512,7 @@ class Losses:
         # return loss
         return self._loss(y, yhat)
 
-    def d_loss(self, y: np.ndarray, yhat: np.ndarray):
+    def d_loss(self, y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
         """
         'd_loss' is a built-in function in the 'Loss' class.
         This function runs a numpy array through the derivative of a loss algorithm.
@@ -582,21 +582,21 @@ class Optimizers:
         default = {
             'adam': {
                 'gamma': 0.001,
-                'lambda_d': 0,
+                'lambda': 0,
                 'beta': (0.9, 0.999),
                 'epsilon': 1e-8,
                 'ams': False
             },
             'sgd': {
                 'gamma': 0.001,
-                'lambda_d': 0,
+                'lambda': 0,
                 'mu': 0,
                 'tau': 0,
                 'nesterov': False
             },
             'rms': {
                 'gamma': 0.001,
-                'lambda_d': 0,
+                'lambda': 0,
                 'beta': 0.99,
                 'mu': 0,
                 'epsilon': 1e-8
@@ -635,7 +635,7 @@ class Optimizers:
         def adam(thetas, nablas):
             # Adam optimization algorithm
             # weight decay
-            deltas = nablas + (self._hyps['lambda_d'] * thetas)
+            deltas = nablas + (self._hyps['lambda'] * thetas)
             if self._memory['deltas_p']:
                 # momentum
                 deltas = ((self._hyps['beta'][0] * self._memory['deltas_p']) + ((1 - self._hyps['beta'][0]) * deltas)) / (1 - self._hyps['beta'][0])
@@ -668,7 +668,7 @@ class Optimizers:
         def sgd(thetas, nablas):
             # SGD optimization algorithm
             # weight decay
-            deltas = nablas + (self._hyps['lambda_d'] * thetas)
+            deltas = nablas + (self._hyps['lambda'] * thetas)
             if self._hyps['mu'] and self._memory['deltas_p']:
                 # momentum
                 deltas = (self._hyps['mu'] * self._memory['deltas_p']) + ((1 - self._hyps['tau']) * deltas)
@@ -687,7 +687,7 @@ class Optimizers:
         def rms(thetas, nablas):
             # RMSprop optimization algorithm
             # weight decay
-            deltas = nablas + (self._hyps['lambda_d'] * thetas)
+            deltas = nablas + (self._hyps['lambda'] * thetas)
             if self._memory['upsilons_p']:
                 # square momentum
                 upsilons = (self._hyps['beta'] * self._memory['upsilons_p']) + ((1 - self._hyps['beta']) * (deltas ** 2))
@@ -739,7 +739,7 @@ class Optimizers:
         # return memory dictionary
         return memories[self._algorithm]
 
-    def optimize(self, thetas: np.ndarray, nablas: np.ndarray):
+    def optimize(self, thetas: np.ndarray, nablas: np.ndarray) -> np.ndarray:
         """
         'update' is a built-in function in the 'Optimizers' class.
         This function updates the parameters of a model based on the gradients.
