@@ -57,7 +57,7 @@ class Initializers:
         # default initialization algorithm parameters
         default = {
             'xavier': {
-                'gain': 1
+                'gain': 1.0
             },
             'gaussian': None,
             'zeros': None,
@@ -101,7 +101,7 @@ class Initializers:
 
         def xavier(row, col):
             # Xavier/Glorot initialization
-            return np.random.randn(row, col) * self._params['gain'] / np.sqrt(2 / (row + col))
+            return np.random.randn(row, col) * self._params['gain'] / np.sqrt(2.0 / (row + col))
 
         def zeros(row, col):
             # Zeros uniform initialization
@@ -200,10 +200,10 @@ class Activators:
             'sigmoid': None,
             'tanh': None,
             'softplus': {
-                'beta': 1
+                'beta': 1.0
             },
             'mish': {
-                'beta': 1
+                'beta': 1.0
             }
         }
 
@@ -245,7 +245,7 @@ class Activators:
 
         def relu(x):
             # ReLU activation
-            return np.maximum(0, x)
+            return np.maximum(0.0, x)
 
         def lrelu(x):
             # Leaky ReLU activation
@@ -253,7 +253,7 @@ class Activators:
 
         def sigmoid(x):
             # Sigmoid activation
-            return 1 / (1 + np.exp(-x))
+            return (1.0 + np.exp(-x)) ** -1.0
 
         def tanh(x):
             # Tanh activation
@@ -261,11 +261,11 @@ class Activators:
 
         def softplus(x):
             # Softplus activation
-            return np.log(1 + np.exp(self._params['beta'] * x)) / self._params['beta']
+            return np.log(1.0 + np.exp(self._params['beta'] * x)) / self._params['beta']
 
         def mish(x):
             # Mish activation
-            return x * np.tanh(np.log(1 + np.exp(self._params['beta'] * x)) / self._params['beta'])
+            return x * np.tanh(np.log(1.0 + np.exp(self._params['beta'] * x)) / self._params['beta'])
 
         # activation algorithm dictionary
         act_funcs = {
@@ -290,19 +290,19 @@ class Activators:
 
         def d_relu(x):
             # derivative of ReLU activation
-            return np.where(x > 0, 1, 0)
+            return np.where(x > 0.0, 1.0, 0.0)
 
         def d_lrelu(x):
             # derivative of Leaky ReLU activation
-            return np.where(x > 0, 1, self._params['beta'])
+            return np.where(x > 0.0, 1.0, self._params['beta'])
 
         def d_sigmoid(x):
             # derivative of Sigmoid activation
-            return np.exp(-x) / ((1 + np.exp(-x)) ** 2)
+            return np.exp(-x) / ((1.0 + np.exp(-x)) ** 2.0)
 
         def d_tanh(x):
             # derivative of Tanh activation
-            return np.cosh(x) ** -2
+            return np.cosh(x) ** -2.0
 
         def d_softplus(x):
             # derivative of Softplus activation
@@ -310,7 +310,7 @@ class Activators:
 
         def d_mish(x):
             # derivative of Mish activation
-            return (np.tanh(np.log(1 + np.exp(self._params['beta'] * x)) / self._params['beta'])) + (x * (np.cosh(np.log(1 + np.exp(self._params['beta'] * x)) / self._params['beta']) ** -2) * (self._params['beta'] * np.exp(self._params['beta'] * x) / (self._params['beta'] + self._params['beta'] * np.exp(self._params['beta'] * x))))
+            return (np.tanh(np.log(1.0 + np.exp(self._params['beta'] * x)) / self._params['beta'])) + (x * (np.cosh(np.log(1.0 + np.exp(self._params['beta'] * x)) / self._params['beta']) ** -2.0) * (self._params['beta'] * np.exp(self._params['beta'] * x) / (self._params['beta'] + self._params['beta'] * np.exp(self._params['beta'] * x))))
 
         # derivative of activation algorithm dictionary
         d_act_funcs = {
@@ -445,7 +445,7 @@ class Losses:
         # todo: check order of operations
         def ssr(y, yhat):
             # SSR loss
-            return np.sum((y - yhat) ** 2)
+            return np.sum((y - yhat) ** 2.0)
 
         def srsr(y, yhat):
             # SRSR loss
@@ -470,7 +470,7 @@ class Losses:
         # todo: check order of operations
         def d_ssr(y, yhat):
             # derivative of SSR loss
-            return -2 * (y - yhat)
+            return -2.0 * (y - yhat)
 
         def d_srsr(y, yhat):
             # derivative of SRSR loss
@@ -582,23 +582,23 @@ class Optimizers:
         default = {
             'adam': {
                 'gamma': 0.001,
-                'lambda': 0,
+                'lambda': 0.0,
                 'beta': (0.9, 0.999),
                 'epsilon': 1e-8,
                 'ams': False
             },
             'sgd': {
                 'gamma': 0.001,
-                'lambda': 0,
-                'mu': 0,
-                'tau': 0,
+                'lambda': 0.0,
+                'mu': 0.0,
+                'tau': 0.0,
                 'nesterov': False
             },
             'rms': {
                 'gamma': 0.001,
-                'lambda': 0,
+                'lambda': 0.0,
                 'beta': 0.99,
-                'mu': 0,
+                'mu': 0.0,
                 'epsilon': 1e-8
             }
         }
@@ -638,13 +638,13 @@ class Optimizers:
             deltas = nablas + (self._hyps['lambda'] * thetas)
             if self._memory['deltas_p']:
                 # momentum
-                deltas = ((self._hyps['beta'][0] * self._memory['deltas_p']) + ((1 - self._hyps['beta'][0]) * deltas)) / (1 - self._hyps['beta'][0])
+                deltas = ((self._hyps['beta'][0] * self._memory['deltas_p']) + ((1.0 - self._hyps['beta'][0]) * deltas)) / (1.0 - self._hyps['beta'][0])
             if self._memory['upsilons_p']:
                 # square momentum
-                upsilons = ((self._hyps['beta'][1] * self._memory['upsilons_p']) / (1 - self._hyps['beta'][1])) + (deltas ** 2)
+                upsilons = ((self._hyps['beta'][1] * self._memory['upsilons_p']) / (1.0 - self._hyps['beta'][1])) + (deltas ** 2.0)
             else:
                 # square
-                upsilons = deltas ** 2
+                upsilons = deltas ** 2.0
             if self._hyps['ams']:
                 # ams-grad variant
                 if self._memory['upsilons_mx']:
@@ -671,7 +671,7 @@ class Optimizers:
             deltas = nablas + (self._hyps['lambda'] * thetas)
             if self._hyps['mu'] and self._memory['deltas_p']:
                 # momentum
-                deltas = (self._hyps['mu'] * self._memory['deltas_p']) + ((1 - self._hyps['tau']) * deltas)
+                deltas = (self._hyps['mu'] * self._memory['deltas_p']) + ((1.0 - self._hyps['tau']) * deltas)
             if self._hyps['nesterov'] and self._hyps['mu']:
                 # nesterov momentum
                 deltas += nablas + self._hyps['mu'] * deltas
@@ -690,10 +690,10 @@ class Optimizers:
             deltas = nablas + (self._hyps['lambda'] * thetas)
             if self._memory['upsilons_p']:
                 # square momentum
-                upsilons = (self._hyps['beta'] * self._memory['upsilons_p']) + ((1 - self._hyps['beta']) * (deltas ** 2))
+                upsilons = (self._hyps['beta'] * self._memory['upsilons_p']) + ((1.0 - self._hyps['beta']) * (deltas ** 2.0))
             else:
                 # square
-                upsilons = (1 - self._hyps['beta']) * (deltas ** 2)
+                upsilons = (1.0 - self._hyps['beta']) * (deltas ** 2.0)
             # step calculation
             deltas = deltas / (np.sqrt(upsilons) + self._hyps['epsilon'])
             if self._hyps['mu'] and self._memory['deltas_p']:

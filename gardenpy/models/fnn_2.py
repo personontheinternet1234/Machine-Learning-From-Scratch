@@ -42,7 +42,7 @@ class FNN:
         self._zero_grad = None
 
         # visual parameters
-        self._status = not status_bars
+        self._status = status_bars
 
     @staticmethod
     def _get_initializer(algorithm, parameters):
