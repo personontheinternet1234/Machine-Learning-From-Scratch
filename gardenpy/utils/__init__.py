@@ -12,6 +12,9 @@ from .algorithms import (
 )
 
 # todo: rewrite data_utils.py
+from .data_utils import (
+    format_data
+)
 
 from .helper_functions import (
     print_color,

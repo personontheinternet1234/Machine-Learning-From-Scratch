@@ -1,6 +1,7 @@
 """
 processed_data utility functions
 """
+# todo: this script is written badly, and ideally should be a dataloader as saving all the data to memory is not sustainable.
 
 import ast
 import os
@@ -9,7 +10,9 @@ import random
 import numpy as np
 import pandas as pd
 
-from gardenpy.utils.helper_functions import print_color
+from .helper_functions import (
+    print_color
+)
 
 from colorama import Fore, Style
 from tqdm import tqdm

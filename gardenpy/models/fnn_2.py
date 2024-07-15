@@ -31,7 +31,7 @@ class FNN:
         # hyperparameters
         self._layers = None
         self._initializer = None
-        self._activator = None
+        self._activators = None
         self._loss = None
         self._optimizer = None
 
@@ -43,8 +43,6 @@ class FNN:
 
         # visual parameters
         self._status = not status_bars
-        # todo: check out how FORE coloring works
-        self._color = f'{Fore.GREEN}{{l_bar}}{{bar}}{{r_bar}}{Style.RESET_ALL}'
 
     @staticmethod
     def _get_initializer(algorithm, parameters):
@@ -67,21 +65,53 @@ class FNN:
         default_initializers = {
             'weights': {
                 'algorithm': 'xavier',
-                'parameters': 'default'
+                'parameters': None
             },
             'biases': {
                 'algorithm': 'zeros',
-                'parameters': 'default'
+                'parameters': None
             }
         }
-        default_activators = ['relu' for lyr in default_layers].append('softmax')
+        if initialization_methods:
+            init_mts = initialization_methods
+        else:
+            init_mts = default_initializers
 
-        layers = layer_sizes  # todo
-        activators = ...
+        if not layer_sizes:
+            self._layers = default_layers
+        else:
+            if not isinstance(layer_sizes, (np.ndarray, list)):
+                raise ValueError(f"'layer_sizes' is not a list or numpy array: {layer_sizes}")
+            elif len(layer_sizes) <= 2:
+                raise ValueError(
+                    f"Invalid length for 'layer_sizes: {layer_sizes}"
+                    f"'layer_sizes': must be greater than 1"
+                )
+            for lyr in layer_sizes:
+                if not isinstance(lyr, (int, np.int64)):
+                    raise ValueError(f"'layer' is not an integer: {lyr}")
+            self._layers = layer_sizes
+        self._initializer = {
+            'weights': self._get_initializer(
+                init_mts['weights']['algorithm'],
+                init_mts['weights']['parameters']
+            ),
+            'biases': self._get_initializer(
+                init_mts['biases']['algorithm'],
+                init_mts['biases']['parameters']
+            )
+        }
+        if not activation_methods:
 
-        self._layers = layers
-        self._initializers = initializers
-        self._activators = activators
+
 
     def initialize_solver(self, loss=None, optimizer=None):
-        ...
+        default_loss = {
+            'algorithm': 'centropy',
+            'parameters': 'default'
+        }
+        default_optimizer = {
+            'algorithm': 'adam',
+            'hyperparameters': None
+        }
+
