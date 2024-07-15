@@ -314,7 +314,6 @@ class Activators:
 
     def _get_activator(self):
         # defines activation algorithm
-        # todo: check order of operations
         def softmax(x):
             # Softmax activation
             return np.exp(x) / np.sum(np.exp(x))
@@ -543,7 +542,6 @@ class Losses:
 
     def _get_loss(self):
         # defines loss algorithm
-        # todo: check order of operations
         def ssr(y, yhat):
             # SSR loss
             return np.sum((y - yhat) ** 2.0)
@@ -568,7 +566,6 @@ class Losses:
 
     def _get_d_loss(self):
         # defines derivative of loss algorithm
-        # todo: check order of operations
         def d_ssr(y, yhat):
             # derivative of SSR loss
             return -2.0 * (y - yhat)
