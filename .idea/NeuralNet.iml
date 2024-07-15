@@ -11,7 +11,7 @@
   <component name="PyNamespacePackagesService">
     <option name="namespacePackageFolders">
       <list>
-        <option value="$MODULE_DIR$/garden" />
+        <option value="$MODULE_DIR$/gardenpy" />
       </list>
     </option>
   </component>

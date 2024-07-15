@@ -4,15 +4,15 @@ Feedforward Neural Network training for MNIST
 
 import os
 
-from garden.metrics import (
+from gardenpy.metrics import (
     visualization as vis
 )
-from garden.utils import (
+from gardenpy.utils import (
     data_utils as du,
     helper_functions as hf
 )
 
-from garden.models.fnn import (
+from gardenpy.models.fnn import (
     FNN
 )
 
@@ -50,7 +50,7 @@ labels_name = 'labels.csv'  # the location of the labels of the data
 
 conf_mat_normal = True  # the type of normalization done on the confusion matrix for results
 
-# print garden credits
+# print gardenpy credits
 hf.print_credits()
 
 # import assets

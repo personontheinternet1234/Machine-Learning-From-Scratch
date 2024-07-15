@@ -11,7 +11,7 @@ import sys
 
 # This works for Derek's computer idk y. if it breaks yor stuff just comment it out
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-from garden.models.fnn import FNN
+from gardenpy.models.fnn import FNN
 
 from PIL import Image
 

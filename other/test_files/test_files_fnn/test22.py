@@ -1,4 +1,4 @@
-from garden.utils.functional import (
+from gardenpy.utils.algorithms import (
     Initializers,
     Activators,
     Losses,

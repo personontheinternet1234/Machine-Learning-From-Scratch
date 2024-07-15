@@ -1,6 +1,6 @@
 # loading processed_data for testing
 from PIL import Image
-from garden.models.fnn import NeuralNetwork as nnet
+from gardenpy.models.fnn import NeuralNetwork as nnet
 import numpy as np
 from tqdm import tqdm
 import pandas as pd

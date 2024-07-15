@@ -1,13 +1,13 @@
 """
-'functional' includes mathematical algorithms for machine learning models.
+'algorithms' includes mathematical algorithms for GardenPy.
 
-'functional' includes:
+'algorithms' includes:
     'Initializers': Initialization algorithms for kernels/weights/biases.
     'Activators': Activation algorithms for activations.
     'Losses': Loss algorithms for loss.
     'Optimizers': Optimization algorithms for kernels/weights/biases.
 
-refer to '(todo)' for in-depth documentation for these algorithms.
+refer to 'todo' for in-depth documentation for these algorithms.
 """
 
 import numpy as np

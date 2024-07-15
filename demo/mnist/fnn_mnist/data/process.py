@@ -7,10 +7,10 @@ import os
 import numpy as np
 import pandas as pd
 
-from garden.utils.data_utils import (
+from gardenpy.utils.data_utils import (
     format_data_raw as dr
 )
-from garden.utils.helper_functions import (
+from gardenpy.utils.helper_functions import (
     print_color
 )
 

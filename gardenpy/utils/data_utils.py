@@ -9,7 +9,7 @@ import random
 import numpy as np
 import pandas as pd
 
-from garden.utils.helper_functions import print_color
+from gardenpy.utils.helper_functions import print_color
 
 from colorama import Fore, Style
 from tqdm import tqdm

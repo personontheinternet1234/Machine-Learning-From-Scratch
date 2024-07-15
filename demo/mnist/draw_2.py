@@ -8,20 +8,21 @@ import numpy as np
 import pygame
 from PIL import Image
 
-from garden.models import (
+from gardenpy.models import (
     CNN,
     CNNTorch,
-    FNN
+    FNN,
+    FNNTorch
 )
-from garden.utils.data_utils import (
+from gardenpy.utils.data_utils import (
     format_parameters_new,
 )
-from garden.utils.helper_functions import (
+from gardenpy.utils.helper_functions import (
     print_color,
     print_credits
 )
-from garden.utils.functional import (
-    softmax
+from gardenpy.utils.algorithms import (
+    Activators
 )
 
 model_type = 'fnn'

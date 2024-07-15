@@ -1,4 +1,4 @@
-# todo: write a code using the fnn from garden to train on the checkered and non-checkered data
+# todo: write a code using the fnn from gardenpy to train on the checkered and non-checkered data
 
 # the trained model was trained with the incorrect math, so it might not work well
 

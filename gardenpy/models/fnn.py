@@ -8,16 +8,16 @@ import time
 import numpy as np
 import pandas as pd
 
-from garden.utils.functional import (
+from gardenpy.utils.algorithms import (
     Initializers,
     Activators,
     Losses,
     Optimizers
 )
-from garden.metrics.metrics import (
+from gardenpy.metrics.metrics import (
     cm
 )
-from garden.utils.data_utils import (
+from gardenpy.utils.data_utils import (
     shuffle as mix  # todo: why naming?
 )
 
