@@ -13,9 +13,11 @@ refer to 'todo' for in-depth documentation on these functions.
 
 import math
 
+DEFAULT = '\033[0m'
+LIGHT_GRAY = '\033[37m'
+GRAY = '\033[90m'
 GREEN = '\033[32m'
 RED = '\033[31m'
-DEFAULT = '\033[0m'
 
 
 def print_color(text, color=DEFAULT, end='\n') -> None:
@@ -49,7 +51,7 @@ def input_color(text, color=DEFAULT) -> str:
     return input(f"{color}{text}{DEFAULT}")
 
 
-def progress(idx: int, max_idx: int, desc=None, b_len: int = 50, color: str = DEFAULT) -> None:
+def progress(idx: int, max_idx: int, desc=None, b_len: int = 50) -> None:
     """
     'progress' is a function that prints a progress bar.
 
@@ -58,7 +60,6 @@ def progress(idx: int, max_idx: int, desc=None, b_len: int = 50, color: str = DE
         max_idx: The maximum amount of iterations.
         desc: The progress bar description.
         b_len: The length of the progress bar.
-        color: The color that the description wll be printed in.
 
     Returns:
         None.
@@ -79,18 +80,20 @@ def progress(idx: int, max_idx: int, desc=None, b_len: int = 50, color: str = DE
     if desc:
         # set description
         p_desc = (
-            f"{color}  {desc}{DEFAULT}"
+            f"  {desc}"
         )
         # print description
         print(p_desc, end='')
 
 
-def convert_time(seconds: float) -> str:
+def convert_time(seconds: float, number_colors: str = DEFAULT, separators_color: str = DEFAULT) -> str:
     """
     'convert_time' is a function that converts seconds to hours:minutes:seconds.
 
     Arguments:
         seconds: The elapsed seconds.
+        number_colors: The color of the numbers.
+        separators_color: The color of the time separators.
 
     Returns:
         Converted time.
@@ -104,22 +107,24 @@ def convert_time(seconds: float) -> str:
     minutes -= hours * 60
     seconds -= minutes * 60
     # return time
-    return f"{hours:01}:{minutes:02}:{seconds:02}"
+    return f"{number_colors}{hours:01}{separators_color}:{number_colors}{minutes:02}{separators_color}:{number_colors}{seconds:02}{DEFAULT}"
 
 
-def print_credits(color=DEFAULT) -> None:
+def print_credits() -> None:
     """
     'print_credits' is a function that prints the credits for GardenPy.
-
-    Arguments:
-        color: The color that the text will be printed in.
 
     Returns:
         None.
     """
     # print credits in alphabetical order
-    print_color("GardenPy", color=color)
-    print_color("   Christian SW Host-Madsen CO '25 <chost-madsen25@punahou.edu>", color=color)
-    print_color("   Mason Morales CO '25 <mmorales25@punahou.edu>", color=color)
-    print_color("   Isaac Park Verbrugge CO '25 <iverbrugge25@punahou.edu>", color=color)
-    print_color("   Derek Yee CO '25 <dyee25@punahou.edu>", color=color)
+    print_color("GardenPy", color=GREEN)
+    print_color("   Contributors:", color=LIGHT_GRAY)
+    print_color("   Christian SW Host-Madsen CO '25 ", end='')
+    print_color("   <chost-madsen25@punahou.edu>", color=GRAY)
+    print_color("   Mason Morales CO '25 ", end='')
+    print_color("              <mmorales25@punahou.edu>", color=GRAY)
+    print_color("   Isaac Park Verbrugge CO '25 ", end='')
+    print_color("       <iverbrugge25@punahou.edu>", color=GRAY)
+    print_color("   Derek Yee CO '25 ", end='')
+    print_color("                  <dyee25@punahou.edu>", color=GRAY)

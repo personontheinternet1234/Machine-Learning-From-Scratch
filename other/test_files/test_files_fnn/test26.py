@@ -3,8 +3,11 @@ import time
 from gardenpy.utils import progress
 from gardenpy.utils.helper_functions import convert_time, print_credits
 
+DEFAULT = '\033[0m'
+LIGHT_GRAY = '\033[37m'
+
 status = True
-max_iter = 10000
+max_iter = 1000
 
 print()
 print_credits()
@@ -26,9 +29,9 @@ for i in range(max_iter):
     if status:
         desc = (
             f"{str(i + 1).zfill(len(str(max_iter)))}/{max_iter}  "
-            f"et-{convert_time(time.time() - start)}  "
-            f"eta-{convert_time((time.time() - start) * max_iter / (i + 1) - (time.time() - start))}  "
-            f"{round((i + 1) / (time.time() - start), 1)}it/s"
+            f"{convert_time(time.time() - start)}{LIGHT_GRAY}et{DEFAULT}  "
+            f"{convert_time((time.time() - start) * max_iter / (i + 1) - (time.time() - start))}{LIGHT_GRAY}eta{DEFAULT}  "
+            f"{round((i + 1) / (time.time() - start), 1)}{LIGHT_GRAY}it/s{DEFAULT}"
         )
         progress(i, max_iter, desc=desc)
 print()
