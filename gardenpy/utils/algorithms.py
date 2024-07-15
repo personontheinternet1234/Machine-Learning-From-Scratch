@@ -10,6 +10,8 @@
 refer to 'todo' for in-depth documentation on these algorithms.
 """
 
+import warnings
+
 import numpy as np
 
 
@@ -63,6 +65,24 @@ class Initializers:
             'zeros': None,
             'ones': None
         }
+        # default initialization algorithm parameter datatypes
+        dtypes = {
+            'xavier': {
+                'gain': (float, int)
+            },
+            'gaussian': any,
+            'zeros': any,
+            'ones': any
+        }
+        # default initialization algorithm parameter value types
+        vtypes = {
+            'xavier': {
+                'gain': lambda x: 0.0 < x
+            },
+            'gaussian': lambda x: True,
+            'zeros': lambda x: True,
+            'ones': lambda x: True
+        }
 
         # instantiate parameter dictionary
         prms = default[self._algorithm]
@@ -70,19 +90,31 @@ class Initializers:
         if params and prms and isinstance(params, dict):
             # set defined parameter
             for prm in params:
-                if prm in prms:
-                    # todo: add errors for each hyperparameter
+                if prm not in prms:
+                    # invalid parameter
+                    warnings.warn(
+                        f"\nInvalid parameter for '{self._algorithm}': {prm}"
+                        f"\nChoose from: {[prm for prm in prms]}",
+                        UserWarning
+                    )
+                elif prm in prms and not isinstance(params[prm], dtypes[self._algorithm][prm]):
+                    # invalid datatype for parameter
+                    raise TypeError(
+                        f"Invalid datatype for '{self._algorithm}': '{prm}'\n"
+                        f"Choose from: {dtypes[self._algorithm][prm]}"
+                    )
+                elif prm in prms and not (vtypes[self._algorithm][prm](params[prm])):
+                    # invalid value for parameter
+                    raise TypeError(
+                        f"Invalid value for '{self._algorithm}': '{prm}'\n"
+                        f"Conditional: {vtypes[self._algorithm][prm]}"
+                    )
+                else:
                     # valid parameter
                     prms[prm] = params[prm]
-                else:
-                    # invalid parameter
-                    raise UserWarning(
-                        f"Invalid parameter for '{self._algorithm}': {prm}\n"
-                        f"Choose from: {[prm for prm in prms]}"
-                    )
         elif params and isinstance(params, dict):
             # parameters not taken
-            raise UserWarning(f"'{self._algorithm}' does not take parameters")
+            warnings.warn(f"\n'{self._algorithm}' does not take parameters", UserWarning)
         elif params:
             # invalid data type
             raise TypeError(
@@ -95,13 +127,13 @@ class Initializers:
 
     def _get_initializer(self):
         # defines initialization algorithm
+        def xavier(row, col):
+            # Xavier/Glorot initialization
+            return np.random.randn(row, col) * self._params['gain'] * np.sqrt(2.0 / (row + col))
+
         def gaussian(row, col):
             # Gaussian initialization
             return np.random.randn(row, col)
-
-        def xavier(row, col):
-            # Xavier/Glorot initialization
-            return np.random.randn(row, col) * self._params['gain'] / np.sqrt(2.0 / (row + col))
 
         def zeros(row, col):
             # Zeros uniform initialization
@@ -113,8 +145,8 @@ class Initializers:
 
         # initialization algorithm dictionary
         init_funcs = {
-            'gaussian': gaussian,
             'xavier': xavier,
+            'gaussian': gaussian,
             'zeros': zeros,
             'ones': ones
         }
@@ -206,6 +238,38 @@ class Activators:
                 'beta': 1.0
             }
         }
+        # default activation algorithm parameter datatypes
+        dtypes = {
+            'softmax': any,
+            'relu': any,
+            'lrelu': {
+                'beta': (float, int)
+            },
+            'sigmoid': any,
+            'tanh': any,
+            'softplus': {
+                'beta': (float, int)
+            },
+            'mish': {
+                'beta': (float, int)
+            }
+        }
+        # default activation algorithm parameter value types
+        vtypes = {
+            'softmax': lambda x: True,
+            'relu': lambda x: True,
+            'lrelu': {
+                'beta': lambda x: 0.0 < x
+            },
+            'sigmoid': lambda x: True,
+            'tanh': lambda x: True,
+            'softplus': {
+                'beta': lambda x: 0.0 <= x
+            },
+            'mish': {
+                'beta': lambda x: 0.0 <= x
+            }
+        }
 
         # instantiate parameter dictionary
         prms = default[self._algorithm]
@@ -213,19 +277,31 @@ class Activators:
         if params and prms and isinstance(params, dict):
             # set defined parameter
             for prm in params:
-                if prm in prms:
-                    # todo: add errors for each parameter
+                if prm not in prms:
+                    # invalid parameter
+                    warnings.warn(
+                        f"\nInvalid parameter for '{self._algorithm}': {prm}"
+                        f"\nChoose from: {[prm for prm in prms]}",
+                        UserWarning
+                    )
+                elif prm in prms and not isinstance(params[prm], dtypes[self._algorithm][prm]):
+                    # invalid datatype for parameter
+                    raise TypeError(
+                        f"Invalid datatype for '{self._algorithm}': '{prm}'\n"
+                        f"Choose from: {dtypes[self._algorithm][prm]}"
+                    )
+                elif prm in prms and not (vtypes[self._algorithm][prm](params[prm])):
+                    # invalid value for parameter
+                    raise TypeError(
+                        f"Invalid value for '{self._algorithm}': '{prm}'\n"
+                        f"Conditional: {vtypes[self._algorithm][prm]}"
+                    )
+                else:
                     # valid parameter
                     prms[prm] = params[prm]
-                else:
-                    # invalid parameter
-                    raise UserWarning(
-                        f"Invalid parameter for '{self._algorithm}': {prm}\n"
-                        f"Choose from: {[prm for prm in prms]}"
-                    )
         elif params and isinstance(params, dict):
             # parameters not taken
-            raise UserWarning(f"'{self._algorithm}' does not take parameters")
+            warnings.warn(f"\n'{self._algorithm}' does not take parameters", UserWarning)
         elif params:
             # invalid data type
             raise TypeError(
@@ -286,7 +362,7 @@ class Activators:
         # todo: check order of operations
         def d_softmax(x):
             # derivative of Softmax activation
-            return ...  # todo: write this algorithm
+            return (np.exp(x) * np.sum(np.exp(x)) - np.exp(2 * x)) / (np.sum(np.exp(x)) ** 2)
 
         def d_relu(x):
             # derivative of ReLU activation
@@ -411,25 +487,50 @@ class Losses:
             'srsr': None
         }
 
+        # default loss algorithm parameter datatypes
+        dtypes = {
+            'centropy': any,
+            'ssr': any,
+            'srsr': any
+        }
+        # default loss algorithm parameter value types
+        vtypes = {
+            'centropy': lambda x: True,
+            'ssr': lambda x: True,
+            'srsr': lambda x: True
+        }
+
         # instantiate parameter dictionary
         prms = default[self._algorithm]
 
         if params and prms and isinstance(params, dict):
             # set defined parameter
             for prm in params:
-                if prm in prms:
-                    # todo: add errors for each parameter
+                if prm not in prms:
+                    # invalid parameter
+                    warnings.warn(
+                        f"\nInvalid parameter for '{self._algorithm}': {prm}"
+                        f"\nChoose from: {[prm for prm in prms]}",
+                        UserWarning
+                    )
+                elif prm in prms and not isinstance(params[prm], dtypes[self._algorithm][prm]):
+                    # invalid datatype for parameter
+                    raise TypeError(
+                        f"Invalid datatype for '{self._algorithm}': '{prm}'\n"
+                        f"Choose from: {dtypes[self._algorithm][prm]}"
+                    )
+                elif prm in prms and not (vtypes[self._algorithm][prm](params[prm])):
+                    # invalid value for parameter
+                    raise TypeError(
+                        f"Invalid value for '{self._algorithm}': '{prm}'\n"
+                        f"Conditional: {vtypes[self._algorithm][prm]}"
+                    )
+                else:
                     # valid parameter
                     prms[prm] = params[prm]
-                else:
-                    # invalid parameter
-                    raise UserWarning(
-                        f"Invalid parameter for '{self._algorithm}': {prm}\n"
-                        f"Choose from: {[prm for prm in prms]}"
-                    )
         elif params and isinstance(params, dict):
             # parameters not taken
-            raise UserWarning(f"'{self._algorithm}' does not take parameters")
+            warnings.warn(f"\n'{self._algorithm}' does not take parameters", UserWarning)
         elif params:
             # invalid data type
             raise TypeError(
@@ -449,11 +550,11 @@ class Losses:
 
         def srsr(y, yhat):
             # SRSR loss
-            return np.sum(np.abs(y - yhat))
+            return np.sum(((y - yhat) ** 2.0) ** 0.5)
 
         def centropy(y, yhat):
             # Cross-Entropy loss
-            return np.sum(yhat * np.log(y))
+            return np.sum(y * np.log(yhat))
 
         # loss algorithm dictionary
         loss_funcs = {
@@ -474,11 +575,11 @@ class Losses:
 
         def d_srsr(y, yhat):
             # derivative of SRSR loss
-            return ...  # todo: write this algorithm
+            return -(y - yhat) ** 2
 
         def d_centropy(y, yhat):
             # derivative of Cross-Entropy loss
-            return ...  # todo: write this algorithm
+            return np.log(yhat) + (y / yhat)
 
         # derivative of loss algorithm dictionary
         d_loss_funcs = {
@@ -583,7 +684,8 @@ class Optimizers:
             'adam': {
                 'gamma': 0.001,
                 'lambda': 0.0,
-                'beta': (0.9, 0.999),
+                'beta1': 0.9,
+                'beta2': 0.999,
                 'epsilon': 1e-8,
                 'ams': False
             },
@@ -602,23 +704,88 @@ class Optimizers:
                 'epsilon': 1e-8
             }
         }
+        # default optimization algorithm hyperparameter datatypes
+        dtypes = {
+            'adam': {
+                'gamma': (float, int),
+                'lambda': (float, int),
+                'beta1': (float, int),
+                'beta2': (float, int),
+                'epsilon': (float, int),
+                'ams': bool
+            },
+            'sgd': {
+                'gamma': (float, int),
+                'lambda': (float, int),
+                'mu': (float, int),
+                'tau': (float, int),
+                'nesterov': bool
+            },
+            'rms': {
+                'gamma': (float, int),
+                'lambda': (float, int),
+                'beta': (float, int),
+                'mu': (float, int),
+                'epsilon': float
+            }
+        }
+        # default optimization algorithm hyperparameter value types
+        vtypes = {
+            'adam': {
+                'gamma': lambda x: True,
+                'lambda': lambda x: 0.0 <= x,
+                'beta1': lambda x: 0.0 < x,
+                'beta2': lambda x: 0.0 < x,
+                'epsilon': lambda x: 0.0 < x,
+                'ams': lambda x: True
+            },
+            'sgd': {
+                'gamma': None,
+                'lambda': lambda x: 0.0 <= x,
+                'mu': lambda x: 0.0 <= x,
+                'tau': lambda x: 0.0 <= x,
+                'nesterov': lambda x: True
+            },
+            'rms': {
+                'gamma': lambda x: True,
+                'lambda': lambda x: 0.0 <= x,
+                'beta': lambda x: 0.0 < x,
+                'mu': lambda x: 0.0 < x,
+                'epsilon': lambda x: 0.0 < x
+            }
+        }
 
-        # instantiate hyperparameter dictionary
+        # instantiate hyperparameters dictionary
         hyps = default[self._algorithm]
 
-        if hyperparams and isinstance(hyperparams, dict):
+        if hyperparams and hyps and isinstance(hyps, dict):
             # set defined hyperparameters
             for hyp in hyperparams:
-                if hyp in hyps:
-                    # todo: add errors for each hyperparameter
+                if hyp not in hyps:
+                    # invalid hyperparameter
+                    warnings.warn(
+                        f"\nInvalid hyperparameter for '{self._algorithm}': {hyp}"
+                        f"\nChoose from: {[hyp for hyp in hyps]}",
+                        UserWarning
+                    )
+                elif hyp in hyps and not isinstance(hyperparams[hyp], dtypes[self._algorithm][hyp]):
+                    # invalid datatype for hyperparameter
+                    raise TypeError(
+                        f"Invalid datatype for '{self._algorithm}': '{hyp}'\n"
+                        f"Choose from: {dtypes[self._algorithm][hyp]}"
+                    )
+                elif hyp in hyps and not (vtypes[self._algorithm][hyp](hyperparams[hyp])):
+                    # invalid value for hyperparameter
+                    raise TypeError(
+                        f"Invalid value for '{self._algorithm}': '{hyp}'\n"
+                        f"Conditional: {vtypes[self._algorithm][hyp]}"
+                    )
+                else:
                     # valid hyperparameter
                     hyps[hyp] = hyperparams[hyp]
-                else:
-                    # invalid hyperparameter
-                    raise UserWarning(
-                        f"Invalid hyperparameter for '{self._algorithm}': {hyp}\n"
-                        f"Choose from: {[hyp for hyp in hyps]}"
-                    )
+        elif hyperparams and isinstance(hyperparams, dict):
+            # hyperparameters not taken
+            warnings.warn(f"\n'{self._algorithm}' does not take hyperparameters", UserWarning)
         elif hyperparams:
             # invalid data type
             raise TypeError(
@@ -638,10 +805,10 @@ class Optimizers:
             deltas = nablas + (self._hyps['lambda'] * thetas)
             if self._memory['deltas_p']:
                 # momentum
-                deltas = ((self._hyps['beta'][0] * self._memory['deltas_p']) + ((1.0 - self._hyps['beta'][0]) * deltas)) / (1.0 - self._hyps['beta'][0])
+                deltas = ((self._hyps['beta1'] * self._memory['deltas_p']) + ((1.0 - self._hyps['beta1']) * deltas)) / (1.0 - self._hyps['beta1'])
             if self._memory['upsilons_p']:
                 # square momentum
-                upsilons = ((self._hyps['beta'][1] * self._memory['upsilons_p']) / (1.0 - self._hyps['beta'][1])) + (deltas ** 2.0)
+                upsilons = ((self._hyps['beta2'] * self._memory['upsilons_p']) / (1.0 - self._hyps['beta2'])) + (deltas ** 2.0)
             else:
                 # square
                 upsilons = deltas ** 2.0

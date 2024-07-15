@@ -2,8 +2,7 @@
 'helper_functions' includes minor utility functions for GardenPy.
 
 'helper_functions' includes:
-    'print_color': Print text in color.
-    'input_color': Input text in color.
+    'ansi_formats': Common ANSI formats.
     'progress': Progress bar.
     'convert_time': Converts time to hours:minutes:seconds.
     'print_credits': Print credits for GardenPy.
@@ -13,42 +12,47 @@ refer to 'todo' for in-depth documentation on these functions.
 
 import math
 
-DEFAULT = '\033[0m'
-LIGHT_GRAY = '\033[37m'
-GRAY = '\033[90m'
-GREEN = '\033[32m'
-RED = '\033[31m'
 
-
-def print_color(text, color=DEFAULT, end='\n') -> None:
+def ansi_formats() -> dict:
     """
-    'print_color' is a function that prints text in color.
+        'ansi_formats' is a function that returns a dictionary of common ansi formats.
 
-    Arguments:
-        text: The text that will be printed.
-        color: The color that the text will be printed in.
-        end: The end-line argument.
+        Arguments:
+            None.
 
-    Returns:
-        None.
-    """
-    # print text
-    print(f"{color}{text}{DEFAULT}", end=end)
-
-
-def input_color(text, color=DEFAULT) -> str:
-    """
-    'input_color' is a function that prompts the user for an input in color.
-
-    Arguments:
-        text: The text that will be printed for input.
-        color: The color that the text will be printed in for input.
-
-    Returns:
-        A string of the user's input.
-    """
-    # get and return input
-    return input(f"{color}{text}{DEFAULT}")
+        Returns:
+            A dictionary of ANSI formats.
+        """
+    # ANSI formats
+    formats = {
+        'reset': '\033[0m',
+        'black': '\033[30m',
+        'red': '\033[31m',
+        'green': '\033[32m',
+        'yellow': '\033[33m',
+        'blue': '\033[34m',
+        'magenta': '\033[35m',
+        'cyan': '\033[36m',
+        'white': '\033[37m',
+        'bright_black': '\033[90m',
+        'bright_red': '\033[91m',
+        'bright_green': '\033[92m',
+        'bright_yellow': '\033[93m',
+        'bright_blue': '\033[94m',
+        'bright_magenta': '\033[95m',
+        'bright_cyan': '\033[96m',
+        'bright_white': '\033[97m',
+        'bold': '\033[1m',
+        'dim': '\033[2m',
+        'italic': '\033[3m',
+        'underline': '\033[4m',
+        'blinking': '\033[5m',
+        'reverse': '\033[7m',
+        'hidden': '\033[8m',
+        'strikethrough': '\033[9m'
+    }
+    # return ANSI formats
+    return formats
 
 
 def progress(idx: int, max_idx: int, desc=None, b_len: int = 50) -> None:
@@ -64,6 +68,8 @@ def progress(idx: int, max_idx: int, desc=None, b_len: int = 50) -> None:
     Returns:
         None.
     """
+    # get ansi formats
+    progress_formats = ansi_formats()
     if not isinstance(b_len, int):
         # invalid datatype
         raise ValueError(f"'b_len' is not an integer: {b_len}")
@@ -71,8 +77,8 @@ def progress(idx: int, max_idx: int, desc=None, b_len: int = 50) -> None:
     completed = (idx + 1) / max_idx
     # make progress bar
     p_bar = (
-        f"\r{GREEN}{'—' * int(b_len * completed)}"
-        f"{RED}{'—' * (b_len - int(b_len * completed))}{DEFAULT}"
+        f"\r{progress_formats['green']}{'—' * int(b_len * completed)}"
+        f"{progress_formats['red']}{'—' * (b_len - int(b_len * completed))}{progress_formats['reset']}"
     )
     # print progress bar
     print(p_bar, end='')
@@ -86,7 +92,7 @@ def progress(idx: int, max_idx: int, desc=None, b_len: int = 50) -> None:
         print(p_desc, end='')
 
 
-def convert_time(seconds: float, number_colors: str = DEFAULT, separators_color: str = DEFAULT) -> str:
+def convert_time(seconds: float, number_colors: str = None, separators_color: str = None) -> str:
     """
     'convert_time' is a function that converts seconds to hours:minutes:seconds.
 
@@ -98,6 +104,12 @@ def convert_time(seconds: float, number_colors: str = DEFAULT, separators_color:
     Returns:
         Converted time.
     """
+    # get ansi formats
+    time_formats = ansi_formats()
+    if not number_colors:
+        number_colors = time_formats['reset']
+    if not separators_color:
+        separators_color = time_formats['reset']
     # round seconds
     seconds = int(seconds)
     # find minutes and hours
@@ -107,7 +119,7 @@ def convert_time(seconds: float, number_colors: str = DEFAULT, separators_color:
     minutes -= hours * 60
     seconds -= minutes * 60
     # return time
-    return f"{number_colors}{hours:01}{separators_color}:{number_colors}{minutes:02}{separators_color}:{number_colors}{seconds:02}{DEFAULT}"
+    return f"{number_colors}{hours:01}{separators_color}:{number_colors}{minutes:02}{separators_color}:{number_colors}{seconds:02}{time_formats['reset']}"
 
 
 def print_credits() -> None:
@@ -117,14 +129,17 @@ def print_credits() -> None:
     Returns:
         None.
     """
+    # get ansi formats
+    credit_formats = ansi_formats()
+    bold_green = '\033[1;32m'
     # print credits in alphabetical order
-    print_color("GardenPy", color=GREEN)
-    print_color("   Contributors:", color=LIGHT_GRAY)
-    print_color("   Christian SW Host-Madsen CO '25 ", end='')
-    print_color("   <chost-madsen25@punahou.edu>", color=GRAY)
-    print_color("   Mason Morales CO '25 ", end='')
-    print_color("              <mmorales25@punahou.edu>", color=GRAY)
-    print_color("   Isaac Park Verbrugge CO '25 ", end='')
-    print_color("       <iverbrugge25@punahou.edu>", color=GRAY)
-    print_color("   Derek Yee CO '25 ", end='')
-    print_color("                  <dyee25@punahou.edu>", color=GRAY)
+    print(f"{bold_green}GardenPy{credit_formats['reset']}")
+    print(f"   {credit_formats['bold']}Contributors:{credit_formats['reset']}")
+    print(f"   Christian SW Host-Madsen CO '25 ", end='')
+    print(f"   {credit_formats['bright_black']}<chost-madsen25@punahou.edu>{credit_formats['reset']}",)
+    print(f"   Mason Morales CO '25 ", end='')
+    print(f"              {credit_formats['bright_black']}<mmorales25@punahou.edu>{credit_formats['reset']}")
+    print(f"   Isaac Park Verbrugge CO '25 ", end='')
+    print(f"       {credit_formats['bright_black']}<iverbrugge25@punahou.edu>{credit_formats['reset']}")
+    print(f"   Derek Yee CO '25 ", end='')
+    print(f"                  {credit_formats['bright_black']}<dyee25@punahou.edu>{credit_formats['reset']}")

@@ -1,7 +1,7 @@
 import time
 
-from gardenpy.utils import progress
-from gardenpy.utils.helper_functions import convert_time, print_credits
+from gardenpy.utils import progress, convert_time
+from gardenpy.utils.helper_functions import print_credits
 
 DEFAULT = '\033[0m'
 LIGHT_GRAY = '\033[37m'
