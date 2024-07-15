@@ -46,7 +46,7 @@ def input_color(text, color=DEFAULT) -> str:
     return input(f'{color}{text}{DEFAULT}')
 
 
-def progress(idx: int, max_idx: int, desc=None, b_len: int = 50, color: str = '\033[0m') -> None:
+def progress(idx: int, max_idx: int, desc=None, b_len: int = 50, color: str = DEFAULT) -> None:
     """
     'progress' is a function that prints a progress bar.
 

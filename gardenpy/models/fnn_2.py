@@ -9,25 +9,21 @@ import time
 import numpy as np
 import pandas as pd
 
-from gardenpy.utils.algorithms import (
+from gardenpy.utils import (
     Initializers,
     Activators,
     Losses,
     Optimizers
 )
-from gardenpy.metrics.metrics import (
-    cm
-)
 from gardenpy.utils.data_utils import (
     shuffle
 )
 
-from colorama import Fore, Style
-from tqdm import tqdm
+DEFAULT = '\033[0m'
 
 
 class FNN:
-    def __init__(self, status_bars=True):
+    def __init__(self, status_bars: bool = True, status_color: str = DEFAULT):
         # hyperparameters
         self._layers = None
         self._initializers = None
@@ -43,6 +39,7 @@ class FNN:
 
         # visual parameters
         self._status = status_bars
+        self._color = status_color
 
     @staticmethod
     def _get_initializer(algorithm, parameters):

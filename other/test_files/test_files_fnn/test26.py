@@ -6,8 +6,11 @@ from gardenpy.utils.helper_functions import print_credits
 status = True
 max_iter = 1000
 
+print('')
 print_credits()
 print('')
+
+time.sleep(1.0)
 
 print(f"Testing")
 start = time.time()
