@@ -5,10 +5,13 @@
     'print_color': Print text in color.
     'input_color': Input text in color.
     'progress': Progress bar.
+    'convert_time': Converts time to hours:minutes:seconds.
     'print_credits': Print credits for GardenPy.
 
 refer to 'todo' for in-depth documentation on these functions.
 """
+
+import math
 
 GREEN = '\033[32m'
 RED = '\033[31m'
@@ -28,7 +31,7 @@ def print_color(text, color=DEFAULT, end='\n') -> None:
         None.
     """
     # print text
-    print(f'{color}{text}{DEFAULT}', end=end)
+    print(f"{color}{text}{DEFAULT}", end=end)
 
 
 def input_color(text, color=DEFAULT) -> str:
@@ -43,7 +46,7 @@ def input_color(text, color=DEFAULT) -> str:
         A string of the user's input.
     """
     # get and return input
-    return input(f'{color}{text}{DEFAULT}')
+    return input(f"{color}{text}{DEFAULT}")
 
 
 def progress(idx: int, max_idx: int, desc=None, b_len: int = 50, color: str = DEFAULT) -> None:
@@ -82,6 +85,28 @@ def progress(idx: int, max_idx: int, desc=None, b_len: int = 50, color: str = DE
         print(p_desc, end='')
 
 
+def convert_time(seconds: float) -> str:
+    """
+    'convert_time' is a function that converts seconds to hours:minutes:seconds.
+
+    Arguments:
+        seconds: The elapsed seconds.
+
+    Returns:
+        Converted time.
+    """
+    # round seconds
+    seconds = int(seconds)
+    # find minutes and hours
+    minutes = math.floor(seconds / 60)
+    hours = math.floor(minutes / 60)
+    # adjust times
+    minutes -= hours * 60
+    seconds -= minutes * 60
+    # return time
+    return f"{hours:01}:{minutes:02}:{seconds:02}"
+
+
 def print_credits(color=DEFAULT) -> None:
     """
     'print_credits' is a function that prints the credits for GardenPy.
@@ -93,7 +118,7 @@ def print_credits(color=DEFAULT) -> None:
         None.
     """
     # print credits in alphabetical order
-    print_color('GardenPy', color=color)
+    print_color("GardenPy", color=color)
     print_color("   Christian SW Host-Madsen CO '25 <chost-madsen25@punahou.edu>", color=color)
     print_color("   Mason Morales CO '25 <mmorales25@punahou.edu>", color=color)
     print_color("   Isaac Park Verbrugge CO '25 <iverbrugge25@punahou.edu>", color=color)
