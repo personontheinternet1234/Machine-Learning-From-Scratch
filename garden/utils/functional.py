@@ -1,148 +1,60 @@
 """
-mathematical functions
+'functional' includes mathematical algorithms for machine learning models.
+
+'functional' includes:
+    'Initializers': Initialization algorithms for kernels/weights/biases.
+    'Activators': Activation algorithms for activations.
+    'Losses': Loss algorithms for loss.
+    'Optimizers': Optimization algorithms for kernels/weights/biases.
+
+refer to '(todo)' for in-depth documentation for these algorithms.
 """
 
 import numpy as np
-from typing import Union
-
-
-def initializers(name, gain='auto'):
-    if gain == 'auto':
-        gains = {
-            'xavier': 1
-        }
-        if name in gains:
-            gain = gains[name]
-        else:
-            gain = None
-    init = {
-        'gaussian': lambda l, w: np.random.randn(l, w),
-        'xavier': lambda l, w: np.random.randn(l, w) * gain / np.sqrt(2 / (w + l)),
-        'zeros': lambda l, w: np.zeros((l, w)),
-        'ones': lambda l, w: np.ones((l, w))
-    }
-    if name in init:
-        return init[name]
-    else:
-        raise ValueError(f"'{name}' is an invalid initialization method")
-
-
-def activators(name, beta='auto'):
-    """ get raw activation function """
-    # set beta
-    if beta == 'auto':
-        betas = {
-            'leaky relu': 0.01,
-            'softplus': 1,
-            'mish': 1
-        }
-        if name in betas:
-            beta = betas[name]
-        else:
-            beta = None
-    elif isinstance(beta, float):
-        beta = beta
-    else:
-        raise ValueError(f"'beta' ({beta}) must be a float or 'auto'")
-    # set activation function
-    g = {
-        'softmax': lambda x: np.exp(x) / np.sum(np.exp(x)),
-        'relu': lambda x: np.maximum(0, x),
-        'leaky-relu': lambda x: np.maximum(beta * x, x),
-        'sigmoid': lambda x: 1 / (1 + np.exp(-x)),
-        'tanh': lambda x: np.tanh(x),
-        'softplus': lambda x: np.log(1 + np.exp(beta * x)) / beta,
-        'mish': lambda x: x * np.tanh(np.log(1 + np.exp(beta * x)) / beta)
-    }
-    # return activation function
-    if name in g:
-        return g[name]
-    else:
-        raise ValueError(f"'{name}' is an invalid activation function")
-
-
-def d_activators(name, beta='auto'):
-    """ get derivative of raw activation function """
-    # set beta
-    if beta == 'auto':
-        betas = {
-            'leaky relu': 0.01,
-            'softplus': 1,
-            'mish': 1
-        }
-        if name in betas:
-            beta = betas[name]
-        else:
-            beta = 0
-    elif isinstance(beta, float):
-        beta = beta
-    else:
-        raise ValueError(f"'beta' ({beta}) must be a float or 'auto'")
-    dg = {
-        'softmax': lambda x: ...,  # todo: write this activation algorithm
-        'relu': lambda x: np.where(x > 0, 1, 0),
-        'leaky-relu': lambda x: np.where(x > 0, 1, beta),
-        'sigmoid': lambda x: np.exp(-x) / ((1 + np.exp(-x)) ** 2),
-        'tanh': lambda x: np.cosh(x) ** -2,
-        'softplus': lambda x: beta * np.exp(beta * x) / (beta + beta * np.exp(beta * x)),
-        'mish': lambda x: (np.tanh(np.log(1 + np.exp(beta * x)) / beta)) + (x * (np.cosh(np.log(1 + np.exp(beta * x)) / beta) ** -2) * (beta * np.exp(beta * x) / (beta + beta * np.exp(beta * x))))
-    }
-    if name in dg:
-        return dg[name]
-    else:
-        raise ValueError(f"'{name}' is an invalid activation function")
-
-
-def losses(name):
-    """ get raw cost function """
-    j = {
-        'ssr': lambda y, yhat: np.sum((y - yhat) ** 2),
-        'sar': lambda y, yhat: np.sum(np.abs(y - yhat)),
-        'centropy': lambda y, yhat: np.sum(yhat * np.log(y))
-    }
-    if name in j:
-        return j[name]
-    else:
-        raise ValueError(f"'{name}' is an invalid loss function")
-
-
-def d_losses(name):
-    """ get derivative of raw cost function """
-    dj = {
-        'ssr': lambda y, yhat: -2 * (y - yhat),
-        'sar': lambda y, yhat: -1 * np.sign(y - yhat),
-        'centropy': lambda y, yhat: ...  # todo: write this loss algorithm
-    }
-    if name in dj:
-        return dj[name]
-    else:
-        raise ValueError(f"'{name}' is an invalid loss function")
 
 
 class Initializers:
-    def __init__(self, method, params):
-        self.methods = [
+    def __init__(self, algorithm: str, parameters: dict = None):
+        """
+        'Initializers' is a class containing various initialization algorithms.
+        These initialization algorithms currently include 'xavier' (Xavier/Glorot), 'gaussian' (Gaussian/Normal), 'zeros' (Uniform Zeros), and 'ones' (Uniform Ones).
+        The class structure promotes flexibility through the easy addition of other initialization algorithms.
+
+        Arguments:
+            algorithm: A string referencing the desired initialization algorithm.
+            parameters: A dictionary referencing the parameters for the initialization algorithm.
+                (any parameters not referenced will be automatically defined)
+        """
+        # initialization algorithms
+        self.algorithms = [
             'xavier',
             'gaussian',
             'zeros',
             'ones'
         ]
-        self._method = self._check_method(method)
-        self._params = self._get_params(params)
+
+        # internal initialization algorithm parameters
+        self._algorithm = self._check_algorithm(algorithm)
+        self._params = self._get_params(parameters)
+
+        # initialization algorithm
         self._initializer = self._get_initializer()
 
-    def _check_method(self, method):
-        if method in self.methods:
-            return method
+    def _check_algorithm(self, algorithm):
+        # checks whether the initialization algorithm is valid
+        if algorithm in self.algorithms:
+            # valid initialization algorithm
+            return algorithm
         else:
-            # error
+            # invalid initialization algorithm
             raise ValueError(
-                f"'{method}' is an invalid optimization technique\n"
-                f"choose from: {[mtd for mtd in self.methods]}"
+                f"Invalid initialization algorithm: '{algorithm}'\n"
+                f"Choose from: {[alg for alg in self.algorithms]}"
             )
 
     def _get_params(self, params):
-        # define default params
+        # defines initialization algorithm parameters
+        # default initialization algorithm parameters
         default = {
             'xavier': {
                 'gain': 1
@@ -152,45 +64,54 @@ class Initializers:
             'ones': None
         }
 
-        if params == 'auto':
-            # set hyperparams if auto
-            self._params = default[self._method]
-        elif isinstance(params, dict):
-            # set default hyperparams
-            self._params = default[self._method]
-            # set hyperparams if defined
+        # instantiate parameter dictionary
+        prms = default[self._algorithm]
+
+        if params and prms and isinstance(params, dict):
+            # set defined parameter
             for prm in params:
-                if prm in self._params:
-                    self._params[prm] = params[prm]
+                if prm in prms:
+                    # todo: add errors for each hyperparameter
+                    # valid parameter
+                    prms[prm] = params[prm]
                 else:
-                    UserWarning(
-                        f"{prm} is not a valid hyperparameter for {self._method}\n"
-                        f"choose from: {[prm for prm in self._params]}"
+                    # invalid parameter
+                    raise UserWarning(
+                        f"Invalid parameter for '{self._algorithm}': {prm}\n"
+                        f"Choose from: {[prm for prm in prms]}"
                     )
-        else:
-            # error
+        elif params and isinstance(params, dict):
+            # parameters not taken
+            raise UserWarning(f"'{self._algorithm}' does not take parameters")
+        elif params:
+            # invalid data type
             raise TypeError(
-                f"hyperparameters must be a dictionary\n"
-                f"choose from: {[prm for prm in default[self._method]]}"
+                f"'parameters' is not a dictionary: {params}\n"
+                f"Choose from: {[prm for prm in prms]}"
             )
 
+        # return parameters
+        return prms
+
     def _get_initializer(self):
-        # gaussian initialization
+        # defines initialization algorithm
         def gaussian(row, col):
-            np.random.randn(row, col)
+            # Gaussian initialization
+            return np.random.randn(row, col)
 
-        # xavier initialization
         def xavier(row, col):
-            np.random.randn(row, col) * self._params['gain'] / np.sqrt(2 / (row + col))
+            # Xavier/Glorot initialization
+            return np.random.randn(row, col) * self._params['gain'] / np.sqrt(2 / (row + col))
 
-        # zeros initialization
         def zeros(row, col):
-            np.zeros((row, col))
+            # Zeros uniform initialization
+            return np.zeros((row, col))
 
-        # ones initialization
         def ones(row, col):
-            np.ones((row, col))
+            # Ones uniform initialization
+            return np.ones((row, col))
 
+        # initialization algorithm dictionary
         init_funcs = {
             'gaussian': gaussian,
             'xavier': xavier,
@@ -198,32 +119,431 @@ class Initializers:
             'ones': ones
         }
 
-        return init_funcs[self._method]
+        # return initialization algorithm
+        return init_funcs[self._algorithm]
 
-    def initialize(self, rows, columns):
+    def initialize(self, rows: int, columns: int):
+        """
+        'initialize' is a built-in function in the 'Initializers' class.
+        This function initializes a numpy array based on the rows and columns.
+
+        Arguments:
+            rows: An integer of the rows in the numpy array.
+            columns: An integer of the columns in the numpy array.
+
+        Returns:
+            A numpy array of initialized values.
+        """
+        if not isinstance(rows, int):
+            # invalid datatype
+            raise TypeError(f"'rows' is not an integer: {rows}")
+        if not isinstance(columns, int):
+            # invalid datatype
+            raise TypeError(f"'columns' is not an integer: {columns}")
+
+        # return numpy array
         return self._initializer(rows, columns)
 
 
 class Activators:
-    ...
+    def __init__(self, algorithm: str, parameters: dict = None):
+        """
+        'Activators' is a class containing various activation algorithms.
+        These activation algorithms currently include 'softmax' (Softmax), 'relu' (ReLU), 'lrelu' (Leaky ReLU), 'sigmoid' (Sigmoid), 'tanh' (Tanh), 'softplus' (Softplus), and 'mish' (Mish).
+        The class structure promotes flexibility through the easy addition of other activation algorithms.
+
+        Arguments:
+            algorithm: A string referencing the desired activation algorithm.
+            parameters: A dictionary referencing the parameters for the activation algorithm.
+                (any parameters not referenced will be automatically defined)
+        """
+        # activation algorithms
+        self.algorithms = [
+            'softmax',
+            'relu',
+            'lrelu',
+            'sigmoid',
+            'tanh',
+            'softplus',
+            'mish'
+        ]
+
+        # internal activation algorithm parameters
+        self._algorithm = self._check_algorithm(algorithm)
+        self._params = self._get_params(parameters)
+
+        # activation algorithms
+        self._activator = self._get_activator()
+        self._d_activator = self._get_d_activator()
+
+    def _check_algorithm(self, algorithm):
+        # checks whether the activation algorithm is valid
+        if algorithm in self.algorithms:
+            # valid activation algorithm
+            return algorithm
+        else:
+            # invalid activation algorithm
+            raise ValueError(
+                f"Invalid activation algorithm: '{algorithm}'\n"
+                f"Choose from: {[alg for alg in self.algorithms]}"
+            )
+
+    def _get_params(self, params):
+        # defines activation algorithm parameters
+        # default activation algorithm parameters
+        default = {
+            'softmax': None,
+            'relu': None,
+            'lrelu': {
+                'beta': 0.01
+            },
+            'sigmoid': None,
+            'tanh': None,
+            'softplus': {
+                'beta': 1
+            },
+            'mish': {
+                'beta': 1
+            }
+        }
+
+        # instantiate parameter dictionary
+        prms = default[self._algorithm]
+
+        if params and prms and isinstance(params, dict):
+            # set defined parameter
+            for prm in params:
+                if prm in prms:
+                    # todo: add errors for each parameter
+                    # valid parameter
+                    prms[prm] = params[prm]
+                else:
+                    # invalid parameter
+                    raise UserWarning(
+                        f"Invalid parameter for '{self._algorithm}': {prm}\n"
+                        f"Choose from: {[prm for prm in prms]}"
+                    )
+        elif params and isinstance(params, dict):
+            # parameters not taken
+            raise UserWarning(f"'{self._algorithm}' does not take parameters")
+        elif params:
+            # invalid data type
+            raise TypeError(
+                f"'parameters' is not a dictionary: {params}\n"
+                f"Choose from: {[prm for prm in prms]}"
+            )
+
+        # return parameters
+        return prms
+
+    def _get_activator(self):
+        # defines activation algorithm
+        # todo: check order of operations
+        def softmax(x):
+            # Softmax activation
+            return np.exp(x) / np.sum(np.exp(x))
+
+        def relu(x):
+            # ReLU activation
+            return np.maximum(0, x)
+
+        def lrelu(x):
+            # Leaky ReLU activation
+            return np.maximum(self._params['beta'] * x, x)
+
+        def sigmoid(x):
+            # Sigmoid activation
+            return 1 / (1 + np.exp(-x))
+
+        def tanh(x):
+            # Tanh activation
+            return np.tanh(x)
+
+        def softplus(x):
+            # Softplus activation
+            return np.log(1 + np.exp(self._params['beta'] * x)) / self._params['beta']
+
+        def mish(x):
+            # Mish activation
+            return x * np.tanh(np.log(1 + np.exp(self._params['beta'] * x)) / self._params['beta'])
+
+        # activation algorithm dictionary
+        act_funcs = {
+            'softmax': softmax,
+            'relu': relu,
+            'lrelu': lrelu,
+            'sigmoid': sigmoid,
+            'tanh': tanh,
+            'softplus': softplus,
+            'mish': mish
+        }
+
+        # return activation algorithm
+        return act_funcs[self._algorithm]
+
+    def _get_d_activator(self):
+        # defines derivative of activation algorithm
+        # todo: check order of operations
+        def d_softmax(x):
+            # derivative of Softmax activation
+            return ...  # todo: write this algorithm
+
+        def d_relu(x):
+            # derivative of ReLU activation
+            return np.where(x > 0, 1, 0)
+
+        def d_lrelu(x):
+            # derivative of Leaky ReLU activation
+            return np.where(x > 0, 1, self._params['beta'])
+
+        def d_sigmoid(x):
+            # derivative of Sigmoid activation
+            return np.exp(-x) / ((1 + np.exp(-x)) ** 2)
+
+        def d_tanh(x):
+            # derivative of Tanh activation
+            return np.cosh(x) ** -2
+
+        def d_softplus(x):
+            # derivative of Softplus activation
+            return self._params['beta'] * np.exp(self._params['beta'] * x) / (self._params['beta'] + self._params['beta'] * np.exp(self._params['beta'] * x))
+
+        def d_mish(x):
+            # derivative of Mish activation
+            return (np.tanh(np.log(1 + np.exp(self._params['beta'] * x)) / self._params['beta'])) + (x * (np.cosh(np.log(1 + np.exp(self._params['beta'] * x)) / self._params['beta']) ** -2) * (self._params['beta'] * np.exp(self._params['beta'] * x) / (self._params['beta'] + self._params['beta'] * np.exp(self._params['beta'] * x))))
+
+        # derivative of activation algorithm dictionary
+        d_act_funcs = {
+            'softmax': d_softmax,
+            'relu': d_relu,
+            'lrelu': d_lrelu,
+            'sigmoid': d_sigmoid,
+            'tanh': d_tanh,
+            'softplus': d_softplus,
+            'mish': d_mish
+        }
+
+        # return derivative of activation algorithm
+        return d_act_funcs[self._algorithm]
+
+    def activate(self, x: np.ndarray):
+        """
+        'activate' is a built-in function in the 'Activators' class.
+        This function runs a numpy array through an activation algorithm.
+
+        Arguments:
+            x: A numpy array of input activations.
+
+        Returns:
+            An numpy array of activated inputs.
+        """
+        if not isinstance(x, np.ndarray):
+            # invalid datatype
+            raise TypeError(f"'x' is not a numpy array: {x}")
+
+        # return numpy array
+        return self._activator(x)
+
+    def d_activate(self, x: np.ndarray):
+        """
+        'd_activate' is a built-in function in the 'Activators' class.
+        This function runs a numpy array through the derivative of an activation algorithm.
+
+        Arguments:
+            x: A numpy array of input activations.
+
+        Returns:
+            An numpy array of the derivative of activated inputs.
+        """
+        if not isinstance(x, np.ndarray):
+            # invalid datatype
+            raise TypeError(f"'x' is not a numpy array: {x}")
+
+        # return numpy array
+        return self._d_activator(x)
 
 
 class Losses:
-    ...
+    def __init__(self, algorithm: str, parameters: dict = None):
+        """
+        'Losses' is a class containing various loss algorithms.
+        These activation algorithms currently include 'ssr' (SSR), 'srsr' (SRSR), and 'centropy' (Cross-Entropy).
+        The class structure promotes flexibility through the easy addition of other loss algorithms.
+
+        Arguments:
+            algorithm: A string referencing the desired loss algorithm.
+            parameters: A dictionary referencing the parameters for the loss algorithm.
+                (any parameters not referenced will be automatically defined)
+        """
+        # loss algorithms
+        self.algorithms = [
+            'centropy',
+            'ssr',
+            'srsr'
+        ]
+
+        # internal loss algorithm parameters
+        self._algorithm = self._check_algorithm(algorithm)
+        self._params = self._get_params(parameters)
+
+        # loss algorithms
+        self._loss = self._get_loss()
+        self._d_loss = self._get_d_loss()
+
+    def _check_algorithm(self, algorithm):
+        # checks whether the loss algorithm is valid
+        if algorithm in self.algorithms:
+            # valid loss algorithm
+            return algorithm
+        else:
+            # invalid loss algorithm
+            raise ValueError(
+                f"Invalid loss algorithm: '{algorithm}'\n"
+                f"Choose from: {[alg for alg in self.algorithms]}"
+            )
+
+    def _get_params(self, params):
+        # defines loss algorithm parameters
+        # default loss algorithm parameters
+        default = {
+            'centropy': None,
+            'ssr': None,
+            'srsr': None
+        }
+
+        # instantiate parameter dictionary
+        prms = default[self._algorithm]
+
+        if params and prms and isinstance(params, dict):
+            # set defined parameter
+            for prm in params:
+                if prm in prms:
+                    # todo: add errors for each parameter
+                    # valid parameter
+                    prms[prm] = params[prm]
+                else:
+                    # invalid parameter
+                    raise UserWarning(
+                        f"Invalid parameter for '{self._algorithm}': {prm}\n"
+                        f"Choose from: {[prm for prm in prms]}"
+                    )
+        elif params and isinstance(params, dict):
+            # parameters not taken
+            raise UserWarning(f"'{self._algorithm}' does not take parameters")
+        elif params:
+            # invalid data type
+            raise TypeError(
+                f"'parameters' is not a dictionary: {params}\n"
+                f"Choose from: {[prm for prm in prms]}"
+            )
+
+        # return parameters
+        return prms
+
+    def _get_loss(self):
+        # defines loss algorithm
+        # todo: check order of operations
+        def ssr(y, yhat):
+            # SSR loss
+            return np.sum((y - yhat) ** 2)
+
+        def srsr(y, yhat):
+            # SRSR loss
+            return np.sum(np.abs(y - yhat))
+
+        def centropy(y, yhat):
+            # Cross-Entropy loss
+            return np.sum(yhat * np.log(y))
+
+        # loss algorithm dictionary
+        loss_funcs = {
+            'centropy': centropy,
+            'ssr': ssr,
+            'srsr': srsr
+        }
+
+        # return loss algorithm
+        return loss_funcs[self._algorithm]
+
+    def _get_d_loss(self):
+        # defines derivative of loss algorithm
+        # todo: check order of operations
+        def d_ssr(y, yhat):
+            # derivative of SSR loss
+            return -2 * (y - yhat)
+
+        def d_srsr(y, yhat):
+            # derivative of SRSR loss
+            return ...  # todo: write this algorithm
+
+        def d_centropy(y, yhat):
+            # derivative of Cross-Entropy loss
+            return ...  # todo: write this algorithm
+
+        # derivative of loss algorithm dictionary
+        d_loss_funcs = {
+            'centropy': d_centropy,
+            'ssr': d_ssr,
+            'srsr': d_srsr
+        }
+
+        # return derivative of loss algorithm
+        return d_loss_funcs[self._algorithm]
+
+    def loss(self, y: np.ndarray, yhat: np.ndarray):
+        """
+        'loss' is a built-in function in the 'Loss' class.
+        This function runs a numpy array through a loss algorithm.
+
+        Arguments:
+            y: A numpy array of predicted activations.
+            yhat: A numpy array of expected activations
+
+        Returns:
+            A numpy float of the calculated loss.
+        """
+        if not isinstance(y, np.ndarray):
+            # invalid datatype
+            raise TypeError(f"'y' is not a numpy array: {y}")
+        if not isinstance(yhat, np.ndarray):
+            # invalid datatype
+            raise TypeError(f"'yhat' is not a numpy array: {yhat}")
+
+        # return loss
+        return self._loss(y, yhat)
+
+    def d_loss(self, y: np.ndarray, yhat: np.ndarray):
+        """
+        'd_loss' is a built-in function in the 'Loss' class.
+        This function runs a numpy array through the derivative of a loss algorithm.
+
+        Arguments:
+            y: A numpy array of predicted activations.
+            yhat: A numpy array of expected activations
+
+        Returns:
+            A numpy array of the derivative of calculated loss with respect to the predicted activations.
+        """
+        if not isinstance(y, np.ndarray):
+            # invalid datatype
+            raise TypeError(f"'y' is not a numpy array: {y}")
+        if not isinstance(yhat, np.ndarray):
+            # invalid datatype
+            raise TypeError(f"'yhat' is not a numpy array: {yhat}")
+
+        # return numpy array
+        return self._d_loss(y, yhat)
 
 
 class Optimizers:
-    """
-    Optimization algorithms.
-    """
     def __init__(self, algorithm: str, hyperparameters: dict = None):
         """
         'Optimizers' is a class containing various optimization algorithms.
         These optimization algorithms currently include 'adam' (Adam), 'sgd' (SGD), and 'rms' (RMSprop).
-        The class structure promotes flexibility through the easy addition of other algorithms.
+        The class structure promotes flexibility through the easy addition of other optimization algorithms.
 
         Arguments:
-            algorithm: A string referencing the optimization algorithm that will be pulled.
+            algorithm: A string referencing the desired optimization algorithm.
             hyperparameters: A dictionary referencing the hyperparameters for the optimization algorithm.
                 (any hyperparameters not referenced will be automatically defined)
         """
@@ -237,6 +557,8 @@ class Optimizers:
         # internal optimization algorithm parameters
         self._algorithm = self._check_algorithm(algorithm)
         self._hyps = self._get_hyperparams(hyperparameters)
+
+        # optimization algorithm
         self._optim = self._get_optim()
 
         # internal memory
@@ -294,7 +616,7 @@ class Optimizers:
                 else:
                     # invalid hyperparameter
                     raise UserWarning(
-                        f"Invalid hyperparameter for {self._algorithm}: {hyp}\n"
+                        f"Invalid hyperparameter for '{self._algorithm}': {hyp}\n"
                         f"Choose from: {[hyp for hyp in hyps]}"
                     )
         elif hyperparams:
@@ -308,12 +630,12 @@ class Optimizers:
         return hyps
 
     def _get_optim(self):
-        # defines optimization function
+        # defines optimization algorithm
         # todo: check order of operations
-        def adam(thetas, gradients):
+        def adam(thetas, nablas):
             # Adam optimization algorithm
             # weight decay
-            deltas = gradients + (self._hyps['lambda_d'] * thetas)
+            deltas = nablas + (self._hyps['lambda_d'] * thetas)
             if self._memory['deltas_p']:
                 # momentum
                 deltas = ((self._hyps['beta'][0] * self._memory['deltas_p']) + ((1 - self._hyps['beta'][0]) * deltas)) / (1 - self._hyps['beta'][0])
@@ -343,16 +665,16 @@ class Optimizers:
             # return thetas
             return thetas
 
-        def sgd(thetas, gradients):
+        def sgd(thetas, nablas):
             # SGD optimization algorithm
             # weight decay
-            deltas = gradients + (self._hyps['lambda_d'] * thetas)
+            deltas = nablas + (self._hyps['lambda_d'] * thetas)
             if self._hyps['mu'] and self._memory['deltas_p']:
                 # momentum
                 deltas = (self._hyps['mu'] * self._memory['deltas_p']) + ((1 - self._hyps['tau']) * deltas)
             if self._hyps['nesterov'] and self._hyps['mu']:
                 # nesterov momentum
-                deltas += gradients + self._hyps['mu'] * deltas
+                deltas += nablas + self._hyps['mu'] * deltas
             # optimization
             thetas -= self._hyps['gamma'] * deltas
 
@@ -362,10 +684,10 @@ class Optimizers:
             # return thetas
             return thetas
 
-        def rms(thetas, gradients):
+        def rms(thetas, nablas):
             # RMSprop optimization algorithm
             # weight decay
-            deltas = gradients + (self._hyps['lambda_d'] * thetas)
+            deltas = nablas + (self._hyps['lambda_d'] * thetas)
             if self._memory['upsilons_p']:
                 # square momentum
                 upsilons = (self._hyps['beta'] * self._memory['upsilons_p']) + ((1 - self._hyps['beta']) * (deltas ** 2))
@@ -417,24 +739,24 @@ class Optimizers:
         # return memory dictionary
         return memories[self._algorithm]
 
-    def update(self, thetas: np.ndarray, gradients: np.ndarray):
+    def optimize(self, thetas: np.ndarray, nablas: np.ndarray):
         """
         'update' is a built-in function in the 'Optimizers' class.
         This function updates the parameters of a model based on the gradients.
 
         Arguments:
             thetas: A numpy array of the parameters that will be optimized.
-            gradients: A numpy array of the gradients used to optimize the parameters.
+            nablas: A numpy array of the gradients used to optimize the parameters.
 
         Returns:
-            An updated parameter.
+            A numpy array of updated parameters.
         """
         if not isinstance(thetas, np.ndarray):
             # invalid datatype
             raise TypeError(f"'thetas' is not a numpy array: {thetas}")
-        if not isinstance(gradients, np.ndarray):
+        if not isinstance(nablas, np.ndarray):
             # invalid datatype
-            raise TypeError(f"'gradients' is not a numpy array: {gradients}")
+            raise TypeError(f"'nablas' is not a numpy array: {nablas}")
 
         # return updated thetas
-        return self._optim(thetas, gradients)
+        return self._optim(thetas, nablas)

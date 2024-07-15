@@ -9,11 +9,6 @@ import numpy as np
 import pandas as pd
 
 from garden.utils.functional import (
-    initializers,
-    activators,
-    d_activators,
-    losses,
-    d_losses,
     Initializers,
     Activators,
     Losses,
@@ -23,7 +18,7 @@ from garden.metrics.metrics import (
     cm
 )
 from garden.utils.data_utils import (
-    shuffle as mix
+    shuffle as mix  # todo: why naming?
 )
 
 from colorama import Fore, Style
