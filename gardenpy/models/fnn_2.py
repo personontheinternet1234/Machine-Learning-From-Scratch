@@ -102,8 +102,7 @@ class FNN:
             )
         }
         if not activation_methods:
-
-
+            ...
 
     def initialize_solver(self, loss=None, optimizer=None):
         default_loss = {

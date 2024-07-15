@@ -6,7 +6,7 @@
     'input_color': Input text in color (default = green).
     'print_credits': Print credits for GardenPy.
 
-refer to 'todo' for in-depth documentation for these algorithms.
+refer to 'todo' for in-depth documentation on these functions.
 """
 
 GREEN = '\033[32m'

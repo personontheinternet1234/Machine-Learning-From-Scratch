@@ -7,7 +7,7 @@
     'Losses': Loss algorithms for loss.
     'Optimizers': Optimization algorithms for kernels/weights/biases.
 
-refer to 'todo' for in-depth documentation for these algorithms.
+refer to 'todo' for in-depth documentation on these algorithms.
 """
 
 import numpy as np
