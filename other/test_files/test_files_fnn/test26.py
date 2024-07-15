@@ -7,6 +7,7 @@ status = True
 max_iter = 1000
 
 print_credits()
+print('')
 
 print(f"Testing")
 start = time.time()
