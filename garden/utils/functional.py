@@ -3,6 +3,7 @@ mathematical functions
 """
 
 import numpy as np
+from typing import Union
 
 
 def initializers(name, gain='auto'):
@@ -78,7 +79,7 @@ def d_activators(name, beta='auto'):
     else:
         raise ValueError(f"'beta' ({beta}) must be a float or 'auto'")
     dg = {
-        'softmax': lambda x: ...,  # todo
+        'softmax': lambda x: ...,  # todo: write this activation algorithm
         'relu': lambda x: np.where(x > 0, 1, 0),
         'leaky-relu': lambda x: np.where(x > 0, 1, beta),
         'sigmoid': lambda x: np.exp(-x) / ((1 + np.exp(-x)) ** 2),
@@ -110,7 +111,7 @@ def d_losses(name):
     dj = {
         'ssr': lambda y, yhat: -2 * (y - yhat),
         'sar': lambda y, yhat: -1 * np.sign(y - yhat),
-        'centropy': lambda y, yhat: ...  # todo
+        'centropy': lambda y, yhat: ...  # todo: write this loss algorithm
     }
     if name in dj:
         return dj[name]
@@ -212,35 +213,50 @@ class Losses:
 
 
 class Optimizers:
-    def __init__(self, method, hyperparameters='auto'):
-        # possible optimizers
-        self.methods = [
+    """
+    Optimization algorithms.
+    """
+    def __init__(self, algorithm: str, hyperparameters: dict = None):
+        """
+        'Optimizers' is a class containing various optimization algorithms.
+        These optimization algorithms currently include 'adam' (Adam), 'sgd' (SGD), and 'rms' (RMSprop).
+        The class structure promotes flexibility through the easy addition of other algorithms.
+
+        Arguments:
+            algorithm: A string referencing the optimization algorithm that will be pulled.
+            hyperparameters: A dictionary referencing the hyperparameters for the optimization algorithm.
+                (any hyperparameters not referenced will be automatically defined)
+        """
+        # optimization algorithms
+        self.algorithms = [
             'adam',
             'sgd',
             'rms'
         ]
 
-        # optimizer parameters
-        self._method = self._check_method(method)
+        # internal optimization algorithm parameters
+        self._algorithm = self._check_algorithm(algorithm)
         self._hyps = self._get_hyperparams(hyperparameters)
         self._optim = self._get_optim()
 
-        # memory
+        # internal memory
         self._memory = self._get_memory()
 
-    def _check_method(self, method):
-        if method in self.methods:
-            # return method
-            return method
+    def _check_algorithm(self, algorithm):
+        # checks whether the optimization algorithm is valid
+        if algorithm in self.algorithms:
+            # valid optimization algorithm
+            return algorithm
         else:
-            # invalid optimization method
+            # invalid optimization algorithm
             raise ValueError(
-                f"'{method}' is an invalid optimization method\n"
-                f"choose from: {[mtd for mtd in self.methods]}"
+                f"Invalid optimization algorithm: '{algorithm}'\n"
+                f"Choose from: {[alg for alg in self.algorithms]}"
             )
 
     def _get_hyperparams(self, hyperparams):
-        # define default hyperparameters
+        # defines optimization algorithm hyperparameters
+        # default optimization algorithm hyperparameters
         default = {
             'adam': {
                 'gamma': 0.001,
@@ -265,36 +281,37 @@ class Optimizers:
             }
         }
 
-        if hyperparams == 'auto':
-            # set hyperparameters if auto
-            self._hyps = default[self._method]
-        elif isinstance(hyperparams, dict):
-            # change hyperparameters if defined
-            # set default hyperparameters
-            self._hyps = default[self._method]
-            # set hyperparameters if defined
+        # instantiate hyperparameter dictionary
+        hyps = default[self._algorithm]
+
+        if hyperparams and isinstance(hyperparams, dict):
+            # set defined hyperparameters
             for hyp in hyperparams:
-                if hyp in self._hyps:
-                    # set hyperparameter
-                    self._hyps[hyp] = hyperparams[hyp]
+                if hyp in hyps:
+                    # todo: add errors for each hyperparameter
+                    # valid hyperparameter
+                    hyps[hyp] = hyperparams[hyp]
                 else:
-                    # unused hyperparameter
-                    UserWarning(
-                        f"{hyp} is not a valid hyperparameter for {self._method}\n"
-                        f"choose from: {[hyp for hyp in self._hyps]}"
+                    # invalid hyperparameter
+                    raise UserWarning(
+                        f"Invalid hyperparameter for {self._algorithm}: {hyp}\n"
+                        f"Choose from: {[hyp for hyp in hyps]}"
                     )
-        else:
-            # incorrect data type
+        elif hyperparams:
+            # invalid data type
             raise TypeError(
-                f"hyperparameters must be a dictionary\n"
-                f"choose from: {[hyp for hyp in default[self._method]]}"
+                f"'hyperparameters' is not a dictionary: {hyperparams}\n"
+                f"Choose from: {[hyp for hyp in hyps]}"
             )
 
+        # return hyperparameters
+        return hyps
+
     def _get_optim(self):
-        # gets optimization function
+        # defines optimization function
         # todo: check order of operations
-        # adam optimizer
         def adam(thetas, gradients):
+            # Adam optimization algorithm
             # weight decay
             deltas = gradients + (self._hyps['lambda_d'] * thetas)
             if self._memory['deltas_p']:
@@ -308,7 +325,6 @@ class Optimizers:
                 upsilons = deltas ** 2
             if self._hyps['ams']:
                 # ams-grad variant
-                # todo: check math here
                 if self._memory['upsilons_mx']:
                     upsilons_mx = np.maximum(self._memory['upsilons_mx'], upsilons)
                 else:
@@ -320,15 +336,15 @@ class Optimizers:
             # optimization
             thetas -= self._hyps['gamma'] * deltas / (np.sqrt(upsilons) + self._hyps['epsilon'])
 
-            # save memory
+            # update memory
             self._memory['deltas_p'] = deltas
             self._memory['upsilons_p'] = upsilons
 
-            # thetas return
+            # return thetas
             return thetas
 
-        # sgd optimizer
         def sgd(thetas, gradients):
+            # SGD optimization algorithm
             # weight decay
             deltas = gradients + (self._hyps['lambda_d'] * thetas)
             if self._hyps['mu'] and self._memory['deltas_p']:
@@ -343,11 +359,11 @@ class Optimizers:
             # update memory
             self._memory['deltas_p'] = deltas
 
-            # thetas return
+            # return thetas
             return thetas
 
-        # rms optimizer
         def rms(thetas, gradients):
+            # RMSprop optimization algorithm
             # weight decay
             deltas = gradients + (self._hyps['lambda_d'] * thetas)
             if self._memory['upsilons_p']:
@@ -368,20 +384,22 @@ class Optimizers:
             self._memory['deltas_p'] = deltas
             self._memory['upsilons_p'] = upsilons
 
-            # thetas return
+            # return thetas
             return thetas
 
-        # optimization dictionary
+        # optimization algorithm dictionary
         optim_funcs = {
             'adam': adam,
             'sgd': sgd,
             'rms': rms
         }
 
-        # return optimizer
-        return optim_funcs[self._method]
+        # return optimization algorithm
+        return optim_funcs[self._algorithm]
 
     def _get_memory(self):
+        # instantiates memory dictionary
+        # required memory components for each optimization algorithm
         memories = {
             'adam': {
                 'deltas_p': None,
@@ -396,7 +414,27 @@ class Optimizers:
                 'upsilons_p': None
             }
         }
-        return memories[self._method]
+        # return memory dictionary
+        return memories[self._algorithm]
 
-    def update(self, thetas, gradients):
+    def update(self, thetas: np.ndarray, gradients: np.ndarray):
+        """
+        'update' is a built-in function in the 'Optimizers' class.
+        This function updates the parameters of a model based on the gradients.
+
+        Arguments:
+            thetas: A numpy array of the parameters that will be optimized.
+            gradients: A numpy array of the gradients used to optimize the parameters.
+
+        Returns:
+            An updated parameter.
+        """
+        if not isinstance(thetas, np.ndarray):
+            # invalid datatype
+            raise TypeError(f"'thetas' is not a numpy array: {thetas}")
+        if not isinstance(gradients, np.ndarray):
+            # invalid datatype
+            raise TypeError(f"'gradients' is not a numpy array: {gradients}")
+
+        # return updated thetas
         return self._optim(thetas, gradients)
