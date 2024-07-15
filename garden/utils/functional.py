@@ -4,23 +4,6 @@ mathematical functions
 
 import numpy as np
 
-# todo: deprecate
-def ssr(expected, predicted):
-    c = np.sum(np.subtract(expected, predicted) ** 2)
-    return c
-
-
-def xavier(length, width):
-    # todo: deprecate
-    """ initialize a random array using xavier initialization """
-    return np.random.randn(length, width) * np.sqrt(2 / length)
-
-
-def softmax(x):
-    # todo: deprecate
-    """ calculate outcome probabilities using softmax """
-    return np.exp(x) / np.sum(np.exp(x))
-
 
 def initializers(name, gain='auto'):
     if gain == 'auto':
@@ -95,7 +78,7 @@ def d_activators(name, beta='auto'):
     else:
         raise ValueError(f"'beta' ({beta}) must be a float or 'auto'")
     dg = {
-        'softmax': lambda x: x,  # todo
+        'softmax': lambda x: ...,  # todo
         'relu': lambda x: np.where(x > 0, 1, 0),
         'leaky-relu': lambda x: np.where(x > 0, 1, beta),
         'sigmoid': lambda x: np.exp(-x) / ((1 + np.exp(-x)) ** 2),
@@ -135,262 +118,285 @@ def d_losses(name):
         raise ValueError(f"'{name}' is an invalid loss function")
 
 
-class Optimizers:
-    def __init__(self, name, hyperparameters='auto', store=True):
-        # optimizer parameters
-        self._name = name
-        self._hyperparams = self._get_hyperparams(hyperparameters)
-        self._optim = self._get_optim(name)
+class Initializers:
+    def __init__(self, method, params):
+        self.methods = [
+            'xavier',
+            'gaussian',
+            'zeros',
+            'ones'
+        ]
+        self._method = self._check_method(method)
+        self._params = self._get_params(params)
+        self._initializer = self._get_initializer()
 
-        # memory parameters
-        self._storage = self._get_storage(store)
-        self._deltas_p = None
-        self._upsilons_p = None
-        self._upsilons_ms = None
-
-    @staticmethod
-    def _get_hyperparams(hyperparams):
-        # define auto hyperparams
-        auto = {
-            'gammas': {
-                'adam': 0.001,
-                'sgd': 0.001,
-                'rms': 0.001
-            },
-            'betas': {
-                'adam': (0.9, 0.999),
-                'rms': 0.99,
-            },
-            'lambda_ds': {
-                'adam': 0,
-                'sgd': 0,
-                'rms': 0
-            },
-            'mus': {
-                'sgd': 0,
-                'rms': 0
-            },
-            'taus': {
-                'sgd': 0
-            },
-            'epsilons': {
-                'adam': 1e-8,
-                'rms': 1e-8
-            },
-            'ams': {
-                'adam': False
-            },
-            'nesterov': {
-                'sgd': False
-            }
-        }
-        if hyperparams == 'auto':
-            # set hyperparams if auto
-            hyperparams = auto
-        elif isinstance(hyperparams, dict):
-            # set hyperparams if defined
-            hyperparams = auto
-            UserWarning('hyperparameters have to be auto at this time')  # todo: allow changing of hyperparameters
+    def _check_method(self, method):
+        if method in self.methods:
+            return method
         else:
-            # errors
+            # error
+            raise ValueError(
+                f"'{method}' is an invalid optimization technique\n"
+                f"choose from: {[mtd for mtd in self.methods]}"
+            )
+
+    def _get_params(self, params):
+        # define default params
+        default = {
+            'xavier': {
+                'gain': 1
+            },
+            'gaussian': None,
+            'zeros': None,
+            'ones': None
+        }
+
+        if params == 'auto':
+            # set hyperparams if auto
+            self._params = default[self._method]
+        elif isinstance(params, dict):
+            # set default hyperparams
+            self._params = default[self._method]
+            # set hyperparams if defined
+            for prm in params:
+                if prm in self._params:
+                    self._params[prm] = params[prm]
+                else:
+                    UserWarning(
+                        f"{prm} is not a valid hyperparameter for {self._method}\n"
+                        f"choose from: {[prm for prm in self._params]}"
+                    )
+        else:
+            # error
             raise TypeError(
                 f"hyperparameters must be a dictionary\n"
-                f"(hyperparameters: {hyperparams})"
+                f"choose from: {[prm for prm in default[self._method]]}"
             )
-        # return hyperparams
-        return hyperparams
 
-    @staticmethod
-    def _get_optim(method):
+    def _get_initializer(self):
+        # gaussian initialization
+        def gaussian(row, col):
+            np.random.randn(row, col)
+
+        # xavier initialization
+        def xavier(row, col):
+            np.random.randn(row, col) * self._params['gain'] / np.sqrt(2 / (row + col))
+
+        # zeros initialization
+        def zeros(row, col):
+            np.zeros((row, col))
+
+        # ones initialization
+        def ones(row, col):
+            np.ones((row, col))
+
+        init_funcs = {
+            'gaussian': gaussian,
+            'xavier': xavier,
+            'zeros': zeros,
+            'ones': ones
+        }
+
+        return init_funcs[self._method]
+
+    def initialize(self, rows, columns):
+        return self._initializer(rows, columns)
+
+
+class Activators:
+    ...
+
+
+class Losses:
+    ...
+
+
+class Optimizers:
+    def __init__(self, method, hyperparameters='auto'):
+        # possible optimizers
+        self.methods = [
+            'adam',
+            'sgd',
+            'rms'
+        ]
+
+        # optimizer parameters
+        self._method = self._check_method(method)
+        self._hyps = self._get_hyperparams(hyperparameters)
+        self._optim = self._get_optim()
+
+        # memory
+        self._memory = self._get_memory()
+
+    def _check_method(self, method):
+        if method in self.methods:
+            # return method
+            return method
+        else:
+            # invalid optimization method
+            raise ValueError(
+                f"'{method}' is an invalid optimization method\n"
+                f"choose from: {[mtd for mtd in self.methods]}"
+            )
+
+    def _get_hyperparams(self, hyperparams):
+        # define default hyperparameters
+        default = {
+            'adam': {
+                'gamma': 0.001,
+                'lambda_d': 0,
+                'beta': (0.9, 0.999),
+                'epsilon': 1e-8,
+                'ams': False
+            },
+            'sgd': {
+                'gamma': 0.001,
+                'lambda_d': 0,
+                'mu': 0,
+                'tau': 0,
+                'nesterov': False
+            },
+            'rms': {
+                'gamma': 0.001,
+                'lambda_d': 0,
+                'beta': 0.99,
+                'mu': 0,
+                'epsilon': 1e-8
+            }
+        }
+
+        if hyperparams == 'auto':
+            # set hyperparameters if auto
+            self._hyps = default[self._method]
+        elif isinstance(hyperparams, dict):
+            # change hyperparameters if defined
+            # set default hyperparameters
+            self._hyps = default[self._method]
+            # set hyperparameters if defined
+            for hyp in hyperparams:
+                if hyp in self._hyps:
+                    # set hyperparameter
+                    self._hyps[hyp] = hyperparams[hyp]
+                else:
+                    # unused hyperparameter
+                    UserWarning(
+                        f"{hyp} is not a valid hyperparameter for {self._method}\n"
+                        f"choose from: {[hyp for hyp in self._hyps]}"
+                    )
+        else:
+            # incorrect data type
+            raise TypeError(
+                f"hyperparameters must be a dictionary\n"
+                f"choose from: {[hyp for hyp in default[self._method]]}"
+            )
+
+    def _get_optim(self):
+        # gets optimization function
         # todo: check order of operations
-        def adam(thetas, gradients, deltas_p=None, upsilons_p=None, upsilons_mx=None, gamma=0.001, lambda_d=0, beta=(0.9, 0.999), epsilon=1e-8, ams=False):
+        # adam optimizer
+        def adam(thetas, gradients):
             # weight decay
-            deltas = gradients + (lambda_d * thetas)
-            if deltas_p:
+            deltas = gradients + (self._hyps['lambda_d'] * thetas)
+            if self._memory['deltas_p']:
                 # momentum
-                deltas = ((beta[0] * deltas_p) + ((1 - beta[0]) * deltas)) / (1 - beta[0])
-            if upsilons_p:
+                deltas = ((self._hyps['beta'][0] * self._memory['deltas_p']) + ((1 - self._hyps['beta'][0]) * deltas)) / (1 - self._hyps['beta'][0])
+            if self._memory['upsilons_p']:
                 # square momentum
-                upsilons = ((beta[1] * upsilons_p) / (1 - beta[1])) + (deltas ** 2)
+                upsilons = ((self._hyps['beta'][1] * self._memory['upsilons_p']) / (1 - self._hyps['beta'][1])) + (deltas ** 2)
             else:
                 # square
                 upsilons = deltas ** 2
-            if ams:
+            if self._hyps['ams']:
                 # ams-grad variant
                 # todo: check math here
-                if upsilons_mx:
-                    upsilons_mx = np.maximum(upsilons_mx, upsilons)
+                if self._memory['upsilons_mx']:
+                    upsilons_mx = np.maximum(self._memory['upsilons_mx'], upsilons)
                 else:
                     upsilons_mx = upsilons
+                # update memory
+                self._memory['upsilons_mx'] = upsilons_mx
+                # set upsilons
                 upsilons = upsilons_mx
             # optimization
-            thetas -= gamma * deltas / (np.sqrt(upsilons) + epsilon)
-            # param return
-            return thetas, deltas, upsilons, upsilons_mx
+            thetas -= self._hyps['gamma'] * deltas / (np.sqrt(upsilons) + self._hyps['epsilon'])
 
-        def sgd(thetas, gradients, deltas_p=None, gamma=0.001, lambda_d=0, mu=0, tau=0, nesterov=False):
+            # save memory
+            self._memory['deltas_p'] = deltas
+            self._memory['upsilons_p'] = upsilons
+
+            # thetas return
+            return thetas
+
+        # sgd optimizer
+        def sgd(thetas, gradients):
             # weight decay
-            deltas = gradients + (lambda_d * thetas)
-            if mu and deltas_p:
+            deltas = gradients + (self._hyps['lambda_d'] * thetas)
+            if self._hyps['mu'] and self._memory['deltas_p']:
                 # momentum
-                deltas = (mu * deltas_p) + ((1 - tau) * deltas)
-            if nesterov and mu:
+                deltas = (self._hyps['mu'] * self._memory['deltas_p']) + ((1 - self._hyps['tau']) * deltas)
+            if self._hyps['nesterov'] and self._hyps['mu']:
                 # nesterov momentum
-                deltas += gradients + mu * deltas
+                deltas += gradients + self._hyps['mu'] * deltas
             # optimization
-            thetas -= gamma * deltas
-            # param return
-            return thetas, deltas
+            thetas -= self._hyps['gamma'] * deltas
 
-        def rms(thetas, gradients, deltas_p=None, upsilons_p=None, gamma=0.01, lambda_d=0, beta=0.99, mu=0, epsilon=1e-8):
+            # update memory
+            self._memory['deltas_p'] = deltas
+
+            # thetas return
+            return thetas
+
+        # rms optimizer
+        def rms(thetas, gradients):
             # weight decay
-            deltas = gradients + (lambda_d * thetas)
-            if upsilons_p:
+            deltas = gradients + (self._hyps['lambda_d'] * thetas)
+            if self._memory['upsilons_p']:
                 # square momentum
-                upsilons = (beta * upsilons_p) + ((1 - beta) * (deltas ** 2))
+                upsilons = (self._hyps['beta'] * self._memory['upsilons_p']) + ((1 - self._hyps['beta']) * (deltas ** 2))
             else:
                 # square
-                upsilons = (1 - beta) * (deltas ** 2)
+                upsilons = (1 - self._hyps['beta']) * (deltas ** 2)
             # step calculation
-            deltas = deltas / (np.sqrt(upsilons) + epsilon)
-            if mu and deltas_p:
+            deltas = deltas / (np.sqrt(upsilons) + self._hyps['epsilon'])
+            if self._hyps['mu'] and self._memory['deltas_p']:
                 # momentum
-                deltas += mu * deltas_p
+                deltas += self._hyps['mu'] * self._memory['deltas_p']
             # optimization
-            thetas -= gamma * deltas
-            # param return
-            return thetas, deltas, upsilons
+            thetas -= self._hyps['gamma'] * deltas
 
-        methods = {
+            # update memory
+            self._memory['deltas_p'] = deltas
+            self._memory['upsilons_p'] = upsilons
+
+            # thetas return
+            return thetas
+
+        # optimization dictionary
+        optim_funcs = {
             'adam': adam,
             'sgd': sgd,
             'rms': rms
         }
 
-        if method in methods:
-            return methods[method]
-        else:
-            raise ValueError(
-                f"'{method}' is an invalid optimization technique\n"
-                f"choose from {[name for name in methods]}"
-            )
+        # return optimizer
+        return optim_funcs[self._method]
 
-    def _get_storage(self, store):
-        storing = {
-            'deltas_p': ['adam', 'sgd', 'rms'],
-            'upsilons_p': ['adam, rms'],
-            'upsilons_ms': ['adam']
+    def _get_memory(self):
+        memories = {
+            'adam': {
+                'deltas_p': None,
+                'upsilons_p': None,
+                'upsilons_mx': None
+            },
+            'sgd': {
+                'deltas_p': None
+            },
+            'rms': {
+                'deltas_p': None,
+                'upsilons_p': None
+            }
         }
-        if store:
-            stores = []
-            for param, method in storing:
-                if self.name in storing[param]:
-                    stores.append(param)
-            return stores
-        else:
-            return None
+        return memories[self._method]
 
-    def set
-
-
-def optimizers(name, parameters='auto'):
-    # todo: check how well python/numpy respects the order of operations
-    hyperparams = {
-        'gammas': {
-            'adam': 0.001,
-            'sgd': 0.001,
-            'rms': 0.001
-        },
-        'betas': {
-            'adam': (0.9, 0.999),
-            'rms': 0.99,
-        },
-        'lambda_ds': {
-            'adam': 0,
-            'sgd': 0,
-            'rms': 0
-        },
-        'mus': {
-            'sgd': 0,
-            'rms': 0
-        },
-        'taus': {
-            'sgd': 0
-        },
-        'epsilons': {
-            'adam': 1e-8,
-            'rms': 1e-8
-        },
-        'ams': {
-            'adam': False
-        },
-        'nesterov': {
-            'sgd': False
-        }
-    }
-
-    def adam(thetas, gradients, deltas_p=None, upsilons_p=None, upsilons_mx=None, gamma=0.001, lambda_d=0, beta=(0.9, 0.999), epsilon=1e-8, ams=False):
-        # weight decay
-        deltas = gradients + (lambda_d * thetas)
-        if deltas_p:
-            # momentum
-            deltas = ((beta[0] * deltas_p) + ((1 - beta[0]) * deltas)) / (1 - beta[0])
-        if upsilons_p:
-            # square momentum
-            upsilons = ((beta[1] * upsilons_p) / (1 - beta[1])) + (deltas ** 2)
-        else:
-            # square
-            upsilons = deltas ** 2
-        if ams:
-            # ams-grad variant
-            upsilons_mx = np.maximum(upsilons_mx, upsilons)
-            upsilons = upsilons_mx
-        # optimization
-        thetas -= gamma * deltas / (np.sqrt(upsilons) + epsilon)
-        # param return
-        return thetas, deltas, upsilons, upsilons_mx
-
-    def sgd(thetas, gradients, deltas_p=None, gamma=0.001, lambda_d=0, mu=0, tau=0, nesterov=False):
-        # weight decay
-        deltas = gradients + (lambda_d * thetas)
-        if mu and deltas_p:
-            # momentum
-            deltas = (mu * deltas_p) + ((1 - tau) * deltas)
-        if nesterov and mu:
-            # nesterov momentum
-            deltas += gradients + mu * deltas
-        # optimization
-        thetas -= gamma * deltas
-        # param return
-        return thetas, deltas
-
-    def rms(thetas, gradients, upsilons_p=None, deltas_p=None, gamma=0.01, lambda_d=0, beta=0.99, mu=0, epsilon=1e-8):
-        # weight decay
-        deltas = gradients + (lambda_d * thetas)
-        if upsilons_p:
-            # square momentum
-            upsilons = (beta * upsilons_p) + ((1 - beta) * (deltas ** 2))
-        else:
-            # square
-            upsilons = (1 - beta) * (deltas ** 2)
-        # step calculation
-        deltas = deltas / (np.sqrt(upsilons) + epsilon)
-        if mu and deltas_p:
-            # momentum
-            deltas += mu * deltas_p
-        # optimization
-        thetas -= gamma * deltas
-        # param return
-        return thetas, deltas, upsilons
-    methods = {
-        'adam': adam,
-        'sgd': sgd,
-        'rms': rms
-    }
-    if name in methods:
-        return methods[name]
-    else:
-        raise ValueError(
-            f"'{name}' is an invalid optimization technique\n"
-            f"choose from {[method for method in methods]}"
-        )
+    def update(self, thetas, gradients):
+        return self._optim(thetas, gradients)

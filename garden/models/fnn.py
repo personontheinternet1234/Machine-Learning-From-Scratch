@@ -14,7 +14,10 @@ from garden.utils.functional import (
     d_activators,
     losses,
     d_losses,
-    optimizers
+    Initializers,
+    Activators,
+    Losses,
+    Optimizers
 )
 from garden.metrics.metrics import (
     cm
@@ -79,12 +82,12 @@ class FNN:
         self._color = f'{Fore.GREEN}{{l_bar}}{{bar}}{{r_bar}}{Style.RESET_ALL}'
 
     @staticmethod
-    def _get_init(name, gain):
-        initializer = initializers(name, gain)
+    def _get_init(method, params):
+        initializer = Initializers(method, params)
         return initializer
 
     @staticmethod
-    def _get_activator(name, beta):
+    def _get_activator(method, params):
         """ set model activation function """
         return {
             'f': activators(name, beta),
