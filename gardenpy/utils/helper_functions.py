@@ -25,7 +25,7 @@ def print_color(text, color=DEFAULT, end='\n') -> None:
         end: The end-line argument.
 
     Returns:
-        None
+        None.
     """
     # print text
     print(f'{color}{text}{DEFAULT}', end=end)
@@ -55,10 +55,10 @@ def progress(idx: int, max_idx: int, desc=None, b_len: int = 50, color: str = '\
         max_idx: The maximum amount of iterations.
         desc: The progress bar description.
         b_len: The length of the progress bar.
-        color: The color that the description wll be printed in
+        color: The color that the description wll be printed in.
 
     Returns:
-        None
+        None.
     """
     if not isinstance(b_len, int):
         # invalid datatype
@@ -90,7 +90,7 @@ def print_credits(color=DEFAULT) -> None:
         color: The color that the text will be printed in.
 
     Returns:
-        None
+        None.
     """
     # print credits in alphabetical order
     print_color('GardenPy', color=color)
