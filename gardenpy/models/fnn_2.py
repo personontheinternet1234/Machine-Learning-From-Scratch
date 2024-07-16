@@ -24,9 +24,14 @@ class FNN:
         self._activators = None
         self._loss = None
         self._optimizer = None
+        self._batching = None
 
         # trainable parameters
         self.thetas = None
+
+        # non trainable parameters
+        self.x = None
+        self.y = None
 
         # calculation variables
         self._zero_grad = None
@@ -89,6 +94,9 @@ class FNN:
                 default[prm] = parameters[prm]
         return Optimizers(default['algorithm'], default['hyperparameters'])
 
+    def _get_batching(self, batching):
+        ...
+
     def instantiate(self, hidden_layers=None, thetas=None, activations=None):
         self._hidden = self._get_hidden(hidden_layers)
 
@@ -99,6 +107,13 @@ class FNN:
     def forward(self):
         ...
 
-    def fit(self, max_iter):
+    def fit(self, x, y, batch_size=None, max_iter=100000):
+        if not isinstance((x, y), np.ndarray):
+            raise TypeError('numpy')
+        self.x = x
+        self.y = y
+        self._batching = self._get_batching(batch_size)
+
+        start = time.time()
         for iter in max_iter:
 

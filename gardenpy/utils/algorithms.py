@@ -93,8 +93,8 @@ class Initializers:
                 if prm not in prms:
                     # invalid parameter
                     warnings.warn(
-                        f"\nInvalid parameter for '{self._algorithm}': {prm}"
-                        f"\nChoose from: {[prm for prm in prms]}",
+                        f"\nInvalid parameter for '{self._algorithm}': '{prm}'\n"
+                        f"Choose from: '{[prm for prm in prms]}'",
                         UserWarning
                     )
                 elif prm in prms and not isinstance(params[prm], dtypes[self._algorithm][prm]):
@@ -168,10 +168,10 @@ class Initializers:
         """
         if not isinstance(rows, int):
             # invalid datatype
-            raise TypeError(f"'rows' is not an integer: {rows}")
+            raise TypeError(f"'rows' is not an integer: '{rows}'")
         if not isinstance(columns, int):
             # invalid datatype
-            raise TypeError(f"'columns' is not an integer: {columns}")
+            raise TypeError(f"'columns' is not an integer: '{columns}'")
 
         # return numpy array
         return self._initializer(rows, columns)
@@ -217,7 +217,7 @@ class Activators:
             # invalid activation algorithm
             raise ValueError(
                 f"Invalid activation algorithm: '{algorithm}'\n"
-                f"Choose from: {[alg for alg in self.algorithms]}"
+                f"Choose from: '{[alg for alg in self.algorithms]}'"
             )
 
     def _get_params(self, params):
@@ -280,21 +280,21 @@ class Activators:
                 if prm not in prms:
                     # invalid parameter
                     warnings.warn(
-                        f"\nInvalid parameter for '{self._algorithm}': {prm}"
-                        f"\nChoose from: {[prm for prm in prms]}",
+                        f"\nInvalid parameter for '{self._algorithm}': '{prm}'\n"
+                        f"Choose from: '{[prm for prm in prms]}'",
                         UserWarning
                     )
                 elif prm in prms and not isinstance(params[prm], dtypes[self._algorithm][prm]):
                     # invalid datatype for parameter
                     raise TypeError(
                         f"Invalid datatype for '{self._algorithm}': '{prm}'\n"
-                        f"Choose from: {dtypes[self._algorithm][prm]}"
+                        f"Choose from: '{dtypes[self._algorithm][prm]}'"
                     )
                 elif prm in prms and not (vtypes[self._algorithm][prm](params[prm])):
                     # invalid value for parameter
                     raise TypeError(
                         f"Invalid value for '{self._algorithm}': '{prm}'\n"
-                        f"Conditional: {vtypes[self._algorithm][prm]}"
+                        f"Conditional: '{vtypes[self._algorithm][prm]}'"
                     )
                 else:
                     # valid parameter
@@ -305,8 +305,8 @@ class Activators:
         elif params:
             # invalid data type
             raise TypeError(
-                f"'parameters' is not a dictionary: {params}\n"
-                f"Choose from: {[prm for prm in prms]}"
+                f"'parameters' is not a dictionary: '{params}'\n"
+                f"Choose from: '{[prm for prm in prms]}'"
             )
 
         # return parameters
@@ -414,7 +414,7 @@ class Activators:
         """
         if not isinstance(x, np.ndarray):
             # invalid datatype
-            raise TypeError(f"'x' is not a numpy array: {x}")
+            raise TypeError(f"'x' is not a numpy array: '{x}'")
 
         # return numpy array
         return self._activator(x)
@@ -432,7 +432,7 @@ class Activators:
         """
         if not isinstance(x, np.ndarray):
             # invalid datatype
-            raise TypeError(f"'x' is not a numpy array: {x}")
+            raise TypeError(f"'x' is not a numpy array: '{x}'")
 
         # return numpy array
         return self._d_activator(x)
@@ -474,7 +474,7 @@ class Losses:
             # invalid loss algorithm
             raise ValueError(
                 f"Invalid loss algorithm: '{algorithm}'\n"
-                f"Choose from: {[alg for alg in self.algorithms]}"
+                f"Choose from: '{[alg for alg in self.algorithms]}'"
             )
 
     def _get_params(self, params):
@@ -508,21 +508,21 @@ class Losses:
                 if prm not in prms:
                     # invalid parameter
                     warnings.warn(
-                        f"\nInvalid parameter for '{self._algorithm}': {prm}"
-                        f"\nChoose from: {[prm for prm in prms]}",
+                        f"\nInvalid parameter for '{self._algorithm}': '{prm}'\n"
+                        f"Choose from: '{[prm for prm in prms]}'",
                         UserWarning
                     )
                 elif prm in prms and not isinstance(params[prm], dtypes[self._algorithm][prm]):
                     # invalid datatype for parameter
                     raise TypeError(
                         f"Invalid datatype for '{self._algorithm}': '{prm}'\n"
-                        f"Choose from: {dtypes[self._algorithm][prm]}"
+                        f"Choose from: '{dtypes[self._algorithm][prm]}'"
                     )
                 elif prm in prms and not (vtypes[self._algorithm][prm](params[prm])):
                     # invalid value for parameter
                     raise TypeError(
                         f"Invalid value for '{self._algorithm}': '{prm}'\n"
-                        f"Conditional: {vtypes[self._algorithm][prm]}"
+                        f"Conditional: '{vtypes[self._algorithm][prm]}'"
                     )
                 else:
                     # valid parameter
@@ -533,8 +533,8 @@ class Losses:
         elif params:
             # invalid data type
             raise TypeError(
-                f"'parameters' is not a dictionary: {params}\n"
-                f"Choose from: {[prm for prm in prms]}"
+                f"'parameters' is not a dictionary: '{params}'\n"
+                f"Choose from: '{[prm for prm in prms]}'"
             )
 
         # return parameters
@@ -602,10 +602,10 @@ class Losses:
         """
         if not isinstance(y, np.ndarray):
             # invalid datatype
-            raise TypeError(f"'y' is not a numpy array: {y}")
+            raise TypeError(f"'y' is not a numpy array: '{y}'")
         if not isinstance(yhat, np.ndarray):
             # invalid datatype
-            raise TypeError(f"'yhat' is not a numpy array: {yhat}")
+            raise TypeError(f"'yhat' is not a numpy array: '{yhat}'")
 
         # return loss
         return self._loss(y, yhat)
@@ -624,10 +624,10 @@ class Losses:
         """
         if not isinstance(y, np.ndarray):
             # invalid datatype
-            raise TypeError(f"'y' is not a numpy array: {y}")
+            raise TypeError(f"'y' is not a numpy array: '{y}'")
         if not isinstance(yhat, np.ndarray):
             # invalid datatype
-            raise TypeError(f"'yhat' is not a numpy array: {yhat}")
+            raise TypeError(f"'yhat' is not a numpy array: '{yhat}'")
 
         # return numpy array
         return self._d_loss(y, yhat)
@@ -671,7 +671,7 @@ class Optimizers:
             # invalid optimization algorithm
             raise ValueError(
                 f"Invalid optimization algorithm: '{algorithm}'\n"
-                f"Choose from: {[alg for alg in self.algorithms]}"
+                f"Choose from: '{[alg for alg in self.algorithms]}'"
             )
 
     def _get_hyperparams(self, hyperparams):
@@ -761,21 +761,21 @@ class Optimizers:
                 if hyp not in hyps:
                     # invalid hyperparameter
                     warnings.warn(
-                        f"\nInvalid hyperparameter for '{self._algorithm}': {hyp}"
-                        f"\nChoose from: {[hyp for hyp in hyps]}",
+                        f"\nInvalid hyperparameter for '{self._algorithm}': '{hyp}'\n"
+                        f"Choose from: '{[hyp for hyp in hyps]}'",
                         UserWarning
                     )
                 elif hyp in hyps and not isinstance(hyperparams[hyp], dtypes[self._algorithm][hyp]):
                     # invalid datatype for hyperparameter
                     raise TypeError(
                         f"Invalid datatype for '{self._algorithm}': '{hyp}'\n"
-                        f"Choose from: {dtypes[self._algorithm][hyp]}"
+                        f"Choose from: '{dtypes[self._algorithm][hyp]}'"
                     )
                 elif hyp in hyps and not (vtypes[self._algorithm][hyp](hyperparams[hyp])):
                     # invalid value for hyperparameter
                     raise TypeError(
                         f"Invalid value for '{self._algorithm}': '{hyp}'\n"
-                        f"Conditional: {vtypes[self._algorithm][hyp]}"
+                        f"Conditional: '{vtypes[self._algorithm][hyp]}'"
                     )
                 else:
                     # valid hyperparameter
@@ -786,8 +786,8 @@ class Optimizers:
         elif hyperparams:
             # invalid data type
             raise TypeError(
-                f"'hyperparameters' is not a dictionary: {hyperparams}\n"
-                f"Choose from: {[hyp for hyp in hyps]}"
+                f"'hyperparameters' is not a dictionary: '{hyperparams}'\n"
+                f"Choose from: '{[hyp for hyp in hyps]}'"
             )
 
         # return hyperparameters
@@ -917,10 +917,10 @@ class Optimizers:
         """
         if not isinstance(thetas, np.ndarray):
             # invalid datatype
-            raise TypeError(f"'thetas' is not a numpy array: {thetas}")
+            raise TypeError(f"'thetas' is not a numpy array: '{thetas}'")
         if not isinstance(nablas, np.ndarray):
             # invalid datatype
-            raise TypeError(f"'nablas' is not a numpy array: {nablas}")
+            raise TypeError(f"'nablas' is not a numpy array: '{nablas}'")
 
         # return updated thetas
         return self._optim(thetas, nablas)
