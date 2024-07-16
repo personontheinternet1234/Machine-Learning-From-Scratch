@@ -22,12 +22,12 @@ class Tensor:
         obj = other
         if isinstance(obj, Tensor):
             obj = other.to_np()
-        self._tracker['operations'].append('matmul')
+        self._tracker['operations'].append('matmul_m')
         result = Tensor(self.tensor @ obj)
-        self._tracker['relations'].append(id(result))
+        self._tracker['relations'].append([id(other), id(result)])
         if isinstance(other, Tensor):
-            other._tracker['operations'].append('matmul_m')
-            other._tracker['relations'].append(id(result))
+            other._tracker['operations'].append('matmul_s')
+            other._tracker['relations'].append([id(self.tensor), id(result)])
         return result
 
     def __mul__(self, other):
@@ -36,22 +36,22 @@ class Tensor:
             obj = other.to_np()
         self._tracker['operations'].append('mul')
         result = Tensor(self.tensor * obj)
-        self._tracker['relations'].append(id(result))
+        self._tracker['relations'].append([id(other), id(result)])
         if isinstance(other, Tensor):
             other._tracker['operations'].append('mul')
-            other._tracker['relations'].append(id(result))
+            other._tracker['relations'].append([id(self.tensor), id(result)])
         return result
 
     def __truediv__(self, other):
         obj = other
         if isinstance(obj, Tensor):
             obj = other.to_np()
-        self._tracker['operations'].append('truediv')
+        self._tracker['operations'].append('truediv_n')
         result = Tensor(self.tensor / obj)
-        self._tracker['relations'].append(id(result))
+        self._tracker['relations'].append([id(other), id(result)])
         if isinstance(other, Tensor):
             other._tracker['operations'].append('truediv_d')
-            other._tracker['relations'].append(id(result))
+            other._tracker['relations'].append([id(self.tensor), id(result)])
         return result
 
     def __add__(self, other):
@@ -60,22 +60,22 @@ class Tensor:
             obj = other.to_np()
         self._tracker['operations'].append('add')
         result = Tensor(self.tensor + obj)
-        self._tracker['relations'].append(id(result))
+        self._tracker['relations'].append([id(other), id(result)])
         if isinstance(other, Tensor):
             other._tracker['operations'].append('add')
-            other._tracker['relations'].append(id(result))
+            other._tracker['relations'].append([id(self.tensor), id(result)])
         return result
 
     def __sub__(self, other):
         obj = other
         if isinstance(obj, Tensor):
             obj = other.to_np()
-        self._tracker['operations'].append('sub')
+        self._tracker['operations'].append('sub_s')
         result = Tensor(self.tensor - obj)
-        self._tracker['relations'].append(id(result))
+        self._tracker['relations'].append([id(other), id(result)])
         if isinstance(other, Tensor):
             other._tracker['operations'].append('sub_m')
-            other._tracker['relations'].append(id(result))
+            other._tracker['relations'].append([id(self.tensor), id(result)])
         return result
 
     def __str__(self):
