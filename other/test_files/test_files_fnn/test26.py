@@ -34,7 +34,7 @@ for i in range(max_iter):
             f"{str(i + 1).zfill(len(str(max_iter)))}{ANSI['white']}it{ANSI['reset']}/{max_iter}{ANSI['white']}it{ANSI['reset']}  "
             f"{(100 * (i + 1) / max_iter):05.1f}{ANSI['white']}%{ANSI['reset']}  "
             f"{convert_time(time.time() - start)}{ANSI['white']}et{ANSI['reset']}  "
-            f"{convert_time((time.time() - start) * (i / max_iter))}{ANSI['white']}eta{ANSI['reset']}  "  # todo
+            f"{convert_time((time.time() - start) * max_iter / (i + 1) - (time.time() - start))}{ANSI['white']}eta{ANSI['reset']}  "
             f"{round((i + 1) / (time.time() - start), 1)}{ANSI['white']}it/s{ANSI['reset']}"
         )
         progress(i, max_iter, desc=desc)
