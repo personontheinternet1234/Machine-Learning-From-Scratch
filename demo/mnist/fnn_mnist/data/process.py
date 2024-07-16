@@ -7,12 +7,9 @@ import os
 import numpy as np
 import pandas as pd
 
-from gardenpy.utils.data_utils import (
-    format_data_raw as dr
-)
-from gardenpy.utils.helper_functions import (
-    print_color
-)
+# from gardenpy.utils.data_utils import (
+#     format_data_raw as dr
+# )
 
 from colorama import Fore, Style
 from tqdm import tqdm
@@ -68,12 +65,12 @@ def process_data(save=True, values_file=os.path.join(save_root, 'values.csv'), l
 
     if save:
         # save processed data
-        print_color('saving...')
+        print('saving...')
         values.to_csv(values_file, index=False)
         labels.to_csv(labels_file, index=False)
     # return processed data
-    values, labels = dr(values), dr(labels)
-    return values, labels
+    # values, labels = dr(values), dr(labels)
+    # return values, labels
 
 
 if __name__ == '__main__':
