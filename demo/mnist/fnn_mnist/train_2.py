@@ -4,8 +4,8 @@ from gardenpy.models import FNN
 
 model = FNN()
 
-model.initialize_model(
-    # thetas=np.ones((5, 5)),
-    hidden_layers=[16, 16],
-    thetas=None
-)
+model.initialize()
+
+arr1 = np.random.randn(5)
+print(np.nanargmax(arr1))
+print(np.argmax(arr1))

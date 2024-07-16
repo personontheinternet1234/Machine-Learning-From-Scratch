@@ -7,18 +7,20 @@ import time
 import warnings
 
 import numpy as np
-import pandas as pd
 
 from ..utils import (
     Initializers,
     Activators,
     Losses,
     Optimizers,
+    progress,
+    convert_time,
+    ansi_formats
 )
 
 
 class FNN:
-    def __init__(self, status_bars: bool = True):
+    def __init__(self, status_bars: bool = False):
         # hyperparameters
         self._hidden = None
         self._activators = None
@@ -26,17 +28,15 @@ class FNN:
         self._optimizer = None
         self._batching = None
 
-        # trainable parameters
-        self.thetas = None
-
-        # non trainable parameters
-        self.x = None
-        self.y = None
-
-        # calculation variables
+        # internal parameters
+        self._thetas = None
         self._zero_grad = None
 
+        # external parameters
+        self.thetas = None  # todo: eventually a dictionary
+
         # visual parameters
+        self._ansi = ansi_formats()
         self._status = status_bars
 
     @staticmethod
@@ -61,7 +61,7 @@ class FNN:
         return Initializers(algorithm, parameters)
 
     @staticmethod
-    def _get_activator(algorithm, parameters):
+    def _get_activators(algorithm, parameters):
         return Activators(algorithm, parameters)
 
     @staticmethod
@@ -70,14 +70,17 @@ class FNN:
             'algorithm': 'centropy',
             'parameters': None
         }
+        if parameters is None:
+            parameters = default
         if not isinstance(parameters, dict):
             raise TypeError('stop')
         for prm in parameters:
             if prm not in default:
                 warnings.warn('warning')
-            else:
-                default[prm] = parameters[prm]
-        return Optimizers(default['algorithm'], default['parameters'])
+        for prm in default:
+            if prm not in parameters:
+                raise ValueError('stop')
+        return Losses(parameters['algorithm'], parameters['parameters'])
 
     @staticmethod
     def _get_optimizer(parameters):
@@ -85,35 +88,73 @@ class FNN:
             'algorithm': 'adam',
             'hyperparameters': None
         }
+        if parameters is None:
+            parameters = default
         if not isinstance(parameters, dict):
             raise TypeError('stop')
         for prm in parameters:
             if prm not in default:
                 warnings.warn('warning')
-            else:
-                default[prm] = parameters[prm]
-        return Optimizers(default['algorithm'], default['hyperparameters'])
+        for prm in default:
+            if prm not in parameters:
+                raise ValueError('stop')
+        return Optimizers(parameters['algorithm'], parameters['hyperparameters'])
 
     def _get_batching(self, batching):
         ...
 
-    def instantiate(self, hidden_layers=None, thetas=None, activations=None):
+    def _step(self, x, y):
+
+    def initialize(self, hidden_layers=None, thetas=None, activations=None):
         self._hidden = self._get_hidden(hidden_layers)
+        self._thetas = self._get_thetas(thetas)
+        self._activators = self._get_activators(activations)
 
     def hyperparameters(self, loss=None, optimizer=None):
         self._loss = self._get_loss(loss)
         self._optimizer = self._get_optimizer(optimizer)
 
-    def forward(self):
+    def forward(self, x):
         ...
 
-    def fit(self, x, y, batch_size=None, max_iter=100000):
+    def predict(self, x):
+        return np.argmax(self.forward(x)[-1])
+
+    def validation(self, valid_x, valid_y, parameters=None):
+        warnings.warn(f"Not supported yet.")
+
+    def fit(self, x, y, parameters=None):
         if not isinstance((x, y), np.ndarray):
             raise TypeError('numpy')
         self.x = x
         self.y = y
-        self._batching = self._get_batching(batch_size)
+        self._xy_len = len(y)
+        self._batching = self._get_batching(...)
 
         start = time.time()
-        for iter in max_iter:
+        for i in range(...):
+            tc = random.randint(self._batching, self._xy_len)
+            x, y = x[tc-self._batching:tc], y[tc-self._batching:tc]
 
+            yhat = self.forward(x)
+            self._step(y, yhat)
+            loss = None
+            accu = None
+            if i % ... == 0:
+                loss = self._loss(y, yhat) / self._batching
+                accu = 0.5 * np.sum(np.abs(yhat - y)) / self._batching
+
+            if self._status:
+                print("Training")
+                desc = (
+                    f"{str(i + 1).zfill(len(str(max_iter)))}{self._ansi['white']}it{self._ansi['reset']}/{max_iter}{self._ansi['white']}it{self._ansi['reset']}  "
+                    f"{(100 * (i + 1) / max_iter):05.1f}{self._ansi['white']}%{self._ansi['reset']}  "
+                    f"{loss:05}{self._ansi['white']}loss{self._ansi['reset']}  "
+                    f"{accu:05.1f}{self._ansi['white']}accu{self._ansi['reset']}  "
+                    f"{convert_time(time.time() - start)}{self._ansi['white']}et{self._ansi['reset']}  "
+                    f"{convert_time((time.time() - start) * max_iter / (i + 1) - (time.time() - start))}{self._ansi['white']}eta{self._ansi['reset']}  "
+                    f"{round((i + 1) / (time.time() - start), 1)}{self._ansi['white']}it/s{self._ansi['reset']}"
+                )
+                progress(i, max_iter, desc=desc)
+
+            print(time.time() - start)

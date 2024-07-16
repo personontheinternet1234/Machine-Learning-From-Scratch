@@ -10,8 +10,6 @@
 refer to 'todo' for in-depth documentation on these functions.
 """
 
-import math
-
 
 def ansi_formats() -> dict:
     """
@@ -113,8 +111,8 @@ def convert_time(seconds: float, number_colors: str = None, separators_color: st
     # round seconds
     seconds = int(seconds)
     # find minutes and hours
-    minutes = math.floor(seconds / 60)
-    hours = math.floor(minutes / 60)
+    minutes = int(seconds / 60)
+    hours = int(minutes / 60)
     # adjust times
     minutes -= hours * 60
     seconds -= minutes * 60
