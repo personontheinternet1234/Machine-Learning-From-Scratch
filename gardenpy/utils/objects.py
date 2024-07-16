@@ -83,7 +83,7 @@ class Tensor:
 
     def __repr__(self):
         return (
-            f"'{id(self)}' Internal:\n"
+            f"'{id(self)}' Internals:\n"
             f"'type': '{str(self._type)}'\n"
             f"'value':\n'{str(self.tensor)}'\n"
             f"'operations': '{self._tracker['operations']}'\n"
