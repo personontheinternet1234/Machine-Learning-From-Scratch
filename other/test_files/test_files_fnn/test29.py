@@ -15,16 +15,16 @@ y = Tensor(np.random.randn(1, 5))
 a_t = x @ w
 y_hat = a_t + b
 
+print(id(b))
+
 grad_b = nabla(y_hat, b)
-print(grad_b)
-print(type(grad_b))
 print(repr(grad_b))
 
-grad_a_t = nabla(y_hat, a_t)
-print(grad_a_t)
-
-grad_w = nabla(a_t, w)
-print(grad_w)
-
-grad_x = nabla(a_t, x)
-print(grad_x)
+# grad_a_t = nabla(y_hat, a_t)
+# print(grad_a_t)
+#
+# grad_w = nabla(a_t, w)
+# print(grad_w)
+#
+# grad_x = nabla(a_t, x)
+# print(grad_x)
