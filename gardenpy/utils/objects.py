@@ -83,8 +83,9 @@ class Tensor:
 
     def __repr__(self):
         return (
-            f"'{id(self.tensor)}' Internal:\n"
+            f"'{id(self)}' Internal:\n"
             f"'type': '{str(self._type)}'\n"
             f"'value':\n'{str(self.tensor)}'\n"
-            f"'path-ids': '{[str(id(path)) for path in self._tracker]}'"
+            f"'operations': '{self._tracker['operations']}'\n"
+            f"'path-ids': '{[[id(pair[path]) for path in range(len(pair))] for pair in self._tracker['relations']]}'"
         )
