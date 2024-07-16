@@ -87,5 +87,5 @@ class Tensor:
             f"'type': '{str(self._type)}'\n"
             f"'value':\n'{str(self.tensor)}'\n"
             f"'operations': '{self._tracker['operations']}'\n"
-            f"'path-ids': '{[[id(pair[path]) for path in range(len(pair))] for pair in self._tracker['relations']]}'"
+            f"'path-ids': '{[[f'{id(pair[path])}' for path in range(len(pair))] for pair in self._tracker['relations']]}'"
         )
