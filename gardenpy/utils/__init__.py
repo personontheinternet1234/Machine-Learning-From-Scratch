@@ -11,7 +11,9 @@ from .algorithms import (
     Optimizers
 )
 
-# todo: rewrite data_utils.py
+from .data_utils import (
+    MNISTFNNDataLoader
+)
 
 from .helper_functions import (
     ansi_formats,

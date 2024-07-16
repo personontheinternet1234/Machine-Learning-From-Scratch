@@ -1,32 +1,26 @@
 """
-Since I've updated so many things, I basically need to rewrite the FNN class
 todo: write description
 """
 
 import random
 import time
+import warnings
 
 import numpy as np
 import pandas as pd
 
-from gardenpy.utils import (
+from ..utils import (
     Initializers,
     Activators,
     Losses,
-    Optimizers
+    Optimizers,
 )
-from gardenpy.utils.data_utils import (
-    shuffle
-)
-
-DEFAULT = '\033[0m'
 
 
 class FNN:
-    def __init__(self, status_bars: bool = True, status_color: str = DEFAULT):
+    def __init__(self, status_bars: bool = True):
         # hyperparameters
-        self._layers = None
-        self._initializers = None
+        self._hidden = None
         self._activators = None
         self._loss = None
         self._optimizer = None
@@ -39,7 +33,23 @@ class FNN:
 
         # visual parameters
         self._status = status_bars
-        self._color = status_color
+
+    @staticmethod
+    def _get_hidden(hidden):
+        # todo: comment and fix errors
+        if hidden is None:
+            hidden = [100]
+        elif isinstance(hidden, (list, np.ndarray)):
+            for lyr in hidden:
+                if not isinstance(lyr, (int, np.int64)):
+                    raise TypeError('stop')
+        return hidden
+
+    def _get_thetas(self, thetas):
+        ...
+
+    def _get_activations(self):
+        ...
 
     @staticmethod
     def _get_initializer(algorithm, parameters):
@@ -50,65 +60,45 @@ class FNN:
         return Activators(algorithm, parameters)
 
     @staticmethod
-    def _get_loss(algorithm, parameters):
-        return Losses(algorithm, parameters)
+    def _get_loss(parameters):
+        default = {
+            'algorithm': 'centropy',
+            'parameters': None
+        }
+        if not isinstance(parameters, dict):
+            raise TypeError('stop')
+        for prm in parameters:
+            if prm not in default:
+                warnings.warn('warning')
+            else:
+                default[prm] = parameters[prm]
+        return Optimizers(default['algorithm'], default['parameters'])
 
     @staticmethod
-    def _get_optimizer(algorithm, hyperparameters):
-        return Optimizers(algorithm, hyperparameters)
-
-    def initialize_model(self, layer_sizes=None, initialization_methods=None, activation_methods=None):
-        default_layers = ['auto', 100, 'auto']
-        default_initializers = {
-            'weights': {
-                'algorithm': 'xavier',
-                'parameters': None
-            },
-            'biases': {
-                'algorithm': 'zeros',
-                'parameters': None
-            }
-        }
-        if initialization_methods:
-            # todo: add checks
-            init_mts = initialization_methods
-        else:
-            init_mts = default_initializers
-
-        if not layer_sizes:
-            self._layers = default_layers
-        else:
-            if not isinstance(layer_sizes, (np.ndarray, list)):
-                raise ValueError(f"'layer_sizes' is not a list or numpy array: {layer_sizes}")
-            elif len(layer_sizes) <= 2:
-                raise ValueError(
-                    f"Invalid length for 'layer_sizes: {layer_sizes}"
-                    f"'layer_sizes': must be greater than 1"
-                )
-            for lyr in layer_sizes:
-                if not isinstance(lyr, (int, np.int64)) or lyr == 'auto':
-                    raise ValueError(f"'layer' is not an integer or 'auto': {lyr}")
-            self._layers = layer_sizes
-        self._initializers = {
-            'weights': self._get_initializer(
-                init_mts['weights']['algorithm'],
-                init_mts['weights']['parameters']
-            ),
-            'biases': self._get_initializer(
-                init_mts['biases']['algorithm'],
-                init_mts['biases']['parameters']
-            )
-        }
-        if not activation_methods:
-            ...
-
-    def initialize_solver(self, loss=None, optimizer=None):
-        default_loss = {
-            'algorithm': 'centropy',
-            'parameters': 'default'
-        }
-        default_optimizer = {
+    def _get_optimizer(parameters):
+        default = {
             'algorithm': 'adam',
             'hyperparameters': None
         }
+        if not isinstance(parameters, dict):
+            raise TypeError('stop')
+        for prm in parameters:
+            if prm not in default:
+                warnings.warn('warning')
+            else:
+                default[prm] = parameters[prm]
+        return Optimizers(default['algorithm'], default['hyperparameters'])
+
+    def instantiate(self, hidden_layers=None, thetas=None, activations=None):
+        self._hidden = self._get_hidden(hidden_layers)
+
+    def hyperparameters(self, loss=None, optimizer=None):
+        self._loss = self._get_loss(loss)
+        self._optimizer = self._get_optimizer(optimizer)
+
+    def forward(self):
+        ...
+
+    def fit(self, max_iter):
+        for iter in max_iter:
 

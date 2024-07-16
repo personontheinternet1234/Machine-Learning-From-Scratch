@@ -6,6 +6,75 @@
 # import ast
 # import os
 # import random
+
+import os
+import pandas as pd
+import numpy as np
+
+
+class MNISTFNNDataLoader:
+    def __init__(self, root, values_path, labels_path, batch_size=5, save_to_memory=False, shuffle=False):
+        self._root = root
+        self._labels_dir = os.path.join(root, labels_path)
+        self._values_dir = os.path.join(root, values_path)
+        self._memory = save_to_memory
+        self._values = None
+        self._labels = None
+        self._get_memory()
+        self._indexes = np.array(pd.read_csv(self._labels_dir).index)
+        self._idx = 0
+        self._batch_size = batch_size
+        self._shuffle = shuffle
+        self.reset()
+
+    def _get_memory(self):
+        if self._memory:
+            self._values = np.array(pd.read_csv(self._values_dir))
+            self._labels = np.array(pd.read_csv(self._labels_dir))
+
+    def reset(self):
+        if self._shuffle:
+            np.random.shuffle(self._indexes)
+        self._idx = 0
+
+    def __len__(self):
+        return len(self._indexes)
+
+    def __iter__(self):
+        self.reset()
+        return self
+
+    def __next__(self):
+        if self._idx >= len(self._indexes):
+            raise StopIteration
+
+        start_idx = self._idx
+        end_idx = min(self._idx + self._batch_size, len(self._indexes))
+        self._idx = end_idx
+
+        batch_indexes = self._indexes[start_idx:end_idx]
+        if self._memory:
+            values = self._values[batch_indexes]
+            labels = self._values[batch_indexes]
+        else:
+            values = pd.read_csv(self._values_dir, skiprows=lambda x: x not in batch_indexes + 1).values
+            labels = pd.read_csv(self._labels_dir, skiprows=lambda x: x not in batch_indexes + 1).values
+
+        return values, labels
+
+    def __getitem__(self, idx):
+        if idx >= len(self._indexes):
+            raise IndexError("Index out of range")
+
+        start_idx = idx * self._batch_size
+        end_idx = min(start_idx + self._batch_size, len(self._indexes))
+
+        batch_indexes = self._indexes[start_idx:end_idx]
+        values = pd.read_csv(self._values_dir, skiprows=lambda x: x not in batch_indexes + 1).values
+        labels = pd.read_csv(self._labels_dir, skiprows=lambda x: x not in batch_indexes + 1).values
+
+        return values, labels
+
 #
 # import numpy as np
 # import pandas as pd

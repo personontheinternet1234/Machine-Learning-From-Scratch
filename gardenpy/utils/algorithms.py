@@ -358,7 +358,6 @@ class Activators:
 
     def _get_d_activator(self):
         # defines derivative of activation algorithm
-        # todo: check order of operations
         def d_softmax(x):
             # derivative of Softmax activation
             return (np.exp(x) * np.sum(np.exp(x)) - np.exp(2 * x)) / (np.sum(np.exp(x)) ** 2)
@@ -385,6 +384,7 @@ class Activators:
 
         def d_mish(x):
             # derivative of Mish activation
+            # todo: check order of operations
             return (np.tanh(np.log(1.0 + np.exp(self._params['beta'] * x)) / self._params['beta'])) + (x * (np.cosh(np.log(1.0 + np.exp(self._params['beta'] * x)) / self._params['beta']) ** -2.0) * (self._params['beta'] * np.exp(self._params['beta'] * x) / (self._params['beta'] + self._params['beta'] * np.exp(self._params['beta'] * x))))
 
         # derivative of activation algorithm dictionary
@@ -595,7 +595,7 @@ class Losses:
 
         Arguments:
             y: A numpy array of predicted activations.
-            yhat: A numpy array of expected activations
+            yhat: A numpy array of expected activations.
 
         Returns:
             A numpy float of the calculated loss.
@@ -617,7 +617,7 @@ class Losses:
 
         Arguments:
             y: A numpy array of predicted activations.
-            yhat: A numpy array of expected activations
+            yhat: A numpy array of expected activations.
 
         Returns:
             A numpy array of the derivative of calculated loss with respect to the predicted activations.

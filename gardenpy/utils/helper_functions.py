@@ -126,6 +126,9 @@ def print_credits() -> None:
     """
     'print_credits' is a function that prints the credits for GardenPy.
 
+    Arguments:
+        None.
+
     Returns:
         None.
     """
@@ -134,12 +137,16 @@ def print_credits() -> None:
     bold_green = '\033[1;32m'
     # print credits in alphabetical order
     print(f"{bold_green}GardenPy{credit_formats['reset']}")
-    print(f"   {credit_formats['bold']}Contributors:{credit_formats['reset']}")
-    print(f"   Christian SW Host-Madsen CO '25 ", end='')
-    print(f"   {credit_formats['bright_black']}<chost-madsen25@punahou.edu>{credit_formats['reset']}",)
-    print(f"   Mason Morales CO '25 ", end='')
-    print(f"              {credit_formats['bright_black']}<mmorales25@punahou.edu>{credit_formats['reset']}")
-    print(f"   Isaac Park Verbrugge CO '25 ", end='')
-    print(f"       {credit_formats['bright_black']}<iverbrugge25@punahou.edu>{credit_formats['reset']}")
-    print(f"   Derek Yee CO '25 ", end='')
-    print(f"                  {credit_formats['bright_black']}<dyee25@punahou.edu>{credit_formats['reset']}")
+    print(f"    {credit_formats['bold']}Contributors:{credit_formats['reset']}")
+    print(f"    Christian SW Host-Madsen", end='')
+    print(f"  {credit_formats['white']}CO '25{credit_formats['reset']}", end='')
+    print(f"  {credit_formats['bright_black']}<chost-madsen25@punahou.edu>{credit_formats['reset']}",)
+    print(f"    Mason Morales", end='')
+    print(f"  {credit_formats['white']}CO '25{credit_formats['reset']}", end='')
+    print(f"  {credit_formats['bright_black']}<mmorales25@punahou.edu>{credit_formats['reset']}")
+    print(f"    Isaac P Verbrugge", end='')
+    print(f"  {credit_formats['white']}CO '25{credit_formats['reset']}", end='')
+    print(f"  {credit_formats['bright_black']}<iverbrugge25@punahou.edu>{credit_formats['reset']}")
+    print(f"    Derek Yee CO", end='')
+    print(f"  {credit_formats['white']}CO '25{credit_formats['reset']}", end='')
+    print(f"  {credit_formats['bright_black']}<dyee25@punahou.edu>{credit_formats['reset']}")

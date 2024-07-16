@@ -1,5 +1,3 @@
-import numpy as np
+list1 = ['5' for i in range(5) + 'c']
 
-a = np.random.randn(5, 5)
-print(a)
-print(5 * a)
+print(list1)
