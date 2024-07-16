@@ -72,7 +72,7 @@ def progress(idx: int, max_idx: int, desc=None, b_len: int = 50) -> None:
     progress_formats = ansi_formats()
     if not isinstance(b_len, int):
         # invalid datatype
-        raise ValueError(f"'b_len' is not an integer: {b_len}")
+        raise ValueError(f"'b_len' is not an integer: '{b_len}'")
     # completed progress
     completed = (idx + 1) / max_idx
     # make progress bar
