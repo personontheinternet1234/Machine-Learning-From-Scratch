@@ -49,7 +49,9 @@ def nabla(grad, rspc):
 
         operation_type = rspc._tracker['operations'][track.index(grad)]
         other = others[track.index(grad)]
-        result = Tensor(back[operation_type](rspc.to_np(), other.to_np()))
+        if isinstance(other, Tensor):
+            other = other.to_np()
+        result = Tensor(back[operation_type](rspc.to_np(), other))
         result._type = 'grad'
         result._tracker['operations'].append(f'd_{operation_type}')
         result._tracker['relations'].append([grad, rspc])
