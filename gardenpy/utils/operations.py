@@ -6,13 +6,11 @@ from .objects import Tensor
 
 
 def nabla(grad, rspc):
-    id_grad = id(grad)
-    id_rspc = id(rspc)
-    id_track = [rlt[1] for rlt in rspc._tracker['relations']]
-    id_other = [rlt[0] for rlt in rspc._tracker['relations']]
+    track = [rlt[1] for rlt in rspc._tracker['relations']]
+    others = [rlt[0] for rlt in rspc._tracker['relations']]
     if not isinstance(rspc, Tensor):
         raise TypeError('not tensor')
-    if id_grad in id_track:
+    if grad in track:
         # todo: add default chain ruling here
         def d_matmul_m(_grad, _rspc):
             ...  # todo
@@ -21,13 +19,13 @@ def nabla(grad, rspc):
             ...  # todo
 
         def d_mul(_rspc, _other):
-            ...  # todo
+            return _other * (_rspc * 0.0 + 1.0)
 
         def d_truediv_n(_rspc, _other):
-            ...  # todo
+            return _other * (_rspc * 0.0 + 1.0)
 
         def d_truediv_d(_rspc, _other):
-            ...  # todo
+            return _other ** -1 * (_rspc * 0.0 + 1.0)
 
         def d_add(_rspc, _other):
             return _rspc * 0.0 + 1.0
@@ -49,11 +47,12 @@ def nabla(grad, rspc):
             'sub_m': d_sub_m
         }
 
-        operation_type = rspc._tracker['operations'][id_track.index(id_grad)]
-        result = back[operation_type](rspc, other)
+        operation_type = rspc._tracker['operations'][track.index(grad)]
+        other = others[track.index(grad)]
+        result = Tensor(back[operation_type](rspc.to_np(), other.to_np()))
         result._type = 'grad'
         result._tracker['operations'].append(f'd_{operation_type}')
-        result._tracker['relations'].append([id_grad, id_rspc])
+        result._tracker['relations'].append([grad, rspc])
         return result
     else:
         raise ValueError('no relation')

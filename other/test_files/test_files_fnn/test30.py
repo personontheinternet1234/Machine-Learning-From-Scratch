@@ -9,8 +9,8 @@ t3 = Tensor(np.random.randn(3, 3))
 t4 = Tensor(np.random.randn(3, 3))
 
 c1 = t1 + t2
-c2 = c1 + t3
-c3 = c2 - t4
+c2 = c1 - t3
+c3 = c2 * t4
 print(id(c1))
 print(id(c2))
 print(id(c3))
