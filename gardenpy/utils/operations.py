@@ -53,8 +53,8 @@ def nabla(grad, rspc):
             other = other.to_np()
         result = Tensor(back[operation_type](rspc.to_np(), other))
         result._type = 'grad'
-        result._tracker['operations'].append(f'd_{operation_type}')
-        result._tracker['relations'].append([grad, rspc])
+        result._tracker['operations'] += f'd_{operation_type}'
+        result._tracker['relations'] += [grad, rspc]
         return result
     else:
         raise ValueError('no relation')
@@ -69,8 +69,8 @@ def chain(grad_loc, grad_glob):
     if not (grad_loc._type == 'grad' and grad_glob._type == 'grad'):
         raise TypeError('not gradients')
 
-    glob_conn = grad_glob._tracker['relations'][0][0]
-    loc_conn = grad_loc._tracker['relations'][-1][1]
+    glob_conn = grad_glob._tracker['relations'][0]
+    loc_conn = grad_loc._tracker['relations'][-1]
     if glob_conn == loc_conn:
         result = Tensor(np.dot(grad_loc.to_np(), grad_glob.to_np()))  # todo: check this math
         result._type = 'grad'

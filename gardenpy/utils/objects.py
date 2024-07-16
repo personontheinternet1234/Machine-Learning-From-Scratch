@@ -82,10 +82,21 @@ class Tensor:
         return f"{str(self.tensor)}"
 
     def __repr__(self):
-        return (
-            f"'{id(self)}' Internals:\n"
-            f"'type': '{str(self._type)}'\n"
-            f"'value':\n'{str(self.tensor)}'\n"
-            f"'operations': '{self._tracker['operations']}'\n"
-            f"'path-ids': '{[[f'{id(pair[path])}' for path in range(len(pair))] for pair in self._tracker['relations']]}'"
-        )
+        if self._type == 'mat':
+            return (
+                f"'{id(self)}' Internals:\n"
+                f"'type': '{str(self._type)}'\n"
+                f"'value':\n'{str(self.tensor)}'\n"
+                f"'operations': '{self._tracker['operations']}'\n"
+                f"'path-ids': '{[[f'{id(path)}' for path in pair] for pair in self._tracker['relations']]}'"
+            )
+        elif self._type == 'grad':
+            return (
+                f"'{id(self)}' Internals:\n"
+                f"'type': '{str(self._type)}'\n"
+                f"'value':\n'{str(self.tensor)}'\n"
+                f"'operations': '{self._tracker['operations']}'\n"
+                f"'path-ids': '{[f'{id(path)}' for path in self._tracker['relations']]}'"
+            )
+        else:
+            raise ValueError('no type')
