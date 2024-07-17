@@ -1,5 +1,3 @@
-import gc
-
 import numpy as np
 
 from .objects import Tensor
@@ -66,30 +64,42 @@ def test_tracker(itm1, itm2):
     track_chain = None
 
     def collect(item, relation, chain_track=None):
-        if chain_track is None:
-            chain_track = []
         nonlocal tracked
         nonlocal track_chain
+        if chain_track is None:
+            chain_track = [relation]
         if isinstance(item, Tensor):
-            relation
             origins = item._tracker['origin']
             if relation in origins:
                 tracked = True
                 track_chain = chain_track
                 chain_track.append(item)
+                chain_track.append(relation)
                 return True
             chains = [collect(sublist, relation, chain_track) for sublist in item._tracker['origin']]
             chain_track.append(item)
             return id(item), chains, chain_track
-        elif item is not None:
-            chain_track.append(item)
-            return id(item), item, chain_track
+        else:
+            return False
 
     collect(itm1, itm2)
+
+    b = []
+
+    def find_chain(item):
+        nonlocal b
+        for i in item:
+            if isinstance(i, Tensor):
+                for j in i._tracker['origin']:
+                    if j in track_chain:
+                        b.append(j)
+                        find_chain(j)
+    find_chain(track_chain)
+
+    print([id(i) for i in b])
     if not tracked:
         raise ValueError('no relation')
     return track_chain
-
 
 
 def chain(grad_glob, grad_loc):

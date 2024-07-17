@@ -114,7 +114,7 @@ class Tensor:
                 f"'value':\n{str(self.tensor)}\n"
                 f"'operations': {self._tracker['operations']}\n"
                 f"'path-ids': {[[f'{id(path)}' for path in pair] for pair in self._tracker['relations']]}\n"
-                f"'origin': '{[f'{id(origin)}' for origin in self._tracker['origin']] if self._tracker['origin'] is not None else None}'"
+                f"'origin': {[f'{id(origin)}' for origin in self._tracker['origin']] if self._tracker['origin'] != [None] else None}"
             )
         elif self._type in ('grad', 'grad_chain'):
             return (
@@ -123,7 +123,7 @@ class Tensor:
                 f"'value':\n{str(self.tensor)}\n"
                 f"'operations': {self._tracker['operations']}\n"
                 f"'path-ids': {[f'{id(path)}' for path in self._tracker['relations']]}\n"
-                f"'origin': '{id(self._tracker['origin']) if self._tracker['origin'] is not None else None}'"
+                f"'origin': {id(self._tracker['origin']) if self._tracker['origin'] is not None else None}"
             )
         else:
             raise ValueError('no type')
