@@ -90,7 +90,7 @@ class Tensor:
                 f"'operations': '{self._tracker['operations']}'\n"
                 f"'path-ids': '{[[f'{id(path)}' for path in pair] for pair in self._tracker['relations']]}'"
             )
-        elif self._type == 'grad':
+        elif self._type in ('grad', 'grad_chain'):
             return (
                 f"'{id(self)}' Internals:\n"
                 f"'type': '{str(self._type)}'\n"
