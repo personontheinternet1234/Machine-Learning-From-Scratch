@@ -50,8 +50,8 @@ def nabla(grad, rspc):
         operation_type = rspc._tracker['operations'][track.index(grad)]
         other = others[track.index(grad)]
         if isinstance(other, Tensor):
-            other = other.to_np()
-        result = Tensor(back[operation_type](rspc.to_np(), other))
+            other = other.to_array()
+        result = Tensor(back[operation_type](rspc.to_array(), other))
         result._type = 'grad'
         result._tracker['operations'].append(f'd_{operation_type}')
         result._tracker['relations'] += [grad, rspc]
@@ -62,18 +62,27 @@ def nabla(grad, rspc):
 
 
 def test_tracker(itm1, itm2):
-    next_itm = itm1._tracker['origin'][0]
-    # print([id(itm) for itm in next_itm])
-    print(id(itm2))
-    print()
-    while True:
-        print(id(next_itm))
-        if itm2 == next_itm:
-            return True
-        if next_itm._tracker['origin'] is not None:
-            next_itm = next_itm._tracker['origin'][0]
+    tracked = False
+
+    def collect(item, relation):
+        if isinstance(item, Tensor):
+            origins = item._tracker['origin']
+            if relation in origins:
+                nonlocal tracked
+                tracked = True
+                return 'here', origins.index(relation)
+            chains = [collect(sublist, relation) for sublist in item._tracker['origin']]
+            return id(item), chains
+        elif item is not None:
+            return id(item), item
         else:
-            return False
+            return None, None
+
+    result = collect(itm1, itm2)
+    print(result)
+
+    if not tracked:
+        raise ValueError('no relation')
 
 
 def chain(grad_glob, grad_loc):
@@ -88,7 +97,7 @@ def chain(grad_glob, grad_loc):
     glob_conn = grad_glob._tracker['relations'][-1]
     loc_conn = grad_loc._tracker['origin']
     if glob_conn == loc_conn:
-        result = Tensor(np.dot(grad_loc.to_np(), grad_glob.to_np()))  # todo: check this math
+        result = Tensor(np.dot(grad_loc.to_array(), grad_glob.to_array()))  # todo: check this math
         result._type = 'grad_chain'
         result._tracker['relations'] = grad_glob._tracker['relations'] + grad_loc._tracker['relations'][1:]
         result._tracker['operations'] = (grad_glob._tracker['operations']) + grad_loc._tracker['operations']

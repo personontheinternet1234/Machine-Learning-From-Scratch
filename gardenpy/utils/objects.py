@@ -13,16 +13,22 @@ class Tensor:
         self._tracker = {
             'operations': [],
             'relations': [],
-            'origin': None
+            'origin': [None]
         }
 
-    def to_np(self):
-        return self.tensor
+    def __str__(self):
+        return str(self.tensor)
+
+    def __len__(self):
+        return len(self.tensor)
+
+    def __getitem__(self, key):
+        return self.tensor[key]
 
     def __matmul__(self, other):
         obj = other
         if isinstance(obj, Tensor):
-            obj = other.to_np()
+            obj = other.to_array()
         self._tracker['operations'].append('matmul_m')
         result = Tensor(self.tensor @ obj)
         result._tracker['origin'] = [self, other]
@@ -35,7 +41,7 @@ class Tensor:
     def __mul__(self, other):
         obj = other
         if isinstance(obj, Tensor):
-            obj = other.to_np()
+            obj = other.to_array()
         self._tracker['operations'].append('mul')
         result = Tensor(self.tensor * obj)
         result._tracker['origin'] = [self, other]
@@ -48,7 +54,7 @@ class Tensor:
     def __truediv__(self, other):
         obj = other
         if isinstance(obj, Tensor):
-            obj = other.to_np()
+            obj = other.to_array()
         self._tracker['operations'].append('truediv_n')
         result = Tensor(self.tensor / obj)
         result._tracker['origin'] = [self, other]
@@ -61,7 +67,7 @@ class Tensor:
     def __add__(self, other):
         obj = other
         if isinstance(obj, Tensor):
-            obj = other.to_np()
+            obj = other.to_array()
         self._tracker['operations'].append('add')
         result = Tensor(self.tensor + obj)
         result._tracker['origin'] = [self, other]
@@ -74,7 +80,7 @@ class Tensor:
     def __sub__(self, other):
         obj = other
         if isinstance(obj, Tensor):
-            obj = other.to_np()
+            obj = other.to_array()
         self._tracker['operations'].append('sub_s')
         result = Tensor(self.tensor - obj)
         result._tracker['origin'] = [self, other]
@@ -87,7 +93,7 @@ class Tensor:
     def __pow__(self, other):
         obj = other
         if isinstance(obj, Tensor):
-            obj = other.to_np()
+            obj = other.to_array()
         self._tracker['operations'].append('pow_b')
         result = Tensor(self.tensor ** obj)
         result._tracker['origin'] = [self, other]
@@ -97,14 +103,8 @@ class Tensor:
             other._tracker['relations'].append([self, result])
         return result
 
-    def __len__(self):
-        return len(self.tensor)
-
-    def __getitem__(self, key):
-        return self.tensor[key]
-
-    def __str__(self):
-        return str(self.tensor)
+    def to_array(self):
+        return self.tensor
 
     def __repr__(self):
         if self._type == 'mat':
