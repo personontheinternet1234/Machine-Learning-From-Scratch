@@ -21,6 +21,10 @@ print(id(c1))
 print(id(c2))
 print(id(c3))
 
-print()
+# print()
+# print(repr(c1))
+# print(repr(c2))
+# print(repr(c3))
 
-test_tracker(c2, t1)
+print()
+print(test_tracker(c3, t1))

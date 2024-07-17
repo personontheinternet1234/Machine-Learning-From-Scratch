@@ -27,7 +27,8 @@ d_c3c2 = nabla(c3, c2)
 print(repr(d_c3c2))
 
 print()
-d_c2t1 = chain(d_c2c1, d_c1t1)
-print(repr(d_c2t1))
-d_c3t1 = chain(d_c3c2, d_c2t1)
+
+d_c3c1 = chain(d_c3c2, d_c2c1)
+print(repr(d_c3c1))
+d_c3t1 = chain(d_c3c1, d_c1t1)
 print(repr(d_c3t1))
