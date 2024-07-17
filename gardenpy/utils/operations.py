@@ -63,26 +63,33 @@ def nabla(grad, rspc):
 
 def test_tracker(itm1, itm2):
     tracked = False
+    track_chain = None
 
-    def collect(item, relation):
+    def collect(item, relation, chain_track=None):
+        if chain_track is None:
+            chain_track = []
+        nonlocal tracked
+        nonlocal track_chain
         if isinstance(item, Tensor):
+            relation
             origins = item._tracker['origin']
+            chains = [collect(sublist, relation, chain_track) for sublist in item._tracker['origin']]
             if relation in origins:
-                nonlocal tracked
                 tracked = True
-                return 'here', origins.index(relation)
-            chains = [collect(sublist, relation) for sublist in item._tracker['origin']]
-            return id(item), chains
+                track_chain = chain_track
+                chain_track.append(item)
+                return id(chains[origins.index(relation)]), chains, chain_track
+            chain_track.append(item)
+            return id(item), chains, chain_track
         elif item is not None:
-            return id(item), item
-        else:
-            return None, None
+            chain_track.append(item)
+            return id(item), item, chain_track
 
-    result = collect(itm1, itm2)
-    print(result)
-
+    collect(itm1, itm2)
     if not tracked:
         raise ValueError('no relation')
+    return track_chain
+
 
 
 def chain(grad_glob, grad_loc):
