@@ -20,23 +20,11 @@ print()
 c1 = t1 + t2
 c2 = c1 - t3
 c3 = c2 * t4
-<<<<<<< HEAD
-print(id(c1))
-print(id(c2))
-print(id(c3))
 
-# print()
-# print(repr(c1))
-# print(repr(c2))
-# print(repr(c3))
-
-<<<<<<< Updated upstream
-=======
 print("'c' ids:")
 print(f"c1: {id(c1)}")
 print(f"c2: {id(c2)}")
 print(f"c3: {id(c3)}")
->>>>>>> brokentrackingtest
 print()
 
 print("equations:")
@@ -44,26 +32,13 @@ print("c1 = t1 + t2")
 print("c2 = c1 - t3")
 print("c3 = c2 * t4")
 print()
-<<<<<<< HEAD
-print(repr(t1))
-=======
-print("calculated chains:")
-f = test_tracker(c3, t1)
-print([id(i) for i in f])
-f = test_tracker(c3, c2)
-=======
 
 print("calculated chains:")
 f = test_tracker(c3, t1)
 print([id(i) for i in f])
 f = test_tracker(c3, c1)
->>>>>>> brokentrackingtest
 print([id(i) for i in f])
 f = test_tracker(c2, t1)
 print([id(i) for i in f])
 f = test_tracker(c1, t1)
 print([id(i) for i in f])
-<<<<<<< HEAD
->>>>>>> Stashed changes
-=======
->>>>>>> brokentrackingtest
