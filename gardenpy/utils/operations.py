@@ -70,9 +70,18 @@ def test_tracker(itm1, itm2):
             if relation in origins:
                 nonlocal tracked
                 tracked = True
+<<<<<<< Updated upstream
                 return 'here', origins.index(relation)
             chains = [collect(sublist, relation) for sublist in item._tracker['origin']]
             return id(item), chains
+=======
+                track_chain = chain_track
+                chain_track.append(item)
+                return True
+            chains = [collect(sublist, relation, chain_track) for sublist in item._tracker['origin']]
+            chain_track.append(item)
+            return id(item), chains, chain_track
+>>>>>>> Stashed changes
         elif item is not None:
             return id(item), item
         else:

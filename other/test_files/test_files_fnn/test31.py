@@ -27,8 +27,20 @@ print(id(c3))
 # print(repr(c2))
 # print(repr(c3))
 
+<<<<<<< Updated upstream
 print()
 b = test_tracker(c3, t1)
 print(b)
 print()
 print(repr(t1))
+=======
+print("calculated chains:")
+f = test_tracker(c3, t1)
+print([id(i) for i in f])
+f = test_tracker(c3, c2)
+print([id(i) for i in f])
+f = test_tracker(c2, t1)
+print([id(i) for i in f])
+f = test_tracker(c1, t1)
+print([id(i) for i in f])
+>>>>>>> Stashed changes
