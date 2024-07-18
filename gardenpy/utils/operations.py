@@ -95,13 +95,9 @@ def test_tracker(itm1, itm2):
             find_chain(val)
     find_chain(reversed(track_chain))
 
-    for loc in reversed(final_chain):
-        nabla(final_chain[])
-
-    print([id(i) for i in b])
     if not tracked:
         raise ValueError('no relation')
-    return b
+    return track_chain
 
 
 def chain(grad_glob, grad_loc):

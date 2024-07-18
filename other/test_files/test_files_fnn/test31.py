@@ -38,10 +38,5 @@ print([id(t1), id(c1), id(c2), id(c3)])
 print()
 
 print("calculated chain:")
-f = test_tracker(c3, t1)
-print([id(i) for i in f])
-print()
-
-# print(repr(c1))
-# print()
-# print(repr(t3))
+track = test_tracker(c3, t1)
+print([id(itm) for itm in track])
