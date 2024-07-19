@@ -1,7 +1,7 @@
 r"""
 'dnn' includes a Dense Neural Network (DNN) built from GardenPy.
 
-'dnn_torch' includes:
+'dnn' includes:
     'DNN': A DNN built from GardenPy.
 
 Refer to 'todo' for in-depth documentation on this model.
