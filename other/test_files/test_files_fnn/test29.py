@@ -1,7 +1,7 @@
 import numpy as np
 
 from gardenpy.utils.objects import Tensor
-from gardenpy.utils.operations import nabla
+from gardenpy.utils.operators import nabla
 
 x = Tensor(np.random.randn(1, 5))
 w = Tensor(np.random.randn(5, 5))

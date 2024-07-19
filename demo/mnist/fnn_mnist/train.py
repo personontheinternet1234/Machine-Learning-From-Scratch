@@ -12,7 +12,7 @@ from gardenpy.utils import (
     helper_functions as hf
 )
 
-from gardenpy.models.fnn import (
+from gardenpy.models.fnn_old import (
     FNN
 )
 

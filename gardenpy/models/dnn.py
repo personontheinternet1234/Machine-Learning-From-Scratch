@@ -1,5 +1,10 @@
-"""
-todo: write description
+r"""
+'dnn' includes a Dense Neural Network (DNN) built from GardenPy.
+
+'dnn_torch' includes:
+    'DNN': A DNN built from GardenPy.
+
+Refer to 'todo' for in-depth documentation on this model.
 """
 
 import random
@@ -8,18 +13,21 @@ import warnings
 
 import numpy as np
 
-from ..utils import (
+from ..utils.algorithms import (
     Initializers,
     Activators,
     Losses,
-    Optimizers,
+    Optimizers
+)
+
+from ..utils.helper_functions import (
     progress,
     convert_time,
     ansi_formats
 )
 
 
-class FNN:
+class DNN:
     def __init__(self, status_bars: bool = False):
         # hyperparameters
         self._hidden = None
@@ -104,6 +112,7 @@ class FNN:
         ...
 
     def _step(self, x, y):
+        ...
 
     def initialize(self, hidden_layers=None, thetas=None, activations=None):
         self._hidden = self._get_hidden(hidden_layers)
@@ -132,7 +141,7 @@ class FNN:
         self._batching = self._get_batching(...)
 
         start = time.time()
-        for i in range(...):
+        for i in range(parameters['max_iter']):
             tc = random.randint(self._batching, self._xy_len)
             x, y = x[tc-self._batching:tc], y[tc-self._batching:tc]
 
@@ -147,14 +156,14 @@ class FNN:
             if self._status:
                 print("Training")
                 desc = (
-                    f"{str(i + 1).zfill(len(str(max_iter)))}{self._ansi['white']}it{self._ansi['reset']}/{max_iter}{self._ansi['white']}it{self._ansi['reset']}  "
-                    f"{(100 * (i + 1) / max_iter):05.1f}{self._ansi['white']}%{self._ansi['reset']}  "
+                    f"{str(i + 1).zfill(len(str(parameters['max_iter'])))}{self._ansi['white']}it{self._ansi['reset']}/{parameters['max_iter']}{self._ansi['white']}it{self._ansi['reset']}  "
+                    f"{(100 * (i + 1) / parameters['max_iter']):05.1f}{self._ansi['white']}%{self._ansi['reset']}  "
                     f"{loss:05}{self._ansi['white']}loss{self._ansi['reset']}  "
                     f"{accu:05.1f}{self._ansi['white']}accu{self._ansi['reset']}  "
                     f"{convert_time(time.time() - start)}{self._ansi['white']}et{self._ansi['reset']}  "
-                    f"{convert_time((time.time() - start) * max_iter / (i + 1) - (time.time() - start))}{self._ansi['white']}eta{self._ansi['reset']}  "
+                    f"{convert_time((time.time() - start) * parameters['max_iter'] / (i + 1) - (time.time() - start))}{self._ansi['white']}eta{self._ansi['reset']}  "
                     f"{round((i + 1) / (time.time() - start), 1)}{self._ansi['white']}it/s{self._ansi['reset']}"
                 )
-                progress(i, max_iter, desc=desc)
+                progress(i, parameters['max_iter'], desc=desc)
 
             print(time.time() - start)

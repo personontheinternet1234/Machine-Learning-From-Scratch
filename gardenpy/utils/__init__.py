@@ -1,8 +1,15 @@
-"""
+r"""
 'utils' includes utility functions for GardenPy.
 
-refer to 'todo' for in-depth documentation on all utility functions.
+Refer to 'todo' for in-depth documentation on all utility functions.
 """
+
+from .objects import Tensor
+
+from .operators import (
+    nabla,
+    chain
+)
 
 from .algorithms import (
     Initializers,
@@ -11,12 +18,24 @@ from .algorithms import (
     Optimizers
 )
 
-from .data_utils import (
-    MNISTFNNDataLoader
-)
+from .data_utils import DataLoaderCSV
 
 from .helper_functions import (
     ansi_formats,
     progress,
     convert_time
 )
+
+__all__ = [
+    'Tensor',
+    'nabla',
+    'chain',
+    'Initializers',
+    'Activators',
+    'Losses',
+    'Optimizers',
+    'DataLoaderCSV',
+    'ansi_formats',
+    'progress',
+    'convert_time'
+]

@@ -1,4 +1,4 @@
-"""
+r"""
 'algorithms' includes mathematical algorithms for GardenPy.
 
 'algorithms' includes:
@@ -7,17 +7,19 @@
     'Losses': Loss algorithms for loss.
     'Optimizers': Optimization algorithms for kernels/weights/biases.
 
-refer to 'todo' for in-depth documentation on these algorithms.
+Refer to 'todo' for in-depth documentation on these algorithms.
 """
 
 import warnings
 
 import numpy as np
 
+from .objects import Tensor
+
 
 class Initializers:
-    def __init__(self, algorithm: str, parameters: dict = None):
-        """
+    def __init__(self, algorithm: str, parameters: dict = None, **kwargs):
+        r"""
         'Initializers' is a class containing various initialization algorithms.
         These initialization algorithms currently include 'xavier' (Xavier/Glorot), 'gaussian' (Gaussian/Normal), 'zeros' (Uniform Zeros), and 'ones' (Uniform Ones).
         The class structure promotes flexibility through the easy addition of other initialization algorithms.
@@ -25,7 +27,9 @@ class Initializers:
         Arguments:
             algorithm: A string referencing the desired initialization algorithm.
             parameters: A dictionary referencing the parameters for the initialization algorithm.
-                (any parameters not referenced will be automatically defined)
+            (any parameters not referenced will be automatically defined)
+                'xavier' (Xavier initialization):
+                    'gain': The gain value.
         """
         # initialization algorithms
         self.algorithms = [
@@ -37,7 +41,7 @@ class Initializers:
 
         # internal initialization algorithm parameters
         self._algorithm = self._check_algorithm(algorithm)
-        self._params = self._get_params(parameters)
+        self._params = self._get_params(parameters, kwargs)
 
         # initialization algorithm
         self._initializer = self._get_initializer()
@@ -54,7 +58,7 @@ class Initializers:
                 f"Choose from: {[alg for alg in self.algorithms]}"
             )
 
-    def _get_params(self, params):
+    def _get_params(self, params, kwargs):
         # defines initialization algorithm parameters
         # default initialization algorithm parameters
         default = {
@@ -86,6 +90,9 @@ class Initializers:
 
         # instantiate parameter dictionary
         prms = default[self._algorithm]
+
+        # combine keyword arguments and parameters
+        params.update(kwargs)
 
         if params and prms and isinstance(params, dict):
             # set defined parameter
@@ -154,17 +161,17 @@ class Initializers:
         # return initialization algorithm
         return init_funcs[self._algorithm]
 
-    def initialize(self, rows: int, columns: int) -> np.ndarray:
-        """
+    def initialize(self, rows: int, columns: int) -> Tensor:
+        r"""
         'initialize' is a built-in function in the 'Initializers' class.
-        This function initializes a numpy array based on the rows and columns.
+        This function initializes a NumPy Array based on the rows and columns.
 
         Arguments:
-            rows: An integer of the rows in the numpy array.
-            columns: An integer of the columns in the numpy array.
+            rows: An integer of the rows in the NumPy Array.
+            columns: An integer of the columns in the NumPy Array.
 
         Returns:
-            A numpy array of initialized values.
+            A Tensor of initialized values.
         """
         if not isinstance(rows, int):
             # invalid datatype
@@ -173,13 +180,14 @@ class Initializers:
             # invalid datatype
             raise TypeError(f"'columns' is not an integer: '{columns}'")
 
-        # return numpy array
-        return self._initializer(rows, columns)
+        # return initialized tensor
+        return Tensor(self._initializer(rows, columns))
 
 
 class Activators:
-    def __init__(self, algorithm: str, parameters: dict = None):
-        """
+    # todo: add tensor support
+    def __init__(self, algorithm: str, parameters: dict = None, **kwargs):
+        r"""
         'Activators' is a class containing various activation algorithms.
         These activation algorithms currently include 'softmax' (Softmax), 'relu' (ReLU), 'lrelu' (Leaky ReLU), 'sigmoid' (Sigmoid), 'tanh' (Tanh), 'softplus' (Softplus), and 'mish' (Mish).
         The class structure promotes flexibility through the easy addition of other activation algorithms.
@@ -187,7 +195,13 @@ class Activators:
         Arguments:
             algorithm: A string referencing the desired activation algorithm.
             parameters: A dictionary referencing the parameters for the activation algorithm.
-                (any parameters not referenced will be automatically defined)
+            (any parameters not referenced will be automatically defined)
+                'lrelu' (Leaky ReLU):
+                    'beta': The negative slope coefficient.
+                'softplus' (Softplus):
+                    'beta': The Beta value.
+                'mish' (Mish):
+                    'beta': The Beta value.
         """
         # activation algorithms
         self.algorithms = [
@@ -202,7 +216,7 @@ class Activators:
 
         # internal activation algorithm parameters
         self._algorithm = self._check_algorithm(algorithm)
-        self._params = self._get_params(parameters)
+        self._params = self._get_params(parameters, kwargs)
 
         # activation algorithms
         self._activator = self._get_activator()
@@ -220,7 +234,7 @@ class Activators:
                 f"Choose from: '{[alg for alg in self.algorithms]}'"
             )
 
-    def _get_params(self, params):
+    def _get_params(self, params, kwargs):
         # defines activation algorithm parameters
         # default activation algorithm parameters
         default = {
@@ -273,6 +287,9 @@ class Activators:
 
         # instantiate parameter dictionary
         prms = default[self._algorithm]
+
+        # combine keyword arguments and parameters
+        params.update(kwargs)
 
         if params and prms and isinstance(params, dict):
             # set defined parameter
@@ -402,45 +419,46 @@ class Activators:
         return d_act_funcs[self._algorithm]
 
     def activate(self, x: np.ndarray) -> np.ndarray:
-        """
+        r"""
         'activate' is a built-in function in the 'Activators' class.
-        This function runs a numpy array through an activation algorithm.
+        This function runs a NumPy Array through an activation algorithm.
 
         Arguments:
-            x: A numpy array of input activations.
+            x: A NumPy Array of input activations.
 
         Returns:
-            An numpy array of activated inputs.
+            An NumPy Array of activated inputs.
         """
         if not isinstance(x, np.ndarray):
             # invalid datatype
-            raise TypeError(f"'x' is not a numpy array: '{x}'")
+            raise TypeError(f"'x' is not a NumPy Array: '{x}'")
 
         # return numpy array
         return self._activator(x)
 
     def d_activate(self, x: np.ndarray) -> np.ndarray:
-        """
+        r"""
         'd_activate' is a built-in function in the 'Activators' class.
-        This function runs a numpy array through the derivative of an activation algorithm.
+        This function runs a NumPy Array through the derivative of an activation algorithm.
 
         Arguments:
-            x: A numpy array of input activations.
+            x: A NumPy Array of input activations.
 
         Returns:
-            An numpy array of the derivative of activated inputs.
+            An NumPy Array of the derivative of activated inputs.
         """
         if not isinstance(x, np.ndarray):
             # invalid datatype
-            raise TypeError(f"'x' is not a numpy array: '{x}'")
+            raise TypeError(f"'x' is not a NumPy Array: '{x}'")
 
         # return numpy array
         return self._d_activator(x)
 
 
 class Losses:
-    def __init__(self, algorithm: str, parameters: dict = None):
-        """
+    # todo: add tensor support
+    def __init__(self, algorithm: str, parameters: dict = None, **kwargs):
+        r"""
         'Losses' is a class containing various loss algorithms.
         These activation algorithms currently include 'ssr' (SSR), 'srsr' (SRSR), and 'centropy' (Cross-Entropy).
         The class structure promotes flexibility through the easy addition of other loss algorithms.
@@ -448,7 +466,8 @@ class Losses:
         Arguments:
             algorithm: A string referencing the desired loss algorithm.
             parameters: A dictionary referencing the parameters for the loss algorithm.
-                (any parameters not referenced will be automatically defined)
+            (any parameters not referenced will be automatically defined)
+                Currently, 'Losses' takes no arguments.
         """
         # loss algorithms
         self.algorithms = [
@@ -459,7 +478,7 @@ class Losses:
 
         # internal loss algorithm parameters
         self._algorithm = self._check_algorithm(algorithm)
-        self._params = self._get_params(parameters)
+        self._params = self._get_params(parameters, kwargs)
 
         # loss algorithms
         self._loss = self._get_loss()
@@ -477,7 +496,7 @@ class Losses:
                 f"Choose from: '{[alg for alg in self.algorithms]}'"
             )
 
-    def _get_params(self, params):
+    def _get_params(self, params, kwargs):
         # defines loss algorithm parameters
         # default loss algorithm parameters
         default = {
@@ -501,6 +520,9 @@ class Losses:
 
         # instantiate parameter dictionary
         prms = default[self._algorithm]
+
+        # combine keyword arguments and parameters
+        params.update(kwargs)
 
         if params and prms and isinstance(params, dict):
             # set defined parameter
@@ -589,53 +611,54 @@ class Losses:
         return d_loss_funcs[self._algorithm]
 
     def loss(self, y: np.ndarray, yhat: np.ndarray) -> np.float64:
-        """
+        r"""
         'loss' is a built-in function in the 'Loss' class.
-        This function runs a numpy array through a loss algorithm.
+        This function runs a NumPy Array through a loss algorithm.
 
         Arguments:
-            y: A numpy array of predicted activations.
-            yhat: A numpy array of expected activations.
+            y: A NumPy Array of predicted activations.
+            yhat: A NumPy Array of expected activations.
 
         Returns:
-            A numpy float of the calculated loss.
+            A NumPy Float64 of the calculated loss.
         """
         if not isinstance(y, np.ndarray):
             # invalid datatype
-            raise TypeError(f"'y' is not a numpy array: '{y}'")
+            raise TypeError(f"'y' is not a NumPy Array: '{y}'")
         if not isinstance(yhat, np.ndarray):
             # invalid datatype
-            raise TypeError(f"'yhat' is not a numpy array: '{yhat}'")
+            raise TypeError(f"'yhat' is not a NumPy Array: '{yhat}'")
 
         # return loss
         return self._loss(y, yhat)
 
     def d_loss(self, y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
-        """
+        r"""
         'd_loss' is a built-in function in the 'Loss' class.
-        This function runs a numpy array through the derivative of a loss algorithm.
+        This function runs a NumPy Array through the derivative of a loss algorithm.
 
         Arguments:
-            y: A numpy array of predicted activations.
-            yhat: A numpy array of expected activations.
+            y: A NumPy Array of predicted activations.
+            yhat: A NumPy Array of expected activations.
 
         Returns:
-            A numpy array of the derivative of calculated loss with respect to the predicted activations.
+            A NumPy Array of the derivative of calculated loss with respect to the predicted activations.
         """
         if not isinstance(y, np.ndarray):
             # invalid datatype
-            raise TypeError(f"'y' is not a numpy array: '{y}'")
+            raise TypeError(f"'y' is not a NumPy Array: '{y}'")
         if not isinstance(yhat, np.ndarray):
             # invalid datatype
-            raise TypeError(f"'yhat' is not a numpy array: '{yhat}'")
+            raise TypeError(f"'yhat' is not a NumPy Array: '{yhat}'")
 
         # return numpy array
         return self._d_loss(y, yhat)
 
 
 class Optimizers:
-    def __init__(self, algorithm: str, hyperparameters: dict = None):
-        """
+    # todo: add tensor support
+    def __init__(self, algorithm: str, hyperparameters: dict = None, **kwargs):
+        r"""
         'Optimizers' is a class containing various optimization algorithms.
         These optimization algorithms currently include 'adam' (Adam), 'sgd' (SGD), and 'rms' (RMSprop).
         The class structure promotes flexibility through the easy addition of other optimization algorithms.
@@ -643,7 +666,26 @@ class Optimizers:
         Arguments:
             algorithm: A string referencing the desired optimization algorithm.
             hyperparameters: A dictionary referencing the hyperparameters for the optimization algorithm.
-                (any hyperparameters not referenced will be automatically defined)
+            (any hyperparameters not referenced will be automatically defined)
+                'adam' (Adam):
+                    'gamma': The learning rate value.
+                    'lambda': The weight decay (L2 regularization) coefficient.
+                    'beta1': The value for the weight held by the new delta.
+                    'beta2': The value for the weight held by the new upsilon.
+                    'epsilon': The numerical stability value to prevent division by zero.
+                    'ams': A bool for the AMSGrad variant.
+                'sgd' (SGD):
+                    'gamma': The learning rate value.
+                    'lambda': The weight decay (L2 regularization) coefficient.
+                    'mu': The value for the weight held by the previous delta.
+                    'tau': the value for the dampening of the new delta.
+                    'nesterov': A bool for Nesterov momentum.
+                'rms' (RMSProp):
+                    'gamma': The learning rate value.
+                    'lambda': The weight decay (L2 regularization) coefficient.
+                    'beta': The value for the weight held by the new upsilon.
+                    'mu': The value for the weight held by the previous delta.
+                    'epsilon': The numerical stability value to prevent division by zero.
         """
         # optimization algorithms
         self.algorithms = [
@@ -654,7 +696,7 @@ class Optimizers:
 
         # internal optimization algorithm parameters
         self._algorithm = self._check_algorithm(algorithm)
-        self._hyps = self._get_hyperparams(hyperparameters)
+        self._hyps = self._get_hyperparams(hyperparameters, kwargs)
 
         # optimization algorithm
         self._optim = self._get_optim()
@@ -674,7 +716,7 @@ class Optimizers:
                 f"Choose from: '{[alg for alg in self.algorithms]}'"
             )
 
-    def _get_hyperparams(self, hyperparams):
+    def _get_hyperparams(self, hyperparams, kwargs):
         # defines optimization algorithm hyperparameters
         # default optimization algorithm hyperparameters
         default = {
@@ -754,6 +796,9 @@ class Optimizers:
 
         # instantiate hyperparameters dictionary
         hyps = default[self._algorithm]
+
+        # combine keyword arguments and hyperparameters
+        hyperparams.update(kwargs)
 
         if hyperparams and hyps and isinstance(hyps, dict):
             # set defined hyperparameters
@@ -904,23 +949,23 @@ class Optimizers:
         return memories[self._algorithm]
 
     def optimize(self, thetas: np.ndarray, nablas: np.ndarray) -> np.ndarray:
-        """
+        r"""
         'update' is a built-in function in the 'Optimizers' class.
         This function updates the parameters of a model based on the gradients.
 
         Arguments:
-            thetas: A numpy array of the parameters that will be optimized.
-            nablas: A numpy array of the gradients used to optimize the parameters.
+            thetas: A NumPy Array of the parameters that will be optimized.
+            nablas: A NumPy Array of the gradients used to optimize the parameters.
 
         Returns:
-            A numpy array of updated parameters.
+            A NumPy Array of updated parameters.
         """
         if not isinstance(thetas, np.ndarray):
             # invalid datatype
-            raise TypeError(f"'thetas' is not a numpy array: '{thetas}'")
+            raise TypeError(f"'thetas' is not a NumPy Array: '{thetas}'")
         if not isinstance(nablas, np.ndarray):
             # invalid datatype
-            raise TypeError(f"'nablas' is not a numpy array: '{nablas}'")
+            raise TypeError(f"'nablas' is not a NumPy Array: '{nablas}'")
 
         # return updated thetas
         return self._optim(thetas, nablas)

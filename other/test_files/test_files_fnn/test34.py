@@ -1,7 +1,7 @@
 import numpy as np
 
-from gardenpy.utils.objects import Tensor
-from gardenpy.utils.operators import nabla2
+from gardenpy import Tensor
+from gardenpy import nabla
 
 t1 = Tensor(np.random.randn(3, 3))
 t2 = Tensor(np.random.randn(3, 3))
@@ -33,17 +33,6 @@ print("c2 = c1 - t3")
 print("c3 = c2 * t4")
 print()
 
-print("correct chain:")
-c = [id(t1), id(c1), id(c2), id(c3)]
-print(c)
-print()
-
-print("calculated chain:")
-track = nabla2(c3, t1)
-p = [id(itm) for itm in track]
-print(p)
-print()
-
-print('is correct:')
-print(p == c)
-print()
+print("calculated gradient:")
+grad = nabla(c3, t1)
+print(repr(grad))

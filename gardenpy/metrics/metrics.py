@@ -1,5 +1,10 @@
-"""
-result calculation functions
+r"""
+'metrics' includes calculations for data evaluation for GardenPy.
+
+'metrics' includes:
+    'cm': A confusion matrix generator.
+
+Refer to 'todo' for in-depth documentation on these metrics.
 """
 
 import numpy as np

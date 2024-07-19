@@ -8,12 +8,21 @@
 # import random
 
 import os
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 
 
-class MNISTFNNDataLoader:
-    def __init__(self, root, values_path, labels_path, batch_size=5, save_to_memory=False, shuffle=False):
+class DataLoaderCSV:
+    def __init__(self, root, values, labels, **kwargs):
+        self._root = root
+        self._val_pth = values
+        self._lab_pth = labels
+        self._idx = 0
+
+
+class DataLoaderCSVOld:
+    def __init__(self, root, values_folder, labels_folder, batch_size=5, save_to_memory=False, shuffle=False):
         self._root = root
         self._labels_dir = os.path.join(root, labels_path)
         self._values_dir = os.path.join(root, values_path)

@@ -1,4 +1,4 @@
-"""
+r"""
 'helper_functions' includes minor utility functions for GardenPy.
 
 'helper_functions' includes:
@@ -7,12 +7,12 @@
     'convert_time': Converts time to hours:minutes:seconds.
     'print_credits': Print credits for GardenPy.
 
-refer to 'todo' for in-depth documentation on these functions.
+Refer to 'todo' for in-depth documentation on these functions.
 """
 
 
 def ansi_formats() -> dict:
-    """
+    r"""
         'ansi_formats' is a function that returns a dictionary of common ansi formats.
 
         Arguments:
@@ -54,7 +54,7 @@ def ansi_formats() -> dict:
 
 
 def progress(idx: int, max_idx: int, desc=None, b_len: int = 50) -> None:
-    """
+    r"""
     'progress' is a function that prints a progress bar.
 
     Arguments:
@@ -91,7 +91,7 @@ def progress(idx: int, max_idx: int, desc=None, b_len: int = 50) -> None:
 
 
 def convert_time(seconds: float, number_colors: str = None, separators_color: str = None) -> str:
-    """
+    r"""
     'convert_time' is a function that converts seconds to hours:minutes:seconds.
 
     Arguments:
@@ -121,7 +121,7 @@ def convert_time(seconds: float, number_colors: str = None, separators_color: st
 
 
 def print_credits() -> None:
-    """
+    r"""
     'print_credits' is a function that prints the credits for GardenPy.
 
     Arguments:

@@ -1,7 +1,7 @@
 import numpy as np
 
 from gardenpy.utils.objects import Tensor
-from gardenpy.utils.operations import nabla, chain
+from gardenpy.utils.operators import nabla, chain
 
 t1 = Tensor(np.random.randn(3, 3))
 t2 = Tensor(np.random.randn(3, 3))
