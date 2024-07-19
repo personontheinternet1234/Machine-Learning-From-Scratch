@@ -1,5 +1,5 @@
-"""
-Data processing for the feedforward neural network for checkered and non-checkered classification
+r"""
+Data processing for the DNN application on checkered or non-checkered pixels.
 """
 
 import os

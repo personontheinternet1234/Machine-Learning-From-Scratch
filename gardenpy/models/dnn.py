@@ -123,16 +123,16 @@ class DNN:
         self._loss = self._get_loss(loss)
         self._optimizer = self._get_optimizer(optimizer)
 
-    def forward(self, x):
+    def forward(self, x: np.ndarray):
         ...
 
-    def predict(self, x):
+    def predict(self, x: np.ndarray):
         return np.argmax(self.forward(x)[-1])
 
-    def validation(self, valid_x, valid_y, parameters=None):
+    def validation(self, valid_x: np.ndarray, valid_y: np.ndarray, parameters: (dict, None) = None):
         warnings.warn(f"Not supported yet.")
 
-    def fit(self, x, y, parameters=None):
+    def fit(self, x: np.ndarray, y: np.ndarray, parameters=None):
         if not isinstance((x, y), np.ndarray):
             raise TypeError('numpy')
         self.x = x

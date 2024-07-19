@@ -1,3 +1,11 @@
+r"""
+Dense Neural Network training on checkered or non-checkered pixels.
+"""
+
+from gardenpy import DNN
+
+model = DNN(status_bars=True)
+
 # todo: write a code using the fnn from gardenpy to train on the checkered and non-checkered data
 
 # the trained model was trained with the incorrect math, so it might not work well

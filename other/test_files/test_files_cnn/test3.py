@@ -63,7 +63,7 @@ lr = 0.001
 
 """ image processed_data """
 
-# load processed_data from fnn_mnist
+# load processed_data from dnn_mnist
 (X_temp, Y_temp), (X_test, Y_test) = keras.datasets.mnist.load_data()
 X = np.append(X_temp, X_test, axis=0)
 Y_temp_2 = np.append(Y_temp, Y_test, axis=0)

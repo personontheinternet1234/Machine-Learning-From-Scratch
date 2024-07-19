@@ -1,5 +1,5 @@
-"""
-Animated display of MNIST hand-drawn numbers
+r"""
+Animated display of MNIST's hand-drawn numbers.
 """
 
 # todo

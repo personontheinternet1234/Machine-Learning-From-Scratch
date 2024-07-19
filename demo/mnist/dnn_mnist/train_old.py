@@ -1,3 +1,5 @@
+# todo: deprecate
+
 """
 Feedforward Neural Network training for MNIST
 """
