@@ -19,7 +19,7 @@ from PIL import Image
 
 
 # this is kind of awful, so eventually we should fix this
-number_file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'temp')
+number_file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'temporary')
 params_file_path = os.path.join(os.path.dirname(__file__), 'fnn_mnist', 'model')
 
 

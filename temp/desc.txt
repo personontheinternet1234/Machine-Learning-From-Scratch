@@ -1,1 +1,0 @@
-this directory is for temporary files needed for running/training models that will be deprecated or removed later

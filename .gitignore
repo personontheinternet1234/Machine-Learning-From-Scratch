@@ -1,7 +1,7 @@
-temp/user_number.jpeg
-data/*/data/*
-!data/*/data/
-demo/*/*/data/processed_data/*
-!demo/*/*/data/processed_data/
 .idea
 *.pyc
+data/*/data/*
+!data/*/data
+demo/*/*/data/processed_data/*
+!demo/*/*/data/processed_data
+temporary/user_number.jpeg
