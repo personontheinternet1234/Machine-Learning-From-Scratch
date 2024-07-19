@@ -1,7 +1,7 @@
 .idea
 *.pyc
-data/*/data/*
-!data/*/data
+demo/data/*/data/*
+!demo/data/*/data
 demo/*/*/data/processed_data/*
 !demo/*/*/data/processed_data
-temporary/user_number.jpeg
+other/temporary/user_number.jpeg
