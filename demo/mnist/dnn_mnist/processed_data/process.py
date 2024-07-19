@@ -20,7 +20,7 @@ color = f'{Fore.GREEN}{{l_bar}}{{bar}}{{r_bar}}{Style.RESET_ALL}'
 
 # file locations
 save_root = os.path.join(
-    os.path.dirname(__file__), 'processed_data'
+    os.path.dirname(__file__), ''
 )
 data_root = os.path.join(
     os.path.dirname(

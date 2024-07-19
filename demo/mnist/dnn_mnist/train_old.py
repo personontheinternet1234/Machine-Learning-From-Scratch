@@ -18,7 +18,7 @@ from gardenpy.models.fnn_old import (
     FNN
 )
 
-import data.process as p
+import demo.mnist.dnn_mnist.processed_data.process as p
 
 # locations
 root = os.path.join(os.path.dirname(__file__))

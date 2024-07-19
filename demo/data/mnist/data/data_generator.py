@@ -9,7 +9,7 @@ from torchvision import datasets
 from torchvision.transforms import ToTensor
 
 # set root and required files
-root = os.path.join(os.path.dirname(__file__), 'data')
+root = os.path.join(os.path.dirname(__file__), '')
 required_files = [
     't10k-images-idx3-ubyte',
     't10k-labels-idx1-ubyte',

@@ -8,7 +8,7 @@ import shutil
 import pandas as pd
 
 # file paths
-root = os.path.join(os.path.dirname(__file__), 'data')
+root = os.path.join(os.path.dirname(__file__), '')
 
 # clear root
 shutil.rmtree(root)
