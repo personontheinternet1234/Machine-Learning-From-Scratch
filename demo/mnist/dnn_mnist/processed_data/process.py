@@ -19,9 +19,7 @@ from torchvision import datasets
 color = f'{Fore.GREEN}{{l_bar}}{{bar}}{{r_bar}}{Style.RESET_ALL}'
 
 # file locations
-save_root = os.path.join(
-    os.path.dirname(__file__), ''
-)
+save_root = os.path.dirname(__file__)
 data_root = os.path.join(
     os.path.dirname(
         os.path.dirname(
