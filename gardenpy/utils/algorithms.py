@@ -92,7 +92,10 @@ class Initializers:
         prms = default[self._algorithm]
 
         # combine keyword arguments and parameters
-        params.update(kwargs)
+        if params and kwargs:
+            params.update(kwargs)
+        elif kwargs:
+            params = kwargs
 
         if params and prms and isinstance(params, dict):
             # set defined parameter
@@ -289,7 +292,10 @@ class Activators:
         prms = default[self._algorithm]
 
         # combine keyword arguments and parameters
-        params.update(kwargs)
+        if params and kwargs:
+            params.update(kwargs)
+        elif kwargs:
+            params = kwargs
 
         if params and prms and isinstance(params, dict):
             # set defined parameter
@@ -522,7 +528,10 @@ class Losses:
         prms = default[self._algorithm]
 
         # combine keyword arguments and parameters
-        params.update(kwargs)
+        if params and kwargs:
+            params.update(kwargs)
+        elif kwargs:
+            params = kwargs
 
         if params and prms and isinstance(params, dict):
             # set defined parameter
@@ -798,7 +807,10 @@ class Optimizers:
         hyps = default[self._algorithm]
 
         # combine keyword arguments and hyperparameters
-        hyperparams.update(kwargs)
+        if hyperparams and kwargs:
+            hyperparams.update(kwargs)
+        elif kwargs:
+            hyperparams = kwargs
 
         if hyperparams and hyps and isinstance(hyps, dict):
             # set defined hyperparameters
