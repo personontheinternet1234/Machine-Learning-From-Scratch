@@ -1,4 +1,4 @@
-# todo: this will be deprecated soon
+# todo: deprecate
 
 """
 Feedforward neural network from scratch

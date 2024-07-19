@@ -177,9 +177,9 @@ trim_value = 7000
 #     for line in f:
 #         Y.append(ast.literal_eval(line))
 
-""" fnn_mnist """
+""" dnn_mnist """
 
-# load processed_data from fnn_mnist
+# load processed_data from dnn_mnist
 (train_values, train_labels), (test_values, test_labels) = keras.datasets.mnist.load_data()
 # combine training and testing labels
 import_data_values = np.append(train_values, test_values, axis=0)
@@ -187,7 +187,7 @@ import_data_labels = np.append(train_labels, test_labels, axis=0)
 data_values = []
 data_labels = []
 
-# reformat processed_data from fnn_mnist
+# reformat processed_data from dnn_mnist
 for i in range(len(train_values)):
     data_values.append(np.array([np.divide(import_data_values[i].flatten().tolist(), 255)]))
     node_values = np.zeros(layer_sizes[-1])
@@ -195,7 +195,7 @@ for i in range(len(train_values)):
     node_values = np.array([node_values])
     data_labels.append(node_values)
 
-""" fnn_mnist end """
+""" dnn_mnist end """
 
 # trim dataset
 if trim:
