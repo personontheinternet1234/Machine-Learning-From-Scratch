@@ -26,9 +26,7 @@ data_root = os.path.join(
     os.path.dirname(
         os.path.dirname(
             os.path.dirname(
-                os.path.dirname(
-                    os.path.dirname(__file__)
-                )
+                os.path.dirname(__file__)
             )
         )
     ),
