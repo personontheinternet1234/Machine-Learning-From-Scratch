@@ -49,8 +49,15 @@ def nabla(gradient: Tensor, respect: Tensor) -> Tensor:
         if relation is None and isinstance(item, Tensor):
             # get downstream relations
             origins = item.tracker['org']
+            # print(target)
+            # print("-----")
+            # print(origins)
+            # print("----------")
             path.append(item)
             if target in origins:
+                # print(origins)
+                # print('----------')
+                # print(target)
                 # found gradient relation
                 path.append(target)
                 relation = path
@@ -117,6 +124,15 @@ def nabla(gradient: Tensor, respect: Tensor) -> Tensor:
             # subtraction subtrahend derivative
             return subtrahend * 0.0 - 1.0
 
+        def _d_activate(value, activator):
+            # activation function derivative
+            return activator.d_activate(value)
+
+        def _d_loss(yhat, relations):
+            loss = relations[0]
+            y = relations[1].to_array()
+            return loss.d_loss(yhat, y)
+
         # gradient calculation correspondences
         gradients = {
             'matmul_l': _d_matmul_l,
@@ -128,7 +144,9 @@ def nabla(gradient: Tensor, respect: Tensor) -> Tensor:
             'truediv_d': _d_truediv_d,
             'add': _d_add,
             'sub_m': _d_sub_m,
-            'sub_s': _d_sub_s
+            'sub_s': _d_sub_s,
+            'activate': _d_activate,
+            'loss': _d_loss
         }
 
         # get operation type
@@ -190,7 +208,12 @@ def chain(downstream: Tensor, upstream: Tensor) -> Tensor:
         # valid relation
         # chain-rule gradients
         # todo: check this math
-        result = Tensor(np.dot(upstream.to_array(), downstream.to_array()))
+        # if 'd_loss' not in downstream.tracker['opr']:
+        #     result = Tensor(np.dot(upstream.to_array(), downstream.to_array()))
+        # else:
+        #     result = Tensor(upstream.to_array() * downstream.to_array())
+        result = Tensor(np.dot(upstream.to_array().squeeze(), downstream.to_array().squeeze()))
+        # result = Tensor(np.dot(upstream.to_array(), downstream.to_array()))
         # set gradient internals
         result.type = 'grad'
         result.tracker['rlt'] = downstream.tracker['rlt'] + upstream.tracker['rlt'][1:]

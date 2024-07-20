@@ -212,7 +212,7 @@ class Tensor:
                 f"'value':\n{str(self.tensor)}\n"
                 f"'operations': {self.tracker['opr']}\n"
                 f"'path-ids': {[[f'{id(path)}' for path in pair] for pair in self.tracker['rlt']]}\n"
-                f"'origin': {[f'{id(origin)}' for origin in self.tracker['org']] if self.tracker['org'] != [None] else None}"
+                f"'origin': {[f'{id(origin)}' for origin in self.tracker['org']] if self.tracker['org'] != [None] else None}\n"
             )
         elif self.type == 'grad':
             # gradient
@@ -222,7 +222,7 @@ class Tensor:
                 f"'value':\n{str(self.tensor)}\n"
                 f"'operations': {self.tracker['opr']}\n"
                 f"'path-ids': {[id(path) for path in self.tracker['rlt']]}\n"
-                f"'origin': {id(self.tracker['org']) if self.tracker['org'] is not None else None}"
+                f"'origin': {id(self.tracker['org']) if self.tracker['org'] is not None else None}\n"
             )
         else:
             # invalid type

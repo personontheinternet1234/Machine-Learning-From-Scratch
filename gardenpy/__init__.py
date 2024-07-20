@@ -12,6 +12,10 @@ from .utils import (
     Tensor,
     nabla,
     chain,
+    Initializers,
+    Activators,
+    Losses,
+    Optimizers
 )
 
 from .models import (
@@ -25,6 +29,10 @@ __all__ = [
     'Tensor',
     'nabla',
     'chain',
+    'Initializers',
+    'Activators',
+    'Losses',
+    'Optimizers',
     'DNN',
     'DNNTorch',
     'CNN',

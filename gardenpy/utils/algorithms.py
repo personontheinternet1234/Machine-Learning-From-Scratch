@@ -102,6 +102,7 @@ class Initializers:
             for prm in params:
                 if prm not in prms:
                     # invalid parameter
+                    print()
                     warnings.warn(
                         f"\nInvalid parameter for '{self._algorithm}': '{prm}'\n"
                         f"Choose from: '{[prm for prm in prms]}'",
@@ -124,6 +125,7 @@ class Initializers:
                     prms[prm] = params[prm]
         elif params and isinstance(params, dict):
             # parameters not taken
+            print()
             warnings.warn(f"\n'{self._algorithm}' does not take parameters", UserWarning)
         elif params:
             # invalid data type
@@ -167,11 +169,11 @@ class Initializers:
     def initialize(self, rows: int, columns: int) -> Tensor:
         r"""
         'initialize' is a built-in function in the 'Initializers' class.
-        This function initializes a NumPy Array based on the rows and columns.
+        This function initializes a Tensor based on the rows and columns.
 
         Arguments:
-            rows: An integer of the rows in the NumPy Array.
-            columns: An integer of the columns in the NumPy Array.
+            rows: An integer of the rows in the Tensor.
+            columns: An integer of the columns in the Tensor.
 
         Returns:
             A Tensor of initialized values.
@@ -302,6 +304,7 @@ class Activators:
             for prm in params:
                 if prm not in prms:
                     # invalid parameter
+                    print()
                     warnings.warn(
                         f"\nInvalid parameter for '{self._algorithm}': '{prm}'\n"
                         f"Choose from: '{[prm for prm in prms]}'",
@@ -324,6 +327,7 @@ class Activators:
                     prms[prm] = params[prm]
         elif params and isinstance(params, dict):
             # parameters not taken
+            print()
             warnings.warn(f"\n'{self._algorithm}' does not take parameters", UserWarning)
         elif params:
             # invalid data type
@@ -424,28 +428,38 @@ class Activators:
         # return derivative of activation algorithm
         return d_act_funcs[self._algorithm]
 
-    def activate(self, x: np.ndarray) -> np.ndarray:
+    def activate(self, x: Tensor) -> Tensor:
         r"""
         'activate' is a built-in function in the 'Activators' class.
-        This function runs a NumPy Array through an activation algorithm.
+        This function runs a Tensor through an activation algorithm.
 
         Arguments:
-            x: A NumPy Array of input activations.
+            x: A Tensor of input activations.
 
         Returns:
-            An NumPy Array of activated inputs.
+            An Tensor of activated inputs.
         """
-        if not isinstance(x, np.ndarray):
+        if not isinstance(x, Tensor):
             # invalid datatype
-            raise TypeError(f"'x' is not a NumPy Array: '{x}'")
+            raise TypeError(f"'x' is not a Tensor: '{x}'")
 
-        # return numpy array
-        return self._activator(x)
+        # calculate result
+        result = Tensor(self._activator(x.to_array()))
+        # track operation
+        x.tracker['opr'].append('activate')
+        # track origin
+        result.tracker['org'] = [x, self]
+        # track relation
+        x.tracker['rlt'].append([self, result])
+
+        # return result
+        return result
 
     def d_activate(self, x: np.ndarray) -> np.ndarray:
         r"""
         'd_activate' is a built-in function in the 'Activators' class.
         This function runs a NumPy Array through the derivative of an activation algorithm.
+        It contains built-in compatibility with automatic differentiation for Tensors.
 
         Arguments:
             x: A NumPy Array of input activations.
@@ -538,6 +552,7 @@ class Losses:
             for prm in params:
                 if prm not in prms:
                     # invalid parameter
+                    print()
                     warnings.warn(
                         f"\nInvalid parameter for '{self._algorithm}': '{prm}'\n"
                         f"Choose from: '{[prm for prm in prms]}'",
@@ -560,6 +575,7 @@ class Losses:
                     prms[prm] = params[prm]
         elif params and isinstance(params, dict):
             # parameters not taken
+            print()
             warnings.warn(f"\n'{self._algorithm}' does not take parameters", UserWarning)
         elif params:
             # invalid data type
@@ -619,32 +635,45 @@ class Losses:
         # return derivative of loss algorithm
         return d_loss_funcs[self._algorithm]
 
-    def loss(self, y: np.ndarray, yhat: np.ndarray) -> np.float64:
+    def loss(self, y: (np.ndarray, Tensor), yhat: Tensor) -> Tensor:
         r"""
         'loss' is a built-in function in the 'Loss' class.
         This function runs a NumPy Array through a loss algorithm.
 
         Arguments:
-            y: A NumPy Array of predicted activations.
-            yhat: A NumPy Array of expected activations.
+            y: A NumPy Array of expected activations.
+            yhat: A Tensor of predicted activations.
 
         Returns:
-            A NumPy Float64 of the calculated loss.
+            A Tensor of the calculated loss.
         """
-        if not isinstance(y, np.ndarray):
+        if not isinstance(y, (np.ndarray, Tensor)):
             # invalid datatype
-            raise TypeError(f"'y' is not a NumPy Array: '{y}'")
-        if not isinstance(yhat, np.ndarray):
+            raise TypeError(f"'y' is not a NumPy Array or Tensor: '{y}'")
+        if not isinstance(yhat, Tensor):
             # invalid datatype
-            raise TypeError(f"'yhat' is not a NumPy Array: '{yhat}'")
+            raise TypeError(f"'yhat' is not a Tensor: '{yhat}'")
+        if isinstance(y, Tensor):
+            # convert to tensor to avoid unnecessary tracking
+            y = y.to_array()
 
-        # return loss
-        return self._loss(y, yhat)
+        # calculate result
+        result = Tensor([self._loss(y, yhat.to_array())])
+        # track operation
+        yhat.tracker['opr'].append('loss')
+        # track origin
+        result.tracker['org'] = [yhat, self]
+        # track relation
+        yhat.tracker['rlt'].append([[self, yhat], result])
+
+        # return result
+        return result
 
     def d_loss(self, y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
         r"""
         'd_loss' is a built-in function in the 'Loss' class.
         This function runs a NumPy Array through the derivative of a loss algorithm.
+        It contains built-in compatibility with automatic differentiation for Tensors.
 
         Arguments:
             y: A NumPy Array of predicted activations.
@@ -665,7 +694,6 @@ class Losses:
 
 
 class Optimizers:
-    # todo: add tensor support
     def __init__(self, algorithm: str, hyperparameters: dict = None, **kwargs):
         r"""
         'Optimizers' is a class containing various optimization algorithms.
@@ -817,6 +845,7 @@ class Optimizers:
             for hyp in hyperparams:
                 if hyp not in hyps:
                     # invalid hyperparameter
+                    print()
                     warnings.warn(
                         f"\nInvalid hyperparameter for '{self._algorithm}': '{hyp}'\n"
                         f"Choose from: '{[hyp for hyp in hyps]}'",
@@ -839,6 +868,7 @@ class Optimizers:
                     hyps[hyp] = hyperparams[hyp]
         elif hyperparams and isinstance(hyperparams, dict):
             # hyperparameters not taken
+            print()
             warnings.warn(f"\n'{self._algorithm}' does not take hyperparameters", UserWarning)
         elif hyperparams:
             # invalid data type
@@ -960,24 +990,24 @@ class Optimizers:
         # return memory dictionary
         return memories[self._algorithm]
 
-    def optimize(self, thetas: np.ndarray, nablas: np.ndarray) -> np.ndarray:
+    def optimize(self, thetas: Tensor, nablas: Tensor) -> Tensor:
         r"""
         'update' is a built-in function in the 'Optimizers' class.
         This function updates the parameters of a model based on the gradients.
 
         Arguments:
-            thetas: A NumPy Array of the parameters that will be optimized.
-            nablas: A NumPy Array of the gradients used to optimize the parameters.
+            thetas: A Tensor of the parameters that will be optimized.
+            nablas: A Tensor of the gradients used to optimize the parameters.
 
         Returns:
-            A NumPy Array of updated parameters.
+            A Tensor of updated parameters.
         """
-        if not isinstance(thetas, np.ndarray):
+        if not isinstance(thetas, Tensor):
             # invalid datatype
-            raise TypeError(f"'thetas' is not a NumPy Array: '{thetas}'")
-        if not isinstance(nablas, np.ndarray):
+            raise TypeError(f"'thetas' is not a Tensor: '{thetas}'")
+        if not isinstance(nablas, Tensor):
             # invalid datatype
-            raise TypeError(f"'nablas' is not a NumPy Array: '{nablas}'")
+            raise TypeError(f"'nablas' is not a Tensor: '{nablas}'")
 
         # return updated thetas
-        return self._optim(thetas, nablas)
+        return Tensor(self._optim(thetas.to_array(), nablas.to_array()))
