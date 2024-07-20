@@ -34,12 +34,14 @@ data_root = os.path.join(
 )
 
 
-def process_data(save=True, values_file=os.path.join(save_root, 'values.csv'), labels_file=os.path.join(save_root, 'labels.csv')):
+def process_data(save=True, cases_per_file = 10000, values_file=os.path.join(save_root, 'values'), labels_file=os.path.join(save_root, 'labels')):
     # load dataset
     train_dataset = datasets.MNIST(root=data_root, train=True, download=True)
     test_dataset = datasets.MNIST(root=data_root, train=False, download=True)
     raw_values = np.append(train_dataset.data.numpy(), test_dataset.data.numpy(), axis=0)
     raw_labels = np.append(train_dataset.targets.numpy(), test_dataset.targets.numpy(), axis=0)
+
+    file_count = 0
 
     # process data
     values = []
@@ -51,23 +53,23 @@ def process_data(save=True, values_file=os.path.join(save_root, 'values.csv'), l
         out = np.array(out)
         labels.append(out)
 
-    # create columns
-    value_columns = list(range(len(values[0])))
-    label_columns = list(range(len(labels[0])))
+        if (i + 1) % cases_per_file == 0 or (i + 1) == len(raw_values):
+            # create columns
+            value_columns = list(range(len(values[0])))
+            label_columns = list(range(len(labels[0])))
 
-    # make list pandas dataframe
-    values = pd.DataFrame(np.array(values), columns=value_columns)
-    labels = pd.DataFrame(np.array(labels), columns=label_columns)
+            # make list pandas dataframe
+            values = pd.DataFrame(np.array(values), columns=value_columns)
+            labels = pd.DataFrame(np.array(labels), columns=label_columns)
 
-    if save:
-        # save processed data
-        print('saving...')
-        values.to_csv(values_file, index=False)
-        labels.to_csv(labels_file, index=False)
-    # return processed data
-    # values, labels = dr(values), dr(labels)
-    # return values, labels
+            file_count += 1
 
+            if save:
+                # save processed data
+                values.to_csv(f'{values_file}{file_count}|{len(raw_values) // cases_per_file}.csv', index=False)
+                labels.to_csv(f'{labels_file}{file_count}|{len(raw_values) // cases_per_file}.csv', index=False)
+            values = []
+            labels = []
 
 if __name__ == '__main__':
     process_data()
