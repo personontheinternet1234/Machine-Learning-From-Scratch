@@ -144,7 +144,7 @@ def print_credits() -> None:
     print(f"  {credit_formats['bright_black']}<mmorales25@punahou.edu>{credit_formats['reset']}")
     print(f"    Isaac P Verbrugge", end='')
     print(f"  {credit_formats['white']}CO '25{credit_formats['reset']}", end='')
-    print(f"  {credit_formats['bright_black']}<iverbrugge25@punahou.edu>{credit_formats['reset']}")
+    print(f"  {credit_formats['bright_black']}<isaacverbrugge@gmail.com>{credit_formats['reset']}")
     print(f"    Derek Yee CO", end='')
     print(f"  {credit_formats['white']}CO '25{credit_formats['reset']}", end='')
     print(f"  {credit_formats['bright_black']}<dyee25@punahou.edu>{credit_formats['reset']}")
