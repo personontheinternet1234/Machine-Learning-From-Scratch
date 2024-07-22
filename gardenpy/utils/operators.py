@@ -41,6 +41,7 @@ def nabla(gradient: Tensor, respect: Tensor) -> Tensor:
     relation = None
 
     # find gradient relation
+    # todo: phase this out
     def _relate(item, target, path=None):
         nonlocal relation
         if path is None:
@@ -159,9 +160,9 @@ def nabla(gradient: Tensor, respect: Tensor) -> Tensor:
         grad = Tensor(gradients[operator](upstream.to_array(), other))
         # set local gradient internals
         grad.type = 'grad'
-        grad.tracker['opr'].append(f'd_{operator}')
+        grad.tracker['opr'].append(f'd_{operator}')  # todo: add absolute tracking with object equation tracking for custom function integration
         grad.tracker['rlt'] += [downstream, upstream]
-        grad.tracker['org'] = downstream
+        grad.tracker['org'] = downstream  # ???
         # return local gradient
         return grad
 
