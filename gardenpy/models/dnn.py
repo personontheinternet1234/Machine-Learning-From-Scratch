@@ -13,6 +13,13 @@ import warnings
 
 import numpy as np
 
+from ..utils.operators import (
+    nabla,
+    chain
+)
+
+from ..utils.objects import Tensor
+
 from ..utils.algorithms import (
     Initializers,
     Activators,

@@ -651,6 +651,7 @@ class Losses:
         Returns:
             A Tensor of the calculated loss.
         """
+        y_arr = y
         if not isinstance(yhat, Tensor):
             # invalid datatype
             raise TypeError(f"'yhat' is not a Tensor: '{yhat}'")
@@ -660,8 +661,6 @@ class Losses:
         if isinstance(y, Tensor):
             # convert to numpy array to avoid unnecessary tracking
             y_arr = y.to_array()
-        else:
-            y_arr = y
 
         # calculate result
         result = Tensor([self._loss(yhat.to_array(), y_arr)])
