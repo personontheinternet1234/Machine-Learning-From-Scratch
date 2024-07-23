@@ -1,4 +1,5 @@
 .idea
+.DS_Store
 *.pyc
 demo/data/*/data/*
 !demo/data/*/data/data_generator.py
