@@ -1,24 +1,24 @@
-import numpy as np
-
 from gardenpy import (
-    Tensor,
     nabla,
-    chain,
     Initializers,
-    Activators,
-    Losses
+    Activators
 )
 
-a1 = Tensor(np.random.randn(1, 5))
-y = np.random.randn(1, 5)
-g = Activators('softmax')
-j = Losses('centropy')
-a2 = g.activate(a1)
-a3 = j.loss(y, a2)
+init = Initializers(algorithm='xavier')
+act = Activators(algorithm='relu')
 
-da3a2 = nabla(a3, a2)
-da2a1 = nabla(a2, a1)
-print(da3a2)
-print(da2a1)
-print(chain(da3a2, da2a1))
-print(nabla(a3, a1))
+arr1 = init.initialize(1, 5)
+arr2 = act.activate(arr1)
+arr3 = act.activate(arr2)
+
+print(arr1)
+print(arr2)
+print(arr3)
+
+print('----------')
+d1 = nabla(arr2, arr1)
+d2 = nabla(arr3, arr2)
+d3 = nabla(arr3, arr1)
+print(d1)
+print(d2)
+print(d3)

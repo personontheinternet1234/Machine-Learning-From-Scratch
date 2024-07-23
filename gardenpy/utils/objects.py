@@ -38,7 +38,8 @@ class Tensor:
         # internals
         self.type = 'mat'
         self.tracker = {
-            'opr': [],
+            'opr': [],  # todo: see if necessary
+            'drv': [],
             'rlt': [],
             'org': [None]
         }
@@ -63,6 +64,7 @@ class Tensor:
             arr = other.to_array()
         # track operation
         self.tracker['opr'].append('matmul_l')
+        self.tracker['drv'].append(self._d_matmul_l)
         # perform operation
         result = Tensor(self.tensor @ arr)
         # track origin
@@ -72,10 +74,23 @@ class Tensor:
         if isinstance(other, Tensor):
             # track operation in secondary tensor
             other.tracker['opr'].append('matmul_r')
+            other.tracker['drv'].append(self._d_matmul_r)
             # track relation in secondary tensor
             other.tracker['rlt'].append([self, result])
         # return completed operation
         return result
+
+    @staticmethod
+    def _d_matmul_l(left_matrix, right_matrix):
+        # matrix multiplication left derivative
+        # todo: this is significantly wrong, redo
+        return right_matrix @ left_matrix.T
+
+    @staticmethod
+    def _d_matmul_r(right_matrix, left_matrix):
+        # matrix multiplication right derivative
+        # todo: this is significantly wrong, redo
+        return left_matrix.T @ right_matrix
 
     def __pow__(self, other):
         # hadamard power
@@ -85,6 +100,7 @@ class Tensor:
             arr = other.to_array()
         # track operation
         self.tracker['opr'].append('pow_b')
+        self.tracker['drv'].append(self._d_pow_b)
         # perform operation
         result = Tensor(self.tensor ** arr)
         # track origin
@@ -94,10 +110,21 @@ class Tensor:
         if isinstance(other, Tensor):
             # track operation in secondary tensor
             other.tracker['opr'].append('pow_e')
+            other.tracker['drv'].append(self._d_pow_e)
             # track relation in secondary tensor
             other.tracker['rlt'].append([self, result])
         # return completed operation
         return result
+
+    @staticmethod
+    def _d_pow_b(base, exponent):
+        # hadamard power base derivative
+        return exponent * (base ** (exponent - 1))
+
+    @staticmethod
+    def _d_pow_e(exponent, base):
+        # hadamard power exponent derivative
+        return np.log(base) * (base ** exponent)
 
     def __mul__(self, other):
         # hadamard multiplication
@@ -107,6 +134,7 @@ class Tensor:
             arr = other.to_array()
         # track operation
         self.tracker['opr'].append('mul')
+        self.tracker['drv'].append(self._d_mul)
         # perform operation
         result = Tensor(self.tensor * arr)
         # track origin
@@ -116,10 +144,16 @@ class Tensor:
         if isinstance(other, Tensor):
             # track operation in secondary tensor
             other.tracker['opr'].append('mul')
+            other.tracker['drv'].append(self._d_mul)
             # track relation in secondary tensor
             other.tracker['rlt'].append([self, result])
         # return completed operation
         return result
+
+    @staticmethod
+    def _d_mul(multiplicand, multiplier):
+        # hadamard multiplication derivative
+        return multiplier * (multiplicand * 0.0 + 1.0)
 
     def __truediv__(self, other):
         # hadamard division
@@ -129,6 +163,7 @@ class Tensor:
             arr = other.to_array()
         # track operation
         self.tracker['opr'].append('truediv_n')
+        self.tracker['drv'].append(self._d_truediv_n)
         # perform operation
         result = Tensor(self.tensor / arr)
         # track origin
@@ -138,10 +173,21 @@ class Tensor:
         if isinstance(other, Tensor):
             # track operation in secondary tensor
             other.tracker['opr'].append('truediv_d')
+            other.tracker['drv'].append(self._d_truediv_d)
             # track relation in secondary tensor
             other.tracker['rlt'].append([self, result])
         # return completed operation
         return result
+
+    @staticmethod
+    def _d_truediv_n(numerator, denominator):
+        # hadamard division numerator derivative
+        return denominator * (numerator * 0.0 + 1.0)
+
+    @staticmethod
+    def _d_truediv_d(denominator, numerator):
+        # hadamard division denominator derivative
+        return numerator ** -1 * (denominator * 0.0 + 1.0)
 
     def __add__(self, other):
         # addition
@@ -151,6 +197,7 @@ class Tensor:
             arr = other.to_array()
         # track operation
         self.tracker['opr'].append('add')
+        self.tracker['drv'].append(self._d_add)
         # perform operation
         result = Tensor(self.tensor + arr)
         # track origin
@@ -160,10 +207,16 @@ class Tensor:
         if isinstance(other, Tensor):
             # track operation in secondary tensor
             other.tracker['opr'].append('add')
+            other.tracker['drv'].append(self._d_add)
             # track relation in secondary tensor
             other.tracker['rlt'].append([self, result])
         # return completed operation
         return result
+
+    @staticmethod
+    def _d_add(addend, _=None):
+        # addition derivative
+        return addend * 0.0 + 1.0
 
     def __sub__(self, other):
         # subtraction
@@ -173,6 +226,7 @@ class Tensor:
             arr = other.to_array()
         # track operation
         self.tracker['opr'].append('sub_m')
+        self.tracker['drv'].append(self._d_sub_m)
         # perform operation
         result = Tensor(self.tensor - arr)
         # track origin
@@ -182,10 +236,21 @@ class Tensor:
         if isinstance(other, Tensor):
             # track operation in secondary tensor
             other.tracker['opr'].append('sub_s')
+            other.tracker['drv'].append(self._d_sub_s)
             # track relation in secondary tensor
             other.tracker['rlt'].append([self, result])
         # return completed operation
         return result
+
+    @staticmethod
+    def _d_sub_m(minuend, _=None):
+        # subtraction minuend subtrahend derivative
+        return minuend * 0.0 + 1.0
+
+    @staticmethod
+    def _d_sub_s(subtrahend, _=None):
+        # subtraction subtrahend derivative
+        return subtrahend * 0.0 - 1.0
 
     def to_array(self) -> np.ndarray:
         r"""
@@ -211,6 +276,7 @@ class Tensor:
                 f"'type': {str(self.type)}\n"
                 f"'value':\n{str(self.tensor)}\n"
                 f"'operations': {self.tracker['opr']}\n"
+                f"'operation derivatives': {self.tracker['drv']}\n"
                 f"'path-ids': {[[f'{id(path)}' for path in pair] for pair in self.tracker['rlt']]}\n"
                 f"'origin': {[f'{id(origin)}' for origin in self.tracker['org']] if self.tracker['org'] != [None] else None}\n"
             )
@@ -221,8 +287,9 @@ class Tensor:
                 f"'type': {str(self.type)}\n"
                 f"'value':\n{str(self.tensor)}\n"
                 f"'operations': {self.tracker['opr']}\n"
+                f"'operation derivatives': {self.tracker['drv']}\n"
                 f"'path-ids': {[id(path) for path in self.tracker['rlt']]}\n"
-                f"'origin': {id(self.tracker['org']) if self.tracker['org'] is not None else None}\n"
+                f"'origin': {id(self.tracker['org'])}\n"
             )
         else:
             # invalid type

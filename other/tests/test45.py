@@ -1,7 +1,5 @@
-import numpy as np
+from time import sleep
 
-arr = np.random.randn(5, 5)
-print(arr)
-
-arr1 = arr.squeeze()
-print(arr1)
+print("Hello World", end="", flush=True)
+sleep(3)
+print("Hello worl ")

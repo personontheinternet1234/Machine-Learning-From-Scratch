@@ -8,8 +8,6 @@ r"""
 Refer to 'todo' for in-depth documentation on these operators.
 """
 
-import numpy as np
-
 from .objects import Tensor
 
 
@@ -41,7 +39,6 @@ def nabla(gradient: Tensor, respect: Tensor) -> Tensor:
     relation = None
 
     # find gradient relation
-    # todo: phase this out
     def _relate(item, target, path=None):
         nonlocal relation
         if path is None:
@@ -50,15 +47,9 @@ def nabla(gradient: Tensor, respect: Tensor) -> Tensor:
         if relation is None and isinstance(item, Tensor):
             # get downstream relations
             origins = item.tracker['org']
-            # print(target)
-            # print("-----")
-            # print(origins)
-            # print("----------")
+            # print([org for org in origins])
             path.append(item)
             if target in origins:
-                # print(origins)
-                # print('----------')
-                # print(target)
                 # found gradient relation
                 path.append(target)
                 relation = path
@@ -82,87 +73,21 @@ def nabla(gradient: Tensor, respect: Tensor) -> Tensor:
         strm_result = [rlt[1] for rlt in upstream.tracker['rlt']]
         strm_other = [rlt[0] for rlt in upstream.tracker['rlt']]
 
-        # local gradient calculations
-        def _d_matmul_l(left_matrix, right_matrix):
-            # matrix multiplication left derivative
-            # todo: check this math
-            return right_matrix @ left_matrix.T
-
-        def _d_matmul_r(right_matrix, left_matrix):
-            # matrix multiplication right derivative
-            # todo: check this math
-            return left_matrix.T @ right_matrix
-
-        def _d_pow_b(base, exponent):
-            # hadamard power base derivative
-            return exponent * (base ** (exponent - 1))
-
-        def _d_pow_e(exponent, base):
-            # hadamard power exponent derivative
-            return np.log(base) * (base ** exponent)
-
-        def _d_mul(multiplicand, multiplier):
-            # hadamard multiplication derivative
-            return multiplier * (multiplicand * 0.0 + 1.0)
-
-        def _d_truediv_n(numerator, denominator):
-            # hadamard division numerator derivative
-            return denominator * (numerator * 0.0 + 1.0)
-
-        def _d_truediv_d(denominator, numerator):
-            # hadamard division denominator derivative
-            return numerator ** -1 * (denominator * 0.0 + 1.0)
-
-        def _d_add(addend, _):
-            # addition derivative
-            return addend * 0.0 + 1.0
-
-        def _d_sub_m(minuend, _):
-            # subtraction minuend subtrahend derivative
-            return minuend * 0.0 + 1.0
-
-        def _d_sub_s(subtrahend, _):
-            # subtraction subtrahend derivative
-            return subtrahend * 0.0 - 1.0
-
-        def _d_activate(value, activator):
-            # activation function derivative
-            return activator.d_activate(value)
-
-        def _d_loss(yhat, relations):
-            loss = relations[0]
-            y = relations[1].to_array()
-            return loss.d_loss(yhat, y)
-
-        # gradient calculation correspondences
-        gradients = {
-            'matmul_l': _d_matmul_l,
-            'matmul_r': _d_matmul_r,
-            'pow_b': _d_pow_b,
-            'pow_e': _d_pow_e,
-            'mul': _d_mul,
-            'truediv_n': _d_truediv_n,
-            'truediv_d': _d_truediv_d,
-            'add': _d_add,
-            'sub_m': _d_sub_m,
-            'sub_s': _d_sub_s,
-            'activate': _d_activate,
-            'loss': _d_loss
-        }
-
         # get operation type
         operator = upstream.tracker['opr'][strm_result.index(downstream)]
+        derivative = upstream.tracker['drv'][strm_result.index(downstream)]
         other = strm_other[strm_result.index(downstream)]
         if isinstance(other, Tensor):
             # numpy array conversion
             other = other.to_array()
         # calculate local gradient
-        grad = Tensor(gradients[operator](upstream.to_array(), other))
+        grad = Tensor(derivative(upstream.to_array(), other))
         # set local gradient internals
         grad.type = 'grad'
-        grad.tracker['opr'].append(f'd_{operator}')  # todo: add absolute tracking with object equation tracking for custom function integration
+        grad.tracker['opr'].append(f'd_{operator}')
+        grad.tracker['drv'].append(derivative)
         grad.tracker['rlt'] += [downstream, upstream]
-        grad.tracker['org'] = downstream  # ???
+        grad.tracker['org'] = downstream
         # return local gradient
         return grad
 
@@ -208,17 +133,14 @@ def chain(downstream: Tensor, upstream: Tensor) -> Tensor:
     if down_relation == up_relation:
         # valid relation
         # chain-rule gradients
-        # todo: check this math
-        # if 'd_loss' not in downstream.tracker['opr']:
-        #     result = Tensor(np.dot(upstream.to_array(), downstream.to_array()))
-        # else:
-        #     result = Tensor(upstream.to_array() * downstream.to_array())
-        result = Tensor(np.dot(upstream.to_array().squeeze(), downstream.to_array().squeeze()))
-        # result = Tensor(np.dot(upstream.to_array(), downstream.to_array()))
+        # todo: this is significantly wrong, redo
+        to_shape = downstream.to_array().shape
+        result = Tensor((upstream.to_array().squeeze() * downstream.to_array().squeeze()).reshape(to_shape))
         # set gradient internals
         result.type = 'grad'
         result.tracker['rlt'] = downstream.tracker['rlt'] + upstream.tracker['rlt'][1:]
         result.tracker['opr'] = downstream.tracker['opr'] + upstream.tracker['opr']
+        result.tracker['drv'] = downstream.tracker['drv'] + upstream.tracker['drv']
         result.tracker['org'] = downstream.tracker['org']
         # return final gradient
         return result

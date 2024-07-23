@@ -30,6 +30,7 @@ class Initializers:
             (any parameters not referenced will be automatically defined)
                 'xavier' (Xavier initialization):
                     'gain': The gain value.
+            kwargs: Key-word arguments that can be used instead of a dictionary for the parameters.
         """
         # initialization algorithms
         self.algorithms = [
@@ -73,19 +74,19 @@ class Initializers:
         dtypes = {
             'xavier': {
                 'gain': (float, int)
-            },
-            'gaussian': any,
-            'zeros': any,
-            'ones': any
+            }
         }
         # default initialization algorithm parameter value types
         vtypes = {
             'xavier': {
                 'gain': lambda x: 0.0 < x
-            },
-            'gaussian': lambda x: True,
-            'zeros': lambda x: True,
-            'ones': lambda x: True
+            }
+        }
+        # default optimization algorithm hyperparameter conversion types
+        ctypes = {
+            'xavier': {
+                'gain': lambda x: float(x)
+            }
         }
 
         # instantiate parameter dictionary
@@ -97,7 +98,7 @@ class Initializers:
         elif kwargs:
             params = kwargs
 
-        if params and prms and isinstance(params, dict):
+        if params and (prms is not None) and isinstance(params, dict):
             # set defined parameter
             for prm in params:
                 if prm not in prms:
@@ -122,7 +123,7 @@ class Initializers:
                     )
                 else:
                     # valid parameter
-                    prms[prm] = params[prm]
+                    prms[prm] = ctypes[prm](params[prm])
         elif params and isinstance(params, dict):
             # parameters not taken
             print()
@@ -141,7 +142,7 @@ class Initializers:
         # defines initialization algorithm
         def xavier(row, col):
             # Xavier/Glorot initialization
-            return np.random.randn(row, col) * self._params['gain'] * np.sqrt(2.0 / (row + col))
+            return np.random.randn(row, col) * self._params['gain'] * np.sqrt(2.0 / float(row + col))
 
         def gaussian(row, col):
             # Gaussian initialization
@@ -149,11 +150,11 @@ class Initializers:
 
         def zeros(row, col):
             # Zeros uniform initialization
-            return np.zeros((row, col))
+            return np.zeros((row, col), dtype=np.float64)
 
         def ones(row, col):
             # Ones uniform initialization
-            return np.ones((row, col))
+            return np.ones((row, col), dtype=np.float64)
 
         # initialization algorithm dictionary
         init_funcs = {
@@ -190,7 +191,6 @@ class Initializers:
 
 
 class Activators:
-    # todo: add tensor support
     def __init__(self, algorithm: str, parameters: dict = None, **kwargs):
         r"""
         'Activators' is a class containing various activation algorithms.
@@ -207,6 +207,7 @@ class Activators:
                     'beta': The Beta value.
                 'mish' (Mish):
                     'beta': The Beta value.
+            kwargs: Key-word arguments that can be used instead of a dictionary for the parameters.
         """
         # activation algorithms
         self.algorithms = [
@@ -259,13 +260,9 @@ class Activators:
         }
         # default activation algorithm parameter datatypes
         dtypes = {
-            'softmax': any,
-            'relu': any,
             'lrelu': {
                 'beta': (float, int)
             },
-            'sigmoid': any,
-            'tanh': any,
             'softplus': {
                 'beta': (float, int)
             },
@@ -275,18 +272,26 @@ class Activators:
         }
         # default activation algorithm parameter value types
         vtypes = {
-            'softmax': lambda x: True,
-            'relu': lambda x: True,
             'lrelu': {
                 'beta': lambda x: 0.0 < x
             },
-            'sigmoid': lambda x: True,
-            'tanh': lambda x: True,
             'softplus': {
                 'beta': lambda x: 0.0 <= x
             },
             'mish': {
                 'beta': lambda x: 0.0 <= x
+            }
+        }
+        # default optimization algorithm hyperparameter conversion types
+        ctypes = {
+            'lrelu': {
+                'beta': lambda x: float(x)
+            },
+            'softplus': {
+                'beta': lambda x: float(x)
+            },
+            'mish': {
+                'beta': lambda x: float(x)
             }
         }
 
@@ -299,7 +304,7 @@ class Activators:
         elif kwargs:
             params = kwargs
 
-        if params and prms and isinstance(params, dict):
+        if params and (prms is not None) and isinstance(params, dict):
             # set defined parameter
             for prm in params:
                 if prm not in prms:
@@ -324,7 +329,7 @@ class Activators:
                     )
                 else:
                     # valid parameter
-                    prms[prm] = params[prm]
+                    prms[prm] = ctypes[prm](params[prm])
         elif params and isinstance(params, dict):
             # parameters not taken
             print()
@@ -385,31 +390,31 @@ class Activators:
 
     def _get_d_activator(self):
         # defines derivative of activation algorithm
-        def d_softmax(x):
+        def d_softmax(x, _=None):
             # derivative of Softmax activation
             return (np.exp(x) * np.sum(np.exp(x)) - np.exp(2 * x)) / (np.sum(np.exp(x)) ** 2)
 
-        def d_relu(x):
+        def d_relu(x, _=None):
             # derivative of ReLU activation
             return np.where(x > 0.0, 1.0, 0.0)
 
-        def d_lrelu(x):
+        def d_lrelu(x, _=None):
             # derivative of Leaky ReLU activation
             return np.where(x > 0.0, 1.0, self._params['beta'])
 
-        def d_sigmoid(x):
+        def d_sigmoid(x, _=None):
             # derivative of Sigmoid activation
             return np.exp(-x) / ((1.0 + np.exp(-x)) ** 2.0)
 
-        def d_tanh(x):
+        def d_tanh(x, _=None):
             # derivative of Tanh activation
             return np.cosh(x) ** -2.0
 
-        def d_softplus(x):
+        def d_softplus(x, _=None):
             # derivative of Softplus activation
             return self._params['beta'] * np.exp(self._params['beta'] * x) / (self._params['beta'] + self._params['beta'] * np.exp(self._params['beta'] * x))
 
-        def d_mish(x):
+        def d_mish(x, _=None):
             # derivative of Mish activation
             # todo: check order of operations
             return (np.tanh(np.log(1.0 + np.exp(self._params['beta'] * x)) / self._params['beta'])) + (x * (np.cosh(np.log(1.0 + np.exp(self._params['beta'] * x)) / self._params['beta']) ** -2.0) * (self._params['beta'] * np.exp(self._params['beta'] * x) / (self._params['beta'] + self._params['beta'] * np.exp(self._params['beta'] * x))))
@@ -432,6 +437,7 @@ class Activators:
         r"""
         'activate' is a built-in function in the 'Activators' class.
         This function runs a Tensor through an activation algorithm.
+        It contains built-in compatibility with automatic differentiation for Tensors.
 
         Arguments:
             x: A Tensor of input activations.
@@ -447,10 +453,11 @@ class Activators:
         result = Tensor(self._activator(x.to_array()))
         # track operation
         x.tracker['opr'].append('activate')
+        x.tracker['drv'].append(self._d_activator)
         # track origin
-        result.tracker['org'] = [x, self]
+        result.tracker['org'] = [x, '_']
         # track relation
-        x.tracker['rlt'].append([self, result])
+        x.tracker['rlt'].append(['_', result])
 
         # return result
         return result
@@ -459,7 +466,7 @@ class Activators:
         r"""
         'd_activate' is a built-in function in the 'Activators' class.
         This function runs a NumPy Array through the derivative of an activation algorithm.
-        It contains built-in compatibility with automatic differentiation for Tensors.
+        This function exists for manual differentiation, use 'nabla' for Tensor support.
 
         Arguments:
             x: A NumPy Array of input activations.
@@ -476,7 +483,6 @@ class Activators:
 
 
 class Losses:
-    # todo: add tensor support
     def __init__(self, algorithm: str, parameters: dict = None, **kwargs):
         r"""
         'Losses' is a class containing various loss algorithms.
@@ -488,6 +494,7 @@ class Losses:
             parameters: A dictionary referencing the parameters for the loss algorithm.
             (any parameters not referenced will be automatically defined)
                 Currently, 'Losses' takes no arguments.
+            kwargs: Key-word arguments that can be used instead of a dictionary for the parameters.
         """
         # loss algorithms
         self.algorithms = [
@@ -524,18 +531,14 @@ class Losses:
             'ssr': None,
             'srsr': None
         }
-
         # default loss algorithm parameter datatypes
         dtypes = {
-            'centropy': any,
-            'ssr': any,
-            'srsr': any
         }
         # default loss algorithm parameter value types
         vtypes = {
-            'centropy': lambda x: True,
-            'ssr': lambda x: True,
-            'srsr': lambda x: True
+        }
+        # default optimization algorithm hyperparameter conversion types
+        ctypes = {
         }
 
         # instantiate parameter dictionary
@@ -547,7 +550,7 @@ class Losses:
         elif kwargs:
             params = kwargs
 
-        if params and prms and isinstance(params, dict):
+        if params and (prms is not None) and isinstance(params, dict):
             # set defined parameter
             for prm in params:
                 if prm not in prms:
@@ -572,7 +575,7 @@ class Losses:
                     )
                 else:
                     # valid parameter
-                    prms[prm] = params[prm]
+                    prms[prm] = ctypes[prm](params[prm])
         elif params and isinstance(params, dict):
             # parameters not taken
             print()
@@ -589,15 +592,15 @@ class Losses:
 
     def _get_loss(self):
         # defines loss algorithm
-        def ssr(y, yhat):
+        def ssr(yhat, y):
             # SSR loss
             return np.sum((y - yhat) ** 2.0)
 
-        def srsr(y, yhat):
+        def srsr(yhat, y):
             # SRSR loss
             return np.sum(((y - yhat) ** 2.0) ** 0.5)
 
-        def centropy(y, yhat):
+        def centropy(yhat, y):
             # Cross-Entropy loss
             return np.sum(y * np.log(yhat))
 
@@ -613,15 +616,15 @@ class Losses:
 
     def _get_d_loss(self):
         # defines derivative of loss algorithm
-        def d_ssr(y, yhat):
+        def d_ssr(yhat, y):
             # derivative of SSR loss
             return -2.0 * (y - yhat)
 
-        def d_srsr(y, yhat):
+        def d_srsr(yhat, y):
             # derivative of SRSR loss
             return -(y - yhat) ** 2
 
-        def d_centropy(y, yhat):
+        def d_centropy(yhat, y):
             # derivative of Cross-Entropy loss
             return np.log(yhat) + (y / yhat)
 
@@ -635,62 +638,66 @@ class Losses:
         # return derivative of loss algorithm
         return d_loss_funcs[self._algorithm]
 
-    def loss(self, y: (np.ndarray, Tensor), yhat: Tensor) -> Tensor:
+    def loss(self, yhat: Tensor, y: (np.ndarray, Tensor)) -> Tensor:
         r"""
         'loss' is a built-in function in the 'Loss' class.
         This function runs a NumPy Array through a loss algorithm.
+        It contains built-in compatibility with automatic differentiation for Tensors.
 
         Arguments:
-            y: A NumPy Array of expected activations.
             yhat: A Tensor of predicted activations.
+            y: A NumPy Array of expected activations.
 
         Returns:
             A Tensor of the calculated loss.
         """
-        if not isinstance(y, (np.ndarray, Tensor)):
-            # invalid datatype
-            raise TypeError(f"'y' is not a NumPy Array or Tensor: '{y}'")
         if not isinstance(yhat, Tensor):
             # invalid datatype
             raise TypeError(f"'yhat' is not a Tensor: '{yhat}'")
+        if not isinstance(y, (np.ndarray, Tensor)):
+            # invalid datatype
+            raise TypeError(f"'y' is not a NumPy Array or Tensor: '{y}'")
         if isinstance(y, Tensor):
-            # convert to tensor to avoid unnecessary tracking
-            y = y.to_array()
+            # convert to numpy array to avoid unnecessary tracking
+            y_arr = y.to_array()
+        else:
+            y_arr = y
 
         # calculate result
-        result = Tensor([self._loss(y, yhat.to_array())])
+        result = Tensor([self._loss(yhat.to_array(), y_arr)])
         # track operation
         yhat.tracker['opr'].append('loss')
+        yhat.tracker['drv'].append(self._d_loss)
         # track origin
-        result.tracker['org'] = [yhat, self]
+        result.tracker['org'] = [yhat, y]
         # track relation
-        yhat.tracker['rlt'].append([[self, yhat], result])
+        yhat.tracker['rlt'].append([y, result])
 
         # return result
         return result
 
-    def d_loss(self, y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
+    def d_loss(self, yhat: np.ndarray, y: np.ndarray) -> np.ndarray:
         r"""
         'd_loss' is a built-in function in the 'Loss' class.
         This function runs a NumPy Array through the derivative of a loss algorithm.
-        It contains built-in compatibility with automatic differentiation for Tensors.
+        This function exists for manual differentiation, use 'nabla' for Tensor support.
 
         Arguments:
-            y: A NumPy Array of predicted activations.
             yhat: A NumPy Array of expected activations.
+            y: A NumPy Array of predicted activations.
 
         Returns:
             A NumPy Array of the derivative of calculated loss with respect to the predicted activations.
         """
-        if not isinstance(y, np.ndarray):
-            # invalid datatype
-            raise TypeError(f"'y' is not a NumPy Array: '{y}'")
         if not isinstance(yhat, np.ndarray):
             # invalid datatype
             raise TypeError(f"'yhat' is not a NumPy Array: '{yhat}'")
+        if not isinstance(y, np.ndarray):
+            # invalid datatype
+            raise TypeError(f"'y' is not a NumPy Array: '{y}'")
 
         # return numpy array
-        return self._d_loss(y, yhat)
+        return self._d_loss(yhat, y)
 
 
 class Optimizers:
@@ -706,23 +713,24 @@ class Optimizers:
             (any hyperparameters not referenced will be automatically defined)
                 'adam' (Adam):
                     'gamma': The learning rate value.
-                    'lambda': The weight decay (L2 regularization) coefficient.
+                    'lambda_d': The weight decay (L2 regularization) coefficient.
                     'beta1': The value for the weight held by the new delta.
                     'beta2': The value for the weight held by the new upsilon.
                     'epsilon': The numerical stability value to prevent division by zero.
                     'ams': A bool for the AMSGrad variant.
                 'sgd' (SGD):
                     'gamma': The learning rate value.
-                    'lambda': The weight decay (L2 regularization) coefficient.
+                    'lambda_d': The weight decay (L2 regularization) coefficient.
                     'mu': The value for the weight held by the previous delta.
                     'tau': the value for the dampening of the new delta.
                     'nesterov': A bool for Nesterov momentum.
                 'rms' (RMSProp):
                     'gamma': The learning rate value.
-                    'lambda': The weight decay (L2 regularization) coefficient.
+                    'lambda_d': The weight decay (L2 regularization) coefficient.
                     'beta': The value for the weight held by the new upsilon.
                     'mu': The value for the weight held by the previous delta.
                     'epsilon': The numerical stability value to prevent division by zero.
+            kwargs: Key-word arguments that can be used instead of a dictionary for the hyperparameters.
         """
         # optimization algorithms
         self.algorithms = [
@@ -759,7 +767,7 @@ class Optimizers:
         default = {
             'adam': {
                 'gamma': 0.001,
-                'lambda': 0.0,
+                'lambda_d': 0.0,
                 'beta1': 0.9,
                 'beta2': 0.999,
                 'epsilon': 1e-8,
@@ -767,14 +775,14 @@ class Optimizers:
             },
             'sgd': {
                 'gamma': 0.001,
-                'lambda': 0.0,
+                'lambda_d': 0.0,
                 'mu': 0.0,
                 'tau': 0.0,
                 'nesterov': False
             },
             'rms': {
                 'gamma': 0.001,
-                'lambda': 0.0,
+                'lambda_d': 0.0,
                 'beta': 0.99,
                 'mu': 0.0,
                 'epsilon': 1e-8
@@ -784,7 +792,7 @@ class Optimizers:
         dtypes = {
             'adam': {
                 'gamma': (float, int),
-                'lambda': (float, int),
+                'lambda_d': (float, int),
                 'beta1': (float, int),
                 'beta2': (float, int),
                 'epsilon': (float, int),
@@ -792,42 +800,67 @@ class Optimizers:
             },
             'sgd': {
                 'gamma': (float, int),
-                'lambda': (float, int),
+                'lambda_d': (float, int),
                 'mu': (float, int),
                 'tau': (float, int),
                 'nesterov': bool
             },
             'rms': {
                 'gamma': (float, int),
-                'lambda': (float, int),
+                'lambda_d': (float, int),
                 'beta': (float, int),
                 'mu': (float, int),
-                'epsilon': float
+                'epsilon': (float, int)
             }
         }
         # default optimization algorithm hyperparameter value types
         vtypes = {
             'adam': {
                 'gamma': lambda x: True,
-                'lambda': lambda x: 0.0 <= x,
+                'lambda_d': lambda x: 0.0 <= x,
                 'beta1': lambda x: 0.0 < x,
                 'beta2': lambda x: 0.0 < x,
                 'epsilon': lambda x: 0.0 < x,
                 'ams': lambda x: True
             },
             'sgd': {
-                'gamma': None,
-                'lambda': lambda x: 0.0 <= x,
+                'gamma': lambda x: True,
+                'lambda_d': lambda x: 0.0 <= x,
                 'mu': lambda x: 0.0 <= x,
                 'tau': lambda x: 0.0 <= x,
                 'nesterov': lambda x: True
             },
             'rms': {
                 'gamma': lambda x: True,
-                'lambda': lambda x: 0.0 <= x,
+                'lambda_d': lambda x: 0.0 <= x,
                 'beta': lambda x: 0.0 < x,
                 'mu': lambda x: 0.0 < x,
                 'epsilon': lambda x: 0.0 < x
+            }
+        }
+        # default optimization algorithm hyperparameter conversion types
+        ctypes = {
+            'adam': {
+                'gamma': lambda x: float(x),
+                'lambda_d': lambda x: float(x),
+                'beta1': lambda x: float(x),
+                'beta2': lambda x: float(x),
+                'epsilon': lambda x: float(x),
+                'ams': lambda x: bool(x)
+            },
+            'sgd': {
+                'gamma': lambda x: float(x),
+                'lambda_d': lambda x: float(x),
+                'mu': lambda x: float(x),
+                'tau': lambda x: float(x),
+                'nesterov': lambda x: bool(x)
+            },
+            'rms': {
+                'gamma': lambda x: float(x),
+                'lambda_d': lambda x: float(x),
+                'beta': lambda x: float(x),
+                'mu': lambda x: float(x),
+                'epsilon': lambda x: float(x)
             }
         }
 
@@ -840,7 +873,7 @@ class Optimizers:
         elif kwargs:
             hyperparams = kwargs
 
-        if hyperparams and hyps and isinstance(hyps, dict):
+        if hyperparams and (hyps is not None) and isinstance(hyps, dict):
             # set defined hyperparameters
             for hyp in hyperparams:
                 if hyp not in hyps:
@@ -865,7 +898,7 @@ class Optimizers:
                     )
                 else:
                     # valid hyperparameter
-                    hyps[hyp] = hyperparams[hyp]
+                    hyps[hyp] = ctypes[hyp](hyperparams[hyp])
         elif hyperparams and isinstance(hyperparams, dict):
             # hyperparameters not taken
             print()
@@ -886,7 +919,7 @@ class Optimizers:
         def adam(thetas, nablas):
             # Adam optimization algorithm
             # weight decay
-            deltas = nablas + (self._hyps['lambda'] * thetas)
+            deltas = nablas + (self._hyps['lambda_d'] * thetas)
             if self._memory['deltas_p']:
                 # momentum
                 deltas = ((self._hyps['beta1'] * self._memory['deltas_p']) + ((1.0 - self._hyps['beta1']) * deltas)) / (1.0 - self._hyps['beta1'])
@@ -919,7 +952,7 @@ class Optimizers:
         def sgd(thetas, nablas):
             # SGD optimization algorithm
             # weight decay
-            deltas = nablas + (self._hyps['lambda'] * thetas)
+            deltas = nablas + (self._hyps['lambda_d'] * thetas)
             if self._hyps['mu'] and self._memory['deltas_p']:
                 # momentum
                 deltas = (self._hyps['mu'] * self._memory['deltas_p']) + ((1.0 - self._hyps['tau']) * deltas)
@@ -938,7 +971,7 @@ class Optimizers:
         def rms(thetas, nablas):
             # RMSprop optimization algorithm
             # weight decay
-            deltas = nablas + (self._hyps['lambda'] * thetas)
+            deltas = nablas + (self._hyps['lambda_d'] * thetas)
             if self._memory['upsilons_p']:
                 # square momentum
                 upsilons = (self._hyps['beta'] * self._memory['upsilons_p']) + ((1.0 - self._hyps['beta']) * (deltas ** 2.0))
