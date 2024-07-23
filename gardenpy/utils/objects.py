@@ -30,7 +30,6 @@ class Tensor:
                 f"Invalid datatype for 'obj': '{obj}'\n"
                 f"Choose from: '{dtypes}'"
             )
-
         if not isinstance(self.tensor, np.ndarray):
             # numpy array conversion
             self.tensor = np.array(self.tensor)
@@ -38,7 +37,7 @@ class Tensor:
         # internals
         self.type = 'mat'
         self.tracker = {
-            'opr': [],  # todo: see if necessary
+            'opr': [],
             'drv': [],
             'rlt': [],
             'org': [None]
