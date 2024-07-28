@@ -1,12 +1,136 @@
+import time
+import warnings
+
 from gardenpy import (
     nabla,
-    Initializers
+    chain,
+    Initializers,
+    Activators,
+    Losses,
+    Optimizers
 )
+from gardenpy.utils import (
+    ansi_formats,
+    progress,
+    convert_time
+)
+from gardenpy.utils.helper_functions import print_credits
 
-init = Initializers(algorithm='gaussian')
-arr1 = init.initialize(3, 5)
-arr2 = init.initialize(5, 4)
+##########
 
-arr3 = arr1 @ arr2
+max_iter = 100000
 
-print(nabla(arr3, arr2))
+##########
+
+ANSI = ansi_formats()
+
+W_init = Initializers(algorithm='xavier')
+B_init = Initializers(algorithm='zeros')
+P_init = Initializers(algorithm='ones')
+
+act1 = Activators(algorithm='lrelu')
+act2 = Activators(algorithm='lrelu')
+loss = Losses(algorithm='savr')
+optim = Optimizers(algorithm='adam', gamma=1e-2)
+
+##########
+
+X = P_init.initialize(1, 3)
+Y = P_init.initialize(1, 3)
+Y *= 0.1
+# for centropy
+# Y *= 0.0
+# Y[0][0] = 1.0
+
+W1 = W_init.initialize(3, 4)
+W2 = W_init.initialize(4, 3)
+
+B1 = B_init.initialize(1, 4)
+B2 = B_init.initialize(1, 3)
+
+g1 = act1.activate
+g2 = act2.activate
+j = loss.loss
+step = optim.optimize
+
+##########
+
+time_interval = 0.05
+bar_interval = 0.1
+
+Yhat = None
+ep = 0
+printed = False
+
+print()
+print_credits()
+print(f"\n{ANSI['bold']}Training{ANSI['reset']}")
+
+if time_interval > bar_interval:
+    raise ValueError(
+        f"Invalid values for 'time_interval' and 'bar_interval'\n"
+        f"({time_interval} > {bar_interval})"
+    )
+if bar_interval % time_interval != 0:
+    print()
+    warnings.warn(
+        f"\n'bar_interval' isn't divisible by 'time_interval'\n"
+        f"({bar_interval} % {time_interval} != 0)",
+        UserWarning
+    )
+time_interval = int(time_interval ** -1)
+bar_interval = int(bar_interval * time_interval)
+
+start = time.time()
+print(f"Epoch {ANSI['white']}{ep + 1}{ANSI['reset']}")
+
+##########
+
+for i in range(max_iter):
+    alpha1 = X @ W1 + B1
+    a2 = g1(alpha1)
+
+    alpha2 = a2 @ W2 + B2
+    Yhat = g2(alpha2)
+
+    L = j(Yhat, Y)
+
+    ##########
+
+    grad_alpha2 = nabla(L, alpha2)
+    grad_B2 = chain(grad_alpha2, nabla(alpha2, B2))
+    # grad_W2 = chain(grad_alpha2, nabla(alpha2, W2))
+
+    # grad_alpha1 = chain(grad_alpha2, nabla(alpha2, alpha1))
+    # grad_B1 = chain(grad_alpha1, nabla(alpha1, B1))
+    # grad_W1 = chain(grad_alpha1, nabla(alpha1, W1))
+
+    ##########
+
+    # W2 = step(W2, grad_W2)
+    B2 = step(B2, grad_B2)
+    # W1 = step(W1, grad_W1)
+    # B1 = step(B1, grad_B1)
+
+    ##########
+
+    elapsed = time.time() - start
+    if round(time_interval * elapsed) % bar_interval != 0 and (i + 1 != max_iter):
+        printed = False
+    elif (not printed) or (i + 1 == max_iter):
+        desc = (
+                f"{L[0]:.3}{ANSI['white']}loss{ANSI['reset']}  "
+                f"{str(i + 1).zfill(len(str(max_iter)))}{ANSI['white']}it{ANSI['reset']}/{max_iter}{ANSI['white']}it{ANSI['reset']}  "
+                f"{(100 * (i + 1) / max_iter):05.1f}{ANSI['white']}%{ANSI['reset']}  "
+                f"{convert_time(elapsed)}{ANSI['white']}et{ANSI['reset']}  "
+                f"{convert_time(elapsed * max_iter / (i + 1) - elapsed)}{ANSI['white']}eta{ANSI['reset']}  "
+                f"{round((i + 1) / elapsed, 1)}{ANSI['white']}it/s{ANSI['reset']}"
+            )
+        progress(i, max_iter, desc=desc)
+        printed = True
+
+##########
+
+print(f"\n\n{ANSI['bold']}Results{ANSI['reset']}")
+print(f"Predicted    {ANSI['white']}{ANSI['italic']}{Yhat}{ANSI['reset']}")
+print(f"Expected     {ANSI['white']}{ANSI['italic']}{Y}{ANSI['reset']}")

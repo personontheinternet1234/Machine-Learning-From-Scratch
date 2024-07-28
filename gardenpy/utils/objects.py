@@ -7,11 +7,13 @@ r"""
 Refer to 'todo' for in-depth documentation on these objects.
 """
 
+from typing import Union
+
 import numpy as np
 
 
 class Tensor:
-    def __init__(self, obj: (np.ndarray, list)):
+    def __init__(self, obj: Union[np.ndarray, list]):
         r"""
         'Tensor' is a NumPy Array that supports automatic differentiation and tracks its operations.
         This object currently includes the operations '@' (Matrix Multiplication), '**' (Hadamard Exponentation), '*' (Hadamard Multiplication), '/' (Hadamard Division), '+' (Addition), and '-' (Subtraction).

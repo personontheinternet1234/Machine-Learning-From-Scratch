@@ -10,6 +10,7 @@ r"""
 Refer to 'todo' for in-depth documentation on these algorithms.
 """
 
+from typing import Union
 import warnings
 
 import numpy as np
@@ -123,7 +124,7 @@ class Initializers:
                     )
                 else:
                     # valid parameter
-                    prms[prm] = ctypes[prm](params[prm])
+                    prms[prm] = ctypes[self._algorithm][prm](params[prm])
         elif params and isinstance(params, dict):
             # parameters not taken
             print()
@@ -167,7 +168,7 @@ class Initializers:
         # return initialization algorithm
         return init_funcs[self._algorithm]
 
-    def initialize(self, rows: int, columns: int) -> Tensor:
+    def initialize(self, rows: int, columns: int, tens=True) -> Union[Tensor, np.ndarray]:
         r"""
         'initialize' is a built-in function in the 'Initializers' class.
         This function initializes a Tensor based on the rows and columns.
@@ -175,6 +176,7 @@ class Initializers:
         Arguments:
             rows: An integer of the rows in the Tensor.
             columns: An integer of the columns in the Tensor.
+            tens: Bool to return a tensor or NumPy Array.
 
         Returns:
             A Tensor of initialized values.
@@ -187,7 +189,10 @@ class Initializers:
             raise TypeError(f"'columns' is not an integer: '{columns}'")
 
         # return initialized tensor
-        return Tensor(self._initializer(rows, columns))
+        if tens:
+            return Tensor(self._initializer(rows, columns))
+        else:
+            return self._initializer(rows, columns)
 
 
 class Activators:
@@ -329,7 +334,7 @@ class Activators:
                     )
                 else:
                     # valid parameter
-                    prms[prm] = ctypes[prm](params[prm])
+                    prms[prm] = ctypes[self._algorithm][prm](params[prm])
         elif params and isinstance(params, dict):
             # parameters not taken
             print()
@@ -433,34 +438,38 @@ class Activators:
         # return derivative of activation algorithm
         return d_act_funcs[self._algorithm]
 
-    def activate(self, x: Tensor) -> Tensor:
+    def activate(self, x: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
         r"""
         'activate' is a built-in function in the 'Activators' class.
         This function runs a Tensor through an activation algorithm.
-        It contains built-in compatibility with automatic differentiation for Tensors.
+        This function contains built-in compatibility with automatic differentiation for Tensors.
 
         Arguments:
-            x: A Tensor of input activations.
+            x: A Tensor or NumPy Array of input activations.
 
         Returns:
-            An Tensor of activated inputs.
+            An Tensor or NumPy Array of activated inputs.
         """
-        if not isinstance(x, Tensor):
+        if not isinstance(x, (Tensor, np.ndarray)):
             # invalid datatype
-            raise TypeError(f"'x' is not a Tensor: '{x}'")
+            raise TypeError(f"'x' is not a Tensor or NumPy Array: '{x}'")
 
-        # calculate result
-        result = Tensor(self._activator(x.to_array()))
-        # track operation
-        x.tracker['opr'].append('activate')
-        x.tracker['drv'].append(self._d_activator)
-        # track origin
-        result.tracker['org'] = [x, '_']
-        # track relation
-        x.tracker['rlt'].append(['_', result])
+        if isinstance(x, Tensor):
+            # calculate result
+            result = Tensor(self._activator(x.to_array()))
+            # track operation
+            x.tracker['opr'].append('activate')
+            x.tracker['drv'].append(self._d_activator)
+            # track origin
+            result.tracker['org'] = [x, '_']
+            # track relation
+            x.tracker['rlt'].append(['_', result])
 
-        # return result
-        return result
+            # return result
+            return result
+        else:
+            # return result
+            return self._activator(x)
 
     def d_activate(self, x: np.ndarray) -> np.ndarray:
         r"""
@@ -486,7 +495,7 @@ class Losses:
     def __init__(self, algorithm: str, parameters: dict = None, **kwargs):
         r"""
         'Losses' is a class containing various loss algorithms.
-        These activation algorithms currently include 'ssr' (SSR), 'srsr' (SRSR), and 'centropy' (Cross-Entropy).
+        These activation algorithms currently include 'ssr' (Sum of the Squared Residuals), 'savr' (Sum of the Absolute Valued Residuals), and 'centropy' (Cross-Entropy).
         The class structure promotes flexibility through the easy addition of other loss algorithms.
 
         Arguments:
@@ -500,7 +509,7 @@ class Losses:
         self.algorithms = [
             'centropy',
             'ssr',
-            'srsr'
+            'savr'
         ]
 
         # internal loss algorithm parameters
@@ -529,7 +538,7 @@ class Losses:
         default = {
             'centropy': None,
             'ssr': None,
-            'srsr': None
+            'savr': None
         }
         # default loss algorithm parameter datatypes
         dtypes = {
@@ -575,7 +584,7 @@ class Losses:
                     )
                 else:
                     # valid parameter
-                    prms[prm] = ctypes[prm](params[prm])
+                    prms[prm] = ctypes[self._algorithm][prm](params[prm])
         elif params and isinstance(params, dict):
             # parameters not taken
             print()
@@ -592,23 +601,23 @@ class Losses:
 
     def _get_loss(self):
         # defines loss algorithm
-        def ssr(yhat, y):
-            # SSR loss
-            return np.sum((y - yhat) ** 2.0)
-
-        def srsr(yhat, y):
-            # SRSR loss
-            return np.sum(((y - yhat) ** 2.0) ** 0.5)
-
         def centropy(yhat, y):
             # Cross-Entropy loss
-            return np.sum(y * np.log(yhat))
+            return -np.sum(y * np.log(yhat))
+
+        def ssr(yhat, y):
+            # Sum of the Squared Residuals loss
+            return np.sum((y - yhat) ** 2.0)
+
+        def savr(yhat, y):
+            # Sum of the Absolute Valued Residuals loss
+            return np.sum(np.abs(y - yhat))
 
         # loss algorithm dictionary
         loss_funcs = {
             'centropy': centropy,
             'ssr': ssr,
-            'srsr': srsr
+            'savr': savr
         }
 
         # return loss algorithm
@@ -616,70 +625,74 @@ class Losses:
 
     def _get_d_loss(self):
         # defines derivative of loss algorithm
-        def d_ssr(yhat, y):
-            # derivative of SSR loss
-            return -2.0 * (y - yhat)
-
-        def d_srsr(yhat, y):
-            # derivative of SRSR loss
-            return -(y - yhat) ** 2
-
         def d_centropy(yhat, y):
             # derivative of Cross-Entropy loss
-            return np.log(yhat) + (y / yhat)
+            return -np.log(yhat) - (y / yhat)
+
+        def d_ssr(yhat, y):
+            # derivative of Sum of the Squared Residuals loss
+            return -2.0 * (y - yhat)
+
+        def d_savr(yhat, y):
+            # derivative of Sum of the Absolute Valued Residuals loss
+            return -np.sign(y - yhat)
 
         # derivative of loss algorithm dictionary
         d_loss_funcs = {
             'centropy': d_centropy,
             'ssr': d_ssr,
-            'srsr': d_srsr
+            'savr': d_savr
         }
 
         # return derivative of loss algorithm
         return d_loss_funcs[self._algorithm]
 
-    def loss(self, yhat: Tensor, y: (np.ndarray, Tensor)) -> Tensor:
+    def loss(self, yhat: Union[Tensor, np.ndarray], y: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
         r"""
         'loss' is a built-in function in the 'Loss' class.
         This function runs a NumPy Array through a loss algorithm.
-        It contains built-in compatibility with automatic differentiation for Tensors.
+        This function contains built-in compatibility with automatic differentiation for Tensors.
 
         Arguments:
-            yhat: A Tensor of predicted activations.
-            y: A NumPy Array of expected activations.
+            yhat: A Tensor or NumPy Array of predicted activations.
+            y: A Tensor or NumPy Array of expected activations.
 
         Returns:
-            A Tensor of the calculated loss.
+            A Tensor or NumPy Array of the calculated loss.
         """
+        if not isinstance(yhat, (Tensor, np.ndarray)):
+            # invalid datatype
+            raise TypeError(f"'yhat' is not a Tensor or NumPy Array: '{yhat}'")
+        if not isinstance(y, (Tensor, np.ndarray)):
+            # invalid datatype
+            raise TypeError(f"'y' is not a Tensor or NumPy Array: '{y}'")
         y_arr = y
-        if not isinstance(yhat, Tensor):
-            # invalid datatype
-            raise TypeError(f"'yhat' is not a Tensor: '{yhat}'")
-        if not isinstance(y, (np.ndarray, Tensor)):
-            # invalid datatype
-            raise TypeError(f"'y' is not a NumPy Array or Tensor: '{y}'")
         if isinstance(y, Tensor):
             # convert to numpy array to avoid unnecessary tracking
             y_arr = y.to_array()
 
-        # calculate result
-        result = Tensor([self._loss(yhat.to_array(), y_arr)])
-        # track operation
-        yhat.tracker['opr'].append('loss')
-        yhat.tracker['drv'].append(self._d_loss)
-        # track origin
-        result.tracker['org'] = [yhat, y]
-        # track relation
-        yhat.tracker['rlt'].append([y, result])
+        if isinstance(yhat, Tensor):
+            # calculate result
+            result = Tensor([self._loss(yhat.to_array(), y_arr)])
+            # track operation
+            yhat.tracker['opr'].append('loss')
+            yhat.tracker['drv'].append(self._d_loss)
+            # track origin
+            result.tracker['org'] = [yhat, y]
+            # track relation
+            yhat.tracker['rlt'].append([y, result])
 
-        # return result
-        return result
+            # return result
+            return result
+        else:
+            # return result
+            return self._loss(yhat, y_arr)
 
     def d_loss(self, yhat: np.ndarray, y: np.ndarray) -> np.ndarray:
         r"""
         'd_loss' is a built-in function in the 'Loss' class.
         This function runs a NumPy Array through the derivative of a loss algorithm.
-        This function exists for manual differentiation, use 'nabla' for Tensor support.
+        This function exists for manual differentiation; use 'nabla' for Tensor support.
 
         Arguments:
             yhat: A NumPy Array of expected activations.
@@ -703,27 +716,27 @@ class Optimizers:
     def __init__(self, algorithm: str, hyperparameters: dict = None, **kwargs):
         r"""
         'Optimizers' is a class containing various optimization algorithms.
-        These optimization algorithms currently include 'adam' (Adam), 'sgd' (SGD), and 'rms' (RMSprop).
+        These optimization algorithms currently include 'adam' (Adaptive Moment Estimation), 'sgd' (Stochastic Gradient Descent), and 'rmsp' (Root Mean Squared Propagation).
         The class structure promotes flexibility through the easy addition of other optimization algorithms.
 
         Arguments:
             algorithm: A string referencing the desired optimization algorithm.
             hyperparameters: A dictionary referencing the hyperparameters for the optimization algorithm.
             (any hyperparameters not referenced will be automatically defined)
-                'adam' (Adam):
+                'adam' (Adaptive Moment Estimation):
                     'gamma': The learning rate value.
                     'lambda_d': The weight decay (L2 regularization) coefficient.
                     'beta1': The value for the weight held by the new delta.
                     'beta2': The value for the weight held by the new upsilon.
                     'epsilon': The numerical stability value to prevent division by zero.
                     'ams': A bool for the AMSGrad variant.
-                'sgd' (SGD):
+                'sgd' (Stochastic Gradient Descent):
                     'gamma': The learning rate value.
                     'lambda_d': The weight decay (L2 regularization) coefficient.
                     'mu': The value for the weight held by the previous delta.
                     'tau': the value for the dampening of the new delta.
                     'nesterov': A bool for Nesterov momentum.
-                'rms' (RMSProp):
+                'rmsp' (Root Mean Squared Propagation):
                     'gamma': The learning rate value.
                     'lambda_d': The weight decay (L2 regularization) coefficient.
                     'beta': The value for the weight held by the new upsilon.
@@ -735,7 +748,7 @@ class Optimizers:
         self.algorithms = [
             'adam',
             'sgd',
-            'rms'
+            'rmsp'
         ]
 
         # internal optimization algorithm parameters
@@ -765,26 +778,26 @@ class Optimizers:
         # default optimization algorithm hyperparameters
         default = {
             'adam': {
-                'gamma': 0.001,
+                'gamma': 1e-3,
                 'lambda_d': 0.0,
                 'beta1': 0.9,
                 'beta2': 0.999,
-                'epsilon': 1e-8,
+                'epsilon': 1e-10,
                 'ams': False
             },
             'sgd': {
-                'gamma': 0.001,
+                'gamma': 1e-3,
                 'lambda_d': 0.0,
                 'mu': 0.0,
                 'tau': 0.0,
                 'nesterov': False
             },
-            'rms': {
-                'gamma': 0.001,
+            'rmsp': {
+                'gamma': 1e-3,
                 'lambda_d': 0.0,
                 'beta': 0.99,
                 'mu': 0.0,
-                'epsilon': 1e-8
+                'epsilon': 1e-10
             }
         }
         # default optimization algorithm hyperparameter datatypes
@@ -795,16 +808,16 @@ class Optimizers:
                 'beta1': (float, int),
                 'beta2': (float, int),
                 'epsilon': (float, int),
-                'ams': bool
+                'ams': (bool, int)
             },
             'sgd': {
                 'gamma': (float, int),
                 'lambda_d': (float, int),
                 'mu': (float, int),
                 'tau': (float, int),
-                'nesterov': bool
+                'nesterov': (bool, int)
             },
-            'rms': {
+            'rmsp': {
                 'gamma': (float, int),
                 'lambda_d': (float, int),
                 'beta': (float, int),
@@ -829,7 +842,7 @@ class Optimizers:
                 'tau': lambda x: 0.0 <= x,
                 'nesterov': lambda x: True
             },
-            'rms': {
+            'rmsp': {
                 'gamma': lambda x: True,
                 'lambda_d': lambda x: 0.0 <= x,
                 'beta': lambda x: 0.0 < x,
@@ -854,7 +867,7 @@ class Optimizers:
                 'tau': lambda x: float(x),
                 'nesterov': lambda x: bool(x)
             },
-            'rms': {
+            'rmsp': {
                 'gamma': lambda x: float(x),
                 'lambda_d': lambda x: float(x),
                 'beta': lambda x: float(x),
@@ -897,7 +910,7 @@ class Optimizers:
                     )
                 else:
                     # valid hyperparameter
-                    hyps[hyp] = ctypes[hyp](hyperparams[hyp])
+                    hyps[hyp] = ctypes[self._algorithm][hyp](hyperparams[hyp])
         elif hyperparams and isinstance(hyperparams, dict):
             # hyperparameters not taken
             print()
@@ -912,34 +925,57 @@ class Optimizers:
         # return hyperparameters
         return hyps
 
+    def _get_memory(self):
+        # instantiates memory dictionary
+        # required memory components for each optimization algorithm
+        memories = {
+            'adam': {
+                'deltas_p': None,
+                'upsilons_p': None,
+                'upsilons_hat_mx': None
+            },
+            'sgd': {
+                'deltas_p': None
+            },
+            'rmsp': {
+                'deltas_p': None,
+                'upsilons_p': None
+            }
+        }
+        # return memory dictionary
+        return memories[self._algorithm]
+
     def _get_optim(self):
         # defines optimization algorithm
         # todo: check order of operations
         def adam(thetas, nablas):
-            # Adam optimization algorithm
+            # Adaptive Moment Estimation optimization algorithm
             # weight decay
             deltas = nablas + (self._hyps['lambda_d'] * thetas)
-            if self._memory['deltas_p']:
+            if self._memory['deltas_p'] is not None:
                 # momentum
-                deltas = ((self._hyps['beta1'] * self._memory['deltas_p']) + ((1.0 - self._hyps['beta1']) * deltas)) / (1.0 - self._hyps['beta1'])
-            if self._memory['upsilons_p']:
+                deltas = ((self._hyps['beta1'] * self._memory['deltas_p']) + ((1.0 - self._hyps['beta1']) * deltas))
+            if self._memory['upsilons_p'] is not None:
                 # square momentum
-                upsilons = ((self._hyps['beta2'] * self._memory['upsilons_p']) / (1.0 - self._hyps['beta2'])) + (deltas ** 2.0)
+                upsilons = (self._hyps['beta2'] * self._memory['upsilons_p']) + (deltas ** 2.0)
             else:
                 # square
                 upsilons = deltas ** 2.0
+            # hat
+            deltas_hat = deltas / (1 - self._hyps['beta1'])
+            upsilons_hat = upsilons / (1 - self._hyps['beta2'])
             if self._hyps['ams']:
                 # ams-grad variant
-                if self._memory['upsilons_mx']:
-                    upsilons_mx = np.maximum(self._memory['upsilons_mx'], upsilons)
+                if self._memory['upsilons_hat_mx'] is not None:
+                    upsilons_hat_mx = np.maximum(self._memory['upsilons_hat_mx'], upsilons_hat)
                 else:
-                    upsilons_mx = upsilons
+                    upsilons_hat_mx = upsilons_hat
                 # update memory
-                self._memory['upsilons_mx'] = upsilons_mx
+                self._memory['upsilons_hat_mx'] = upsilons_hat_mx
                 # set upsilons
-                upsilons = upsilons_mx
+                upsilons_hat = upsilons_hat_mx
             # optimization
-            thetas -= self._hyps['gamma'] * deltas / (np.sqrt(upsilons) + self._hyps['epsilon'])
+            thetas -= self._hyps['gamma'] * deltas_hat / (np.sqrt(upsilons_hat) + self._hyps['epsilon'])
 
             # update memory
             self._memory['deltas_p'] = deltas
@@ -949,13 +985,13 @@ class Optimizers:
             return thetas
 
         def sgd(thetas, nablas):
-            # SGD optimization algorithm
+            # Stochastic Gradient Descent optimization algorithm
             # weight decay
             deltas = nablas + (self._hyps['lambda_d'] * thetas)
-            if self._hyps['mu'] and self._memory['deltas_p']:
+            if self._hyps['mu'] and (self._memory['deltas_p'] is not None):
                 # momentum
                 deltas = (self._hyps['mu'] * self._memory['deltas_p']) + ((1.0 - self._hyps['tau']) * deltas)
-            if self._hyps['nesterov'] and self._hyps['mu']:
+            if self._hyps['nesterov'] and (self._hyps['mu'] is not None):
                 # nesterov momentum
                 deltas += nablas + self._hyps['mu'] * deltas
             # optimization
@@ -967,11 +1003,11 @@ class Optimizers:
             # return thetas
             return thetas
 
-        def rms(thetas, nablas):
-            # RMSprop optimization algorithm
+        def rmsp(thetas, nablas):
+            # Root Mean Squared Propagation optimization algorithm
             # weight decay
             deltas = nablas + (self._hyps['lambda_d'] * thetas)
-            if self._memory['upsilons_p']:
+            if self._memory['upsilons_p'] is not None:
                 # square momentum
                 upsilons = (self._hyps['beta'] * self._memory['upsilons_p']) + ((1.0 - self._hyps['beta']) * (deltas ** 2.0))
             else:
@@ -979,7 +1015,7 @@ class Optimizers:
                 upsilons = (1.0 - self._hyps['beta']) * (deltas ** 2.0)
             # step calculation
             deltas = deltas / (np.sqrt(upsilons) + self._hyps['epsilon'])
-            if self._hyps['mu'] and self._memory['deltas_p']:
+            if self._hyps['mu'] and (self._memory['deltas_p'] is not None):
                 # momentum
                 deltas += self._hyps['mu'] * self._memory['deltas_p']
             # optimization
@@ -996,50 +1032,39 @@ class Optimizers:
         optim_funcs = {
             'adam': adam,
             'sgd': sgd,
-            'rms': rms
+            'rmsp': rmsp
         }
 
         # return optimization algorithm
         return optim_funcs[self._algorithm]
 
-    def _get_memory(self):
-        # instantiates memory dictionary
-        # required memory components for each optimization algorithm
-        memories = {
-            'adam': {
-                'deltas_p': None,
-                'upsilons_p': None,
-                'upsilons_mx': None
-            },
-            'sgd': {
-                'deltas_p': None
-            },
-            'rms': {
-                'deltas_p': None,
-                'upsilons_p': None
-            }
-        }
-        # return memory dictionary
-        return memories[self._algorithm]
-
-    def optimize(self, thetas: Tensor, nablas: Tensor) -> Tensor:
+    def optimize(self, thetas: Union[Tensor, np.ndarray], nablas: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
         r"""
-        'update' is a built-in function in the 'Optimizers' class.
+        'optimize' is a built-in function in the 'Optimizers' class.
         This function updates the parameters of a model based on the gradients.
+        This function contains built-in compatibility with automatic differentiation for Tensors.
 
         Arguments:
-            thetas: A Tensor of the parameters that will be optimized.
-            nablas: A Tensor of the gradients used to optimize the parameters.
+            thetas: A Tensor or NumPy Array of the parameters that will be optimized.
+            nablas: A Tensor or NumPy Array of the gradients used to optimize the parameters.
 
         Returns:
-            A Tensor of updated parameters.
+            A Tensor or NumPy Array of updated parameters.
         """
-        if not isinstance(thetas, Tensor):
+        if not isinstance(thetas, (Tensor, np.ndarray)):
             # invalid datatype
-            raise TypeError(f"'thetas' is not a Tensor: '{thetas}'")
-        if not isinstance(nablas, Tensor):
+            raise TypeError(f"'thetas' is not a Tensor or NumPy Array: '{thetas}'")
+        if not isinstance(nablas, (Tensor, np.ndarray)):
             # invalid datatype
-            raise TypeError(f"'nablas' is not a Tensor: '{nablas}'")
+            raise TypeError(f"'nablas' is not a Tensor or NumPy Array: '{nablas}'")
 
         # return updated thetas
-        return Tensor(self._optim(thetas.to_array(), nablas.to_array()))
+        if isinstance(nablas, Tensor):
+            # nablas conversion
+            nablas = nablas.to_array()
+        if isinstance(thetas, Tensor):
+            # Tensor
+            return Tensor(self._optim(thetas.to_array(), nablas))
+        else:
+            # numpy array
+            return self._optim(thetas, nablas)
