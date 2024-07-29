@@ -189,7 +189,7 @@ class Tensor:
     @staticmethod
     def _d_truediv_d(denominator, numerator):
         # hadamard division denominator derivative
-        return numerator ** -1 * (denominator * 0.0 + 1.0)
+        return (denominator * 0.0 + 1.0) / numerator
 
     def __add__(self, other):
         # addition

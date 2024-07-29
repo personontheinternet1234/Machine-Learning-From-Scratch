@@ -8,6 +8,7 @@ Refer to 'todo' for in-depth documentation on this model.
 """
 
 import time
+from typing import Union
 import warnings
 
 import numpy as np
@@ -49,14 +50,7 @@ class DNN:
         self._grad_w = None
         self._grad_b = None
         self._zeros = None
-
-        # internal dataloaders
         self._train_loader = None
-        self._valid_loader = None
-        self._batching = None
-
-        # external parameters
-        self.thetas = None
 
         # visual parameters
         self._status = status_bars
@@ -160,11 +154,15 @@ class DNN:
         self._j = self._get_loss(loss)
         self._optimizer = self._get_optimizer(optimizer)
 
-    def forward(self, x: np.ndarray):
-        a = [x]
+    def forward(self, x: Union[Tensor, np.ndarray]) -> np.ndarray:
+        if not isinstance(x, (Tensor, np.ndarray)):
+            raise TypeError('not correct type')
+        if isinstance(x, Tensor):
+            x = x.to_array()
+        a = self._zeros
+        a[0] = x
         for lyr in range(len(self._lyrs) - 1):
-            a_n = self._g['f'](a[-1] @ self._w[lyr] + self._b[lyr])
-            a.append(a_n)
+            a[lyr + 1] = self._g[lyr](a[lyr] @ self._w[lyr].to_array() + self._b[lyr].to_array())
         return a
 
     def _forward(self, x, y):
@@ -175,7 +173,7 @@ class DNN:
         for lyr in range(len(self._lyrs) - 1):
             self._alpha[lyr] = self._a[-1] @ self._w[lyr]
             self._beta[lyr] = self._alpha[-1] + self._b[lyr]
-            self._a[lyr + 1] = self._g[lyr]['f'](self._beta[-1])
+            self._a[lyr + 1] = self._g[lyr](self._beta[-1])
         self._loss = self._j(self._a[-1], y)
 
     def _backward(self):
@@ -188,7 +186,7 @@ class DNN:
             grad_alpha = chain(grad_alpha, nabla(self._alpha[lyr - 1], self._grad_w[lyr]))
         self._grad_b[0] = chain(grad_alpha, nabla(self._alpha[1], self._b[0]))
         self._grad_w[0] = chain(self._grad_b[0], nabla(self._b[0], self._w[0]))
-        if len(self._grad_b.shape) == 4:
+        if self._train_loader.batching > 1:
             self._grad_b = Tensor(np.sum(self._grad_b.to_array(), axis=0))
             self._grad_w = Tensor(np.sum(self._grad_w.to_array(), axis=0))
 
@@ -198,7 +196,10 @@ class DNN:
         self._w = self._optimizer(self._w, self._grad_w)
         self._b = self._optimizer(self._b, self._grad_b)
 
-    def predict(self, x: np.ndarray):
+    def output(self, x: Union[Tensor, np.ndarray]) -> np.ndarray:
+        return self.forward(x)[-1]
+
+    def predict(self, x: Union[Tensor, np.ndarray]) -> np.int64:
         return np.argmax(self.forward(x)[-1])
 
     def fit(self, data, parameters=None):
@@ -211,8 +212,8 @@ class DNN:
             x, y = next(data)
             self._step(x, y)
             if epoch % parameters['eval_rate'] == 0:
-                b_loss = self._loss / self._batching
-                b_accu = 0.5 * np.sum(np.abs(self._a[-1] - y)) / self._batching
+                b_loss = self._loss / self._train_loader.batching
+                b_accu = 0.5 * np.sum(np.abs(self._a[-1] - y)) / self._train_loader.batching
             if self._status:
                 print("Training")
                 desc = (

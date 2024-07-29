@@ -2,7 +2,7 @@ r"""
 'helper_functions' includes minor utility functions for GardenPy.
 
 'helper_functions' includes:
-    'ansi_formats': Common ANSI formats.
+    'ansi': Common ANSI formats.
     'progress': Progress bar.
     'convert_time': Converts time to hours:minutes:seconds.
     'print_credits': Print credits for GardenPy.
@@ -10,10 +10,10 @@ r"""
 Refer to 'todo' for in-depth documentation on these functions.
 """
 
-r"""
-    'ansi' is a variable that contains all the commonly used ANSI formats.
-"""
 ansi = {
+        r"""
+            'ansi' is a variable that contains all the commonly used ANSI formats.
+        """
         'reset': '\033[0m',
         'black': '\033[30m',
         'red': '\033[31m',
