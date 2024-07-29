@@ -37,6 +37,7 @@ class Tensor:
             self.tensor = np.array(self.tensor)
 
         # internals
+        self.shape = self.tensor.shape
         self.type = 'mat'
         self.tracker = {
             'opr': [],

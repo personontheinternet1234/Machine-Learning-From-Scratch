@@ -26,7 +26,7 @@ from ..utils.algorithms import (
 from ..utils.helper_functions import (
     progress,
     convert_time,
-    ansi_formats
+    ansi
 )
 
 
@@ -37,13 +37,18 @@ class DNN:
         self._lyrs = None
         self._g = None
         self._j = None
-        self._solver = None
         self._optimizer = None
 
         # internal parameters
         self._w = None
         self._b = None
-        self._zero_grad = None
+        self._a = None
+        self._alpha = None
+        self._beta = None
+        self._loss = None
+        self._grad_w = None
+        self._grad_b = None
+        self._zeros = None
 
         # internal dataloaders
         self._train_loader = None
@@ -54,7 +59,6 @@ class DNN:
         self.thetas = None
 
         # visual parameters
-        self._ansi = ansi_formats()
         self._status = status_bars
 
     @staticmethod
@@ -84,7 +88,7 @@ class DNN:
         return weights, biases
 
     @staticmethod
-    def _get_activators(parameters, lyrs):
+    def _get_activators(parameters, hdns):
         params_norm = {
             'algorithm': 'relu',
             'parameters': None
@@ -94,9 +98,27 @@ class DNN:
             'parameters': None
         }
         params = []
-        for lyr in range(lyrs - 1):
-            params.append(Activators(params_norm['algorithm'], params_norm['parameters']))
-        params.append(Activators(params_last['algorithm'], params_last['parameters']))
+        for hdn in range(hdns - 1):
+            if parameters is None:
+                params.append(Activators(params_norm['algorithm'], params_norm['parameters']))
+            elif isinstance(parameters[hdn], dict):
+                params.append(Activators(parameters[hdn]['algorithm'], parameters[hdn]['parameters']))
+            elif isinstance(parameters[hdn], np.ndarray):
+                params.append(Tensor(parameters[hdn]))
+            elif isinstance(parameters[hdn], Tensor):
+                params.append(parameters[hdn])
+            else:
+                raise TypeError('not dict')
+        if parameters is None:
+            params.append(Activators(params_last['algorithm'], params_last['parameters']))
+        elif isinstance(parameters[hdns], dict):
+            params.append(Activators(parameters[hdns]['algorithm'], parameters[hdns]['parameters']))
+        elif isinstance(parameters[hdns], np.ndarray):
+            params.append(Tensor(parameters[hdns]))
+        elif isinstance(parameters[hdns], Tensor):
+            params.append(parameters[hdns])
+        else:
+            raise TypeError('not dict')
         return params
 
     @staticmethod
@@ -129,17 +151,13 @@ class DNN:
                 raise ValueError('stop')
         return Optimizers(parameters['algorithm'], parameters['hyperparameters'])
 
-    def _get_batching(self, batching):
-        ...
-
     def initialize(self, hidden_layers=None, thetas=None, activations=None):
         self._hidden = self._get_hidden(hidden_layers)
         self._w, self._b = self._get_thetas(thetas)
-        self._g = self._get_activators(activations)
+        self._g = self._get_activators(activations, self._hidden)
 
     def hyperparameters(self, loss=None, optimizer=None):
         self._j = self._get_loss(loss)
-        self._solver = self._get_solver()
         self._optimizer = self._get_optimizer(optimizer)
 
     def forward(self, x: np.ndarray):
@@ -149,60 +167,36 @@ class DNN:
             a.append(a_n)
         return a
 
-    def _step(self, a, y):
-        grad_w, grad_b = self._solver(a, y)
-        self._w = self._optimizer(self._w, grad_w)
-        self._b = self._optimizer(self._b, grad_b)
+    def _forward(self, x, y):
+        self._a = self._zeros
+        self._a[0] = x
+        self._alpha = self._zeros
+        self._beta = self._zeros
+        for lyr in range(len(self._lyrs) - 1):
+            self._alpha[lyr] = self._a[-1] @ self._w[lyr]
+            self._beta[lyr] = self._alpha[-1] + self._b[lyr]
+            self._a[lyr + 1] = self._g[lyr]['f'](self._beta[-1])
+        self._loss = self._j(self._a[-1], y)
 
-    def _get_solver(self):
-        if self._batching == 1:
-            def backward(a, y):
-                # instantiate gradients
-                grad_w = self._zero_grad[0]
-                grad_b = self._zero_grad[1]
+    def _backward(self):
+        grad_alpha = nabla(self._loss, self._alpha[-1])
+        self._grad_b = self._zeros
+        self._grad_w = self._zeros
+        for lyr in range(-1, -self._lyrs + 1, -1):
+            self._grad_b[lyr] = chain(grad_alpha, nabla(self._alpha[lyr], self._b[lyr]))
+            self._grad_w[lyr] = chain(self._grad_b[lyr], nabla(self._b[lyr], self._w[lyr]))
+            grad_alpha = chain(grad_alpha, nabla(self._alpha[lyr - 1], self._grad_w[lyr]))
+        self._grad_b[0] = chain(grad_alpha, nabla(self._alpha[1], self._b[0]))
+        self._grad_w[0] = chain(self._grad_b[0], nabla(self._b[0], self._w[0]))
+        if len(self._grad_b.shape) == 4:
+            self._grad_b = Tensor(np.sum(self._grad_b.to_array(), axis=0))
+            self._grad_w = Tensor(np.sum(self._grad_w.to_array(), axis=0))
 
-                # calculate gradients
-                grad_a = self._j['d'](y, a[-1])
-                for lyr in range(-1, -len(a) + 1, -1):
-                    grad_b[lyr] = self._g[lyr]['d'](a[lyr - 1] @ self._w[lyr] + self._b[lyr]) * grad_a
-                    grad_w[lyr] = a[lyr - 1].T * grad_b[lyr]
-                    grad_a = np.sum(self._w[lyr] * grad_b[lyr], axis=1)
-                grad_b[0] = self._g[0]['d'](a[0] @ self._b[0] + self._b[0]) * grad_a
-                grad_w[0] = a[0].T * grad_b[0]
-
-                # return gradients
-                return grad_w, grad_b
-            # return solver
-            return backward
-
-        else:
-            # redefine zero gradients
-            self._zero_grad[0] = np.array([self._zero_grad[0]] * self._batching)
-            self._zero_grad[0] = np.array([self._zero_grad[1]] * self._batching)
-
-            def update(a, y):
-                # instantiate gradients
-                grad_w = self._zero_grad[0]
-                grad_b = self._zero_grad[1]
-
-                # calculate gradients
-                grad_a = self._j['d'](y, a[-1])
-                for lyr in range(-1, -len(a) + 1, -1):
-                    grad_b[lyr] = self._g[lyr]['d'](a[lyr - 1] @ self._w[lyr] + self._b[lyr]) * grad_a
-                    grad_w[lyr] = np.reshape(a[lyr - 1], (self._batching, self._lyrs[lyr - 1], 1)) * grad_b
-                    grad_a = np.reshape(np.sum(self._w[lyr] * grad_b[lyr], axis=2, keepdims=True), (self._batching, 1, self._lyrs[lyr - 1]))
-                grad_b[0] = self._g[0]['d'](a[0] @ self._w[0] + self._b[0]) * grad_a
-                grad_w[0] = np.reshape(a[0], (self._batching, self._lyrs[0], 1)) * grad_b[0]
-
-                # sum and average gradients
-                grad_w = np.sum(grad_w, axis=0) / self._batching
-                grad_b = np.sum(grad_b, axis=0) / self._batching
-
-                # return gradients
-                return grad_w, grad_b
-
-            # return solver
-            return update
+    def _step(self, x, y):
+        self._forward(x, y)
+        self._backward()
+        self._w = self._optimizer(self._w, self._grad_w)
+        self._b = self._optimizer(self._b, self._grad_b)
 
     def predict(self, x: np.ndarray):
         return np.argmax(self.forward(x)[-1])
@@ -212,25 +206,27 @@ class DNN:
         b_accu = None
         start = time.time()
 
-        print(f"\n{self._ansi['bold']}Training{self._ansi['reset']}")
+        print(f"\n{ansi['bold']}Training{ansi['reset']}")
         for epoch in range(parameters['epochs']):
             x, y = next(data)
-            a = self.forward(x)
-            self._step(y, a)
+            self._step(x, y)
             if epoch % parameters['eval_rate'] == 0:
-                b_loss = self._j(y, a) / self._batching
-                b_accu = 0.5 * np.sum(np.abs(a - y)) / self._batching
+                b_loss = self._loss / self._batching
+                b_accu = 0.5 * np.sum(np.abs(self._a[-1] - y)) / self._batching
             if self._status:
                 print("Training")
                 desc = (
-                    f"{str(epoch + 1).zfill(len(str(parameters['max_iter'])))}{self._ansi['white']}it{self._ansi['reset']}/{parameters['max_iter']}{self._ansi['white']}it{self._ansi['reset']}  "
-                    f"{(100 * (epoch + 1) / parameters['max_iter']):05.1f}{self._ansi['white']}%{self._ansi['reset']}  "
-                    f"{b_loss:05}{self._ansi['white']}loss{self._ansi['reset']}  "
-                    f"{b_accu:05.1f}{self._ansi['white']}accu{self._ansi['reset']}  "
-                    f"{convert_time(time.time() - start)}{self._ansi['white']}et{self._ansi['reset']}  "
-                    f"{convert_time((time.time() - start) * parameters['max_iter'] / (epoch + 1) - (time.time() - start))}{self._ansi['white']}eta{self._ansi['reset']}  "
-                    f"{round((epoch + 1) / (time.time() - start), 1)}{self._ansi['white']}it/s{self._ansi['reset']}"
+                    f"{str(epoch + 1).zfill(len(str(parameters['max_iter'])))}{ansi['white']}it{ansi['reset']}/{parameters['max_iter']}{ansi['white']}it{ansi['reset']}  "
+                    f"{(100 * (epoch + 1) / parameters['max_iter']):05.1f}{ansi['white']}%{ansi['reset']}  "
+                    f"{b_loss:05}{ansi['white']}loss{ansi['reset']}  "
+                    f"{b_accu:05.1f}{ansi['white']}accu{ansi['reset']}  "
+                    f"{convert_time(time.time() - start)}{ansi['white']}et{ansi['reset']}  "
+                    f"{convert_time((time.time() - start) * parameters['max_iter'] / (epoch + 1) - (time.time() - start))}{ansi['white']}eta{ansi['reset']}  "
+                    f"{round((epoch + 1) / (time.time() - start), 1)}{ansi['white']}it/s{ansi['reset']}"
                 )
                 progress(epoch, parameters['max_iter'], desc=desc)
 
             print(time.time() - start)
+
+    def final(self):
+        return self._w, self._b

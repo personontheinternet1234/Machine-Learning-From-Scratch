@@ -10,7 +10,7 @@ from gardenpy import (
     Optimizers
 )
 from gardenpy.utils import (
-    ansi_formats,
+    ansi,
     progress,
     convert_time
 )
@@ -21,8 +21,6 @@ from gardenpy.utils.helper_functions import print_credits
 max_iter = 100000
 
 ##########
-
-ANSI = ansi_formats()
 
 W_init = Initializers(algorithm='xavier')
 B_init = Initializers(algorithm='zeros')
@@ -64,7 +62,7 @@ printed = False
 
 print()
 print_credits()
-print(f"\n{ANSI['bold']}Training{ANSI['reset']}")
+print(f"\n{ansi['bold']}Training{ansi['reset']}")
 
 if time_interval > bar_interval:
     raise ValueError(
@@ -82,7 +80,7 @@ time_interval = int(time_interval ** -1)
 bar_interval = int(bar_interval * time_interval)
 
 start = time.time()
-print(f"Epoch {ANSI['white']}{ep + 1}{ANSI['reset']}")
+print(f"Epoch {ansi['white']}{ep + 1}{ansi['reset']}")
 
 ##########
 
@@ -119,18 +117,18 @@ for i in range(max_iter):
         printed = False
     elif (not printed) or (i + 1 == max_iter):
         desc = (
-                f"{L[0]:.3}{ANSI['white']}loss{ANSI['reset']}  "
-                f"{str(i + 1).zfill(len(str(max_iter)))}{ANSI['white']}it{ANSI['reset']}/{max_iter}{ANSI['white']}it{ANSI['reset']}  "
-                f"{(100 * (i + 1) / max_iter):05.1f}{ANSI['white']}%{ANSI['reset']}  "
-                f"{convert_time(elapsed)}{ANSI['white']}et{ANSI['reset']}  "
-                f"{convert_time(elapsed * max_iter / (i + 1) - elapsed)}{ANSI['white']}eta{ANSI['reset']}  "
-                f"{round((i + 1) / elapsed, 1)}{ANSI['white']}it/s{ANSI['reset']}"
+                f"{L[0]:.3}{ansi['white']}loss{ansi['reset']}  "
+                f"{str(i + 1).zfill(len(str(max_iter)))}{ansi['white']}it{ansi['reset']}/{max_iter}{ansi['white']}it{ansi['reset']}  "
+                f"{(100 * (i + 1) / max_iter):05.1f}{ansi['white']}%{ansi['reset']}  "
+                f"{convert_time(elapsed)}{ansi['white']}et{ansi['reset']}  "
+                f"{convert_time(elapsed * max_iter / (i + 1) - elapsed)}{ansi['white']}eta{ansi['reset']}  "
+                f"{round((i + 1) / elapsed, 1)}{ansi['white']}it/s{ansi['reset']}"
             )
         progress(i, max_iter, desc=desc)
         printed = True
 
 ##########
 
-print(f"\n\n{ANSI['bold']}Results{ANSI['reset']}")
-print(f"Predicted    {ANSI['white']}{ANSI['italic']}{Yhat}{ANSI['reset']}")
-print(f"Expected     {ANSI['white']}{ANSI['italic']}{Y}{ANSI['reset']}")
+print(f"\n\n{ansi['bold']}Results{ansi['reset']}")
+print(f"Predicted    {ansi['white']}{ansi['italic']}{Yhat}{ansi['reset']}")
+print(f"Expected     {ansi['white']}{ansi['italic']}{Y}{ansi['reset']}")

@@ -10,19 +10,10 @@ r"""
 Refer to 'todo' for in-depth documentation on these functions.
 """
 
-
-def ansi_formats() -> dict:
-    r"""
-        'ansi_formats' is a function that returns a dictionary of common ansi formats.
-
-        Arguments:
-            None.
-
-        Returns:
-            A dictionary of ANSI formats.
-        """
-    # ANSI formats
-    formats = {
+r"""
+    'ansi' is a variable that contains all the commonly used ANSI formats.
+"""
+ansi = {
         'reset': '\033[0m',
         'black': '\033[30m',
         'red': '\033[31m',
@@ -49,8 +40,6 @@ def ansi_formats() -> dict:
         'hidden': '\033[8m',
         'strikethrough': '\033[9m'
     }
-    # return ANSI formats
-    return formats
 
 
 def progress(idx: int, max_idx: int, desc=None, b_len: int = 50) -> None:
@@ -67,7 +56,6 @@ def progress(idx: int, max_idx: int, desc=None, b_len: int = 50) -> None:
         None.
     """
     # get ansi formats
-    progress_formats = ansi_formats()
     if not isinstance(b_len, int):
         # invalid datatype
         raise ValueError(f"'b_len' is not an integer: '{b_len}'")
@@ -75,8 +63,8 @@ def progress(idx: int, max_idx: int, desc=None, b_len: int = 50) -> None:
     completed = (idx + 1) / max_idx
     # make progress bar
     p_bar = (
-        f"\r{progress_formats['green']}{'—' * int(b_len * completed)}"
-        f"{progress_formats['red']}{'—' * (b_len - int(b_len * completed))}{progress_formats['reset']}"
+        f"\r{ansi['green']}{'—' * int(b_len * completed)}"
+        f"{ansi['red']}{'—' * (b_len - int(b_len * completed))}{ansi['reset']}"
     )
     # print progress bar
     print(p_bar, end='')
@@ -103,11 +91,10 @@ def convert_time(seconds: float, number_colors: str = None, separators_color: st
         Converted time.
     """
     # get ansi formats
-    time_formats = ansi_formats()
     if not number_colors:
-        number_colors = time_formats['reset']
+        number_colors = ansi['reset']
     if not separators_color:
-        separators_color = time_formats['reset']
+        separators_color = ansi['reset']
     # round seconds
     seconds = int(seconds)
     # find minutes and hours
@@ -117,7 +104,7 @@ def convert_time(seconds: float, number_colors: str = None, separators_color: st
     minutes -= hours * 60
     seconds -= minutes * 60
     # return time
-    return f"{number_colors}{hours:01}{separators_color}:{number_colors}{minutes:02}{separators_color}:{number_colors}{seconds:02}{time_formats['reset']}"
+    return f"{number_colors}{hours:01}{separators_color}:{number_colors}{minutes:02}{separators_color}:{number_colors}{seconds:02}{ansi['reset']}"
 
 
 def print_credits() -> None:
@@ -130,21 +117,18 @@ def print_credits() -> None:
     Returns:
         None.
     """
-    # get ansi formats
-    credit_formats = ansi_formats()
-    bold_green = '\033[1;32m'
     # print credits in alphabetical order
-    print(f"{credit_formats['bold']}{credit_formats['green']}GardenPy{credit_formats['reset']}")
-    print(f"    {credit_formats['bold']}Contributors{credit_formats['reset']}")
+    print(f"{ansi['bold']}{ansi['green']}GardenPy{ansi['reset']}")
+    print(f"    {ansi['bold']}Contributors{ansi['reset']}")
     print(f"    Christian SW Host-Madsen", end='')
-    print(f"    {credit_formats['white']}Punahou School CO '25{credit_formats['reset']}", end='')
-    print(f"    {credit_formats['bright_black']}<chost-madsen25@punahou.edu>{credit_formats['reset']}",)
+    print(f"    {ansi['white']}Punahou School CO '25{ansi['reset']}", end='')
+    print(f"    {ansi['bright_black']}<chost-madsen25@punahou.edu>{ansi['reset']}",)
     print(f"    Mason YY Morales", end='')
-    print(f"            {credit_formats['white']}Punahou School CO '25{credit_formats['reset']}", end='')
-    print(f"    {credit_formats['bright_black']}<mmorales25@punahou.edu>{credit_formats['reset']}")
+    print(f"            {ansi['white']}Punahou School CO '25{ansi['reset']}", end='')
+    print(f"    {ansi['bright_black']}<mmorales25@punahou.edu>{ansi['reset']}")
     print(f"    Isaac P Verbrugge", end='')
-    print(f"           {credit_formats['white']}Punahou School CO '25{credit_formats['reset']}", end='')
-    print(f"    {credit_formats['bright_black']}<isaacverbrugge@gmail.com>{credit_formats['reset']}")
+    print(f"           {ansi['white']}Punahou School CO '25{ansi['reset']}", end='')
+    print(f"    {ansi['bright_black']}<isaacverbrugge@gmail.com>{ansi['reset']}")
     print(f"    Derek Yee", end='')
-    print(f"                   {credit_formats['white']}Punahou School CO '25{credit_formats['reset']}", end='')
-    print(f"    {credit_formats['bright_black']}<dyee25@punahou.edu>{credit_formats['reset']}")
+    print(f"                   {ansi['white']}Punahou School CO '25{ansi['reset']}", end='')
+    print(f"    {ansi['bright_black']}<dyee25@punahou.edu>{ansi['reset']}")

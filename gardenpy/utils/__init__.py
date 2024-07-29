@@ -21,7 +21,7 @@ from .algorithms import (
 from .data_utils import DataLoaderCSV
 
 from .helper_functions import (
-    ansi_formats,
+    ansi,
     progress,
     convert_time
 )
@@ -35,7 +35,7 @@ __all__ = [
     'Losses',
     'Optimizers',
     'DataLoaderCSV',
-    'ansi_formats',
+    'ansi',
     'progress',
     'convert_time'
 ]
