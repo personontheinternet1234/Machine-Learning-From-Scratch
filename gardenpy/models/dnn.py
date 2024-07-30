@@ -67,32 +67,33 @@ class DNN:
 
     @staticmethod
     def _get_thetas(parameters, hdns):
-        weights = [{'algorithm': 'gaussian'}] * (hdns - 1)
-        biases = [{'algorithm': 'gaussian'}] * (hdns - 1)
+        # set default initializers
+        weights = [{'algorithm': 'gaussian'}] * (hdns + 1)
+        biases = [{'algorithm': 'gaussian'}] * (hdns + 1)
         if parameters is not None:
-            for lyr in range(hdns - 1):
+            # defined parameters
+            for lyr in range(hdns + 1):
                 try:
-                    if isinstance(parameters['weights'][lyr], Tensor):
-                        weights[lyr] = parameters['weights'][lyr]
-                    elif isinstance(parameters['weights'][lyr], dict):
+                    # valid index
+                    if isinstance(parameters['weights'][lyr], (Tensor, dict)):
+                        # valid parameter
                         weights[lyr] = parameters['weights'][lyr]
                     else:
-                        raise ValueError('wrong type')
+                        # invalid datatype for parameter
+                        raise TypeError(
+                            f"Invalid datatype for 'thetas': '{}'\n"
+                            f"Choose from: '{dtypes[self._algorithm][prm]}'"
+                        )
                 except IndexError:
+                    # invalid index
                     warnings.warn('no instance')
                     pass
+
         for w in range(len(weights)):
             if isinstance(weights, dict) and 'algorithm' in weights[w]:
                 alg = weights[w]['algorithm']
                 del weights[w]['algorithm']
                 weights[w] = Initializers(alg, weights[w])
-            else:
-                raise ValueError('no algorithm')
-        for b in range(len(biases)):
-            if isinstance(biases, dict) and 'algorithm' in biases[b]:
-                alg = biases[b]['algorithm']
-                del biases[b]['algorithm']
-                biases[b] = Initializers(alg, biases[b])
             else:
                 raise ValueError('no algorithm')
         return weights, biases
