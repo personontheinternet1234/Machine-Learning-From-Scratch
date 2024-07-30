@@ -782,7 +782,7 @@ class Optimizers:
                 'lambda_d': 0.0,
                 'beta1': 0.9,
                 'beta2': 0.999,
-                'epsilon': 1e-10,
+                'epsilon': 1e-8,
                 'ams': False
             },
             'sgd': {
@@ -797,7 +797,7 @@ class Optimizers:
                 'lambda_d': 0.0,
                 'beta': 0.99,
                 'mu': 0.0,
-                'epsilon': 1e-10
+                'epsilon': 1e-8
             }
         }
         # default optimization algorithm hyperparameter datatypes

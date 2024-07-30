@@ -15,8 +15,8 @@ dataset = DataLoaderCSV(
     labels='labels',
     values='values',
     root=os.path.join(os.path.dirname(__file__), 'processed_data'),
-    valid=0.3,
-    batching=64,
+    valid=0.2,
+    batching=128,
     trim=False,
     shuffle=True,
     save_memory=True,
@@ -24,9 +24,10 @@ dataset = DataLoaderCSV(
 
 model = DNN(status_bars=True)
 model.initialize(
-    hidden_layers=[16, 16],
+    hidden_layers=[512, 256, 128],
     thetas={
         'weights': [
+            {'algorithm': 'xavier', 'gain': 1.0},
             {'algorithm': 'xavier', 'gain': 1.0},
             {'algorithm': 'xavier', 'gain': 1.0},
             {'algorithm': 'xavier', 'gain': 1.0}
@@ -34,12 +35,14 @@ model.initialize(
         'biases': [
             {'algorithm': 'zeros'},
             {'algorithm': 'zeros'},
+            {'algorithm': 'zeros'},
             {'algorithm': 'zeros'}
         ]
     },
     activations=[
-        {'algorithm': 'lrelu', 'beta': 0.1},
-        {'algorithm': 'lrelu', 'beta': 0.1},
+        {'algorithm': 'relu'},
+        {'algorithm': 'relu'},
+        {'algorithm': 'relu'},
         {'algorithm': 'softmax'}
     ]
 )
@@ -48,18 +51,18 @@ model.hyperparameters(
     optimizer={
         'algorithm': 'adam',
         'gamma': 1e-2,
-        'lambda_d': 0.01,
+        'lambda_d': 0,
         'beta1': 0.9,
         'beta2': 0.999,
-        'epsilon': 1e-10,
+        'epsilon': 1e-8,
         'ams': False
     }
 )
 model.fit(
     data=dataset,
     parameters={
-        'iterations': 10_000,
-        'rate': 10
+        'epochs': 50,
+        'rate': 1
     }
 )
 model.eval(

@@ -66,20 +66,55 @@ class DNN:
         return hidden
 
     @staticmethod
-    def _get_thetas(thetas):
-        weights = []
-        biases = []
-        for prm in thetas['weights']:
-            if isinstance(prm, Tensor):
-                weights.append(prm)
+    def _get_thetas(parameters, hdns):
+        weights = [{'algorithm': 'gaussian'}] * (hdns - 1)
+        biases = [{'algorithm': 'gaussian'}] * (hdns - 1)
+        if parameters is not None:
+            for lyr in range(hdns - 1):
+                try:
+                    if isinstance(parameters['weights'][lyr], Tensor):
+                        weights[lyr] = parameters['weights'][lyr]
+                    elif isinstance(parameters['weights'][lyr], dict):
+                        weights[lyr] = parameters['weights'][lyr]
+                    else:
+                        raise ValueError('wrong type')
+                except IndexError:
+                    warnings.warn('no instance')
+                    pass
+        for w in range(len(weights)):
+            if isinstance(weights, dict) and 'algorithm' in weights[w]:
+                alg = weights[w]['algorithm']
+                del weights[w]['algorithm']
+                weights[w] = Initializers(alg, weights[w])
             else:
-                weights.append(Initializers(prm['algorithm'], prm['parameters']))
-        for prm in thetas['biases']:
-            if isinstance(prm, Tensor):
-                biases.append(prm)
+                raise ValueError('no algorithm')
+        for b in range(len(biases)):
+            if isinstance(biases, dict) and 'algorithm' in biases[b]:
+                alg = biases[b]['algorithm']
+                del biases[b]['algorithm']
+                biases[b] = Initializers(alg, biases[b])
             else:
-                biases.append(Initializers(prm['algorithm'], prm['parameters']))
+                raise ValueError('no algorithm')
         return weights, biases
+        # for prm in thetas['weights']:
+        #     if isinstance(prm, Tensor):
+        #         weights[]
+        #     else:
+        #         if 'algorithm' not in prm:
+        #             raise ValueError('no specified algorithm')
+        #         alg = prm['algorithm']
+        #         del prm['algorithm']
+        #         weights.append(Initializers(alg, prm))
+        # for prm in thetas['biases']:
+        #     if isinstance(prm, Tensor):
+        #         biases.append(prm)
+        #     else:
+        #         if 'algorithm' not in prm:
+        #             raise ValueError('no specified algorithm')
+        #         alg = prm['algorithm']
+        #         del prm['algorithm']
+        #         biases.append(Initializers(alg, prm))
+        # return weights, biases
 
     @staticmethod
     def _get_activators(parameters, hdns):

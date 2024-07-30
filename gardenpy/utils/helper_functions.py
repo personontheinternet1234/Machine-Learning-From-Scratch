@@ -11,9 +11,7 @@ Refer to 'todo' for in-depth documentation on these functions.
 """
 
 ansi = {
-        r"""
-            'ansi' is a variable that contains all the commonly used ANSI formats.
-        """
+        # 'ansi' is a variable that contains all the commonly used ANSI formats.
         'reset': '\033[0m',
         'black': '\033[30m',
         'red': '\033[31m',

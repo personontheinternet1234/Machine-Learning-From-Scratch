@@ -24,8 +24,8 @@ class DataLoaderCSV:
 class DataLoaderCSVOld:
     def __init__(self, root, values_folder, labels_folder, batch_size=5, save_to_memory=False, shuffle=False):
         self._root = root
-        self._labels_dir = os.path.join(root, labels_path)
-        self._values_dir = os.path.join(root, values_path)
+        self._labels_dir = os.path.join(root, labels_folder)
+        self._values_dir = os.path.join(root, values_folder)
         self._memory = save_to_memory
         self._values = None
         self._labels = None
