@@ -1,11 +1,16 @@
 r"""
-'operators' includes the operators for GardenPy.
+**Operators for GardenPy.**
 
-'operators' includes:
-    'nabla': Automatic gradient calculation for Tensors.
-    'chain': Automatic chain-ruling for the gradients of Tensors.
+Attributes:
+----------
+**nabla**:
+    Gradient calculation for Tensors.
+**chain**:
+    Chain ruling for Tensors.
 
-Refer to 'todo' for in-depth documentation on these operators.
+Notes:
+----------
+- Refer to GardenPy's repository or GardenPy's docs for more information.
 """
 
 from .objects import Tensor
@@ -13,14 +18,38 @@ from .objects import Tensor
 
 def nabla(gradient: Tensor, respect: Tensor) -> Tensor:
     r"""
-    'nabla' is a function that finds the gradient of 'gradient' with respect to 'respect' with automatic chain-ruling.
+    **Gradient calculation for Tensors.**
 
-    Arguments:
-        gradient: The item the gradient is with.
-        respect: The item the gradient is with respect to.
+    Calculates the gradient of 'gradient' with respect to 'respect'.
+
+    Parameters:
+    ----------
+    **gradient** : (*Tensor*):
+        The final value to calculate the gradient with.
+    **respect** : (*Tensor*):
+        The value the gradient is calculated with respect to.
 
     Returns:
-        A Tensor of the gradient of the two Tensors.
+    ----------
+    - **grad** : (*Tensor*)
+            The calculated gradient.
+
+    Notes:
+    ----------
+    - Automatic differentation automatically chain-rules.
+    - Automatic differentation relies on internal tracking from Tensors.
+        - Relation detection occurs within 'nabla'.
+        - You must refer to a variable you saved for the automatic detection to relate your two Tensors.
+    - The two Tensors must have type 'mat'. To chain rule two gradients, use 'chain'.
+
+    Example:
+    ----------
+    >>> from gardenpy.utils.objects import Tensor
+    >>> from gardenpy.utils.operators import nabla
+    >>> tens1 = Tensor([[5, 4, 3]])
+    >>> tens2 = Tensor([[1, 2, 3]])
+    >>> tens3 = tens1 + tens2
+    >>> grad_tens3_tens1 = nabla(tens3, tens1)
     """
     if not isinstance(gradient, Tensor):
         # invalid datatype
@@ -105,14 +134,43 @@ def nabla(gradient: Tensor, respect: Tensor) -> Tensor:
 
 def chain(downstream: Tensor, upstream: Tensor) -> Tensor:
     r"""
-    'chain' is a function that manually chain-rules two gradients.
+    **Chain ruling for Tensors.**
 
-    Arguments:
-        downstream: The downstream gradient.
-        upstream: The upstream gradient.
+    Calculates the gradient that is chain-ruled from the downstream and upstream gradients.
+
+    Parameters:
+    ----------
+    **downstream** : (*Tensor*):
+        The downstream gradient.
+    **respect** : (*Tensor*):
+        The upstream gradient.
 
     Returns:
-        A Tensor of the chain-ruled gradient.
+    ----------
+    - **grad** : (*Tensor*)
+            The calculated gradient.
+
+    Notes:
+    ----------
+    - Automatic differentation automatically chain-rules.
+        - This seperate call allows chain-ruling to increase efficieny if part of the gradient has already been calculated.
+    - Automatic differentation relies on internal tracking from Tensors.
+        - The two gradients must have a connecting variable for 'chain' to detect their relationship.
+        - You must refer to a variable you saved for the automatic detection to relate your two Tensors.
+    - The two Tensors must have type 'grad'. To chain rule two matrices, use 'nabla'.
+
+    Example:
+    ----------
+    >>> from gardenpy.utils.objects import Tensor
+    >>> from gardenpy.utils.operators import nabla, chain
+    >>> tens1 = Tensor([[5, 4, 3]])
+    >>> tens2 = Tensor([[1, 2, 3]])
+    >>> tens3 = Tensor([[6, 7, 8]])
+    >>> tens4 = tens1 + tens2
+    >>> tens5 = tens4 + tens3
+    >>> grad_tens3_tens1 = nabla(tens3, tens1)
+    >>> grad_tens5_tens3 = nabla(tens5, tens3)
+    >>> grad_tens5_tens1 = chain(grad_tens5_tens3, grad_tens3_tens1)
     """
     if not isinstance(upstream, Tensor):
         # invalid datatype

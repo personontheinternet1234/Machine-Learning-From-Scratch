@@ -1458,7 +1458,7 @@ class Optimizers:
         Notes:
         ----------
         - The optimized thetas will retain the same datatype as the initial thetas.
-        - The optimized thetas will support automatic tracking for automatic differentation if it is a Tensor.
+        - The optimized thetas will support automatic tracking for automatic differentiation if it is a Tensor.
 
         - The internal memory will be accessed automatically upon the function call.
 

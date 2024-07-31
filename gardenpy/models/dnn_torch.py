@@ -9,4 +9,5 @@ Refer to 'todo' for in-depth documentation on this model.
 
 
 class DNNTorch:
-    ...
+    def __init__(self):
+        raise NotImplementedError("CNN has not been implemented yet.")
