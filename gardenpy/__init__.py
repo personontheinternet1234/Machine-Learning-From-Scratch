@@ -46,3 +46,7 @@ __authors__ = [
     'Isaac P Verbrugge',
     'Derek S Yee'
 ]
+
+__artists__ = [
+    'Kamalau Kimata'
+]

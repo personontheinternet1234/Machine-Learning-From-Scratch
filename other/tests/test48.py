@@ -14,7 +14,7 @@ from gardenpy.utils import (
     progress,
     convert_time
 )
-from gardenpy.utils.helper_functions import print_credits
+from gardenpy.utils.helper_functions import print_contributors
 
 ##########
 
@@ -61,7 +61,7 @@ ep = 0
 printed = False
 
 print()
-print_credits()
+print_contributors()
 print(f"\n{ansi['bold']}Training{ansi['reset']}")
 
 if time_interval > bar_interval:

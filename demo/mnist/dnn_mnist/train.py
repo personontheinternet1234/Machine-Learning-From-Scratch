@@ -4,12 +4,12 @@ Dense Neural Network training on MNIST.
 
 import os
 
-from gardenpy.models import DNN, EvaluationDNN, SaveDNN
+from gardenpy.models import DNN
 from gardenpy.utils import DataLoaderCSV, ansi
-from gardenpy.utils.helper_functions import print_credits
+from gardenpy.utils.helper_functions import print_contributors
 
 print()
-print_credits()
+print_contributors()
 
 dataset = DataLoaderCSV(
     labels='labels',
@@ -74,18 +74,18 @@ if save_parameters.lower() == 'save':
 else:
     print(f"{ansi['bright_black']}{ansi['italic']}Parameters not saved.{ansi['reset']}")
 
-evals = EvaluationDNN(status_bars=True)
-evals.evaluate(
-    stats={
-                'log': {'on': True}
-    }
-)
-evals.graphs(
-    graphs={
-        'boxplot': {'on': True},
-        'heatmap': {'on': True, 'normalized': True, 'validation': True},
-        'lgraph': {'on': True, 'accuracy': True, 'loss': True, 'validation': True},
-        'rgraph': {'on': True, 'accuracy': True, 'loss': True, 'validation': True}
-    }
-)
-print()
+# evals = EvaluationDNN(status_bars=True)
+# evals.evaluate(
+#     stats={
+#                 'log': {'on': True}
+#     }
+# )
+# evals.graphs(
+#     graphs={
+#         'boxplot': {'on': True},
+#         'heatmap': {'on': True, 'normalized': True, 'validation': True},
+#         'lgraph': {'on': True, 'accuracy': True, 'loss': True, 'validation': True},
+#         'rgraph': {'on': True, 'accuracy': True, 'loss': True, 'validation': True}
+#     }
+# )
+# print()

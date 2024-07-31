@@ -9,8 +9,8 @@ Attributes:
     Progress bar.
 **convert_time**:
     Time converter from seconds to hours:minutes:seconds.
-**print_credits**:
-    Credits for GardenPy.
+**print_contributors**:
+    Contributors for GardenPy.
 
 Notes:
 ----------
@@ -138,9 +138,9 @@ def convert_time(seconds: float, *, number_colors: str = None, separators_color:
     return f"{number_colors}{hours:01}{separators_color}:{number_colors}{minutes:02}{separators_color}:{number_colors}{seconds:02}{ansi['reset']}"
 
 
-def print_credits() -> None:
+def print_contributors() -> None:
     r"""
-    **Prints the credits for GardenPy.**
+    **Prints the contributors for GardenPy.**
 
     Parameters:
     ----------
@@ -152,12 +152,12 @@ def print_credits() -> None:
 
     Example:
     ----------
-    >>> from gardenpy.utils.helper_functions import print_credits
-    >>> print_credits()
+    >>> from gardenpy.utils.helper_functions import print_contributors
+    >>> print_contributors()
     """
-    # print credits in alphabetical order
+    # print contributors in alphabetical order
     print(f"{ansi['bold']}{ansi['green']}GardenPy{ansi['reset']}")
-    print(f"    {ansi['bold']}Contributors{ansi['reset']}")
+    print(f"    {ansi['bold']}Authors{ansi['reset']}")
     print(f"    Christian SW Host-Madsen", end='')
     print(f"    {ansi['white']}Punahou School CO '25{ansi['reset']}", end='')
     print(f"    {ansi['bright_black']}<chost-madsen25@punahou.edu>{ansi['reset']}",)
@@ -170,3 +170,8 @@ def print_credits() -> None:
     print(f"    Derek S Yee", end='')
     print(f"                 {ansi['white']}Punahou School CO '25{ansi['reset']}", end='')
     print(f"    {ansi['bright_black']}<dyee25@punahou.edu>{ansi['reset']}")
+    print()
+    print(f"    {ansi['bold']}Artists{ansi['reset']}")
+    print(f"    Kamalau Kimata", end='')
+    print(f"              {ansi['white']}Punahou School CO '25{ansi['reset']}", end='')
+    print(f"    {ansi['bright_black']}<kkimata25@punahou.edu>{ansi['reset']}", )
