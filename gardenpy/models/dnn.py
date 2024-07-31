@@ -364,7 +364,24 @@ class DNN:
 
     def setup(self) -> None:
         if self._data is not None:
-            ...
+            # check for data
+            self._lyrs = self._hidden
+            self._lyrs.insert(0, self._data.num_values)
+            self._lyrs.append(0, self._data.num_labels)
+        elif isinstance(self._w[0], Tensor) and isinstance(self._w[-1], Tensor):
+            # check for thetas
+            self._lyrs = self._hidden
+            self._lyrs.insert(0, self._w.shape[0])
+            self._lyrs.append(0, self._w.shape[1])
+        else:
+            # not enough data for setup
+            raise RuntimeError(
+                f"Invalid setup for DNN: '{self}'\n"
+                f"Add 'thetas' or 'data' to setup model"
+            )
+        for lyr in range(len(self._lyrs) - 1):
+            # instantiate thetas
+            self._w[...] = ...
         self._initialized = True
 
     def forward(self, x: Union[Tensor, np.ndarray]) -> np.ndarray:
