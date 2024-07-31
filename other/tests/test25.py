@@ -26,6 +26,7 @@ start = time.time()
 status = True
 simulate = True
 
+print()
 print(f"Training model  {num} iterations")
 for i in range(num):
     if simulate:
@@ -37,4 +38,4 @@ for i in range(num):
             f"{round((i + 1) / (current - start), 1)}it/s"
         )
         bar(i, num, desc=description)
-print('')
+print('\n')

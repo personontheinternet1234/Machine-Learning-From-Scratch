@@ -6,7 +6,7 @@ sns.set(style='whitegrid')
 
 # Load the 'tips' dataset
 tips = sns.load_dataset('tips')
-print(tips)
+print(tips.to_string())
 
 
 

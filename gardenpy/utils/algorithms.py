@@ -1,13 +1,21 @@
 r"""
-'algorithms' includes mathematical algorithms for GardenPy.
+**Algorithms for GardenPy.**
 
-'algorithms' includes:
-    'Initializers': Initialization algorithms for kernels/weights/biases.
-    'Activators': Activation algorithms for activations.
-    'Losses': Loss algorithms for loss.
-    'Optimizers': Optimization algorithms for kernels/weights/biases.
+Attributes:
+----------
+**Initializers**:
+    Initialization algorithms for kernels/weights/biases.
+**Activators**:
+    Activation algorithms for activations.
+**Losses**:
+    Loss algorithms for loss.
+**Optimizers**:
+    Optimization algorithms for kernels/weights/biases.
 
-Refer to 'todo' for in-depth documentation on these algorithms.
+
+Notes:
+----------
+- Refer to GardenPy's repository or GardenPy's docs for more information.
 """
 
 from typing import Union
@@ -19,26 +27,90 @@ from .objects import Tensor
 
 
 class Initializers:
-    def __init__(self, algorithm: str, parameters: dict = None, **kwargs):
-        r"""
-        'Initializers' is a class containing various initialization algorithms.
-        These initialization algorithms currently include 'xavier' (Xavier/Glorot), 'gaussian' (Gaussian/Normal), 'zeros' (Uniform Zeros), and 'ones' (Uniform Ones).
-        The class structure promotes flexibility through the easy addition of other initialization algorithms.
+    r"""
+    **Initialization algorithms for GardenPy.**
 
-        Arguments:
-            algorithm: A string referencing the desired initialization algorithm.
-            parameters: A dictionary referencing the parameters for the initialization algorithm.
-            (any parameters not referenced will be automatically defined)
-                'xavier' (Xavier initialization):
-                    'gain': The gain value.
-            kwargs: Key-word arguments that can be used instead of a dictionary for the parameters.
+    These algorithms ideally support GardenPy Tensors, but are compatible with NumPy Arrays.
+
+    Attributes:
+    ----------
+    **algorithm** : (*str*)
+        The initialization algorithm.
+    **parameters** : (*dict*)
+        The parameters for the initialization algorithm.
+
+    Methods:
+    ----------
+    **__init__(algorithm: str, *, parameters: dict = None, **kwargs)** :
+        Instantiates the object with the specified parameters.
+
+    **initialize(self, rows: int, columns: int, *, tens=True) -> Union[Tensor, np.ndarray]** :
+        Initializes matrix with the specified dimensions.
+        If *tens* is True, the initialized matrix will be a Tensor.
+
+
+    Notes:
+    ----------
+    - Initializers supports GardenPy Tensors; however, Initializers also works with NumPy Arrays.
+
+    - Refer to GardenPy's repository or GardenPy's docs for more information.
+    """
+    def __init__(self, algorithm: str, *, parameters: dict = None, **kwargs):
+        r"""
+        **Initializer initialization with defined parameters.**
+
+        Parameters:
+        ----------
+        **algorithm** : (*str*) {'*xavier*', '*gaussian*', '*uniform*'}
+            The initialization algorithm.
+
+            - *xavier* : Xavier/Glorot.
+            - *gaussian*: Gaussian/Normal.
+            - *uniform*: Uniform values.
+
+        **parameters** (*dict*, *optional*) :
+            The parameters for the initialization algorithm.
+
+            - **xavier** : (*dict*) {'*mu*', '*sigma*'}
+                - *mu* : (float, int), default=0.0
+                    The mean.
+                - *sigma* : (float, int), default=1.0
+                    The standard deviation.
+
+            - **gaussian** : (*dict*) {'*mu*', '*sigma*'}
+                - *mu* : (float, int), default=0.0
+                    The mean.
+                - *sigma* : (float, int), default=1.0
+                    The standard deviation.
+
+            - **uniform** : (*dict*) {'*value*'}
+                - *value* : (float, int), default=1.0
+                    The uniform value.
+
+        ****kwargs** (*any*, *optional*) :
+            The parameters for the initialization algorithm with keyword arguments if desired.
+
+            To set a parameter, add a keyword argument that refers to one of the parameters.
+
+        Notes:
+        ----------
+        - Any parameters not specified will be set to their default values.
+
+        - Parameters that are specified but not used within the specified algorithm will be discarded.
+            - The user will receive a warning when this occurs.
+
+        - Initializers supports GardenPy Tensors; however, Initializers also works with NumPy Arrays.
+
+        Example:
+        -----
+        >>> from gardenpy.utils.algorithms import Initializers
+        >>> init = Initializers('gaussian', parameters={'mu': 1.0, 'sigma': 3.0})
         """
         # initialization algorithms
         self.algorithms = [
             'xavier',
             'gaussian',
-            'zeros',
-            'ones'
+            'uniform'
         ]
 
         # internal initialization algorithm parameters
@@ -65,28 +137,57 @@ class Initializers:
         # default initialization algorithm parameters
         default = {
             'xavier': {
-                'gain': 1.0
+                'mu': 0.0,
+                'sigma': 1.0
             },
-            'gaussian': None,
-            'zeros': None,
-            'ones': None
+            'gaussian': {
+                'mu': 0.0,
+                'sigma': 1.0
+            },
+            'uniform': {
+                'value': 1.0
+            }
         }
         # default initialization algorithm parameter datatypes
         dtypes = {
             'xavier': {
-                'gain': (float, int)
+                'mu': (float, int),
+                'sigma': (float, int)
+            },
+            'gaussian': {
+                'mu': (float, int),
+                'sigma': (float, int)
+            },
+            'uniform': {
+                'value': (float, int),
             }
         }
         # default initialization algorithm parameter value types
         vtypes = {
             'xavier': {
-                'gain': lambda x: 0.0 < x
+                'mu': lambda x: True,
+                'sigma': lambda x: True
+            },
+            'gaussian': {
+                'mu': lambda x: True,
+                'sigma': lambda x: True
+            },
+            'uniform': {
+                'value': lambda x: True,
             }
         }
-        # default optimization algorithm hyperparameter conversion types
+        # default initialization algorithm parameter conversion types
         ctypes = {
             'xavier': {
-                'gain': lambda x: float(x)
+                'mu': lambda x: float(x),
+                'sigma': lambda x: float(x)
+            },
+            'gaussian': {
+                'mu': lambda x: float(x),
+                'sigma': lambda x: float(x)
+            },
+            'uniform': {
+                'value': lambda x: float(x),
             }
         }
 
@@ -143,43 +244,57 @@ class Initializers:
         # defines initialization algorithm
         def xavier(row, col):
             # Xavier/Glorot initialization
-            return np.random.randn(row, col) * self._params['gain'] * np.sqrt(2.0 / float(row + col))
+            return self._params['sigma'] * np.sqrt(2.0 / float(row + col)) * np.random.randn(row, col) + self._params['mu']
 
         def gaussian(row, col):
             # Gaussian initialization
-            return np.random.randn(row, col)
+            return self._params['sigma'] * np.random.randn(row, col) + self._params['mu']
 
-        def zeros(row, col):
+        def uniform(row, col):
             # Zeros uniform initialization
-            return np.zeros((row, col), dtype=np.float64)
-
-        def ones(row, col):
-            # Ones uniform initialization
-            return np.ones((row, col), dtype=np.float64)
+            return self._params['value'] * np.ones((row, col), dtype=np.float64)
 
         # initialization algorithm dictionary
         init_funcs = {
             'xavier': xavier,
             'gaussian': gaussian,
-            'zeros': zeros,
-            'ones': ones
+            'uniform': uniform,
         }
 
         # return initialization algorithm
         return init_funcs[self._algorithm]
 
-    def initialize(self, rows: int, columns: int, tens=True) -> Union[Tensor, np.ndarray]:
+    def initialize(self, rows: int, columns: int, *, tens=True) -> Union[Tensor, np.ndarray]:
         r"""
-        'initialize' is a built-in function in the 'Initializers' class.
-        This function initializes a Tensor based on the rows and columns.
+        **Initializes matrix with the specified dimensions.**
 
-        Arguments:
-            rows: An integer of the rows in the Tensor.
-            columns: An integer of the columns in the Tensor.
-            tens: Bool to return a tensor or NumPy Array.
+        If *tens* is True, the initialized matrix will be a Tensor.
+
+        This function ideally supports GardenPy Tensors, but is compatible with NumPy Arrays.
+
+        Parameters:
+        ----------
+        - **rows** : (*int*)
+            The rows.
+        - **columns** : (*int*)
+            The columns.
+        - **tens** : (*bool*), default=True
+            Whether to initialize as a Tensor.
 
         Returns:
-            A Tensor of initialized values.
+        ----------
+        - **matrix** : (*Union[Tensor, np.ndarray]*)
+            The initialized matrix.
+
+        Notes:
+        ----------
+        - The initialized matrix will support automatic tracking for automatic differentiation if it is a Tensor.
+
+        Example:
+        ----------
+        >>> from gardenpy.utils.algorithms import Initializers
+        >>> init = Initializers('gaussian', parameters={'mu': 1.0, 'sigma': 3.0})
+        >>> mat = init.initialize(3, 4)
         """
         if not isinstance(rows, int):
             # invalid datatype
@@ -196,23 +311,92 @@ class Initializers:
 
 
 class Activators:
-    def __init__(self, algorithm: str, parameters: dict = None, **kwargs):
-        r"""
-        'Activators' is a class containing various activation algorithms.
-        These activation algorithms currently include 'softmax' (Softmax), 'relu' (ReLU), 'lrelu' (Leaky ReLU), 'sigmoid' (Sigmoid), 'tanh' (Tanh), 'softplus' (Softplus), and 'mish' (Mish).
-        The class structure promotes flexibility through the easy addition of other activation algorithms.
+    r"""
+    **Activation algorithms for GardenPy.**
 
-        Arguments:
-            algorithm: A string referencing the desired activation algorithm.
-            parameters: A dictionary referencing the parameters for the activation algorithm.
-            (any parameters not referenced will be automatically defined)
-                'lrelu' (Leaky ReLU):
-                    'beta': The negative slope coefficient.
-                'softplus' (Softplus):
-                    'beta': The Beta value.
-                'mish' (Mish):
-                    'beta': The Beta value.
-            kwargs: Key-word arguments that can be used instead of a dictionary for the parameters.
+    These algorithms ideally support GardenPy Tensors, but are compatible with NumPy Arrays.
+    With NumPy Arrays, there will be no tracking.
+
+    Attributes:
+    ----------
+    **algorithm** : (*str*)
+        The activation algorithm.
+    **parameters** : (*dict*)
+        The parameters for the activation algorithm.
+
+    Methods:
+    ----------
+    **__init__(algorithm: str, *, parameters: dict = None, **kwargs)** :
+        Instantiates the object with the specified parameters.
+
+    **activate(self, x: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]** :
+        Activates values with the activation algorithm.
+        The activated values will retain the same datatype as x.
+        If x is a Tensor, Activators will automatically track the equation for automatic differentiation.
+
+    **d_activate(self, x: np.ndarray) -> np.ndarray** :
+        Calculates derivative of x based on the specified outputs.
+        Only supports NumPy Arrays for manual calculation.
+        Use 'nabla' from gardenpy.utils.operators for Tensor support.
+
+    Notes:
+    ----------
+    - Activators supports automatic differentiation built-in with Tensors.
+        - d_activate should never be called when using Tensors.
+        - Use 'nabla' from gardenpy.utils.operators for Tensor support.
+
+    - Refer to GardenPy's repository or GardenPy's docs for more information.
+    """
+    def __init__(self, algorithm: str, *, parameters: dict = None, **kwargs):
+        r"""
+        **Activator initialization with defined parameters.**
+
+        Parameters:
+        ----------
+        **algorithm** : (*str*) {'*softmax*', '*relu*', '*lrelu*', '*sigmoid*', '*tanh*', '*softplus*', '*mish*'}
+            The activator algorithm.
+
+            - *softmax* : Softmax.
+            - *relu*: Rectified Linear Unit.
+            - *lrelu*: Leaky Rectified Linear Unit.
+            - *sigmoid*: Sigmoid.
+            - *tanh*: Tanh.
+            - *softplus*: SoftPlus.
+            - *mish*: Mish.
+
+        **parameters** (*dict*, *optional*) :
+            The parameters for the activation algorithm.
+
+            - **lrelu** : (*dict*) {'*beta*'}
+                - *beta* : (float, int, 0.0<=beta), default=1e-2
+                    The negative slope.
+
+            - **softplus** : (*dict*) {'*beta*'}
+                - *beta* : (float, int, 0.0<=beta), default=1.0
+                    The vertical stretch.
+
+            - **mish** : (*dict*) {'*beta*'}
+                - *beta* : (float, int, 0.0<=beta), default=1.0
+                    The vertical stretch.
+
+        ****kwargs** (*any*, *optional*) :
+            The parameters for the activation algorithm with keyword arguments if desired.
+
+            To set a parameter, add a keyword argument that refers to one of the parameters.
+
+        Notes:
+        ----------
+        - Any parameters not specified will be set to their default values.
+
+        - Parameters that are specified but not used within the specified algorithm will be discarded.
+            - The user will receive a warning when this occurs.
+
+        - Activators supports GardenPy Tensors; however, Activators also works with NumPy Arrays.
+
+        Example:
+        -----
+        >>> from gardenpy.utils.algorithms import Activators
+        >>> optim = Activators('relu')
         """
         # activation algorithms
         self.algorithms = [
@@ -252,7 +436,7 @@ class Activators:
             'softmax': None,
             'relu': None,
             'lrelu': {
-                'beta': 0.01
+                'beta': 1e-2
             },
             'sigmoid': None,
             'tanh': None,
@@ -287,7 +471,7 @@ class Activators:
                 'beta': lambda x: 0.0 <= x
             }
         }
-        # default optimization algorithm hyperparameter conversion types
+        # default activation algorithm parameter conversion types
         ctypes = {
             'lrelu': {
                 'beta': lambda x: float(x)
@@ -365,7 +549,7 @@ class Activators:
 
         def sigmoid(x):
             # Sigmoid activation
-            return (1.0 + np.exp(-x)) ** -1.0
+            return (np.exp(-x) + 1.0) ** -1.0
 
         def tanh(x):
             # Tanh activation
@@ -373,11 +557,11 @@ class Activators:
 
         def softplus(x):
             # Softplus activation
-            return np.log(1.0 + np.exp(self._params['beta'] * x)) / self._params['beta']
+            return np.log(np.exp(self._params['beta'] * x) + 1.0) / self._params['beta']
 
         def mish(x):
             # Mish activation
-            return x * np.tanh(np.log(1.0 + np.exp(self._params['beta'] * x)) / self._params['beta'])
+            return x * np.tanh(np.log(np.exp(self._params['beta'] * x) + 1.0) / self._params['beta'])
 
         # activation algorithm dictionary
         act_funcs = {
@@ -397,7 +581,8 @@ class Activators:
         # defines derivative of activation algorithm
         def d_softmax(x, _=None):
             # derivative of Softmax activation
-            return (np.exp(x) * np.sum(np.exp(x)) - np.exp(2 * x)) / (np.sum(np.exp(x)) ** 2)
+            # todo: broken
+            return (np.sum(np.exp(x)) * np.exp(x) - np.exp(2.0 * x)) / (np.sum(np.exp(x)) ** 2.0)
 
         def d_relu(x, _=None):
             # derivative of ReLU activation
@@ -409,7 +594,7 @@ class Activators:
 
         def d_sigmoid(x, _=None):
             # derivative of Sigmoid activation
-            return np.exp(-x) / ((1.0 + np.exp(-x)) ** 2.0)
+            return np.exp(-x) / ((np.exp(-x) + 1.0) ** 2.0)
 
         def d_tanh(x, _=None):
             # derivative of Tanh activation
@@ -417,12 +602,11 @@ class Activators:
 
         def d_softplus(x, _=None):
             # derivative of Softplus activation
-            return self._params['beta'] * np.exp(self._params['beta'] * x) / (self._params['beta'] + self._params['beta'] * np.exp(self._params['beta'] * x))
+            return self._params['beta'] * np.exp(self._params['beta'] * x) / (self._params['beta'] * np.exp(self._params['beta'] * x) + self._params['beta'])
 
         def d_mish(x, _=None):
             # derivative of Mish activation
-            # todo: check order of operations
-            return (np.tanh(np.log(1.0 + np.exp(self._params['beta'] * x)) / self._params['beta'])) + (x * (np.cosh(np.log(1.0 + np.exp(self._params['beta'] * x)) / self._params['beta']) ** -2.0) * (self._params['beta'] * np.exp(self._params['beta'] * x) / (self._params['beta'] + self._params['beta'] * np.exp(self._params['beta'] * x))))
+            return np.tanh(np.log(np.exp(self._params['beta'] * x) + 1.0) / self._params['beta']) + x * (np.cosh(np.log(np.exp(self._params['beta'] * x) + 1.0) / self._params['beta']) ** -2.0) * (self._params['beta'] * np.exp(self._params['beta'] * x) / (self._params['beta'] * np.exp(self._params['beta'] * x) + self._params['beta']))
 
         # derivative of activation algorithm dictionary
         d_act_funcs = {
@@ -440,15 +624,33 @@ class Activators:
 
     def activate(self, x: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
         r"""
-        'activate' is a built-in function in the 'Activators' class.
-        This function runs a Tensor through an activation algorithm.
-        This function contains built-in compatibility with automatic differentiation for Tensors.
+        **Activates values with the activation algorithm.**
 
-        Arguments:
-            x: A Tensor or NumPy Array of input activations.
+        This function ideally supports GardenPy Tensors, but is compatible with NumPy Arrays.
+        If x is a Tensor, Activators will automatically track the equation for automatic differentiation.
+
+        Parameters:
+        ----------
+        - **yhat** : (*Union[Tensor, np.ndarray]*)
+            The initial values.
 
         Returns:
-            An Tensor or NumPy Array of activated inputs.
+        ----------
+        - **y** : (*Union[Tensor, np.ndarray]*)
+            The activated values.
+
+        Notes:
+        ----------
+        - y will retain the same datatype as x.
+        - If x is a Tensor, Activators will automatically track the equation for automatic differentiation.
+
+        Example:
+        ----------
+        >>> from gardenpy.utils.objects import Tensor
+        >>> from gardenpy.utils.algorithms import Activators
+        >>> act = Activators('relu')
+        >>> in_value = Tensor([-0.5, 1])
+        >>> out_value = act.activate(in_value)
         """
         if not isinstance(x, (Tensor, np.ndarray)):
             # invalid datatype
@@ -473,15 +675,34 @@ class Activators:
 
     def d_activate(self, x: np.ndarray) -> np.ndarray:
         r"""
-        'd_activate' is a built-in function in the 'Activators' class.
-        This function runs a NumPy Array through the derivative of an activation algorithm.
-        This function exists for manual differentiation, use 'nabla' for Tensor support.
+        **Calculates the gradient of x with respect to y.**
 
-        Arguments:
-            x: A NumPy Array of input activations.
+        Only supports NumPy Arrays for manual calculation.
+        Use 'nabla' from gardenpy.utils.operators for Tensor support.
+
+        Parameters:
+        ----------
+        - **x** : (*np.ndarray*)
+            The initial values.
 
         Returns:
-            An NumPy Array of the derivative of activated inputs.
+        ----------
+        - **y** : (*np.ndarray*)
+            The gradient of x with respect to y.
+
+        Notes:
+        ----------
+        - Only supports NumPy Arrays.
+            - For Tensor support, use 'nabla' from gardenpy.utils.operators.
+
+        Example:
+        ----------
+        >>> from numpy import array
+        >>> from gardenpy.utils.algorithms import Activators
+        >>> act = Activators('relu')
+        >>> in_value = array([0, 1])
+        >>> out_value = act.activate(in_value)
+        >>> grad_in = act.d_activate(in_value)
         """
         if not isinstance(x, np.ndarray):
             # invalid datatype
@@ -492,18 +713,78 @@ class Activators:
 
 
 class Losses:
-    def __init__(self, algorithm: str, parameters: dict = None, **kwargs):
-        r"""
-        'Losses' is a class containing various loss algorithms.
-        These activation algorithms currently include 'ssr' (Sum of the Squared Residuals), 'savr' (Sum of the Absolute Valued Residuals), and 'centropy' (Cross-Entropy).
-        The class structure promotes flexibility through the easy addition of other loss algorithms.
+    r"""
+    **Loss algorithms for GardenPy.**
 
-        Arguments:
-            algorithm: A string referencing the desired loss algorithm.
-            parameters: A dictionary referencing the parameters for the loss algorithm.
-            (any parameters not referenced will be automatically defined)
-                Currently, 'Losses' takes no arguments.
-            kwargs: Key-word arguments that can be used instead of a dictionary for the parameters.
+    These algorithms ideally support GardenPy Tensors, but are compatible with NumPy Arrays.
+    With NumPy Arrays, there will be no tracking.
+
+    Attributes:
+    ----------
+    **algorithm** : (*str*)
+        The loss algorithm.
+    **parameters** : (*dict*)
+        The parameters for the loss algorithm.
+
+    Methods:
+    ----------
+    **__init__(algorithm: str, *, parameters: dict = None, **kwargs)** :
+        Instantiates the object with the specified parameters.
+
+    **loss(yhat: Union[Tensor, np.ndarray], y: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]** :
+        Calculates loss based on the specified outputs.
+        The loss will retain the same datatype as yhat.
+        If yhat is a Tensor, Losses will automatically track the equation for automatic differentiation.
+
+    **d_loss(yhat: np.ndarray, y: np.ndarray) -> np.ndarray** :
+        Calculates derivative of the loss based on the specified outputs.
+        Only supports NumPy Arrays for manual calculation.
+        Use 'nabla' from gardenpy.utils.operators for Tensor support.
+
+    Notes:
+    ----------
+    - Losses supports automatic differentiation built-in with Tensors.
+        - d_loss should never be called when using Tensors.
+        - Use 'nabla' from gardenpy.utils.operators for Tensor support.
+
+    - Losses supports GardenPy Tensors; however, Losses also works with NumPy Arrays.
+
+    - Refer to GardenPy's repository or GardenPy's docs for more information.
+    """
+    def __init__(self, algorithm: str, *, parameters: dict = None, **kwargs):
+        r"""
+        **Loss initialization with defined parameters.**
+
+        Parameters:
+        ----------
+        **algorithm** : (*str*) {'*centropy*', '*ssr*', '*savr*'}
+            The loss algorithm.
+
+            - *centropy* : Categorical Cross-Entropy.
+            - *ssr*: Sum of the Squared Residuals.
+            - *savr*: Sum of the Absolute Value Residuals.
+
+        **parameters** (*dict*, *optional*) :
+            The parameters for the loss algorithm.
+
+            Currently, no loss algorithms accept parameters.
+
+        ****kwargs** (*any*, *optional*) :
+            The parameters for the loss algorithm with keyword arguments if desired.
+
+            To set a parameter, add a keyword argument that refers to one of the parameters.
+
+        Notes:
+        ----------
+        - Any parameters not specified will be set to their default values.
+
+        - Parameters that are specified but not used within the specified algorithm will be discarded.
+            - The user will receive a warning when this occurs.
+
+        Example:
+        -----
+        >>> from gardenpy.utils.algorithms import Losses
+        >>> optim = Losses('centropy')
         """
         # loss algorithms
         self.algorithms = [
@@ -546,7 +827,7 @@ class Losses:
         # default loss algorithm parameter value types
         vtypes = {
         }
-        # default optimization algorithm hyperparameter conversion types
+        # default loss algorithm parameter conversion types
         ctypes = {
         }
 
@@ -649,16 +930,36 @@ class Losses:
 
     def loss(self, yhat: Union[Tensor, np.ndarray], y: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
         r"""
-        'loss' is a built-in function in the 'Loss' class.
-        This function runs a NumPy Array through a loss algorithm.
-        This function contains built-in compatibility with automatic differentiation for Tensors.
+        **Calculates loss based on the specified outputs.**
 
-        Arguments:
-            yhat: A Tensor or NumPy Array of predicted activations.
-            y: A Tensor or NumPy Array of expected activations.
+        This function ideally supports GardenPy Tensors, but is compatible with NumPy Arrays.
+        If yhat is a Tensor, loss will automatically track the equation for automatic differentiation.
+
+        Parameters:
+        ----------
+        - **yhat** : (*Union[Tensor, np.ndarray]*)
+            The predicted values.
+        - **y** : (*Union[Tensor, np.ndarray]*)
+            The expected values.
 
         Returns:
-            A Tensor or NumPy Array of the calculated loss.
+        ----------
+        - **loss** : (*Union[Tensor, np.ndarray]*)
+            The calculated loss.
+
+        Notes:
+        ----------
+        - The loss will retain the same datatype as yhat.
+        - If yhat is a Tensor, Losses will automatically track the equation for automatic differentiation.
+
+        Example:
+        ----------
+        >>> from gardenpy.utils.objects import Tensor
+        >>> from gardenpy.utils.algorithms import Losses
+        >>> loss = Losses('ssr')
+        >>> expected = Tensor([0, 1])
+        >>> predicted = Tensor([0.2, 0.5])
+        >>> cost = loss.loss(expected, predicted)
         """
         if not isinstance(yhat, (Tensor, np.ndarray)):
             # invalid datatype
@@ -690,16 +991,37 @@ class Losses:
 
     def d_loss(self, yhat: np.ndarray, y: np.ndarray) -> np.ndarray:
         r"""
-        'd_loss' is a built-in function in the 'Loss' class.
-        This function runs a NumPy Array through the derivative of a loss algorithm.
-        This function exists for manual differentiation; use 'nabla' for Tensor support.
+        **Calculates the gradient of loss with respect to yhat based on the specified outputs.**
 
-        Arguments:
-            yhat: A NumPy Array of expected activations.
-            y: A NumPy Array of predicted activations.
+        Only supports NumPy Arrays for manual calculation.
+        Use 'nabla' from gardenpy.utils.operators for Tensor support.
+
+        Parameters:
+        ----------
+        - **yhat** : (*np.ndarray*)
+            The predicted values.
+        - **y** : (*np.ndarray*)
+            The expected values.
 
         Returns:
-            A NumPy Array of the derivative of calculated loss with respect to the predicted activations.
+        ----------
+        - **grad_yhat** : (*np.ndarray*)
+            The gradient of loss with respect to yhat.
+
+        Notes:
+        ----------
+        - Only supports NumPy Arrays.
+            - For Tensor support, use 'nabla' from gardenpy.utils.operators.
+
+        Example:
+        ----------
+        >>> from numpy import array
+        >>> from gardenpy.utils.algorithms import Losses
+        >>> loss = Losses('ssr')
+        >>> expected = array([0, 1])
+        >>> predicted = array([0.2, 0.5])
+        >>> cost = loss.loss(expected, predicted)
+        >>> d_cost = loss.d_loss(expected, predicted)
         """
         if not isinstance(yhat, np.ndarray):
             # invalid datatype
@@ -713,36 +1035,114 @@ class Losses:
 
 
 class Optimizers:
-    def __init__(self, algorithm: str, hyperparameters: dict = None, **kwargs):
-        r"""
-        'Optimizers' is a class containing various optimization algorithms.
-        These optimization algorithms currently include 'adam' (Adaptive Moment Estimation), 'sgd' (Stochastic Gradient Descent), and 'rmsp' (Root Mean Squared Propagation).
-        The class structure promotes flexibility through the easy addition of other optimization algorithms.
+    r"""
+    **Optimization algorithms for GardenPy.**
 
-        Arguments:
-            algorithm: A string referencing the desired optimization algorithm.
-            hyperparameters: A dictionary referencing the hyperparameters for the optimization algorithm.
-            (any hyperparameters not referenced will be automatically defined)
-                'adam' (Adaptive Moment Estimation):
-                    'gamma': The learning rate value.
-                    'lambda_d': The weight decay (L2 regularization) coefficient.
-                    'beta1': The value for the weight held by the new delta.
-                    'beta2': The value for the weight held by the new upsilon.
-                    'epsilon': The numerical stability value to prevent division by zero.
-                    'ams': A bool for the AMSGrad variant.
-                'sgd' (Stochastic Gradient Descent):
-                    'gamma': The learning rate value.
-                    'lambda_d': The weight decay (L2 regularization) coefficient.
-                    'mu': The value for the weight held by the previous delta.
-                    'tau': the value for the dampening of the new delta.
-                    'nesterov': A bool for Nesterov momentum.
-                'rmsp' (Root Mean Squared Propagation):
-                    'gamma': The learning rate value.
-                    'lambda_d': The weight decay (L2 regularization) coefficient.
-                    'beta': The value for the weight held by the new upsilon.
-                    'mu': The value for the weight held by the previous delta.
-                    'epsilon': The numerical stability value to prevent division by zero.
-            kwargs: Key-word arguments that can be used instead of a dictionary for the hyperparameters.
+    These algorithms ideally support GardenPy Tensors, but are compatible with NumPy Arrays.
+
+    Attributes:
+    ----------
+    **algorithm** : (*str*)
+        The optimization algorithm.
+    **hyperparameters** : (*dict*)
+        The hyperparameters for the optimization algorithm.
+
+    Methods:
+    ----------
+    **__init__(algorithm: str, *, hyperparameters: dict = None, **kwargs)** :
+        Instantiates the object with the specified hyperparameters.
+
+    **optimize(thetas: Union[Tensor, np.ndarray], nablas: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]** :
+        Optimizes the thetas based on the specified gradients.
+        The optimized thetas will retain the same datatype as the initial thetas.
+
+    Notes:
+    ----------
+    - Optimizers optimizes thetas iteratively within each call.
+
+    - Optimizers does not calculate gradients.
+        - Gradients are calculated from GardenPy Tensors' automatic differentiation or by hand.
+
+    - Optimizers supports GardenPy Tensors; however, Optimizers also works with NumPy Arrays.
+
+    - Any values that must be called outside one instance of optimization are automatically saved to memory.
+        - These values are saved within each object and called when necessary.
+        - These values are not readily callable externally.
+
+    - Refer to GardenPy's repository or GardenPy's docs for more information.
+    """
+    def __init__(self, algorithm: str, *, hyperparameters: dict = None, **kwargs):
+        r"""
+        **Optimizer initialization with defined hyperparameters.**
+
+        Parameters:
+        ----------
+        **algorithm** : (*str*) {'*adam*', '*sgd*', '*rmsp*'}
+            The optimization algorithm.
+
+            - *adam* : Adaptive Moment Estimation.
+            - *sgd*: Stochastic Gradient Descent.
+            - *rmsp*: Root Mean Squared Propagation.
+
+        **hyperparameters** (*dict*, *optional*) :
+            The hyperparameters for the optimization algorithm.
+
+            - **adam** : (*dict*) {'*gamma*', '*lambda_d*', '*beta1*', '*beta2*', '*epsilon*', '*ams*'}
+                - *gamma* : (float, int), default=1e-3
+                    Learning rate.
+                - *lambda_d* : (float, int, 0.0 <= lambda_d), default=0.0
+                    Strength of weight decay / L2 regularization.
+                - *beta1* : (float, int, 0.0 <= beta1 < 1), default=0.9
+                    Exponential decay rate for the first moment (mean).
+                - *beta2* : (float, int, 0.0 <= beta2 < 1), default=0.999
+                    Exponential decay rate for the second moment (uncentered variance).
+                - *epsilon* : (float, int, 0.0 < epsilon), default=1e-8
+                    Numerical stability constant to prevent division by zero.
+                - *ams* : (bool), default=False
+                    Whether to use AMSGrad.
+
+            - **sgd** : (*dict*) {'*gamma*', '*lambda_d*', '*mu*', '*tau*', '*nesterov*'}
+                - *gamma* : (float, int), default=1e-3
+                    Learning rate.
+                - *lambda_d* : (float, int, 0.0 <= lambda_d), default=0.0
+                    Strength of weight decay / L2 regularization.
+                - *mu* : (float, int, 0 <= mu < 1.0), default=0.0
+                    Decay rate for the previous delta.
+                - *tau* : (float, int, 0.0 <= tau < 1.0), default=0.0
+                    Dampening of the current delta.
+                - *nesterov* : (bool), default=False
+                    Whether to use Nesterov momentum.
+
+            - **rmsp** : (*dict*) {'*gamma*', '*lambda_d*', '*beta*', '*mu*', '*epsilon*'}
+                - *gamma* : (float, int), default=1e-3
+                    Learning rate.
+                - *lambda_d* : (float, int, 0.0 <= lambda_d), default=0.0
+                    Strength of weight decay / L2 regularization.
+                - *beta* : (float, int, 0.0 <= beta < 1), default=0.99
+                    Exponential decay rate for the first moment (mean).
+                - *mu* : (float, int, 0 <= mu < 1.0), default=0.0
+                    Decay rate for the previous delta.
+                - *epsilon* : (float, int, 0.0 < epsilon), default=1e-8
+                    Numerical stability constant to prevent division by zero.
+
+        ****kwargs** (*any*, *optional*) :
+            The hyperparameters for the optimization algorithm with keyword arguments if desired.
+
+            To set a hyperparameter, add a keyword argument that refers to one of the hyperparameters.
+
+        Notes:
+        ----------
+        - Any hyperparameters not specified will be set to their default values.
+
+        - Hyperparameters that are specified but not used within the specified algorithm will be discarded.
+            - The user will receive a warning when this occurs.
+
+        - The internal memory will automatically be initialized when Optimizers is instantiated.
+
+        Example:
+        -----
+        >>> from gardenpy.utils.algorithms import Optimizers
+        >>> optim = Optimizers('adam', hyperparameters={'gamma': 1e-2, 'lambda_d': 1e-3, 'ams': True})
         """
         # optimization algorithms
         self.algorithms = [
@@ -830,23 +1230,23 @@ class Optimizers:
             'adam': {
                 'gamma': lambda x: True,
                 'lambda_d': lambda x: 0.0 <= x,
-                'beta1': lambda x: 0.0 < x,
-                'beta2': lambda x: 0.0 < x,
+                'beta1': lambda x: 0.0 <= x < 1.0,
+                'beta2': lambda x: 0.0 <= x < 1.0,
                 'epsilon': lambda x: 0.0 < x,
                 'ams': lambda x: True
             },
             'sgd': {
                 'gamma': lambda x: True,
                 'lambda_d': lambda x: 0.0 <= x,
-                'mu': lambda x: 0.0 <= x,
-                'tau': lambda x: 0.0 <= x,
+                'mu': lambda x: 0.0 <= x < 1.0,
+                'tau': lambda x: 0.0 <= x < 1.0,
                 'nesterov': lambda x: True
             },
             'rmsp': {
                 'gamma': lambda x: True,
                 'lambda_d': lambda x: 0.0 <= x,
-                'beta': lambda x: 0.0 < x,
-                'mu': lambda x: 0.0 < x,
+                'beta': lambda x: 0.0 <= x < 1.0,
+                'mu': lambda x: 0.0 <= x < 1.0,
                 'epsilon': lambda x: 0.0 < x
             }
         }
@@ -947,17 +1347,16 @@ class Optimizers:
 
     def _get_optim(self):
         # defines optimization algorithm
-        # todo: check order of operations
         def adam(thetas, nablas):
             # Adaptive Moment Estimation optimization algorithm
             # weight decay
-            deltas = nablas + (self._hyps['lambda_d'] * thetas)
+            deltas = nablas + self._hyps['lambda_d'] * thetas
             if self._memory['deltas_p'] is not None:
                 # momentum
-                deltas = ((self._hyps['beta1'] * self._memory['deltas_p']) + ((1.0 - self._hyps['beta1']) * deltas))
+                deltas = self._hyps['beta1'] * self._memory['deltas_p'] + (1.0 - self._hyps['beta1']) * deltas
             if self._memory['upsilons_p'] is not None:
                 # square momentum
-                upsilons = (self._hyps['beta2'] * self._memory['upsilons_p']) + (deltas ** 2.0)
+                upsilons = self._hyps['beta2'] * self._memory['upsilons_p'] + deltas ** 2.0
             else:
                 # square
                 upsilons = deltas ** 2.0
@@ -990,7 +1389,7 @@ class Optimizers:
             deltas = nablas + (self._hyps['lambda_d'] * thetas)
             if self._hyps['mu'] and (self._memory['deltas_p'] is not None):
                 # momentum
-                deltas = (self._hyps['mu'] * self._memory['deltas_p']) + ((1.0 - self._hyps['tau']) * deltas)
+                deltas = self._hyps['mu'] * self._memory['deltas_p'] + (1.0 - self._hyps['tau']) * deltas
             if self._hyps['nesterov'] and (self._hyps['mu'] is not None):
                 # nesterov momentum
                 deltas += nablas + self._hyps['mu'] * deltas
@@ -1006,13 +1405,13 @@ class Optimizers:
         def rmsp(thetas, nablas):
             # Root Mean Squared Propagation optimization algorithm
             # weight decay
-            deltas = nablas + (self._hyps['lambda_d'] * thetas)
+            deltas = nablas + self._hyps['lambda_d'] * thetas
             if self._memory['upsilons_p'] is not None:
                 # square momentum
-                upsilons = (self._hyps['beta'] * self._memory['upsilons_p']) + ((1.0 - self._hyps['beta']) * (deltas ** 2.0))
+                upsilons = self._hyps['beta'] * self._memory['upsilons_p'] + (1.0 - self._hyps['beta']) * deltas ** 2.0
             else:
                 # square
-                upsilons = (1.0 - self._hyps['beta']) * (deltas ** 2.0)
+                upsilons = (1.0 - self._hyps['beta']) * deltas ** 2.0
             # step calculation
             deltas = deltas / (np.sqrt(upsilons) + self._hyps['epsilon'])
             if self._hyps['mu'] and (self._memory['deltas_p'] is not None):
@@ -1040,16 +1439,37 @@ class Optimizers:
 
     def optimize(self, thetas: Union[Tensor, np.ndarray], nablas: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
         r"""
-        'optimize' is a built-in function in the 'Optimizers' class.
-        This function updates the parameters of a model based on the gradients.
-        This function contains built-in compatibility with automatic differentiation for Tensors.
+        **Optimizes the thetas of a model based on the specified gradients.**
 
-        Arguments:
-            thetas: A Tensor or NumPy Array of the parameters that will be optimized.
-            nablas: A Tensor or NumPy Array of the gradients used to optimize the parameters.
+        This function ideally supports GardenPy Tensors, but is compatible with NumPy Arrays.
+
+        Parameters:
+        ----------
+        - **thetas** : (*Union[Tensor, np.ndarray]*)
+            The thetas.
+        - **nablas** : (*Union[Tensor, np.ndarray]*)
+            The gradients of the thetas.
 
         Returns:
-            A Tensor or NumPy Array of updated parameters.
+        ----------
+        - **thetas** : (*Union[Tensor, np.ndarray]*)
+            The optimized thetas.
+
+        Notes:
+        ----------
+        - The optimized thetas will retain the same datatype as the initial thetas.
+        - The optimized thetas will support automatic tracking for automatic differentation if it is a Tensor.
+
+        - The internal memory will be accessed automatically upon the function call.
+
+        Example:
+        ----------
+        >>> from gardenpy.utils.objects import Tensor
+        >>> from gardenpy.utils.algorithms import Optimizers
+        >>> optim = Optimizers('adam')
+        >>> theta = Tensor([0, 1])
+        >>> nabla = Tensor([0.2, 0.5])
+        >>> theta = optim.optimize(theta, nabla)
         """
         if not isinstance(thetas, (Tensor, np.ndarray)):
             # invalid datatype

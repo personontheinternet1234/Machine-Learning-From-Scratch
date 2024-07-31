@@ -17,7 +17,6 @@ from .utils import (
     Losses,
     Optimizers
 )
-
 from .models import (
     DNN,
     DNNTorch,
@@ -43,7 +42,7 @@ __version__ = '0.9.0'
 
 __authors__ = [
     'Christian SW Host-Madsen',
-    'Mason Morales',
+    'Mason YY Morales',
     'Isaac P Verbrugge',
-    'Derek Yee'
+    'Derek S Yee'
 ]

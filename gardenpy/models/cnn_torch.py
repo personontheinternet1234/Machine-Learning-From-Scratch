@@ -8,5 +8,12 @@ Refer to 'todo' for in-depth documentation on this model.
 """
 
 
+# from sklearn.neural_network import MLPRegressor
+# from ..utils.algorithms import Optimizers
+# from torch.optim import Adam
+#
+# a = MLPRegressor()
+# b = Optimizers()
+
 class CNNTorch:
     ...

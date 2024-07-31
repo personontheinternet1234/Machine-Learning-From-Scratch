@@ -1,13 +1,20 @@
 r"""
-'helper_functions' includes minor utility functions for GardenPy.
+**Minor utility functions for GardenPy.**
 
-'helper_functions' includes:
-    'ansi': Common ANSI formats.
-    'progress': Progress bar.
-    'convert_time': Converts time to hours:minutes:seconds.
-    'print_credits': Print credits for GardenPy.
+Attributes:
+----------
+**ansi**:
+    Common ANSI formats.
+**progress**:
+    Progress bar.
+**convert_time**:
+    Time converter from seconds to hours:minutes:seconds.
+**print_credits**:
+    Credits for GardenPy.
 
-Refer to 'todo' for in-depth documentation on these functions.
+Notes:
+----------
+- Refer to GardenPy's repository or GardenPy's docs for more information.
 """
 
 ansi = {
@@ -40,18 +47,30 @@ ansi = {
     }
 
 
-def progress(idx: int, max_idx: int, desc=None, b_len: int = 50) -> None:
+def progress(idx: int, max_idx: int, *, desc: str = None, b_len: int = 50) -> None:
     r"""
-    'progress' is a function that prints a progress bar.
+    **Prints a progress bar.**
 
     Arguments:
-        idx: The current iteration.
-        max_idx: The maximum amount of iterations.
-        desc: The progress bar description.
-        b_len: The length of the progress bar.
+    ----------
+    - **idx** : (*int*)
+        The current index.
+    - **max_idx** : (*int*)
+        The maximum index.
+    - **desc** : (*str*), default=None
+        The bar description.
+    - **b_len** : (*int*), default=50:
+        The bar length
 
     Returns:
-        None.
+    ----------
+    None.
+
+    Example:
+    ----------
+    >>> from gardenpy.utils.helper_functions import progress
+    >>> for i in range(5000):
+    >>>     progress(i, 5000)
     """
     # get ansi formats
     if not isinstance(b_len, int):
@@ -76,17 +95,31 @@ def progress(idx: int, max_idx: int, desc=None, b_len: int = 50) -> None:
         print(p_desc, end='')
 
 
-def convert_time(seconds: float, number_colors: str = None, separators_color: str = None) -> str:
+def convert_time(seconds: float, *, number_colors: str = None, separators_color: str = None) -> str:
     r"""
-    'convert_time' is a function that converts seconds to hours:minutes:seconds.
+    **Converts seconds to hours:minutes:seconds.**
 
     Arguments:
-        seconds: The elapsed seconds.
-        number_colors: The color of the numbers.
-        separators_color: The color of the time separators.
+    ----------
+    - **seconds** : (*float*)
+        The elapsed seconds.
+    - **number_colors** : (*str*), default=None
+        The number colors.
+    - **seperator_colors** : (*str*), default=None
+        The time separator colors.
 
     Returns:
-        Converted time.
+    ----------
+    - **time** : (*str*)
+        The converted time.
+
+    Example:
+    ----------
+    >>> import time
+    >>> from gardenpy.utils.helper_functions import convert_time
+    >>> start_time = time.time()
+    >>> time.sleep(0.5)
+    >>> convert_time(time.time() - start_time)
     """
     # get ansi formats
     if not number_colors:
@@ -107,13 +140,20 @@ def convert_time(seconds: float, number_colors: str = None, separators_color: st
 
 def print_credits() -> None:
     r"""
-    'print_credits' is a function that prints the credits for GardenPy.
+    **Prints the credits for GardenPy.**
 
-    Arguments:
-        None.
+    Parameters:
+    ----------
+    None.
 
     Returns:
-        None.
+    ----------
+    None.
+
+    Example:
+    ----------
+    >>> from gardenpy.utils.helper_functions import print_credits
+    >>> print_credits()
     """
     # print credits in alphabetical order
     print(f"{ansi['bold']}{ansi['green']}GardenPy{ansi['reset']}")
@@ -127,6 +167,6 @@ def print_credits() -> None:
     print(f"    Isaac P Verbrugge", end='')
     print(f"           {ansi['white']}Punahou School CO '25{ansi['reset']}", end='')
     print(f"    {ansi['bright_black']}<isaacverbrugge@gmail.com>{ansi['reset']}")
-    print(f"    Derek Yee", end='')
-    print(f"                   {ansi['white']}Punahou School CO '25{ansi['reset']}", end='')
+    print(f"    Derek S Yee", end='')
+    print(f"                 {ansi['white']}Punahou School CO '25{ansi['reset']}", end='')
     print(f"    {ansi['bright_black']}<dyee25@punahou.edu>{ansi['reset']}")

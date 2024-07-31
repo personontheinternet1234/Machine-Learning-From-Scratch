@@ -1,10 +1,14 @@
 r"""
-'objects' includes the objects for GardenPy.
+**Objects for GardenPy.**
 
-'objects' includes:
-    'Tensor': Automatic differentiation matrices.
+Attributes:
+----------
+**Tensor**:
+    Matrix for automatic differentiation.
 
-Refer to 'todo' for in-depth documentation on these objects.
+Notes:
+----------
+- Refer to GardenPy's repository or GardenPy's docs for more information.
 """
 
 from typing import Union
@@ -13,15 +17,73 @@ import numpy as np
 
 
 class Tensor:
+    r"""
+    **Matrix with automatic tracking for automatic differentiation**
+
+    This matrix is similar to a NumPy Array, but tracks operations and its relationship to other variables.
+
+    Attributes:
+    ----------
+    **tensor** : (*np.ndarray*)
+        The Tensor value.
+    **shape** : (*tuple*)
+        The Tensor shape.
+    **type** : (*str*)
+        The Tensor type.
+    **tracker** : (*dict*)
+        The Tensor's internal tracker.
+
+    Methods:
+    ----------
+    **__init__(obj: Union[np.ndarray, list])** :
+        Instantiates the Tensor with the specified values.
+
+    **__matmul__(other)** :
+        Performs the cross product.
+
+    **__pow__(other)** :
+        Performs the hadamard power.
+
+    **__mul__(other)** :
+        Performs hadamard multiplication.
+
+    **__truediv__(other)** :
+        Performs hadamard division.
+
+    **__add__(other)** :
+        Performs addition.
+
+    **__sub__(other)** :
+        Performs subtraction.
+
+    **to_array()** :
+        NumPy Array conversion.
+
+    Notes:
+    ----------
+    - Tensor automatically tracks the equations done to it and its relationship to other variables.
+    - Use 'nablas' or 'chain' from gardenpy.utils.operators to automatically differentiate.
+
+    - Refer to GardenPy's repository or GardenPy's docs for more information.
+    """
     def __init__(self, obj: Union[np.ndarray, list]):
         r"""
-        'Tensor' is a NumPy Array that supports automatic differentiation and tracks its operations.
-        This object currently includes the operations '@' (Matrix Multiplication), '**' (Hadamard Exponentation), '*' (Hadamard Multiplication), '/' (Hadamard Division), '+' (Addition), and '-' (Subtraction).
-        Additionally, this supports the operation 'to_array' (NumPy Array Conversion).
-        The operation structure promotes flexibility through the easy addition of other operations.
+        **Tensor initialization.**
 
-        Arguments:
-            obj: A list or numpy array that will be converted into a GardenPy Tensor.
+        Parameters:
+        ----------
+        **obj** : (*Union[np.ndarray, list]*)
+            The object that will become a Tensor.
+
+        Notes:
+        ----------
+        - Tensors act similarly to NumPy Arrays.
+        - Most GardenPy functions support Tensors.
+
+        Example:
+        -----
+        >>> from gardenpy.utils.objects import Tensor
+        >>> tens = Tensor(np.random.randn(5, 5))
         """
         # internal array
         self.tensor = obj
@@ -256,14 +318,20 @@ class Tensor:
 
     def to_array(self) -> np.ndarray:
         r"""
-        'to_array' is a built-in function in 'Tensors'.
-        This converts a tensor to a NumPy Array.
+        **Tensor to NumPy Array conversion**
 
-        Arguments:
-            None.
+        Parameters:
+        ----------
+        None.
 
         Returns:
-            A NumPy Array.
+        ----------
+        - **array** : (*np.ndarray*)
+            The NumPy Array of the Values.
+
+        Notes:
+        ----------
+        - Just the value of the Tensor will be returned.
         """
         # return array
         return self.tensor

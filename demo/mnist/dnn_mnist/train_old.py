@@ -14,7 +14,7 @@ from gardenpy.utils import (
     helper_functions as hf
 )
 
-from gardenpy.models.fnn_old import (
+from gardenpy.models.z_fnn_old import (
     FNN
 )
 

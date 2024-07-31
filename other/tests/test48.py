@@ -23,12 +23,12 @@ max_iter = 100000
 ##########
 
 W_init = Initializers(algorithm='xavier')
-B_init = Initializers(algorithm='zeros')
-P_init = Initializers(algorithm='ones')
+B_init = Initializers(algorithm='uniform', value=0.0)
+P_init = Initializers(algorithm='uniform', value=1.0)
 
-act1 = Activators(algorithm='lrelu')
-act2 = Activators(algorithm='lrelu')
-loss = Losses(algorithm='savr')
+act1 = Activators(algorithm='relu')
+act2 = Activators(algorithm='softmax')
+loss = Losses(algorithm='ssr')
 optim = Optimizers(algorithm='adam', gamma=1e-2)
 
 ##########
@@ -117,13 +117,14 @@ for i in range(max_iter):
         printed = False
     elif (not printed) or (i + 1 == max_iter):
         desc = (
-                f"{L[0]:.3}{ansi['white']}loss{ansi['reset']}  "
-                f"{str(i + 1).zfill(len(str(max_iter)))}{ansi['white']}it{ansi['reset']}/{max_iter}{ansi['white']}it{ansi['reset']}  "
-                f"{(100 * (i + 1) / max_iter):05.1f}{ansi['white']}%{ansi['reset']}  "
-                f"{convert_time(elapsed)}{ansi['white']}et{ansi['reset']}  "
-                f"{convert_time(elapsed * max_iter / (i + 1) - elapsed)}{ansi['white']}eta{ansi['reset']}  "
-                f"{round((i + 1) / elapsed, 1)}{ansi['white']}it/s{ansi['reset']}"
-            )
+            f"{str(i + 1).zfill(len(str(max_iter)))}{ansi['white']}it{ansi['reset']}/{max_iter}{ansi['white']}it{ansi['reset']}  "
+            f"{(100 * (i + 1) / max_iter):05.1f}{ansi['white']}%{ansi['reset']}  "
+            f"{L[0]:.3}{ansi['white']}loss{ansi['reset']}  "
+            # f"{accu:05.1f}{ansi['white']}accu{ansi['reset']}  "
+            f"{convert_time(elapsed)}{ansi['white']}et{ansi['reset']}  "
+            f"{convert_time(elapsed * max_iter / (i + 1) - elapsed)}{ansi['white']}eta{ansi['reset']}  "
+            f"{round((i + 1) / elapsed, 1)}{ansi['white']}it/s{ansi['reset']}"
+        )
         progress(i, max_iter, desc=desc)
         printed = True
 

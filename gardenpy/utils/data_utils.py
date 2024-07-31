@@ -13,7 +13,11 @@ import numpy as np
 import pandas as pd
 
 
-class DataLoaderCSV:
+class DataLoader:
+    ...
+
+
+class DataLoaderCSV(DataLoader):
     def __init__(self, root, values, labels, **kwargs):
         self._root = root
         self._val_pth = values
