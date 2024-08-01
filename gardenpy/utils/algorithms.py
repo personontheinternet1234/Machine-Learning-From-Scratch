@@ -580,7 +580,6 @@ class Activators:
         # defines derivative of activation algorithm
         def d_softmax(x, _=None):
             # derivative of Softmax activation
-            # todo: broken
             return (np.sum(np.exp(x)) * np.exp(x) - np.exp(2.0 * x)) / (np.sum(np.exp(x)) ** 2.0)
 
         def d_relu(x, _=None):

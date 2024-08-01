@@ -1,5 +1,7 @@
 import time
 
+import numpy as np
+
 from gardenpy import (
     nabla,
     chain,
@@ -27,17 +29,15 @@ P_init = Initializers(algorithm='uniform', value=1.0)
 
 act1 = Activators(algorithm='relu')
 act2 = Activators(algorithm='softmax')
-loss = Losses(algorithm='ssr')
+loss = Losses(algorithm='centropy')
 optim = Optimizers(algorithm='adam', gamma=1e-2)
 
 ##########
 
 X = P_init.initialize(1, 3)
 Y = P_init.initialize(1, 3)
-Y *= 0.1
-# for centropy
-# Y *= 0.0
-# Y[0][0] = 1.0
+Y *= 0.0
+Y[0][0] = 1.0
 
 W1 = W_init.initialize(3, 4)
 W2 = W_init.initialize(4, 3)
@@ -92,12 +92,13 @@ for i in range(max_iter):
 
     ##########
 
+    accu = 100.0 - 50.0 * np.sum(np.abs(np.argmax(Yhat) - np.argmax(Y)))
     elapsed = time.time() - start
     desc = (
         f"{str(i + 1).zfill(len(str(max_iter)))}{ansi['white']}it{ansi['reset']}/{max_iter}{ansi['white']}it{ansi['reset']}  "
         f"{(100 * (i + 1) / max_iter):05.1f}{ansi['white']}%{ansi['reset']}  "
         f"{L[0]:.3}{ansi['white']}loss{ansi['reset']}  "
-        # f"{accu:05.1f}{ansi['white']}accu{ansi['reset']}  "
+        f"{accu:05.1f}{ansi['white']}accu{ansi['reset']}  "
         f"{convert_time(elapsed)}{ansi['white']}et{ansi['reset']}  "
         f"{convert_time(elapsed * max_iter / (i + 1) - elapsed)}{ansi['white']}eta{ansi['reset']}  "
         f"{round((i + 1) / elapsed, 1)}{ansi['white']}it/s{ansi['reset']}"
