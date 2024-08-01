@@ -28,16 +28,16 @@ from .objects import Tensor
 
 class Initializers:
     r"""
-    **Initialization algorithms for GardenPy.**
+    **Initialization algorithms for kernels/weights/biases.**
 
     These algorithms ideally support GardenPy Tensors, but are compatible with NumPy Arrays.
 
     Attributes:
     ----------
     **algorithm** : (*str*)
-        The initialization algorithm.
+        Initialization algorithm.
     **parameters** : (*dict*)
-        The parameters for the initialization algorithm.
+        Parameters for initialization algorithm.
 
     Methods:
     ----------
@@ -45,9 +45,8 @@ class Initializers:
         Instantiates the object with the specified parameters.
 
     **initialize(self, rows: int, columns: int, *, tens=True) -> Union[Tensor, np.ndarray]** :
-        Initializes matrix with the specified dimensions.
-        If *tens* is True, the initialized matrix will be a Tensor.
-
+        Initializes an array with the specified dimensions.
+        If *tens* is 'True', the initialized matrix will be a Tensor.
 
     Notes:
     ----------

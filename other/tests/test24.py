@@ -17,12 +17,13 @@ def bar(idx, max_idx, start, desc=None, b_len=50, color='\033[0m'):
         f"{color}  {round(current - start, 1)}s  "
         f"{round((idx + 1) / (current - start), 1)}it/s{DEFAULT}"
     )
-    print(p_bar, end='')
-    if desc:
+    if desc is None:
+        print(p_bar, end='')
+    else:
         p_desc = (
             f"{color}  {desc}{DEFAULT}"
         )
-        print(p_desc, end='')
+        print(p_bar, p_desc, end='')
 
 
 num = 500

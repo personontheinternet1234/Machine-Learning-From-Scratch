@@ -38,7 +38,7 @@ __all__ = [
     'CNNTorch'
 ]
 
-__version__ = '0.9.0'
+__version__ = '0.0.8'
 
 __authors__ = [
     'Christian SW Host-Madsen',

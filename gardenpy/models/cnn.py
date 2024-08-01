@@ -11,3 +11,4 @@ Refer to 'todo' for in-depth documentation on this model.
 class CNN:
     def __init__(self):
         raise NotImplementedError("CNN has not been implemented yet.")
+        from sklearn.neural_network import MLPClassifier
