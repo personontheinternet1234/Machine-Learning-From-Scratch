@@ -6,4 +6,4 @@ demo/data/*/data/*
 demo/*/*/processed_data/*
 !demo/*/*/processed_data/process.py
 other/temporary/user_number.jpeg
-gardenpy/gardenpy.egg-info
+*.egg-info
