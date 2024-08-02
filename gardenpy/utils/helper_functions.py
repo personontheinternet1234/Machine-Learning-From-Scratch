@@ -72,8 +72,10 @@ def progress(idx: int, max_idx: int, *, desc: str = None, b_len: int = 50) -> No
     Example:
     ----------
     >>> from gardenpy.utils.helper_functions import progress
-    >>> for i in range(5000):
-    >>>     progress(i, 5000)
+    >>> max_iter = 5000
+    >>> for i in range(max_iter):
+    >>>     ...
+    >>>     progress(i, max_iter)
     """
     # get ansi formats
     if not isinstance(b_len, int):
@@ -96,7 +98,7 @@ def progress(idx: int, max_idx: int, *, desc: str = None, b_len: int = 50) -> No
         print(f"{p_bar}  {p_desc}", end='')
 
 
-def convert_time(seconds: float, *, number_colors: str = None, separators_color: str = None) -> str:
+def convert_time(seconds: float, *, number_colors: str = ansi['reset'], separators_color: str = ansi['reset']) -> str:
     r"""
     **Converts seconds to hours:minutes:seconds.**
 
@@ -116,25 +118,18 @@ def convert_time(seconds: float, *, number_colors: str = None, separators_color:
 
     Example:
     ----------
-    >>> import time
     >>> from gardenpy.utils.helper_functions import convert_time
-    >>> start_time = time.time()
-    >>> time.sleep(0.5)
-    >>> convert_time(time.time() - start_time)
+    >>> sec = 50000
+    >>> convert_time(sec)
     """
-    # get ansi formats
-    if not number_colors:
-        number_colors = ansi['reset']
-    if not separators_color:
-        separators_color = ansi['reset']
     # round seconds
     seconds = int(seconds)
     # find minutes and hours
-    minutes = int(seconds / 60)
-    hours = int(minutes / 60)
+    minutes = seconds // 60
+    hours = minutes // 60
     # adjust times
-    minutes -= hours * 60
-    seconds -= minutes * 60
+    minutes -= 60 * hours
+    seconds -= 60 * minutes + 3600 * hours
     # return time
     return f"{number_colors}{hours:01}{separators_color}:{number_colors}{minutes:02}{separators_color}:{number_colors}{seconds:02}{ansi['reset']}"
 

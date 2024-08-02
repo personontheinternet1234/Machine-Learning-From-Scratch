@@ -26,8 +26,8 @@ W_init = Initializers(algorithm='xavier')
 B_init = Initializers(algorithm='uniform', value=0.0)
 P_init = Initializers(algorithm='uniform', value=1.0)
 
-act1 = Activators(algorithm='relu')
-act2 = Activators(algorithm='softmax')
+act1 = Activators(algorithm='lrelu')
+act2 = Activators(algorithm='lrelu')
 loss = Losses(algorithm='ssr')
 optim = Optimizers(algorithm='adam', gamma=1e-2)
 
@@ -35,7 +35,7 @@ optim = Optimizers(algorithm='adam', gamma=1e-2)
 
 X = P_init.initialize(1, 3)
 Y = P_init.initialize(1, 3)
-Y *= 0.1
+Y *= 5
 # for centropy
 # Y *= 0.0
 # Y[0][0] = 1.0

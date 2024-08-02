@@ -115,6 +115,7 @@ def nabla(gradient: Tensor, respect: Tensor) -> Tensor:
         grad.type = 'grad'
         grad.tracker['opr'].append(f'd_{operator}')
         grad.tracker['drv'].append(derivative)
+        grad.tracker['chn'].append(upstream.tracker['chn'])
         grad.tracker['rlt'] += [downstream, upstream]
         grad.tracker['org'] = downstream
         # return local gradient
@@ -132,7 +133,7 @@ def nabla(gradient: Tensor, respect: Tensor) -> Tensor:
     return result
 
 
-def chain(downstream: Tensor, upstream: Tensor) -> Tensor:
+def chain(downstream: Tensor, upstream: Tensor, *, reduce=True) -> Tensor:
     r"""
     **Chain ruling for Tensors.**
 
@@ -191,14 +192,13 @@ def chain(downstream: Tensor, upstream: Tensor) -> Tensor:
     if down_relation == up_relation:
         # valid relation
         # chain-rule gradients
-        # todo: this is significantly wrong, redo
-        to_shape = downstream.to_array().shape
-        result = Tensor((upstream.to_array().squeeze() * downstream.to_array().squeeze()).reshape(to_shape))
+        result = Tensor(upstream.tracker['chn'][0][0](downstream.to_array(), upstream.to_array(), reduce))
         # set gradient internals
         result.type = 'grad'
         result.tracker['rlt'] = downstream.tracker['rlt'] + upstream.tracker['rlt'][1:]
         result.tracker['opr'] = downstream.tracker['opr'] + upstream.tracker['opr']
         result.tracker['drv'] = downstream.tracker['drv'] + upstream.tracker['drv']
+        result.tracker['chn'] = downstream.tracker['chn'] + upstream.tracker['chn']
         result.tracker['org'] = downstream.tracker['org']
         # return final gradient
         return result

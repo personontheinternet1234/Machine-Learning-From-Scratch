@@ -620,6 +620,10 @@ class Activators:
         # return derivative of activation algorithm
         return d_act_funcs[self._algorithm]
 
+    @staticmethod
+    def _chain(upstream, downstream, _=None):
+        return upstream * downstream
+
     def activate(self, x: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
         r"""
         **Activates values with the activation algorithm.**
@@ -660,6 +664,7 @@ class Activators:
             # track operation
             x.tracker['opr'].append('activate')
             x.tracker['drv'].append(self._d_activator)
+            x.tracker['chn'].append(self._chain)
             # track origin
             result.tracker['org'] = [x, '_']
             # track relation
@@ -926,6 +931,10 @@ class Losses:
         # return derivative of loss algorithm
         return d_loss_funcs[self._algorithm]
 
+    @staticmethod
+    def _chain(downstream, upstream, _=None):
+        return downstream * upstream
+
     def loss(self, yhat: Union[Tensor, np.ndarray], y: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
         r"""
         **Calculates loss based on the specified outputs.**
@@ -976,6 +985,7 @@ class Losses:
             # track operation
             yhat.tracker['opr'].append('loss')
             yhat.tracker['drv'].append(self._d_loss)
+            yhat.tracker['chn'].append(self._chain)
             # track origin
             result.tracker['org'] = [yhat, y]
             # track relation
@@ -1348,7 +1358,14 @@ class Optimizers:
         def adam(thetas, nablas):
             # Adaptive Moment Estimation optimization algorithm
             # weight decay
+            print('hello')
+            print(thetas)
+            print(nablas)
+            print(self._hyps['lambda_d'])
             deltas = nablas + self._hyps['lambda_d'] * thetas
+            print(deltas)
+            for i in range(5):
+                print()
             if self._memory['deltas_p'] is not None:
                 # momentum
                 deltas = self._hyps['beta1'] * self._memory['deltas_p'] + (1.0 - self._hyps['beta1']) * deltas
