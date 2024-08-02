@@ -28,18 +28,18 @@ w_init = Initializers(algorithm='xavier')
 b_init = Initializers(algorithm='uniform', value=0.0)
 
 act1 = Activators(algorithm='lrelu')
-act2 = Activators(algorithm='softmax')
-loss = Losses(algorithm='centropy')
-gamma = 1e-1
-alg = 'sgd'
+act2 = Activators(algorithm='lrelu')
+loss = Losses(algorithm='ssr')
+gamma = 1e-2
+alg = 'rmsp'
 optim_b2 = Optimizers(algorithm=alg, gamma=gamma)
 optim_w2 = Optimizers(algorithm=alg, gamma=gamma)
 optim_b1 = Optimizers(algorithm=alg, gamma=gamma)
 optim_w1 = Optimizers(algorithm=alg, gamma=gamma)
 
 ##########
-x = Tensor([1.0, 0.5, 1.0])
-y = Tensor([0.1, 0.1, 0.1])
+x = Tensor([[1.0, 0.5, 1.0]])
+y = Tensor([[0.1, 0.1, 0.1]])
 
 w1 = w_init.initialize(3, 4)
 w2 = w_init.initialize(4, 3)
