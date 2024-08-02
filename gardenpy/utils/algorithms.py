@@ -1358,14 +1358,7 @@ class Optimizers:
         def adam(thetas, nablas):
             # Adaptive Moment Estimation optimization algorithm
             # weight decay
-            print('hello')
-            print(thetas)
-            print(nablas)
-            print(self._hyps['lambda_d'])
             deltas = nablas + self._hyps['lambda_d'] * thetas
-            print(deltas)
-            for i in range(5):
-                print()
             if self._memory['deltas_p'] is not None:
                 # momentum
                 deltas = self._hyps['beta1'] * self._memory['deltas_p'] + (1.0 - self._hyps['beta1']) * deltas

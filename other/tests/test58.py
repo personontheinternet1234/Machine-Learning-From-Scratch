@@ -1,4 +1,3 @@
-import random
 import time
 
 import numpy as np
@@ -31,25 +30,22 @@ b_init = Initializers(algorithm='uniform', value=0.0)
 act1 = Activators(algorithm='lrelu')
 act2 = Activators(algorithm='softmax')
 loss = Losses(algorithm='centropy')
-gamma = 1e-2
-optim_b2 = Optimizers(algorithm='adam', gamma=gamma)
-optim_w2 = Optimizers(algorithm='adam', gamma=gamma)
-optim_b1 = Optimizers(algorithm='adam', gamma=gamma)
-optim_w1 = Optimizers(algorithm='adam', gamma=gamma)
+gamma = 1e-1
+alg = 'sgd'
+optim_b2 = Optimizers(algorithm=alg, gamma=gamma)
+optim_w2 = Optimizers(algorithm=alg, gamma=gamma)
+optim_b1 = Optimizers(algorithm=alg, gamma=gamma)
+optim_w1 = Optimizers(algorithm=alg, gamma=gamma)
 
 ##########
-x = [[0, 0], [0, 1], [1, 0], [1, 1]]
-y = [[0, 1], [1, 0], [1, 0], [0, 1]]
-for i in range(len(x)):
-    x[i] = Tensor([x[i]])
-for i in range(len(y)):
-    y[i] = Tensor([y[i]])
+x = Tensor([1.0, 0.5, 1.0])
+y = Tensor([0.1, 0.1, 0.1])
 
-w1 = w_init.initialize(2, 3)
-w2 = w_init.initialize(3, 2)
+w1 = w_init.initialize(3, 4)
+w2 = w_init.initialize(4, 3)
 
-b1 = b_init.initialize(1, 3)
-b2 = b_init.initialize(1, 2)
+b1 = b_init.initialize(1, 4)
+b2 = b_init.initialize(1, 3)
 
 g1 = act1.activate
 g2 = act2.activate
@@ -74,8 +70,7 @@ print(f"Epoch {ansi['white']}{ep + 1}{ansi['reset']}")
 ##########
 
 for i in range(max_iter):
-    tc = random.randint(0, 3)
-    alpha1 = x[tc] @ w1
+    alpha1 = x @ w1
     beta1 = alpha1 + b1
     a2 = g1(beta1)
 
@@ -83,7 +78,7 @@ for i in range(max_iter):
     beta2 = alpha2 + b2
     yhat = g2(beta2)
 
-    loss = j(yhat, y[tc])
+    loss = j(yhat, y)
 
     ##########
 
@@ -102,13 +97,13 @@ for i in range(max_iter):
     ##########
 
     b2 = step_b2(b2, grad_b2)
-    w2 = step_w2(w2, grad_w2)
-    b1 = step_b1(b1, grad_b1)
-    w1 = step_w1(w1, grad_w1)
+    # w2 = step_w2(w2, grad_w2)
+    # b1 = step_b1(b1, grad_b1)
+    # w1 = step_w1(w1, grad_w1)
 
     ##########
 
-    accu = 100.0 - 50.0 * np.sum(np.abs(np.argmax(yhat) - np.argmax(y[tc])))
+    accu = 100.0 - 50.0 * np.sum(np.abs(np.argmax(yhat.to_array()) - np.argmax(y.to_array())))
     elapsed = time.time() - start
     desc = (
         f"{str(i + 1).zfill(len(str(max_iter)))}{ansi['white']}it{ansi['reset']}/{max_iter}{ansi['white']}it{ansi['reset']}  "
@@ -123,11 +118,7 @@ for i in range(max_iter):
 
 ##########
 
-yhats = []
-for case in x:
-    yhats.append(g2(g1(case @ w1 + b1) @ w2 + b2))
-
 print(f"\n\n{ansi['bold']}Results{ansi['reset']}")
-print(f"Predicted    {ansi['white']}{ansi['italic']}{yhats}{ansi['reset']}")
+print(f"Predicted    {ansi['white']}{ansi['italic']}{yhat}{ansi['reset']}")
 print(f"Expected     {ansi['white']}{ansi['italic']}{y}{ansi['reset']}")
 print()

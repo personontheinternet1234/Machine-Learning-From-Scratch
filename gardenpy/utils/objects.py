@@ -150,12 +150,7 @@ class Tensor:
     @staticmethod
     def _d_matmul_l(left_matrix, right_matrix):
         # matrix multiplication left derivative
-        res = np.reshape(right_matrix.T, (right_matrix.shape[1], *left_matrix.shape))
-        # print(res)
-        # print(right_matrix.T)
-        # print(res)
-        # print(left_matrix)
-        return res
+        return np.reshape(right_matrix.T, (right_matrix.shape[1], *left_matrix.shape))
 
     @staticmethod
     def _d_matmul_r(right_matrix, left_matrix):
@@ -163,36 +158,13 @@ class Tensor:
         return left_matrix.T * (0.0 * right_matrix + 1.0)
 
     @staticmethod
-    def _d_matmul_l_chn(downstream, upstream, reduce=True):
-        if reduce:
-            # print()
-            # print(downstream)
-            # print()
-            # print('up')
-            # print(upstream)
-            # print()
-            # print()
-            # print()
-            # print('down')
-            # print(np.sum(downstream, axis=1))
-            # print()
-            # print(np.sum(upstream, axis=1))
-            # print(downstream)
-            # print(upstream)
-            # print(upstream)
-            # print(downstream)
-            # print(np.sum(upstream * downstream.T, axis=1))
-            # print('a')
-            # print(upstream[0] * downstream.squeeze()[0])
-            # print(upstream[1] * downstream.squeeze()[1])
-            # print(downstream.shape)
-            # print(upstream.shape)
-            # print(downstream.T)
-            # print(upstream)
+    def _d_matmul_l_chn(downstream, upstream, org=None):
+        if org:
+            # print(org)
             shp = upstream.shape
             res = np.reshape(downstream.T * upstream.squeeze(), shp).T
-            return res
-            # return np.sum(upstream * downstream.T, axis=1)
+            return np.sum(res, axis=2).T
+            # return res.T
         else:
             raise NotImplementedError('not in yet')
 
@@ -404,10 +376,6 @@ class Tensor:
     @staticmethod
     def _d_sub_s_chn(downstream, upstream, _=None):
         return downstream * upstream
-
-    def reduce(self):
-        self.tensor = np.sum(self.tensor, axis=2).T
-        self.shape = self.tensor.shape
 
     def to_array(self) -> np.ndarray:
         r"""

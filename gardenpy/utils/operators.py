@@ -76,7 +76,6 @@ def nabla(gradient: Tensor, respect: Tensor) -> Tensor:
         if relation is None and isinstance(item, Tensor):
             # get downstream relations
             origins = item.tracker['org']
-            # print([org for org in origins])
             path.append(item)
             if target in origins:
                 # found gradient relation
@@ -192,7 +191,7 @@ def chain(downstream: Tensor, upstream: Tensor, *, reduce=True) -> Tensor:
     if down_relation == up_relation:
         # valid relation
         # chain-rule gradients
-        result = Tensor(upstream.tracker['chn'][0][0](downstream.to_array(), upstream.to_array(), reduce))
+        result = Tensor(upstream.tracker['chn'][0][0](downstream.to_array(), upstream.to_array(), downstream.tracker['org']))
         # set gradient internals
         result.type = 'grad'
         result.tracker['rlt'] = downstream.tracker['rlt'] + upstream.tracker['rlt'][1:]
