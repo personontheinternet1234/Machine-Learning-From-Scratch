@@ -21,7 +21,7 @@ from gardenpy.utils.helper_functions import print_contributors
 
 ##########
 
-max_iter = 5000
+max_iter = 20000
 
 ##########
 
@@ -30,8 +30,7 @@ b_init = Initializers(algorithm='uniform', value=0.0)
 
 act1 = Activators(algorithm='relu')
 act2 = Activators(algorithm='relu')
-loss = Losses(algorithm='ssr')
-gamma = 0
+loss = Losses(algorithm='savr')
 alg = 'sgd'
 hyp = {
     'gamma': 1e-2,
@@ -82,9 +81,7 @@ for i in range(max_iter):
     tc = random.randint(0, 3)
     tc = 2
     a1 = x[tc]
-    a1.tracker_reset()
     y1 = y[tc]
-    y1.tracker_reset()
     alpha1 = a1 @ w1
     beta1 = alpha1 + b1
     a2 = g1(beta1)
@@ -115,6 +112,21 @@ for i in range(max_iter):
     w2 = step_w2(w2, grad_w2)
     # b1 = step_b1(b1, grad_b1)
     # w1 = step_w1(w1, grad_w1)
+
+    ##########
+
+    a1.tracker_reset()
+    y1.tracker_reset()
+
+    grad_b2.tracker_reset()
+    grad_w2.tracker_reset()
+    grad_b1.tracker_reset()
+    grad_w1.tracker_reset()
+
+    b2.tracker_reset()
+    w2.tracker_reset()
+    b1.tracker_reset()
+    w1.tracker_reset()
 
     ##########
 

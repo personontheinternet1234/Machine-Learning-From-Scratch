@@ -1358,25 +1358,30 @@ class Optimizers:
         def adam(thetas, nablas):
             # Adaptive Moment Estimation optimization algorithm
             # weight decay
-            deltas = nablas + self._hyps['lambda_d'] * thetas
+            nablas = nablas + self._hyps['lambda_d'] * thetas
             if self._memory['deltas_p'] is not None:
                 # momentum
-                deltas = self._hyps['beta1'] * self._memory['deltas_p'] + (1.0 - self._hyps['beta1']) * deltas
-            if self._memory['upsilons_p'] is not None:
-                # square momentum
-                upsilons = self._hyps['beta2'] * self._memory['upsilons_p'] + deltas ** 2.0
+                deltas = self._hyps['beta1'] * self._memory['deltas_p'] + (1.0 - self._hyps['beta1']) * nablas
             else:
                 # square
-                upsilons = deltas ** 2.0
+                deltas = (1.0 - self._hyps['beta1']) * nablas
+            if self._memory['upsilons_p'] is not None:
+                # square momentum
+                upsilons = self._hyps['beta2'] * self._memory['upsilons_p'] + (1.0 - self._hyps['beta2']) * nablas ** 2.0
+            else:
+                # square
+                upsilons = nablas ** 2.0
             # hat
             deltas_hat = deltas / (1 - self._hyps['beta1'])
             upsilons_hat = upsilons / (1 - self._hyps['beta2'])
             if self._hyps['ams']:
                 # ams-grad variant
                 if self._memory['upsilons_hat_mx'] is not None:
+                    # calculate maximum upsilon
                     upsilons_hat_mx = np.maximum(self._memory['upsilons_hat_mx'], upsilons_hat)
                 else:
-                    upsilons_hat_mx = upsilons_hat
+                    # set maximum upsilon
+                    upsilons_hat_mx = np.maximum(0.0 * upsilons_hat, upsilons_hat)
                 # update memory
                 self._memory['upsilons_hat_mx'] = upsilons_hat_mx
                 # set upsilons
@@ -1394,10 +1399,13 @@ class Optimizers:
         def sgd(thetas, nablas):
             # Stochastic Gradient Descent optimization algorithm
             # weight decay
-            deltas = nablas + (self._hyps['lambda_d'] * thetas)
+            nablas = nablas + (self._hyps['lambda_d'] * thetas)
             if self._hyps['mu'] and (self._memory['deltas_p'] is not None):
                 # momentum
-                deltas = self._hyps['mu'] * self._memory['deltas_p'] + (1.0 - self._hyps['tau']) * deltas
+                deltas = self._hyps['mu'] * self._memory['deltas_p'] + (1.0 - self._hyps['tau']) * nablas
+            else:
+                # default deltas
+                deltas = nablas
             if self._hyps['nesterov'] and (self._hyps['mu'] is not None):
                 # nesterov momentum
                 deltas += nablas + self._hyps['mu'] * deltas
@@ -1413,15 +1421,15 @@ class Optimizers:
         def rmsp(thetas, nablas):
             # Root Mean Squared Propagation optimization algorithm
             # weight decay
-            deltas = nablas + self._hyps['lambda_d'] * thetas
+            nablas = nablas + self._hyps['lambda_d'] * thetas
             if self._memory['upsilons_p'] is not None:
                 # square momentum
-                upsilons = self._hyps['beta'] * self._memory['upsilons_p'] + (1.0 - self._hyps['beta']) * deltas ** 2.0
+                upsilons = self._hyps['beta'] * self._memory['upsilons_p'] + (1.0 - self._hyps['beta']) * nablas ** 2.0
             else:
                 # square
-                upsilons = (1.0 - self._hyps['beta']) * deltas ** 2.0
+                upsilons = (1.0 - self._hyps['beta']) * nablas ** 2.0
             # step calculation
-            deltas = deltas / (np.sqrt(upsilons) + self._hyps['epsilon'])
+            deltas = nablas / (np.sqrt(upsilons) + self._hyps['epsilon'])
             if self._hyps['mu'] and (self._memory['deltas_p'] is not None):
                 # momentum
                 deltas += self._hyps['mu'] * self._memory['deltas_p']
