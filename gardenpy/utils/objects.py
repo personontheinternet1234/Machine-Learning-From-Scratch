@@ -377,6 +377,15 @@ class Tensor:
     def _d_sub_s_chn(downstream, upstream, _=None):
         return downstream * upstream
 
+    def tracker_reset(self):
+        self.tracker = {
+            'opr': [],
+            'drv': [],
+            'chn': [],
+            'rlt': [],
+            'org': [None]
+        }
+
     def to_array(self) -> np.ndarray:
         r"""
         **Tensor to NumPy Array conversion**

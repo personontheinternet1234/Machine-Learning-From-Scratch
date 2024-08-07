@@ -28,14 +28,14 @@ max_iter = 5000
 w_init = Initializers(algorithm='xavier')
 b_init = Initializers(algorithm='uniform', value=0.0)
 
-act1 = Activators(algorithm='lrelu')
-act2 = Activators(algorithm='softmax')
-loss = Losses(algorithm='centropy')
-gamma = 1e-3
-alg = 'adam'
+act1 = Activators(algorithm='relu')
+act2 = Activators(algorithm='relu')
+loss = Losses(algorithm='ssr')
+gamma = 0
+alg = 'sgd'
 hyp = {
     'gamma': 1e-2,
-    'mu': 1e-2
+    'mu': 0.0
 }
 optim_b2 = Optimizers(alg, hyperparameters=hyp)
 optim_w2 = Optimizers(alg, hyperparameters=hyp)
@@ -82,7 +82,9 @@ for i in range(max_iter):
     tc = random.randint(0, 3)
     tc = 2
     a1 = x[tc]
+    a1.tracker_reset()
     y1 = y[tc]
+    y1.tracker_reset()
     alpha1 = a1 @ w1
     beta1 = alpha1 + b1
     a2 = g1(beta1)
