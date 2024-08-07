@@ -21,7 +21,7 @@ from gardenpy.utils.helper_functions import print_contributors
 
 ##########
 
-max_iter = 10000
+max_iter = 5000
 
 ##########
 
@@ -31,11 +31,16 @@ b_init = Initializers(algorithm='uniform', value=0.0)
 act1 = Activators(algorithm='lrelu')
 act2 = Activators(algorithm='softmax')
 loss = Losses(algorithm='centropy')
-gamma = 1e-2
-optim_b2 = Optimizers(algorithm='adam', gamma=gamma)
-optim_w2 = Optimizers(algorithm='adam', gamma=gamma)
-optim_b1 = Optimizers(algorithm='adam', gamma=gamma)
-optim_w1 = Optimizers(algorithm='adam', gamma=gamma)
+gamma = 1e-3
+alg = 'adam'
+hyp = {
+    'gamma': 1e-2,
+    'mu': 1e-2
+}
+optim_b2 = Optimizers(alg, hyperparameters=hyp)
+optim_w2 = Optimizers(alg, hyperparameters=hyp)
+optim_b1 = Optimizers(alg, hyperparameters=hyp)
+optim_w1 = Optimizers(alg, hyperparameters=hyp)
 
 ##########
 x = [[0, 0], [0, 1], [1, 0], [1, 1]]
@@ -75,7 +80,10 @@ print(f"Epoch {ansi['white']}{ep + 1}{ansi['reset']}")
 
 for i in range(max_iter):
     tc = random.randint(0, 3)
-    alpha1 = x[tc] @ w1
+    tc = 2
+    a1 = x[tc]
+    y1 = y[tc]
+    alpha1 = a1 @ w1
     beta1 = alpha1 + b1
     a2 = g1(beta1)
 
@@ -83,7 +91,7 @@ for i in range(max_iter):
     beta2 = alpha2 + b2
     yhat = g2(beta2)
 
-    loss = j(yhat, y[tc])
+    loss = j(yhat, y1)
 
     ##########
 
@@ -103,21 +111,35 @@ for i in range(max_iter):
 
     b2 = step_b2(b2, grad_b2)
     w2 = step_w2(w2, grad_w2)
-    b1 = step_b1(b1, grad_b1)
-    w1 = step_w1(w1, grad_w1)
+    # b1 = step_b1(b1, grad_b1)
+    # w1 = step_w1(w1, grad_w1)
 
     ##########
 
-    accu = 100.0 - 50.0 * np.sum(np.abs(np.argmax(yhat) - np.argmax(y[tc])))
+    floss = Tensor([0])
+    faccu = 0
+    for c in range(len(x)):
+        alpha1 = Tensor(x[c].to_array()) @ w1
+        beta1 = alpha1 + b1
+        a2 = g1(beta1)
+
+        alpha2 = a2 @ w2
+        beta2 = alpha2 + b2
+        yhat = g2(beta2)
+
+        floss += j(yhat, y[c])
+        faccu += np.nanargmax(yhat.to_array())
+
     elapsed = time.time() - start
+    faccu /= 0.04
     desc = (
         f"{str(i + 1).zfill(len(str(max_iter)))}{ansi['white']}it{ansi['reset']}/{max_iter}{ansi['white']}it{ansi['reset']}  "
         f"{(100 * (i + 1) / max_iter):05.1f}{ansi['white']}%{ansi['reset']}  "
-        f"{loss[0]:.3}{ansi['white']}loss{ansi['reset']}  "
-        f"{accu:05.1f}{ansi['white']}accu{ansi['reset']}  "
+        f"{round((i + 1) / elapsed, 1)}{ansi['white']}it/s{ansi['reset']}  "
         f"{convert_time(elapsed)}{ansi['white']}et{ansi['reset']}  "
         f"{convert_time(elapsed * max_iter / (i + 1) - elapsed)}{ansi['white']}eta{ansi['reset']}  "
-        f"{round((i + 1) / elapsed, 1)}{ansi['white']}it/s{ansi['reset']}"
+        f"{faccu:05.1f}{ansi['white']}%accu{ansi['reset']}  "
+        f"{floss[0]:.5}{ansi['white']}loss{ansi['reset']}"
     )
     progress(i, max_iter, desc=desc)
 

@@ -1,7 +1,5 @@
 import time
 
-import numpy as np
-
 from gardenpy import (
     Tensor,
     nabla,
@@ -39,7 +37,7 @@ optim_w1 = Optimizers(algorithm=alg, gamma=gamma)
 
 ##########
 x = Tensor([[1.0, 0.5, 1.0]])
-y = Tensor([[0.1, 0.1, 0.1]])
+y = Tensor([[5.0, 5.0, 3.0]])
 
 w1 = w_init.initialize(3, 4)
 w2 = w_init.initialize(4, 3)
@@ -97,22 +95,20 @@ for i in range(max_iter):
     ##########
 
     b2 = step_b2(b2, grad_b2)
-    # w2 = step_w2(w2, grad_w2)
+    w2 = step_w2(w2, grad_w2)
     # b1 = step_b1(b1, grad_b1)
     # w1 = step_w1(w1, grad_w1)
 
     ##########
 
-    accu = 100.0 - 50.0 * np.sum(np.abs(np.argmax(yhat.to_array()) - np.argmax(y.to_array())))
     elapsed = time.time() - start
     desc = (
         f"{str(i + 1).zfill(len(str(max_iter)))}{ansi['white']}it{ansi['reset']}/{max_iter}{ansi['white']}it{ansi['reset']}  "
         f"{(100 * (i + 1) / max_iter):05.1f}{ansi['white']}%{ansi['reset']}  "
-        f"{loss[0]:.3}{ansi['white']}loss{ansi['reset']}  "
-        f"{accu:05.1f}{ansi['white']}accu{ansi['reset']}  "
+        f"{round((i + 1) / elapsed, 1)}{ansi['white']}it/s{ansi['reset']}  "
         f"{convert_time(elapsed)}{ansi['white']}et{ansi['reset']}  "
         f"{convert_time(elapsed * max_iter / (i + 1) - elapsed)}{ansi['white']}eta{ansi['reset']}  "
-        f"{round((i + 1) / elapsed, 1)}{ansi['white']}it/s{ansi['reset']}"
+        f"{loss[0]:.3}{ansi['white']}loss{ansi['reset']}"
     )
     progress(i, max_iter, desc=desc)
 
