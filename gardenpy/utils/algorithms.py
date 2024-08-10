@@ -61,20 +61,20 @@ class Initializers:
         Parameters:
         ----------
         **algorithm** : (*str*) {'*xavier*', '*gaussian*', '*uniform*'}
-            The initialization algorithm.
+            Initialization algorithm.
 
             - *xavier* : Xavier/Glorot.
             - *gaussian*: Gaussian/Normal.
             - *uniform*: Uniform values.
 
         **parameters** (*dict*, *optional*) :
-            The parameters for the initialization algorithm.
+            Parameters for Initialization algorithm.
 
             - **xavier** : (*dict*) {'*mu*', '*sigma*'}
                 - *mu* : (float, int), default=0.0
-                    The mean.
+                    Mean.
                 - *sigma* : (float, int), default=1.0
-                    The standard deviation.
+                    Standard deviation.
 
             - **gaussian** : (*dict*) {'*mu*', '*sigma*'}
                 - *mu* : (float, int), default=0.0
@@ -669,6 +669,7 @@ class Activators:
             result.tracker['org'] = [x, '_']
             # track relation
             x.tracker['rlt'].append(['_', result])
+            # result.id = x.id + 1
 
             # return result
             return result
@@ -821,17 +822,33 @@ class Losses:
         # default loss algorithm parameters
         default = {
             'centropy': None,
+            'focal': {
+                'alpha': 1.0,
+                'gamma': 2.0
+            },
             'ssr': None,
             'savr': None
         }
         # default loss algorithm parameter datatypes
         dtypes = {
+            'focal': {
+                'alpha': (float, int),
+                'gamma': (float, int)
+            }
         }
         # default loss algorithm parameter value types
         vtypes = {
+            'focal': {
+                'alpha': lambda x: 0.0 < x <= 1.0,
+                'gamma': lambda x: 0.0 < x
+            }
         }
         # default loss algorithm parameter conversion types
         ctypes = {
+            'focal': {
+                'alpha': lambda x: float(x),
+                'gamma': lambda x: float(x)
+            }
         }
 
         # instantiate parameter dictionary
@@ -889,6 +906,9 @@ class Losses:
             # Cross-Entropy loss
             return -np.sum(y * np.log(yhat))
 
+        def focal(yhat, y):
+            return -self._params['alpha'] * (y - yhat) ** self._params['gamma'] * np.log(yhat)
+
         def ssr(yhat, y):
             # Sum of the Squared Residuals loss
             return np.sum((y - yhat) ** 2.0)
@@ -912,6 +932,10 @@ class Losses:
         def d_centropy(yhat, y):
             # derivative of Cross-Entropy loss
             return -np.log(yhat) - (y / yhat)
+
+        def d_focal(yhat, y):
+            # todo
+            ...
 
         def d_ssr(yhat, y):
             # derivative of Sum of the Squared Residuals loss
@@ -990,6 +1014,7 @@ class Losses:
             result.tracker['org'] = [yhat, y]
             # track relation
             yhat.tracker['rlt'].append([y, result])
+            # result.id = yhat.id + 1
 
             # return result
             return result
@@ -1079,7 +1104,7 @@ class Optimizers:
 
     - Refer to GardenPy's repository or GardenPy's docs for more information.
     """
-    def __init__(self, algorithm: str, *, hyperparameters: dict = None, **kwargs):
+    def __init__(self, algorithm: str, *, hyperparameters: dict = None, correlator=True, **kwargs):
         r"""
         **Optimizer initialization with defined hyperparameters.**
 
@@ -1095,8 +1120,8 @@ class Optimizers:
         **hyperparameters** (*dict*, *optional*) :
             The hyperparameters for the optimization algorithm.
 
-            - **adam** : (*dict*) {'*gamma*', '*lambda_d*', '*beta1*', '*beta2*', '*epsilon*', '*ams*'}
-                - *gamma* : (float, int), default=1e-3
+            - **adam** : (*dict*) {'*alpha*', '*lambda_d*', '*beta1*', '*beta2*', '*epsilon*', '*ams*'}
+                - *alpha* : (float, int), default=1e-3
                     Learning rate.
                 - *lambda_d* : (float, int, 0.0 <= lambda_d), default=0.0
                     Strength of weight decay / L2 regularization.
@@ -1109,8 +1134,8 @@ class Optimizers:
                 - *ams* : (bool), default=False
                     Whether to use AMSGrad.
 
-            - **sgd** : (*dict*) {'*gamma*', '*lambda_d*', '*mu*', '*tau*', '*nesterov*'}
-                - *gamma* : (float, int), default=1e-3
+            - **sgd** : (*dict*) {'*alpha*', '*lambda_d*', '*mu*', '*tau*', '*nesterov*'}
+                - *alpha* : (float, int), default=1e-3
                     Learning rate.
                 - *lambda_d* : (float, int, 0.0 <= lambda_d), default=0.0
                     Strength of weight decay / L2 regularization.
@@ -1121,8 +1146,8 @@ class Optimizers:
                 - *nesterov* : (bool), default=False
                     Whether to use Nesterov momentum.
 
-            - **rmsp** : (*dict*) {'*gamma*', '*lambda_d*', '*beta*', '*mu*', '*epsilon*'}
-                - *gamma* : (float, int), default=1e-3
+            - **rmsp** : (*dict*) {'*alpha*', '*lambda_d*', '*beta2*', '*mu*', '*epsilon*'}
+                - *alpha* : (float, int), default=1e-3
                     Learning rate.
                 - *lambda_d* : (float, int, 0.0 <= lambda_d), default=0.0
                     Strength of weight decay / L2 regularization.
@@ -1150,13 +1175,14 @@ class Optimizers:
         Example:
         -----
         >>> from gardenpy.utils.algorithms import Optimizers
-        >>> optim = Optimizers('adam', hyperparameters={'gamma': 1e-2, 'lambda_d': 1e-3, 'ams': True})
+        >>> optim = Optimizers('adam', hyperparameters={'alpha': 1e-2, 'lambda_d': 1e-3, 'ams': True})
         """
         # optimization algorithms
         self.algorithms = [
             'adam',
             'sgd',
-            'rmsp'
+            'rmsp',
+            'adag'
         ]
 
         # internal optimization algorithm parameters
@@ -1167,7 +1193,15 @@ class Optimizers:
         self._optim = self._get_optim()
 
         # internal memory
-        self._memory = self._get_memory()
+        self._correlator = correlator
+        if correlator:
+            # instance memorization
+            self._tensors = []
+            self._full = []
+            self._memory = None
+        else:
+            # set memorization
+            self._memory = self._get_memory()
 
     def _check_algorithm(self, algorithm):
         # checks whether the optimization algorithm is valid
@@ -1186,7 +1220,7 @@ class Optimizers:
         # default optimization algorithm hyperparameters
         default = {
             'adam': {
-                'gamma': 1e-3,
+                'alpha': 1e-3,
                 'lambda_d': 0.0,
                 'beta1': 0.9,
                 'beta2': 0.999,
@@ -1194,24 +1228,31 @@ class Optimizers:
                 'ams': False
             },
             'sgd': {
-                'gamma': 1e-3,
+                'alpha': 1e-3,
                 'lambda_d': 0.0,
                 'mu': 0.0,
                 'tau': 0.0,
                 'nesterov': False
             },
             'rmsp': {
-                'gamma': 1e-3,
+                'alpha': 1e-3,
                 'lambda_d': 0.0,
-                'beta': 0.99,
+                'beta2': 0.99,
                 'mu': 0.0,
+                'epsilon': 1e-8
+            },
+            'adag': {
+                'alpha': 1e-2,
+                'lambda_d': 0.0,
+                'tau': 0.0,
+                'nu': 0.0,
                 'epsilon': 1e-8
             }
         }
         # default optimization algorithm hyperparameter datatypes
         dtypes = {
             'adam': {
-                'gamma': (float, int),
+                'alpha': (float, int),
                 'lambda_d': (float, int),
                 'beta1': (float, int),
                 'beta2': (float, int),
@@ -1219,49 +1260,63 @@ class Optimizers:
                 'ams': (bool, int)
             },
             'sgd': {
-                'gamma': (float, int),
+                'alpha': (float, int),
                 'lambda_d': (float, int),
                 'mu': (float, int),
                 'tau': (float, int),
                 'nesterov': (bool, int)
             },
             'rmsp': {
-                'gamma': (float, int),
+                'alpha': (float, int),
                 'lambda_d': (float, int),
-                'beta': (float, int),
+                'beta2': (float, int),
                 'mu': (float, int),
+                'epsilon': (float, int)
+            },
+            'adag': {
+                'alpha': (float, int),
+                'lambda_d': (float, int),
+                'tau': (float, int),
+                'nu': (float, int),
                 'epsilon': (float, int)
             }
         }
         # default optimization algorithm hyperparameter value types
         vtypes = {
             'adam': {
-                'gamma': lambda x: True,
-                'lambda_d': lambda x: 0.0 <= x,
+                'alpha': lambda x: True,
+                'lambda_d': lambda x: 0.0 <= x < 1.0,
                 'beta1': lambda x: 0.0 <= x < 1.0,
                 'beta2': lambda x: 0.0 <= x < 1.0,
-                'epsilon': lambda x: 0.0 < x,
+                'epsilon': lambda x: 0.0 < x <= 1e-2,
                 'ams': lambda x: True
             },
             'sgd': {
-                'gamma': lambda x: True,
-                'lambda_d': lambda x: 0.0 <= x,
+                'alpha': lambda x: True,
+                'lambda_d': lambda x: 0.0 <= x < 1.0,
                 'mu': lambda x: 0.0 <= x < 1.0,
                 'tau': lambda x: 0.0 <= x < 1.0,
                 'nesterov': lambda x: True
             },
             'rmsp': {
-                'gamma': lambda x: True,
-                'lambda_d': lambda x: 0.0 <= x,
-                'beta': lambda x: 0.0 <= x < 1.0,
+                'alpha': lambda x: True,
+                'lambda_d': lambda x: 0.0 <= x < 1.0,
+                'beta2': lambda x: 0.0 <= x < 1.0,
                 'mu': lambda x: 0.0 <= x < 1.0,
-                'epsilon': lambda x: 0.0 < x
+                'epsilon': lambda x: 0.0 < x <= 1e-2
+            },
+            'adag': {
+                'alpha': lambda x: True,
+                'lambda_d': lambda x: 0.0 <= x < 1.0,
+                'tau': lambda x: 0.0 <= x <= 1.0,
+                'nu': lambda x: 0.0 <= x <= 1.0,
+                'epsilon': lambda x: 0.0 < x <= 1e-2
             }
         }
         # default optimization algorithm hyperparameter conversion types
         ctypes = {
             'adam': {
-                'gamma': lambda x: float(x),
+                'alpha': lambda x: float(x),
                 'lambda_d': lambda x: float(x),
                 'beta1': lambda x: float(x),
                 'beta2': lambda x: float(x),
@@ -1269,17 +1324,24 @@ class Optimizers:
                 'ams': lambda x: bool(x)
             },
             'sgd': {
-                'gamma': lambda x: float(x),
+                'alpha': lambda x: float(x),
                 'lambda_d': lambda x: float(x),
                 'mu': lambda x: float(x),
                 'tau': lambda x: float(x),
                 'nesterov': lambda x: bool(x)
             },
             'rmsp': {
-                'gamma': lambda x: float(x),
+                'alpha': lambda x: float(x),
                 'lambda_d': lambda x: float(x),
-                'beta': lambda x: float(x),
+                'beta2': lambda x: float(x),
                 'mu': lambda x: float(x),
+                'epsilon': lambda x: float(x)
+            },
+            'adag': {
+                'alpha': lambda x: float(x),
+                'lambda_d': lambda x: float(x),
+                'tau': lambda x: float(x),
+                'nu': lambda x: float(x),
                 'epsilon': lambda x: float(x)
             }
         }
@@ -1340,6 +1402,7 @@ class Optimizers:
             'adam': {
                 'deltas_p': None,
                 'upsilons_p': None,
+                'iota': 1.0,
                 'upsilons_hat_mx': None
             },
             'sgd': {
@@ -1348,6 +1411,10 @@ class Optimizers:
             'rmsp': {
                 'deltas_p': None,
                 'upsilons_p': None
+            },
+            'adag': {
+                'iota': 1.0,
+                'tau': None
             }
         }
         # return memory dictionary
@@ -1357,97 +1424,139 @@ class Optimizers:
         # defines optimization algorithm
         def adam(thetas, nablas):
             # Adaptive Moment Estimation optimization algorithm
-            # weight decay
-            nablas = nablas + self._hyps['lambda_d'] * thetas
+            if self._hyps['lambda_d']:
+                # weight decay
+                nablas = nablas + self._hyps['lambda_d'] * thetas
+
             if self._memory['deltas_p'] is not None:
-                # momentum
+                # zero-biased first moment estimate
                 deltas = self._hyps['beta1'] * self._memory['deltas_p'] + (1.0 - self._hyps['beta1']) * nablas
             else:
-                # square
+                # zero-biased initialized first moment estimate
                 deltas = (1.0 - self._hyps['beta1']) * nablas
+            # zero-biased first moment memory update
+            self._memory['deltas_p'] = deltas
+
             if self._memory['upsilons_p'] is not None:
-                # square momentum
+                # zero-biased second raw moment estimate
                 upsilons = self._hyps['beta2'] * self._memory['upsilons_p'] + (1.0 - self._hyps['beta2']) * nablas ** 2.0
             else:
-                # square
-                upsilons = nablas ** 2.0
-            # hat
-            deltas_hat = deltas / (1 - self._hyps['beta1'])
-            upsilons_hat = upsilons / (1 - self._hyps['beta2'])
-            if self._hyps['ams']:
-                # ams-grad variant
-                if self._memory['upsilons_hat_mx'] is not None:
-                    # calculate maximum upsilon
-                    upsilons_hat_mx = np.maximum(self._memory['upsilons_hat_mx'], upsilons_hat)
-                else:
-                    # set maximum upsilon
-                    upsilons_hat_mx = np.maximum(0.0 * upsilons_hat, upsilons_hat)
-                # update memory
-                self._memory['upsilons_hat_mx'] = upsilons_hat_mx
-                # set upsilons
-                upsilons_hat = upsilons_hat_mx
-            # optimization
-            thetas -= self._hyps['gamma'] * deltas_hat / (np.sqrt(upsilons_hat) + self._hyps['epsilon'])
-
-            # update memory
-            self._memory['deltas_p'] = deltas
+                # zero-biased initialized second raw moment estimate
+                upsilons = (1.0 - self._hyps['beta2']) * nablas ** 2.0
+            # zero-biased second raw moment memory update
             self._memory['upsilons_p'] = upsilons
 
-            # return thetas
+            # zero-bias correction
+            deltas_hat = deltas / (1.0 - self._hyps['beta1'] ** self._memory['iota'])
+            upsilons_hat = upsilons / (1.0 - self._hyps['beta2'] ** self._memory['iota'])
+            # zero-bias factor update
+            self._memory['iota'] += 1.0
+
+            if self._hyps['ams']:
+                # strongly non-convex decaying learning rate variant
+                if self._memory['upsilons_hat_mx'] is not None:
+                    # maximum zero-biased second raw moment estimate
+                    upsilons_hat_mx = np.maximum(self._memory['upsilons_hat_mx'], upsilons_hat)
+                else:
+                    # initial maximum zero-biased second raw moment estimate
+                    upsilons_hat_mx = np.maximum(0.0 * upsilons_hat, upsilons_hat)
+                upsilons_hat = upsilons_hat_mx
+                # maximum zero-biased second raw moment memory update
+                self._memory['upsilons_hat_mx'] = upsilons_hat_mx
+
+            # optimization
+            thetas -= self._hyps['alpha'] * deltas_hat / (np.sqrt(upsilons_hat) + self._hyps['epsilon'])
             return thetas
 
         def sgd(thetas, nablas):
             # Stochastic Gradient Descent optimization algorithm
-            # weight decay
-            nablas = nablas + (self._hyps['lambda_d'] * thetas)
+            if self._hyps['lambda_d']:
+                # weight decay
+                nablas = nablas + self._hyps['lambda_d'] * thetas
+
             if self._hyps['mu'] and (self._memory['deltas_p'] is not None):
-                # momentum
+                # momentum and dampening
                 deltas = self._hyps['mu'] * self._memory['deltas_p'] + (1.0 - self._hyps['tau']) * nablas
+                # delta memory update
+                self._memory['deltas_p'] = deltas
+            elif self._hyps['mu']:
+                # dampening
+                deltas = (1.0 - self._hyps['tau']) * nablas
+                # delta memory update
+                self._memory['deltas_p'] = deltas
             else:
-                # default deltas
-                deltas = nablas
-            if self._hyps['nesterov'] and (self._hyps['mu'] is not None):
-                # nesterov momentum
-                deltas += nablas + self._hyps['mu'] * deltas
+                # dampening
+                deltas = (1.0 - self._hyps['tau']) * nablas
+
+            if self._hyps['nesterov'] and self._hyps['mu']:
+                # nesterov variant
+                deltas = nablas + self._hyps['mu'] * deltas
+
             # optimization
-            thetas -= self._hyps['gamma'] * deltas
-
-            # update memory
-            self._memory['deltas_p'] = deltas
-
-            # return thetas
+            thetas -= self._hyps['alpha'] * deltas
             return thetas
 
         def rmsp(thetas, nablas):
             # Root Mean Squared Propagation optimization algorithm
-            # weight decay
-            nablas = nablas + self._hyps['lambda_d'] * thetas
+            if self._hyps['lambda_d']:
+                # weight decay
+                nablas = nablas + self._hyps['lambda_d'] * thetas
+
             if self._memory['upsilons_p'] is not None:
-                # square momentum
-                upsilons = self._hyps['beta'] * self._memory['upsilons_p'] + (1.0 - self._hyps['beta']) * nablas ** 2.0
+                # zero-biased second raw moment estimate
+                upsilons = self._hyps['beta2'] * self._memory['upsilons_p'] + (1.0 - self._hyps['beta2']) * nablas ** 2.0
             else:
-                # square
-                upsilons = (1.0 - self._hyps['beta']) * nablas ** 2.0
-            # step calculation
+                # zero-biased initialized second raw moment estimate
+                upsilons = (1.0 - self._hyps['beta2']) * nablas ** 2.0
+            # zero-biased second raw moment memory update
+            self._memory['upsilons_p'] = upsilons
+
+            # delta calculation
             deltas = nablas / (np.sqrt(upsilons) + self._hyps['epsilon'])
+
             if self._hyps['mu'] and (self._memory['deltas_p'] is not None):
                 # momentum
                 deltas += self._hyps['mu'] * self._memory['deltas_p']
+                # delta memory update
+                self._memory['deltas_p'] = deltas
+            elif self._hyps['mu']:
+                # delta memory update
+                self._memory['deltas_p'] = deltas
+
             # optimization
-            thetas -= self._hyps['gamma'] * deltas
+            thetas -= self._hyps['alpha'] * deltas
+            return thetas
 
-            # update memory
-            self._memory['deltas_p'] = deltas
-            self._memory['upsilons_p'] = upsilons
+        def adag(thetas, nablas):
+            # Adaptive Gradient Algorithm optimization algorithm
+            if self._hyps['lambda_d']:
+                # weight decay
+                nablas = nablas + self._hyps['lambda_d'] * thetas
 
-            # return thetas
+            # learning rate adaption
+            alpha_hat = self._hyps['alpha'] / ((self._memory['iota'] - 1.0) * self._hyps['nu'] + 1.0)
+            # learning rate factor update
+            self._memory['iota'] += 1.0
+
+            if self._memory['tau'] is not None:
+                # state-sum calculation
+                tau = self._memory['tau'] + nablas ** 2.0
+            else:
+                # state-sum initialization
+                tau = 0.0 * thetas + self._hyps['tau']
+            # state-sum memory update
+            self._memory['tau'] = tau
+
+            # optimization
+            thetas -= alpha_hat * nablas / (np.sqrt(tau) + self._hyps['epsilon'])
             return thetas
 
         # optimization algorithm dictionary
         optim_funcs = {
             'adam': adam,
             'sgd': sgd,
-            'rmsp': rmsp
+            'rmsp': rmsp,
+            'adag': adag
         }
 
         # return optimization algorithm
@@ -1500,7 +1609,21 @@ class Optimizers:
             nablas = nablas.to_array()
         if isinstance(thetas, Tensor):
             # Tensor
-            return Tensor(self._optim(thetas.to_array(), nablas))
+            if self._correlator:
+                if thetas.id in self._tensors:
+                    # get memory instance
+                    self._memory = self._full[self._tensors.index(thetas.id)]
+                else:
+                    # set memory instance
+                    self._tensors.append(thetas.id)
+                    self._full.append(self._get_memory())
+                    self._memory = self._full[self._tensors.index(thetas.id)]
+            # perform optimization
+            result = Tensor(self._optim(thetas.to_array(), nablas))
+            # maintain id
+            result.id = thetas.id
+            return result
         else:
             # numpy array
-            return self._optim(thetas, nablas)
+            result = self._optim(thetas, nablas)
+            return result

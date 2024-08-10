@@ -53,3 +53,5 @@ print('\n\na1 test')
 print(a1)
 print(grad_a1.to_array().squeeze())
 print(np.sum(grad_r1.to_array().T * grad_a1.to_array().squeeze(), axis=0))
+
+import matplotlib

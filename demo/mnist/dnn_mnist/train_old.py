@@ -10,7 +10,7 @@ from gardenpy.metrics import (
     visualization as vis
 )
 from gardenpy.utils import (
-    data_utils as du,
+    dataloaders as du,
     helper_functions as hf
 )
 

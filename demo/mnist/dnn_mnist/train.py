@@ -51,7 +51,7 @@ model.hyperparameters(
     loss={'algorithm': 'centropy'},
     optimizer={
         'algorithm': 'adam',
-        'gamma': 1e-3,
+        'alpha': 1e-3,
         'lambda_d': 0,
         'beta1': 0.9,
         'beta2': 0.999,

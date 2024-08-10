@@ -1,5 +1,5 @@
 r"""
-**utility for GardenPy.**
+**Utility for GardenPy.**
 
 Attributes:
 ----------
@@ -43,7 +43,7 @@ from .algorithms import (
     Losses,
     Optimizers
 )
-from .data_utils import (
+from .dataloaders import (
     DataLoaderCSV
 )
 from .helper_functions import (

@@ -31,12 +31,7 @@ b_init = Initializers(algorithm='uniform', value=0.0)
 act1 = Activators(algorithm='lrelu')
 act2 = Activators(algorithm='lrelu')
 loss = Losses(algorithm='ssr')
-alg = 'adam'
-hyp = {}
-optim_b2 = Optimizers(alg, hyperparameters=hyp, correlator=False)
-optim_w2 = Optimizers(alg, hyperparameters=hyp, correlator=False)
-optim_b1 = Optimizers(alg, hyperparameters=hyp, correlator=False)
-optim_w1 = Optimizers(alg, hyperparameters=hyp, correlator=False)
+optim = Optimizers('adam', hyperparameters={})
 
 ##########
 x = [[0, 0], [0, 1], [1, 0], [1, 1]]
@@ -55,10 +50,7 @@ b2 = b_init.initialize(1, 2)
 g1 = act1.activate
 g2 = act2.activate
 j = loss.loss
-step_b2 = optim_b2.optimize
-step_w2 = optim_w2.optimize
-step_b1 = optim_b1.optimize
-step_w1 = optim_w1.optimize
+step = optim.optimize
 
 ##########
 
@@ -105,10 +97,8 @@ for i in range(max_iter):
 
     ##########
 
-    b2 = step_b2(b2, grad_b2)
-    w2 = step_w2(w2, grad_w2)
-    print(f"\n{b2.get_internals()}")
-    print(f"\n{w2.get_internals()}")
+    b2 = step(b2, grad_b2)
+    w2 = step(w2, grad_w2)
     # b1 = step_b1(b1, grad_b1)
     # w1 = step_w1(w1, grad_w1)
 

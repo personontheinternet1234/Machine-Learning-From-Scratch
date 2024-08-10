@@ -101,6 +101,7 @@ class Tensor:
         # internals
         self.shape = self.tensor.shape
         self.type = 'mat'
+        self.id = id(self)
         self.tracker = {
             'opr': [],
             'drv': [],
@@ -135,6 +136,7 @@ class Tensor:
         result = Tensor(self.tensor @ arr)
         # track origin
         result.tracker['org'] = [self, other]
+        # result.id = self.id + 1
         # track relation
         self.tracker['rlt'].append([other, result])
         if isinstance(other, Tensor):
@@ -189,6 +191,7 @@ class Tensor:
         result = Tensor(self.tensor ** arr)
         # track origin
         result.tracker['org'] = [self, other]
+        # result.id = self.id + 1
         # track relation
         self.tracker['rlt'].append([other, result])
         if isinstance(other, Tensor):
@@ -233,6 +236,7 @@ class Tensor:
         result = Tensor(self.tensor * arr)
         # track origin
         result.tracker['org'] = [self, other]
+        # result.id = self.id + 1
         # track relation
         self.tracker['rlt'].append([other, result])
         if isinstance(other, Tensor):
@@ -268,6 +272,7 @@ class Tensor:
         result = Tensor(self.tensor / arr)
         # track origin
         result.tracker['org'] = [self, other]
+        # result.id = self.id + 1
         # track relation
         self.tracker['rlt'].append([other, result])
         if isinstance(other, Tensor):
@@ -312,6 +317,7 @@ class Tensor:
         result = Tensor(self.tensor + arr)
         # track origin
         result.tracker['org'] = [self, other]
+        # result.id = self.id + 1
         # track relation
         self.tracker['rlt'].append([other, result])
         if isinstance(other, Tensor):
@@ -347,6 +353,7 @@ class Tensor:
         result = Tensor(self.tensor - arr)
         # track origin
         result.tracker['org'] = [self, other]
+        # result.id = self.id + 1
         # track relation
         self.tracker['rlt'].append([other, result])
         if isinstance(other, Tensor):
@@ -410,32 +417,29 @@ class Tensor:
         # representation
         return str(self)
 
-    def tracker_repr(self):
+    def get_internals(self):
         # representation of the objects internals
         types = ['mat', 'grad']
         if self.type == 'mat':
             # matrix
             return (
-                f"'{id(self)}' Internals:\n"
-                f"'type': {str(self.type)}\n"
-                f"'value':\n{str(self.tensor)}\n"
-                f"'operations': {self.tracker['opr']}\n"
-                f"'operation derivatives': {self.tracker['drv']}\n"
-                f"'operation chain-rules': {self.tracker['chn']}\n"
-                f"'path-ids': {[[f'{id(path)}' for path in pair] for pair in self.tracker['rlt']]}\n"
-                f"'origin': {[f'{id(origin)}' for origin in self.tracker['org']] if self.tracker['org'] != [None] else None}\n"
+                f"{hex(self.id)} ({str(self.type)})\n"
+                f"{str(self.type)}\n"
+                f"{str(self.tensor)}\n"
+                f"drv: {self.tracker['drv']}\n"
+                f"chn: {self.tracker['chn']}\n"
+                f"pth: {[[hex(id(path)) for path in pair] for pair in self.tracker['rlt']]}\n"
+                f"org: {[hex(id(origin)) for origin in self.tracker['org']] if self.tracker['org'] != [None] else []}\n"
             )
         elif self.type == 'grad':
             # gradient
             return (
-                f"{id(self)} Internals:\n"
-                f"'type': {str(self.type)}\n"
-                f"'value':\n{str(self.tensor)}\n"
-                f"'operations': {self.tracker['opr']}\n"
-                f"'operation derivatives': {self.tracker['drv']}\n"
-                f"'operation chain-rules': {self.tracker['chn']}\n"
-                f"'path-ids': {[id(path) for path in self.tracker['rlt']]}\n"
-                f"'origin': {id(self.tracker['org'])}\n"
+                f"{hex(self.id)} ({str(self.type)})\n"
+                f"{str(self.tensor)}\n"
+                f"drv: {self.tracker['drv']}\n"
+                f"chn: {self.tracker['chn']}\n"
+                f"pth: {[hex(id(path)) for path in self.tracker['rlt']]}\n"
+                f"org: {hex(id(self.tracker['org']))}\n"
             )
         else:
             # invalid type

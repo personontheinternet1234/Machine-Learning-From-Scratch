@@ -1,4 +1,4 @@
-from gardenpy.utils.data_utils import MNISTFNNDataLoader
+from gardenpy.utils.dataloaders import MNISTFNNDataLoader
 
 # todo: make folder data/mnist/data (because it doesn't exist for some reason) and run data_generator.py in there
 # todo: make folder demo/mnist/dnn_mnist/data/processed_data (because it doesn't exist for some reason) and run process.py there

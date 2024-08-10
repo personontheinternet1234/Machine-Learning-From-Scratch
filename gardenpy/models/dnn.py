@@ -24,7 +24,7 @@ from ..utils.algorithms import (
     Losses,
     Optimizers
 )
-from ..utils.data_utils import DataLoader
+from ..utils.dataloaders import DataLoader
 from ..utils.helper_functions import (
     progress,
     convert_time,
@@ -33,7 +33,14 @@ from ..utils.helper_functions import (
 
 
 class DNN:
-    def __init__(self, status_bars: bool = False):
+    r"""
+    DNN
+    """
+    def __init__(self, *, status_bars: bool = False, ikwiad: bool = False):
+        r"""
+        status_bars = whether to have status bars
+        ikwiad = "I know what I am doing" to remove all weak warnings and non-critical errors
+        """
         # hyperparameters
         self._hidden = None
         self._lyrs = None
@@ -353,7 +360,7 @@ class DNN:
         self._w = self._optimizer(self._w, self._grad_w)
         self._b = self._optimizer(self._b, self._grad_b)
 
-    def configure(self, hidden_layers: dict = None, *, thetas: dict = None, activations: dict = None) -> None:
+    def configure(self, hidden_layers: list = None, *, thetas: dict = None, activations: list = None) -> None:
         self._hidden = self._get_hidden(hidden_layers)
         self._w, self._b = self._get_thetas(thetas, len(self._hidden))
         self._g = self._get_activators(activations, len(self._hidden))
@@ -381,7 +388,8 @@ class DNN:
             )
         for lyr in range(len(self._lyrs) - 1):
             # instantiate thetas
-            self._w[...] = ...
+            self._w[lyr] = self._w[lyr].initialize(self._lyrs[lyr], self._lyrs[lyr + 1])
+            self._b[lyr] = self._b[lyr].initialize(1, self._lyrs[lyr + 1])
         self._initialized = True
 
     def forward(self, x: Union[Tensor, np.ndarray]) -> np.ndarray:

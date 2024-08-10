@@ -19,7 +19,7 @@ from gardenpy.utils.algorithms import (
 from gardenpy.metrics.metrics import (
     cm
 )
-from gardenpy.utils.data_utils import (
+from gardenpy.utils.dataloaders import (
     shuffle as mix  # todo: why naming?
 )
 

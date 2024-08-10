@@ -117,6 +117,7 @@ def nabla(gradient: Tensor, respect: Tensor) -> Tensor:
         grad.tracker['chn'].append(upstream.tracker['chn'])
         grad.tracker['rlt'] += [downstream, upstream]
         grad.tracker['org'] = downstream
+        # grad.id = downstream.id + 1
         # return local gradient
         return grad
 
@@ -132,7 +133,7 @@ def nabla(gradient: Tensor, respect: Tensor) -> Tensor:
     return result
 
 
-def chain(downstream: Tensor, upstream: Tensor, *, reduce=True) -> Tensor:
+def chain(downstream: Tensor, upstream: Tensor) -> Tensor:
     r"""
     **Chain ruling for Tensors.**
 
@@ -199,6 +200,8 @@ def chain(downstream: Tensor, upstream: Tensor, *, reduce=True) -> Tensor:
         result.tracker['drv'] = downstream.tracker['drv'] + upstream.tracker['drv']
         result.tracker['chn'] = downstream.tracker['chn'] + upstream.tracker['chn']
         result.tracker['org'] = downstream.tracker['org']
+        # result.id = downstream.id + 1
+
         # return final gradient
         return result
     else:
