@@ -34,6 +34,7 @@ loss = Losses(algorithm='ssr')
 optim = Optimizers('adam', hyperparameters={})
 
 ##########
+
 x = [[0, 0], [0, 1], [1, 0], [1, 1]]
 y = [[0, 1], [1, 0], [1, 0], [0, 1]]
 for i in range(len(x)):
@@ -68,7 +69,6 @@ print(f"Epoch {ansi['white']}{ep + 1}{ansi['reset']}")
 
 for i in range(max_iter):
     tc = random.randint(0, 3)
-    tc = 2
     a1 = x[tc]
     y1 = y[tc]
     alpha1 = a1 @ w1
@@ -88,6 +88,7 @@ for i in range(max_iter):
     grad_b2 = chain(grad_beta2, nabla(beta2, b2))
     grad_alpha2 = chain(grad_beta2, nabla(beta2, alpha2))
     grad_w2 = chain(grad_alpha2, nabla(alpha2, w2))
+    # print(grad_w2.get_internals())
 
     grad_a2 = chain(grad_alpha2, nabla(alpha2, a2))
     grad_beta1 = chain(grad_a2, nabla(a2, beta1))
@@ -99,8 +100,8 @@ for i in range(max_iter):
 
     b2 = step(b2, grad_b2)
     w2 = step(w2, grad_w2)
-    # b1 = step_b1(b1, grad_b1)
-    # w1 = step_w1(w1, grad_w1)
+    b1 = step(b1, grad_b1)
+    w1 = step(w1, grad_w1)
 
     ##########
 
@@ -131,9 +132,9 @@ for i in range(max_iter):
         yhat = g2(beta2)
 
         floss += j(yhat, y[c])
-        faccu += np.nanargmax(yhat.to_array())  # this doesn't work
+        faccu += np.nanargmax(np.abs(y[c].to_array() - yhat.to_array()))  # this doesn't work
 
-    elapsed = time.time() - start
+    elapsed = time.time() - start + 1e-6
     faccu /= 0.04
     desc = (
         f"{str(i + 1).zfill(len(str(max_iter)))}{ansi['white']}it{ansi['reset']}/{max_iter}{ansi['white']}it{ansi['reset']}  "
