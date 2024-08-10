@@ -29,8 +29,8 @@ if os.path.exists(os.path.join(root, 'MNIST', 'raw')):
 # check if data is valid
 if required_files != existing_files:
     # clear root
-    shutil.rmtree(root)
-    os.makedirs(root)
+    # shutil.rmtree(root)
+    # os.makedirs(root)
 
     # load raw data
     training_data = datasets.MNIST(
