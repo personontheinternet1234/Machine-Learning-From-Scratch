@@ -1,0 +1,1 @@
+This directory includes temporary files that will be removed in the future.

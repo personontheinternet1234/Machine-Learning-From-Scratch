@@ -1,0 +1,60 @@
+machine-learning-from-scratch/
+├── credits.txt
+├── demo/
+│   ├── mnist/
+│   │   ├── cnn_mnist/
+│   │   │   ├── cnn_mnist.py
+│   │   │   ├── data/
+│   │   │   │   └── preprocess.py
+│   │   │   └── models/
+│   │   │       ├── biases.txt
+│   │   │       ├── kernels.txt
+│   │   │       └── weights.txt
+│   │   ├── cnn_torch_mnist/
+│   │   │   ├── cnn_torch_mnist.py
+│   │   │   ├── data/
+│   │   │   │   └── preprocess.py
+│   │   │   └── models/
+│   │   │       └── params.pth
+│   │   ├── draw.py
+│   │   ├── data_display.py
+│   │   ├── fnn_mnist/
+│   │   │   ├── fnn_mnist.py
+│   │   │   ├── data/
+│   │   │   │   └── preprocess.py
+│   │   │   └── models/
+│   │   │       ├── biases.txt
+│   │   │       └── weights.txt
+│   │   ├── fnn_torch_mnist/
+│   │   │   ├── fnn_torch_mnist.py
+│   │   │   ├── data/
+│   │   │   │   └── preprocess.py
+│   │   │   └── models/
+│   │   │       └── params.pth
+│   │   └── ...
+│   └── ...
+├── garden/
+│   ├── functional/
+│   │   └── functional.py
+│   ├── metrics/
+│   │   ├── metrics.py
+│   │   └── visualization.py
+│   ├── models/
+│   │   ├── cnn.py
+│   │   ├── cnn_torch.py
+│   │   ├── fnn.py
+│   │   ├── fnn_torch.py
+│   │   └── ...
+│   ├── utils/
+│   │   ├── helper_functions.py
+│   │   └── data_utils.py
+│   └── __init__.py
+├── data/
+│   ├── mnist_data/
+│   │   ├── data_generator.py
+│   │   └── data/
+│   │       └── ...
+│   └── ...
+├── README.md
+├── requirements.txt
+└── setup.py
