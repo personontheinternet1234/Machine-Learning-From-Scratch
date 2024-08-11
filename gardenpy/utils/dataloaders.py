@@ -20,17 +20,35 @@ class DataLoader:
 
 
 class DataLoaderCSV(DataLoader):
-    def __init__(self, root, values_folder, labels_folder, **kwargs):
+    def __init__(self, root, values_file, labels_file, number_files=1, shuffle_order=False, **kwargs):
         self._root = root
-        self._values_dir = os.path.join(root, labels_folder)
-        self._labels_dir = os.path.join(root, values_folder)
+        self.values_file = os.path.join(root, values_file)
+        self.labels_file = os.path.join(root, labels_file)
         self._values = None
         self._labels = None
+        self._shuffle_order = shuffle_order
+        self._idx = 0
+        self.number_files = number_files
+
+        self._order = np.arange(0, self.number_files)
+
+    def load(self, file_num=0):
+        if file_num == 0:
+            file_num = ""
+        self._values = Tensor(np.array(pd.read_csv(str(self.values_file).replace(".csv", "") + str(file_num) + ".csv")))
+        self._labels = Tensor(np.array(pd.read_csv(str(self.labels_file).replace(".csv", "") + str(file_num) + ".csv")))
+
+    def reset(self):
+        if self._shuffle_order:
+            self.shuffle()
         self._idx = 0
 
-    def load(self):
-        self._values = Tensor(np.array(pd.read_csv(self._values_dir)))
-        self._labels = Tensor(np.array(pd.read_csv(self._labels_dir)))
+    def shuffle(self):
+        np.random.shuffle(self._order)
+
+    def __next__(self):
+        self._idx += 1
+        self.load(self._order[self._idx])
 
 
 class DataLoaderCSVOld:
