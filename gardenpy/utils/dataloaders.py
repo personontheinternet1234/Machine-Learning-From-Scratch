@@ -12,17 +12,25 @@ import os
 import numpy as np
 import pandas as pd
 
+from .objects import Tensor
+
 
 class DataLoader:
     ...
 
 
 class DataLoaderCSV(DataLoader):
-    def __init__(self, root, values, labels, **kwargs):
+    def __init__(self, root, values_folder, labels_folder, **kwargs):
         self._root = root
-        self._val_pth = values
-        self._lab_pth = labels
+        self._values_dir = os.path.join(root, labels_folder)
+        self._labels_dir = os.path.join(root, values_folder)
+        self._values = None
+        self._labels = None
         self._idx = 0
+
+    def load(self):
+        self._values = Tensor(np.array(pd.read_csv(self._values_dir)))
+        self._labels = Tensor(np.array(pd.read_csv(self._labels_dir)))
 
 
 class DataLoaderCSVOld:
