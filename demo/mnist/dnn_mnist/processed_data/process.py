@@ -62,8 +62,8 @@ def process_data(save=True, cases_per_file = 10000, values_file=os.path.join(sav
 
             if save:
                 # save processed data
-                values.to_csv(f'{values_file}{file_count}|{len(raw_values) // cases_per_file}.csv', index=False)
-                labels.to_csv(f'{labels_file}{file_count}|{len(raw_values) // cases_per_file}.csv', index=False)
+                values.to_csv(f'{values_file}{file_count}_{len(raw_values) // cases_per_file}.csv', index=False)
+                labels.to_csv(f'{labels_file}{file_count}_{len(raw_values) // cases_per_file}.csv', index=False)
             values = []
             labels = []
 
