@@ -16,7 +16,20 @@ from .objects import Tensor
 
 
 class DataLoader:
-    ...
+    def load(self):
+        ...
+
+    def reset(self):
+        ...
+
+    def __iter__(self):
+        ...
+
+    def __next__(self):
+        ...
+
+    def __getitem__(self, item):
+        ...
 
 
 class DataLoaderCSV(DataLoader):
