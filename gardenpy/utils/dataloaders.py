@@ -46,9 +46,25 @@ class DataLoaderCSV(DataLoader):
     def shuffle(self):
         np.random.shuffle(self._order)
 
+    def __iter__(self):
+        self.reset()
+        return self
+
     def __next__(self):
         self._idx += 1
+        if self._idx >= len(self._indexes):
+            raise StopIteration
         self.load(self._order[self._idx])
+
+        return self._labels, self._values
+
+    def __getitem__(self, idx):
+        if idx >= len(self._indexes):
+            raise IndexError("Index out of range")
+
+        self.load(idx)
+
+        return self._values, self._labels
 
 
 class DataLoaderCSVOld:
