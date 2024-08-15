@@ -840,7 +840,7 @@ class Losses:
         vtypes = {
             'focal': {
                 'alpha': lambda x: 0.0 < x <= 1.0,
-                'gamma': lambda x: 0.0 < x
+                'gamma': lambda x: 0.0 <= x
             }
         }
         # default loss algorithm parameter conversion types
@@ -920,6 +920,7 @@ class Losses:
         # loss algorithm dictionary
         loss_funcs = {
             'centropy': centropy,
+            'focal': focal,
             'ssr': ssr,
             'savr': savr
         }
@@ -948,6 +949,7 @@ class Losses:
         # derivative of loss algorithm dictionary
         d_loss_funcs = {
             'centropy': d_centropy,
+            'focal': d_focal,
             'ssr': d_ssr,
             'savr': d_savr
         }
@@ -1181,8 +1183,7 @@ class Optimizers:
         self.algorithms = [
             'adam',
             'sgd',
-            'rmsp',
-            'adag'
+            'rmsp'
         ]
 
         # internal optimization algorithm parameters
@@ -1528,6 +1529,7 @@ class Optimizers:
             return thetas
 
         def adag(thetas, nablas):
+            # todo
             # Adaptive Gradient Algorithm optimization algorithm
             if self._hyps['lambda_d']:
                 # weight decay
