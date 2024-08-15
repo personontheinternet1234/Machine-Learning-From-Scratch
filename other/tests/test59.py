@@ -21,15 +21,15 @@ from gardenpy.utils.helper_functions import print_contributors
 
 ##########
 
-max_iter = 20000
+max_iter = 25000
 
 ##########
 
 w_init = Initializers(algorithm='xavier')
 b_init = Initializers(algorithm='uniform', value=0.0)
 
-act1 = Activators(algorithm='lrelu')
-act2 = Activators(algorithm='lrelu')
+act1 = Activators(algorithm='relu')
+act2 = Activators(algorithm='softmax')
 loss = Losses(algorithm='ssr')
 optim = Optimizers('adam', hyperparameters={})
 
@@ -85,10 +85,10 @@ for i in range(max_iter):
 
     grad_yhat = nabla(loss, yhat)
     grad_beta2 = chain(grad_yhat, nabla(yhat, beta2))
+    # print(loss)
     grad_b2 = chain(grad_beta2, nabla(beta2, b2))
     grad_alpha2 = chain(grad_beta2, nabla(beta2, alpha2))
     grad_w2 = chain(grad_alpha2, nabla(alpha2, w2))
-    # print(grad_w2.get_internals())
 
     grad_a2 = chain(grad_alpha2, nabla(alpha2, a2))
     grad_beta1 = chain(grad_a2, nabla(a2, beta1))
@@ -132,7 +132,7 @@ for i in range(max_iter):
         yhat = g2(beta2)
 
         floss += j(yhat, y[c])
-        faccu += np.nanargmax(np.abs(y[c].to_array() - yhat.to_array()))  # this doesn't work
+        # faccu += np.nanargmax(np.abs(y[c].to_array() - yhat.to_array()))  # this doesn't work
 
     elapsed = time.time() - start + 1e-6
     faccu /= 0.04
@@ -142,7 +142,7 @@ for i in range(max_iter):
         f"{round((i + 1) / elapsed, 1)}{ansi['white']}it/s{ansi['reset']}  "
         f"{convert_time(elapsed)}{ansi['white']}et{ansi['reset']}  "
         f"{convert_time(elapsed * max_iter / (i + 1) - elapsed)}{ansi['white']}eta{ansi['reset']}  "
-        f"{faccu:05.1f}{ansi['white']}%accu{ansi['reset']}  "
+        # f"{faccu:05.1f}{ansi['white']}%accu{ansi['reset']}  "
         f"{floss[0]:.5}{ansi['white']}loss{ansi['reset']}"
     )
     progress(i, max_iter, desc=desc)

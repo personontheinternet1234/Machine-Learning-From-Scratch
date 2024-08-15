@@ -29,8 +29,8 @@ w_init = Initializers(algorithm='xavier')
 b_init = Initializers(algorithm='uniform', value=0.0)
 
 act1 = Activators(algorithm='lrelu')
-act2 = Activators(algorithm='lrelu')
-loss = Losses(algorithm='ssr')
+act2 = Activators(algorithm='softmax')
+loss = Losses(algorithm='focal')
 alg = 'adam'
 hyp = {}
 optim_b2 = Optimizers(alg, hyperparameters=hyp, correlator=False)

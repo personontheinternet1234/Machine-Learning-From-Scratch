@@ -793,6 +793,7 @@ class Losses:
         # loss algorithms
         self.algorithms = [
             'centropy',
+            'focal',
             'ssr',
             'savr'
         ]
@@ -907,6 +908,7 @@ class Losses:
             return -np.sum(y * np.log(yhat))
 
         def focal(yhat, y):
+            # Focal loss
             return -np.sum(self._params['alpha'] * (y - yhat) ** self._params['gamma'] * np.log(yhat))
 
         def ssr(yhat, y):
@@ -932,11 +934,11 @@ class Losses:
         # defines derivative of loss algorithm
         def d_centropy(yhat, y):
             # derivative of Cross-Entropy loss
-            return -np.log(yhat) - (y / yhat)
+            return -y / (yhat + 1e-8)
 
         def d_focal(yhat, y):
+            # derivative of Focal loss
             return -1 * self._params["alpha"] * (y - yhat) ** self._params["gamma"] / yhat - self._params["alpha"] * self._params["gamma"] * (y - yhat) ** (self._params["gamma"] - 1.0) * np.log(yhat)
-
 
         def d_ssr(yhat, y):
             # derivative of Sum of the Squared Residuals loss
