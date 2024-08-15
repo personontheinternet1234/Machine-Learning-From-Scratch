@@ -907,7 +907,7 @@ class Losses:
             return -np.sum(y * np.log(yhat))
 
         def focal(yhat, y):
-            return -self._params['alpha'] * (y - yhat) ** self._params['gamma'] * np.log(yhat)
+            return -np.sum(self._params['alpha'] * (y - yhat) ** self._params['gamma'] * np.log(yhat))
 
         def ssr(yhat, y):
             # Sum of the Squared Residuals loss
@@ -935,8 +935,8 @@ class Losses:
             return -np.log(yhat) - (y / yhat)
 
         def d_focal(yhat, y):
-            # todo
-            ...
+            return -1 * self._params["alpha"] * (y - yhat) ** self._params["gamma"] / yhat - self._params["alpha"] * self._params["gamma"] * (y - yhat) ** (self._params["gamma"] - 1.0) * np.log(yhat)
+
 
         def d_ssr(yhat, y):
             # derivative of Sum of the Squared Residuals loss
