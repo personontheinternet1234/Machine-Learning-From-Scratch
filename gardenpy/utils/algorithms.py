@@ -840,7 +840,7 @@ class Losses:
         vtypes = {
             'focal': {
                 'alpha': lambda x: 0.0 < x <= 1.0,
-                'gamma': lambda x: 0.0 < x
+                'gamma': lambda x: 0.0 <= x
             }
         }
         # default loss algorithm parameter conversion types
@@ -907,7 +907,7 @@ class Losses:
             return -np.sum(y * np.log(yhat))
 
         def focal(yhat, y):
-            return -self._params['alpha'] * (y - yhat) ** self._params['gamma'] * np.log(yhat)
+            return -np.sum(self._params['alpha'] * (y - yhat) ** self._params['gamma'] * np.log(yhat))
 
         def ssr(yhat, y):
             # Sum of the Squared Residuals loss
@@ -920,6 +920,7 @@ class Losses:
         # loss algorithm dictionary
         loss_funcs = {
             'centropy': centropy,
+            'focal': focal,
             'ssr': ssr,
             'savr': savr
         }
@@ -934,8 +935,8 @@ class Losses:
             return -np.log(yhat) - (y / yhat)
 
         def d_focal(yhat, y):
-            # todo
-            ...
+            return -1 * self._params["alpha"] * (y - yhat) ** self._params["gamma"] / yhat - self._params["alpha"] * self._params["gamma"] * (y - yhat) ** (self._params["gamma"] - 1.0) * np.log(yhat)
+
 
         def d_ssr(yhat, y):
             # derivative of Sum of the Squared Residuals loss
@@ -948,6 +949,7 @@ class Losses:
         # derivative of loss algorithm dictionary
         d_loss_funcs = {
             'centropy': d_centropy,
+            'focal': d_focal,
             'ssr': d_ssr,
             'savr': d_savr
         }
@@ -1181,8 +1183,7 @@ class Optimizers:
         self.algorithms = [
             'adam',
             'sgd',
-            'rmsp',
-            'adag'
+            'rmsp'
         ]
 
         # internal optimization algorithm parameters
@@ -1528,6 +1529,7 @@ class Optimizers:
             return thetas
 
         def adag(thetas, nablas):
+            # todo
             # Adaptive Gradient Algorithm optimization algorithm
             if self._hyps['lambda_d']:
                 # weight decay
