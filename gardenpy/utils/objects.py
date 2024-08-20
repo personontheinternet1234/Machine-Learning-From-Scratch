@@ -161,14 +161,7 @@ class Tensor:
 
     @staticmethod
     def _d_matmul_l_chn(downstream, upstream, org=None):
-        if org:
-            # print(org)
-            shp = upstream.shape
-            res = np.reshape(downstream.T * upstream.squeeze(), shp).T
-            return np.sum(res, axis=2).T
-            # return res.T
-        else:
-            raise NotImplementedError('not in yet')
+        return downstream @ upstream
 
     @staticmethod
     def _d_matmul_r_chn(downstream, upstream, reduce=True):
