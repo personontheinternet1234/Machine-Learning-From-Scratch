@@ -153,22 +153,21 @@ class Tensor:
     def _d_matmul_l(left_matrix, right_matrix):
         # matrix multiplication left derivative
         shape = set(left_matrix.shape)
-        n_shape = shape
         shape.discard(1)
-        return right_matrix.T
-        # return np.reshape(right_matrix.T, (right_matrix.shape[1], *left_matrix.shape))
+        if len(shape) == 1:
+            return right_matrix.T
+        else:
+            return np.tile(right_matrix.T, (list(shape)[1], 1))
 
     @staticmethod
     def _d_matmul_r(right_matrix, left_matrix):
         # matrix multiplication right derivative
         shape = set(right_matrix.shape)
-        n_shape = shape
         shape.discard(1)
         if len(shape) == 1:
             return left_matrix.T
         else:
-            return np.tile(left_matrix, (list(shape)[0], 1)).T
-        # return left_matrix.T * (0.0 * right_matrix + 1.0)
+            return np.tile(left_matrix.T, (1, list(shape)[1]))
 
     @staticmethod
     def _d_matmul_l_chn(downstream, upstream, org=None):
