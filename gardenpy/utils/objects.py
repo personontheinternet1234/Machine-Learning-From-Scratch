@@ -152,12 +152,23 @@ class Tensor:
     @staticmethod
     def _d_matmul_l(left_matrix, right_matrix):
         # matrix multiplication left derivative
-        return np.reshape(right_matrix.T, (right_matrix.shape[1], *left_matrix.shape))
+        shape = set(left_matrix.shape)
+        n_shape = shape
+        shape.discard(1)
+        return right_matrix.T
+        # return np.reshape(right_matrix.T, (right_matrix.shape[1], *left_matrix.shape))
 
     @staticmethod
     def _d_matmul_r(right_matrix, left_matrix):
         # matrix multiplication right derivative
-        return left_matrix.T * (0.0 * right_matrix + 1.0)
+        shape = set(right_matrix.shape)
+        n_shape = shape
+        shape.discard(1)
+        if len(shape) == 1:
+            return left_matrix.T
+        else:
+            return np.tile(left_matrix, (list(shape)[0], 1)).T
+        # return left_matrix.T * (0.0 * right_matrix + 1.0)
 
     @staticmethod
     def _d_matmul_l_chn(downstream, upstream, org=None):
@@ -165,10 +176,15 @@ class Tensor:
 
     @staticmethod
     def _d_matmul_r_chn(downstream, upstream, reduce=True):
-        if reduce:
-            return downstream * upstream
-        else:
-            raise NotImplementedError('not in yet')
+        print('a')
+        print(downstream)
+        print('\n\n')
+        print(upstream)
+        return downstream * upstream
+        # if reduce:
+        #     return downstream * upstream
+        # else:
+        #     raise NotImplementedError('not in yet')
 
     def __pow__(self, other):
         # hadamard power

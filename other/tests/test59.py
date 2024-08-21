@@ -28,8 +28,8 @@ max_iter = 25000
 w_init = Initializers(algorithm='xavier')
 b_init = Initializers(algorithm='uniform', value=0.0)
 
-act1 = Activators(algorithm='relu')
-act2 = Activators(algorithm='softmax')
+act1 = Activators(algorithm='lrelu')
+act2 = Activators(algorithm='lrelu')
 loss = Losses(algorithm='ssr')
 optim = Optimizers('adam', hyperparameters={})
 
@@ -85,7 +85,6 @@ for i in range(max_iter):
 
     grad_yhat = nabla(loss, yhat)
     grad_beta2 = chain(grad_yhat, nabla(yhat, beta2))
-    # print(loss)
     grad_b2 = chain(grad_beta2, nabla(beta2, b2))
     grad_alpha2 = chain(grad_beta2, nabla(beta2, alpha2))
     grad_w2 = chain(grad_alpha2, nabla(alpha2, w2))
