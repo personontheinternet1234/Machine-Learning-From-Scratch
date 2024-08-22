@@ -171,19 +171,17 @@ class Tensor:
 
     @staticmethod
     def _d_matmul_l_chn(downstream, upstream, org=None):
-        return downstream @ upstream
+        try:
+            return downstream * upstream
+        finally:
+            return downstream.T * upstream
 
     @staticmethod
     def _d_matmul_r_chn(downstream, upstream, reduce=True):
-        print('a')
-        print(downstream)
-        print('\n\n')
-        print(upstream)
-        return downstream * upstream
-        # if reduce:
-        #     return downstream * upstream
-        # else:
-        #     raise NotImplementedError('not in yet')
+        try:
+            return downstream * upstream
+        finally:
+            return downstream.T * upstream
 
     def __pow__(self, other):
         # hadamard power
@@ -345,7 +343,10 @@ class Tensor:
 
     @staticmethod
     def _d_add_chn(downstream, upstream, _=None):
-        return downstream * upstream
+        try:
+            return downstream * upstream
+        finally:
+            return downstream.T * upstream
 
     def __sub__(self, other):
         # subtraction

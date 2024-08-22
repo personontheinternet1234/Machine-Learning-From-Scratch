@@ -1,5 +1,3 @@
-import numpy as np
-
 from gardenpy import Initializers, nabla
 
 init = Initializers('gaussian').initialize
@@ -20,4 +18,3 @@ g2 = nabla(r1, t2)
 print(g1)
 print(g2)
 print('\n\n')
-
