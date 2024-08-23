@@ -171,17 +171,28 @@ class Tensor:
 
     @staticmethod
     def _d_matmul_l_chn(downstream, upstream, org=None):
+        # matrix multiplication left derivative
         try:
             return downstream * upstream
-        finally:
-            return downstream.T * upstream
+        except ValueError:
+            return downstream @ upstream
 
     @staticmethod
     def _d_matmul_r_chn(downstream, upstream, reduce=True):
+        # return downstream * upstream
         try:
             return downstream * upstream
-        finally:
-            return downstream.T * upstream
+        except ValueError:
+            return downstream @ upstream
+        # try:
+        #     return downstream * upstream
+        # finally:
+        #     print(downstream.shape)
+        #     print(upstream.shape)
+        #     try:
+        #         return downstream @ upstream
+        #     finally:
+        #         return ...
 
     def __pow__(self, other):
         # hadamard power
@@ -343,10 +354,7 @@ class Tensor:
 
     @staticmethod
     def _d_add_chn(downstream, upstream, _=None):
-        try:
-            return downstream * upstream
-        finally:
-            return downstream.T * upstream
+        return downstream * upstream
 
     def __sub__(self, other):
         # subtraction
