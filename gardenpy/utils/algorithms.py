@@ -1114,12 +1114,13 @@ class Optimizers:
 
         Parameters:
         ----------
-        **algorithm** : (*str*) {'*adam*', '*sgd*', '*rmsp*'}
+        **algorithm** : (*str*) {'*adam*', '*sgd*', '*rmsp*', '*adag'}
             The optimization algorithm.
 
             - *adam* : Adaptive Moment Estimation.
             - *sgd*: Stochastic Gradient Descent.
             - *rmsp*: Root Mean Squared Propagation.
+            - *adag*: Adaptive Gradient Algorithm.
 
         **hyperparameters** (*dict*, *optional*) :
             The hyperparameters for the optimization algorithm.
