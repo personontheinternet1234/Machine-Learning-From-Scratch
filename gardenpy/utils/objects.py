@@ -177,7 +177,7 @@ class Tensor:
         except ValueError:
             try:
                 return downstream.T * upstream
-            finally:
+            except ValueError:
                 return downstream @ upstream
 
     @staticmethod
@@ -188,7 +188,7 @@ class Tensor:
         except ValueError:
             try:
                 return downstream.T * upstream
-            finally:
+            except ValueError:
                 return downstream @ upstream
         # try:
         #     return downstream * upstream
