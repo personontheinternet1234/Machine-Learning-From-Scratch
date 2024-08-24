@@ -33,6 +33,10 @@ print(f"g1 (nabla(r2, t3)): {g1.shape}\n")
 c1 = nabla(r2, t2)
 c2 = nabla(r2, t1)
 
+print('c ideal')
+print(f"c2 (nabla(r2, t1)): (4, 3)   (really??)")
+print(f"c1 (nabla(r2, t2)): (3, 4)\n")
+
 print('c')
 print(f"c2 (nabla(r2, t1)): {c2.shape}")
 print(f"c1 (nabla(r2, t2)): {c1.shape}\n")

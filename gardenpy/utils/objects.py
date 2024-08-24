@@ -175,7 +175,10 @@ class Tensor:
         try:
             return downstream * upstream
         except ValueError:
-            return downstream @ upstream
+            try:
+                return downstream.T * upstream
+            finally:
+                return downstream @ upstream
 
     @staticmethod
     def _d_matmul_r_chn(downstream, upstream, reduce=True):
@@ -183,7 +186,10 @@ class Tensor:
         try:
             return downstream * upstream
         except ValueError:
-            return downstream @ upstream
+            try:
+                return downstream.T * upstream
+            finally:
+                return downstream @ upstream
         # try:
         #     return downstream * upstream
         # finally:
