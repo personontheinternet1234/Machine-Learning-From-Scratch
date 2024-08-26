@@ -167,7 +167,7 @@ class Tensor:
         if len(shape) == 1:
             return left_matrix.T
         else:
-            return np.tile(left_matrix.T, (1, list(shape)[1]))
+            return np.tile(left_matrix.T, (1, list(shape)[0]))
 
     @staticmethod
     def _d_matmul_l_chn(downstream, upstream, org=None):
@@ -189,7 +189,7 @@ class Tensor:
             try:
                 return downstream.T * upstream
             finally:
-                return downstream @ upstream
+                return upstream @ downstream
         # try:
         #     return downstream * upstream
         # finally:
@@ -230,12 +230,12 @@ class Tensor:
     @staticmethod
     def _d_pow_b(base, exponent):
         # hadamard power base derivative
-        return exponent * (base ** (exponent - 1))
+        return exponent * (base ** (exponent - 1)) * np.eye(base.shape[1])
 
     @staticmethod
     def _d_pow_e(exponent, base):
         # hadamard power exponent derivative
-        return np.log(base) * (base ** exponent)
+        return np.log(base) * (base ** exponent) * np.eye(exponent.shape[1])
 
     @staticmethod
     def _d_pow_b_chn(downstream, upstream, _=None):
@@ -275,7 +275,7 @@ class Tensor:
     @staticmethod
     def _d_mul(multiplicand, multiplier, _=None):
         # hadamard multiplication derivative
-        return multiplier * (multiplicand * 0.0 + 1.0)
+        return multiplier * (multiplicand * 0.0 + 1.0) * np.eye(multiplier.shape[1])
 
     @staticmethod
     def _d_mul_chn(downstream, upstream, _=None):
@@ -311,12 +311,12 @@ class Tensor:
     @staticmethod
     def _d_truediv_n(numerator, denominator):
         # hadamard division numerator derivative
-        return denominator * (numerator * 0.0 + 1.0)
+        return denominator * (numerator * 0.0 + 1.0) * np.eye(numerator.shape[1])
 
     @staticmethod
     def _d_truediv_d(denominator, numerator):
         # hadamard division denominator derivative
-        return (denominator * 0.0 + 1.0) / numerator
+        return (denominator * 0.0 + 1.0) / numerator * np.eye(denominator.shape[1])
 
     @staticmethod
     def _d_truediv_n_chn(downstream, upstream, _=None):
@@ -356,11 +356,17 @@ class Tensor:
     @staticmethod
     def _d_add(addend, _=None):
         # addition derivative
-        return addend * 0.0 + 1.0
+        return (addend * 0.0 + 1.0) * np.eye(addend.shape[1])
 
     @staticmethod
     def _d_add_chn(downstream, upstream, _=None):
-        return downstream * upstream
+        try:
+            return downstream * upstream
+        except ValueError:
+            try:
+                return downstream @ upstream
+            except ValueError:
+                return upstream @ downstream
 
     def __sub__(self, other):
         # subtraction
@@ -392,12 +398,12 @@ class Tensor:
     @staticmethod
     def _d_sub_m(minuend, _=None):
         # subtraction minuend subtrahend derivative
-        return minuend * 0.0 + 1.0
+        return (minuend * 0.0 + 1.0) * np.eye(minuend.shape[1])
 
     @staticmethod
     def _d_sub_s(subtrahend, _=None):
         # subtraction subtrahend derivative
-        return subtrahend * 0.0 - 1.0
+        return (subtrahend * 0.0 - 1.0) * np.eye(subtrahend.shape[1])
 
     @staticmethod
     def _d_sub_m_chn(downstream, upstream, _=None):

@@ -580,31 +580,31 @@ class Activators:
         # defines derivative of activation algorithm
         def d_softmax(x, _=None):
             # derivative of Softmax activation
-            return (np.sum(np.exp(x)) * np.exp(x) - np.exp(2.0 * x)) / (np.sum(np.exp(x)) ** 2.0)
+            return (np.sum(np.exp(x)) * np.exp(x) - np.exp(2.0 * x)) / (np.sum(np.exp(x)) ** 2.0) * np.eye(x.shape[1])
 
         def d_relu(x, _=None):
             # derivative of ReLU activation
-            return np.where(x > 0.0, 1.0, 0.0)
+            return np.where(x > 0.0, 1.0, 0.0) * np.eye(x.shape[1])
 
         def d_lrelu(x, _=None):
             # derivative of Leaky ReLU activation
-            return np.where(x > 0.0, 1.0, self._params['beta'])
+            return np.where(x > 0.0, 1.0, self._params['beta']) * np.eye(x.shape[1])
 
         def d_sigmoid(x, _=None):
             # derivative of Sigmoid activation
-            return np.exp(-x) / ((np.exp(-x) + 1.0) ** 2.0)
+            return np.exp(-x) / ((np.exp(-x) + 1.0) ** 2.0) * np.eye(x.shape[1])
 
         def d_tanh(x, _=None):
             # derivative of Tanh activation
-            return np.cosh(x) ** -2.0
+            return np.cosh(x) ** -2.0 * np.eye(x.shape[1])
 
         def d_softplus(x, _=None):
             # derivative of Softplus activation
-            return self._params['beta'] * np.exp(self._params['beta'] * x) / (self._params['beta'] * np.exp(self._params['beta'] * x) + self._params['beta'])
+            return self._params['beta'] * np.exp(self._params['beta'] * x) / (self._params['beta'] * np.exp(self._params['beta'] * x) + self._params['beta']) * np.eye(x.shape[1])
 
         def d_mish(x, _=None):
             # derivative of Mish activation
-            return np.tanh(np.log(np.exp(self._params['beta'] * x) + 1.0) / self._params['beta']) + x * (np.cosh(np.log(np.exp(self._params['beta'] * x) + 1.0) / self._params['beta']) ** -2.0) * (self._params['beta'] * np.exp(self._params['beta'] * x) / (self._params['beta'] * np.exp(self._params['beta'] * x) + self._params['beta']))
+            return (np.tanh(np.log(np.exp(self._params['beta'] * x) + 1.0) / self._params['beta']) + x * (np.cosh(np.log(np.exp(self._params['beta'] * x) + 1.0) / self._params['beta']) ** -2.0) * (self._params['beta'] * np.exp(self._params['beta'] * x) / (self._params['beta'] * np.exp(self._params['beta'] * x) + self._params['beta']))) * np.eye(x.shape[1])
 
         # derivative of activation algorithm dictionary
         d_act_funcs = {
@@ -622,7 +622,10 @@ class Activators:
 
     @staticmethod
     def _chain(upstream, downstream, _=None):
-        return upstream * downstream
+        try:
+            return upstream * downstream
+        except ValueError:
+            return upstream @ downstream
 
     def activate(self, x: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
         r"""
@@ -961,7 +964,7 @@ class Losses:
 
     @staticmethod
     def _chain(downstream, upstream, _=None):
-        return downstream * upstream
+        return downstream @ upstream
 
     def loss(self, yhat: Union[Tensor, np.ndarray], y: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
         r"""
