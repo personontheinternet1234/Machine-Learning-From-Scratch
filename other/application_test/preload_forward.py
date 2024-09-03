@@ -1,4 +1,4 @@
-# run without any gardenpy imports
+# without gardenpy imports
 
 def main(a0=None):
     import ast

@@ -1,4 +1,4 @@
-# run with gardenpy imports
+# with gardenpy imports
 
 def main(a0=None):
     import ast
@@ -18,10 +18,10 @@ def main(a0=None):
                 biases.append(np.array(ast.literal_eval(line)))
         return weights, biases
 
-    w, b = load_params(os.path.dirname(__file__))
-
     act = Activators('lrelu', beta=0.1).activate
     pred = Activators('softmax').activate
+
+    w, b = load_params(os.path.dirname(__file__))
 
     a1 = act(a0 @ w[0] + b[0])
     a2 = act(a1 @ w[1] + b[1])
