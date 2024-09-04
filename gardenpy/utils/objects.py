@@ -360,13 +360,7 @@ class Tensor:
 
     @staticmethod
     def _d_add_chn(downstream, upstream, _=None):
-        try:
-            return downstream * upstream
-        except ValueError:
-            try:
-                return downstream @ upstream
-            except ValueError:
-                return upstream @ downstream
+        return upstream @ downstream
 
     def __sub__(self, other):
         # subtraction

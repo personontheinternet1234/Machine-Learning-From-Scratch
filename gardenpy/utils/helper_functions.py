@@ -202,4 +202,3 @@ def print_contributors(*, who: list = None) -> None:
         print(f"    Kamalau Kimata", end='')
         print(f"              {ansi['white']}Punahou School CO '25{ansi['reset']}", end='')
         print(f"    {ansi['bright_black']}<kkimata25@punahou.edu>{ansi['reset']}", )
-        printed = True

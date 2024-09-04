@@ -622,10 +622,7 @@ class Activators:
 
     @staticmethod
     def _chain(upstream, downstream, _=None):
-        try:
-            return upstream * downstream
-        except ValueError:
-            return upstream @ downstream
+        return upstream @ downstream
 
     def activate(self, x: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
         r"""
