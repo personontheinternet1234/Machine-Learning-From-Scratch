@@ -25,8 +25,6 @@ def main(a0=None):
 
     w, b = load_params(os.path.dirname(__file__))
 
-    print(w[0].shape)
-
     a1 = lrelu(np.array([a0]) @ w[0] + b[0])
     a2 = lrelu(a1 @ w[1] + b[1])
     a3 = lrelu(a2 @ w[2] + b[2])
