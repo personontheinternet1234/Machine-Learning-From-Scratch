@@ -21,3 +21,5 @@ print(chain(nabla(t4, t3), nabla(t3, t1)))
 print()
 
 print(nabla(c, t1))
+print(chain(nabla(c, t4), nabla(t4, t1)))
+print(nabla(c, t4))
