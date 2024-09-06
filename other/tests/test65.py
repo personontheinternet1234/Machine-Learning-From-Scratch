@@ -18,13 +18,14 @@ for i in range(100000):
     cost = loss(yh, e1)
 
     gb2 = nabla(cost, b2)
+    print(nabla(yh, w2).shape)
     gw2 = nabla(cost, w2)
     gb1 = nabla(cost, b1)
-    # gw1 = nabla(cost, w1)
+    gw1 = nabla(cost, w1)
 
     # w1 = optim(w1, gw1)
     b1 = optim(b1, gb1)
-    w2 = optim(w2, gw2)
-    # b2 = optim(b2, gb2)
+    # w2 = optim(w2, gw2)
+    b2 = optim(b2, gb2)
     print(cost)
     print()

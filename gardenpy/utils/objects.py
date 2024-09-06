@@ -172,24 +172,28 @@ class Tensor:
     @staticmethod
     def _d_matmul_l_chn(downstream, upstream, org=None):
         # matrix multiplication left derivative
-        try:
-            return downstream * upstream
-        except ValueError:
-            try:
-                return downstream.T * upstream
-            except ValueError:
-                return downstream @ upstream
+        # try:
+        #     return downstream * upstream
+        # except ValueError:
+        #     try:
+        #         return downstream.T * upstream
+        #     except ValueError:
+        return downstream @ upstream
 
     @staticmethod
     def _d_matmul_r_chn(downstream, upstream, reduce=True):
         # return downstream * upstream
-        try:
-            return downstream * upstream
-        except ValueError:
-            try:
-                return downstream.T * upstream
-            except ValueError:
-                return downstream @ upstream
+        print(downstream.shape)
+        print(upstream.shape)
+        print()
+        return downstream @ upstream.T
+        # try:
+        #     return downstream * upstream
+        # except ValueError:
+        #     try:
+        #         return downstream.T * upstream
+        #     except ValueError:
+        #         return upstream @ downstream
         # try:
         #     return downstream * upstream
         # finally:
@@ -360,7 +364,7 @@ class Tensor:
 
     @staticmethod
     def _d_add_chn(downstream, upstream, _=None):
-        return upstream @ downstream
+        return downstream @ upstream
 
     def __sub__(self, other):
         # subtraction
