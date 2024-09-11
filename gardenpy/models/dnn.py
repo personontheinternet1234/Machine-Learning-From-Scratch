@@ -386,6 +386,7 @@ class DNN:
                 f"Invalid setup for DNN: '{self}'\n"
                 f"Add 'thetas' or 'data' to setup model"
             )
+
         for lyr in range(len(self._lyrs) - 1):
             # instantiate thetas
             self._w[lyr] = self._w[lyr].initialize(self._lyrs[lyr], self._lyrs[lyr + 1])
