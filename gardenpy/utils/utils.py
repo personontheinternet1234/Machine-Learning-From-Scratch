@@ -2,6 +2,7 @@ r"""
 utils.py
 
 Includes utility functions for GardenPy.
+Contains a parameter checker.
 """
 
 from typing import Optional
@@ -17,10 +18,9 @@ class ParamChecker:
     r"""
     ParamChecker is a parameter checker for any parameters.
 
-    By specifying the default values, their datatypes, their value types, and their
-    conversion types, you can set a reusable parameter checker that replaces all
-    unfilled parameters with a default value, checks their datatype, checks if
-    they match a conditional, and converts them to a certain value.
+    By specifying the default values, their datatypes, their value types, and their conversion types, you can set a
+    reusable parameter checker that replaces all unfilled parameters with a default value, checks their datatype, checks
+    if they match a conditional, and converts them to a certain value.
     """
     def __init__(self, name: str = 'Parameters', *, ikwiad: bool = False):
         r"""
@@ -31,7 +31,7 @@ class ParamChecker:
                 Name of the ParamChecker instance.
                 Used when an error occurs for ease error traceback.
                 Defaults to "Parameters".
-            ikwiad (bool, optional):
+            ikwiad (bool):
                 "I know what I am doing" (ikwiad).
                 If True, removes all warning messages.
                 Defaults to False.
@@ -114,7 +114,7 @@ class ParamChecker:
         Checks parameters.
 
         Args:
-            params (dict):
+            params (dict, optional):
                 Parameters to be checked.
             **kwargs:
                 kwargs of the parameters to be checked.

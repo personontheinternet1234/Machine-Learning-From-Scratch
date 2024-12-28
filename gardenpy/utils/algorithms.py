@@ -1,312 +1,444 @@
 r"""
-**Algorithms for GardenPy.**
+algorithms.py
 
-Attributes:
-----------
-**Initializers**:
-    Initialization algorithms for kernels/weights/biases.
-**Activators**:
-    Activation algorithms for activations.
-**Losses**:
-    Loss algorithms for loss.
-**Optimizers**:
-    Optimization algorithms for kernels/weights/biases.
-
-
-Notes:
-----------
-- Refer to GardenPy's repository or GardenPy's docs for more information.
+Includes machine learning algorithms for GardenPy. Algorithms support the autograd method from GardenPy's Tensors.
+Algorithms can be easily added within each method.
+Contains an initializer, activator, loss, and optimizer.
 """
 
-from typing import Union
+from typing import Optional, Union
 import warnings
-
 import numpy as np
 
 from .objects import Tensor
+from ..utils.utils import ParamChecker
 
 
 class Initializers:
     r"""
-    **Initialization algorithms for kernels/weights/biases.**
+    Initialization algorithms for weights and biases.
 
-    These algorithms ideally support GardenPy Tensors, but are compatible with NumPy Arrays.
-
-    Attributes:
-    ----------
-    **algorithm** : (*str*)
-        Initialization algorithm.
-    **parameters** : (*dict*)
-        Parameters for initialization algorithm.
-
-    Methods:
-    ----------
-    **__init__(algorithm: str, *, parameters: dict = None, **kwargs)** :
-        Instantiates the object with the specified parameters.
-
-    **initialize(self, rows: int, columns: int, *, tens=True) -> Union[Tensor, np.ndarray]** :
-        Initializes an array with the specified dimensions.
-        If *tens* is 'True', the initialized matrix will be a Tensor.
-
-    Notes:
-    ----------
-    - Initializers supports GardenPy Tensors; however, Initializers also works with NumPy Arrays.
-
-    - Refer to GardenPy's repository or GardenPy's docs for more information.
+    Creates GardenPy Tensors using the specified initialization method with the specified dimensions. It automatically
+    creates GardenPy Tensors, but these can be converted into NumPy arrays if wanted. Initialization methods can be
+    added with relative ease using the base structure provided within this class.
     """
-    def __init__(self, algorithm: str, *, parameters: dict = None, **kwargs):
+    methods = [
+        'xavier',
+        'gaussian',
+        'uniform'
+    ]
+
+    def __init__(self, method: str, *, hyperparameters: Optional[dict] = None, ikwiad: bool = False, **kwargs):
         r"""
-        **Initializer initialization with defined parameters.**
+        Sets internal initializer method and hyperparameters. Used for reference when Tensor creation is called.
+        Any hyperparameters not set will set to their default value.
 
-        Parameters:
-        ----------
-        **algorithm** : (*str*) {'*xavier*', '*gaussian*', '*uniform*'}
-            Initialization algorithm.
+        "xavier" (Xavier/Glorot)
+            - "mu" (float | int), default = 0.0
+                Distribution mean.
+            - "sigma" (float | int), default = 1.0, 0.0 < sigma
+                Distribution standard deviation.
+            - "kappa" (float | int), default = 1.0
+                Distribution gain.
+        "gaussian" (Gaussian/Normal)
+            - "mu" (float | int), default = 0.0
+                Distribution mean.
+            - "sigma" (float | int), default = 1.0, 0.0 < sigma
+                Distribution standard deviation.
+            - "kappa" (float | int), default = 1.0
+                Distribution gain.
+        "uniform" (Uniform)
+            - "kappa" (float | int), default = 1.0
+                Uniform value.
 
-            - *xavier* : Xavier/Glorot.
-            - *gaussian*: Gaussian/Normal.
-            - *uniform*: Uniform values.
+        Args:
+            method (str):
+                Initializer method.
+            hyperparameters (dict, optional):
+                Method hyperparameters.
+            ikwiad (bool):
+                "I know what I am doing" (ikwiad).
+                If True, removes all warning messages.
+                Defaults to False.
+            **kwargs:
+                Alternate input format for method hyperparameters.
 
-        **parameters** (*dict*, *optional*) :
-            Parameters for Initialization algorithm.
-
-            - **xavier** : (*dict*) {'*mu*', '*sigma*'}
-                - *mu* : (float, int), default=0.0
-                    Mean.
-                - *sigma* : (float, int), default=1.0
-                    Standard deviation.
-
-            - **gaussian** : (*dict*) {'*mu*', '*sigma*'}
-                - *mu* : (float, int), default=0.0
-                    The mean.
-                - *sigma* : (float, int), default=1.0
-                    The standard deviation.
-
-            - **uniform** : (*dict*) {'*value*'}
-                - *value* : (float, int), default=1.0
-                    The uniform value.
-
-        ****kwargs** (*any*, *optional*) :
-            The parameters for the initialization algorithm with keyword arguments if desired.
-
-            To set a parameter, add a keyword argument that refers to one of the parameters.
-
-        Notes:
-        ----------
-        - Any parameters not specified will be set to their default values.
-
-        - Parameters that are specified but not used within the specified algorithm will be discarded.
-            - The user will receive a warning when this occurs.
-
-        - Initializers supports GardenPy Tensors; however, Initializers also works with NumPy Arrays.
-
-        Example:
-        -----
-        >>> from gardenpy.utils.algorithms import Initializers
-        >>> init = Initializers('gaussian', parameters={'mu': 1.0, 'sigma': 3.0})
+        Raises:
+            TypeError: If any hyperparameters were of the wrong type.
+            ValueError: If invalid values were passed for any of the hyperparameters.
         """
-        # initialization algorithms
-        self.algorithms = [
-            'xavier',
-            'gaussian',
-            'uniform'
-        ]
+        # internals
+        self._ikwiad = ikwiad
+        self._method, self._hyperparams = self._get_method(method, hyperparameters, **kwargs)
 
-        # internal initialization algorithm parameters
-        self._algorithm = self._check_algorithm(algorithm)
-        self._params = self._get_params(parameters, kwargs)
+        # set method
+        self._set_initializer()
 
-        # initialization algorithm
-        self._initializer = self._get_initializer()
+    def _get_method(self, method, hyperparams, **kwargs):
+        # hyperparameter reference
+        default_hyperparams = {
+            'xavier': {
+                'default': {
+                    'mu': 0.0,
+                    'sigma': 1.0,
+                    'kappa': 1.0
+                },
+                'dtypes': {
+                    'mu': (float, int),
+                    'sigma': (float, int),
+                    'kappa': (float, int)
+                },
+                'vtypes': {
+                    'mu': lambda x: True,
+                    'sigma': lambda x: 0 < x,
+                    'kappa': lambda x: True
+                },
+                'ctypes': {
+                    'mu': lambda x: float(x),
+                    'sigma': lambda x: float(x),
+                    'kappa': lambda x: float(x)
+                }
+            },
+            'gaussian': {
+                'default': {
+                    'mu': 0.0,
+                    'sigma': 1.0,
+                    'kappa': 1.0
+                },
+                'dtypes': {
+                    'mu': (float, int),
+                    'sigma': (float, int),
+                    'kappa': (float, int)
+                },
+                'vtypes': {
+                    'mu': lambda x: True,
+                    'sigma': lambda x: 0 < x,
+                    'kappa': lambda x: True
+                },
+                'ctypes': {
+                    'mu': lambda x: float(x),
+                    'sigma': lambda x: float(x),
+                    'kappa': lambda x: float(x)
+                }
+            },
+            'kappa': {
+                'default': {
+                    'kappa': 1.0
+                },
+                'dtypes': {
+                    'kappa': (float, int)
+                },
+                'vtypes': {
+                    'kappa': lambda x: True
+                },
+                'ctypes': {
+                    'kappa': lambda x: float(x)
+                }
+            }
+        }
 
-    def _check_algorithm(self, algorithm):
-        # checks whether the initialization algorithm is valid
-        if algorithm in self.algorithms:
-            # valid initialization algorithm
-            return algorithm
-        else:
-            # invalid initialization algorithm
+        # check method
+        if not isinstance(method, str):
+            raise TypeError("'method' must be a string")
+        if method not in self.methods:
             raise ValueError(
-                f"Invalid initialization algorithm: '{algorithm}'\n"
-                f"Choose from: {[alg for alg in self.algorithms]}"
+                f"Invalid method: {method}\n"
+                f"Choose from: {self.methods}"
             )
 
-    def _get_params(self, params, kwargs):
-        # defines initialization algorithm parameters
-        # default initialization algorithm parameters
-        default = {
-            'xavier': {
-                'mu': 0.0,
-                'sigma': 1.0
-            },
-            'gaussian': {
-                'mu': 0.0,
-                'sigma': 1.0
-            },
-            'uniform': {
-                'value': 1.0
-            }
-        }
-        # default initialization algorithm parameter datatypes
-        dtypes = {
-            'xavier': {
-                'mu': (float, int),
-                'sigma': (float, int)
-            },
-            'gaussian': {
-                'mu': (float, int),
-                'sigma': (float, int)
-            },
-            'uniform': {
-                'value': (float, int),
-            }
-        }
-        # default initialization algorithm parameter value types
-        vtypes = {
-            'xavier': {
-                'mu': lambda x: True,
-                'sigma': lambda x: True
-            },
-            'gaussian': {
-                'mu': lambda x: True,
-                'sigma': lambda x: True
-            },
-            'uniform': {
-                'value': lambda x: True,
-            }
-        }
-        # default initialization algorithm parameter conversion types
-        ctypes = {
-            'xavier': {
-                'mu': lambda x: float(x),
-                'sigma': lambda x: float(x)
-            },
-            'gaussian': {
-                'mu': lambda x: float(x),
-                'sigma': lambda x: float(x)
-            },
-            'uniform': {
-                'value': lambda x: float(x),
-            }
-        }
+        # check hyperparameters
+        checker = ParamChecker(name=f'{method} Hyperparameters', ikwiad=self._ikwiad)
+        checker.set_types(**default_hyperparams[method])
 
-        # instantiate parameter dictionary
-        prms = default[self._algorithm]
+        # set internal hyperparameters
+        return method, checker.check_params(hyperparams, **kwargs)
 
-        # combine keyword arguments and parameters
-        if params and kwargs:
-            params.update(kwargs)
-        elif kwargs:
-            params = kwargs
+    def _set_initializer(self):
+        # initializer wrapper
+        def initializer(func):
+            def wrapper(*args) -> Tensor:
+                r"""
+                Returns initialized Tensor with specified dimensions.
 
-        if params and (prms is not None) and isinstance(params, dict):
-            # set defined parameter
-            for prm in params:
-                if prm not in prms:
-                    # invalid parameter
-                    print()
-                    warnings.warn(
-                        f"\nInvalid parameter for '{self._algorithm}': '{prm}'\n"
-                        f"Choose from: '{[prm for prm in prms]}'",
-                        UserWarning
-                    )
-                elif prm in prms and not isinstance(params[prm], dtypes[self._algorithm][prm]):
-                    # invalid datatype for parameter
-                    raise TypeError(
-                        f"Invalid datatype for '{self._algorithm}': '{prm}'\n"
-                        f"Choose from: {dtypes[self._algorithm][prm]}"
-                    )
-                elif prm in prms and not (vtypes[self._algorithm][prm](params[prm])):
-                    # invalid value for parameter
-                    raise TypeError(
-                        f"Invalid value for '{self._algorithm}': '{prm}'\n"
-                        f"Conditional: {vtypes[self._algorithm][prm]}"
-                    )
-                else:
-                    # valid parameter
-                    prms[prm] = ctypes[self._algorithm][prm](params[prm])
-        elif params and isinstance(params, dict):
-            # parameters not taken
-            print()
-            warnings.warn(f"\n'{self._algorithm}' does not take parameters", UserWarning)
-        elif params:
-            # invalid data type
-            raise TypeError(
-                f"'parameters' is not a dictionary: {params}\n"
-                f"Choose from: {[prm for prm in prms]}"
-            )
+                Args:
+                    *args:
+                        Tensor's dimensions.
+                        Must consist of at least two dimensions of positive integers.
 
-        # return parameters
-        return prms
+                Returns:
+                    Tensor:
+                        Initialized Tensor.
 
-    def _get_initializer(self):
-        # defines initialization algorithm
-        def xavier(row, col):
-            # Xavier/Glorot initialization
-            return self._params['sigma'] * np.sqrt(2.0 / float(row + col)) * np.random.randn(row, col) + self._params['mu']
+                Raises:
+                    ValueError: If the dimensions weren't properly set.
+                """
+                # check for errors
+                if not 2 <= len(args):
+                    raise ValueError("Initialization must occur with at least 2 dimensions")
+                if not all(isinstance(arg, int) and 0 < arg for arg in args):
+                    raise ValueError("Each dimension must be a positive integer")
+                # initialize tensor
+                return Tensor(func(*args))
+            return wrapper
 
-        def gaussian(row, col):
-            # Gaussian initialization
-            return self._params['sigma'] * np.random.randn(row, col) + self._params['mu']
+        # hyperparameter reference
+        h = self._hyperparams
 
-        def uniform(row, col):
-            # Zeros uniform initialization
-            return self._params['value'] * np.ones((row, col), dtype=np.float64)
+        @initializer
+        def xavier(*args):
+            # xavier method function
+            return h['kappa'] * np.sqrt(2.0 / float(args[-2] + args[-1])) * np.random.normal(loc=h['mu'], scale=h['sigma'], size=args)
 
-        # initialization algorithm dictionary
-        init_funcs = {
+        @initializer
+        def gaussian(*args):
+            # gaussian method function
+            return h['kappa'] * np.random.normal(loc=h['mu'], scale=h['sigma'], size=args)
+
+        @initializer
+        def uniform(*args):
+            # uniform method function
+            return h['kappa'] * np.ones(args, dtype=np.float64)
+
+        # function reference
+        funcs = {
             'xavier': xavier,
             'gaussian': gaussian,
-            'uniform': uniform,
+            'uniform': uniform
         }
 
-        # return initialization algorithm
-        return init_funcs[self._algorithm]
+        # set initialize function
+        self.initialize = funcs[self._method]
 
-    def initialize(self, rows: int, columns: int, *, tens=True) -> Union[Tensor, np.ndarray]:
+
+class Activators2:
+    r"""
+    Activation algorithms for arrays.
+
+    Applies an activation function to arrays. If used with GardenPy's Tensors, activation function utilizes the autograd
+    methods, allowing for automatic gradient calculation and tracking with the activation functions. These activation
+    functions can be used with NumPy arrays, but will lose automatic gradient tracking methods. The derivative of these
+    activation functions can be called if using NumPy arrays, but function calls will go through no checks. If using
+    Tensors, the derivatives will be automatically utilized during a nabla call. Activation methods can be added with
+    relative ease using the base structure provided within this class.
+    """
+    methods = [
+        'softmax',
+        'relu',
+        'lrelu',
+        'sigmoid',
+        'tanh',
+        'softplus',
+        'mish'
+    ]
+
+    def __init__(self, method: str, *, hyperparameters: Optional[dict] = None, ikwiad: bool = False, **kwargs):
         r"""
-        **Initializes matrix with the specified dimensions.**
+        Sets internal activator method and hyperparameters. Used for reference when activation is called. Any
+        hyperparameters not set will set to their default value.
 
-        If *tens* is True, the initialized matrix will be a Tensor.
+        "softmax" (Softmax)
+            - None
+        "relu" (ReLU)
+            - None
+        "lrelu" (Leaky ReLU)
+            - "beta" (float | int), default = 1e-2, 0.0 < beta
+                Negative slope.
+        "sigmoid" (Sigmoid)
+            - None
+        "tanh" (Tanh)
+            - None
+        "softplus" (Softplus)
+            - "beta" (float | int), default = 1.0, 0.0 <= beta
+                Vertical stretch.
+        "mish" (Mish)
+            - "beta" (float | int), default = 1.0, 0.0 <= beta
+                    Vertical stretch.
 
-        This function ideally supports GardenPy Tensors, but is compatible with NumPy Arrays.
+        Args:
+            method (str):
+                Activator method.
+            hyperparameters (dict, optional):
+                Method hyperparameters.
+            ikwiad (bool):
+                "I know what I am doing" (ikwiad).
+                If True, removes all warning messages.
+                Defaults to False.
+            **kwargs:
+                Alternate input format for method hyperparameters.
 
-        Parameters:
-        ----------
-        - **rows** : (*int*)
-            The rows.
-        - **columns** : (*int*)
-            The columns.
-        - **tens** : (*bool*), default=True
-            Whether to initialize as a Tensor.
-
-        Returns:
-        ----------
-        - **matrix** : (*Union[Tensor, np.ndarray]*)
-            The initialized matrix.
-
-        Notes:
-        ----------
-        - The initialized matrix will support automatic tracking for automatic differentiation if it is a Tensor.
-
-        Example:
-        ----------
-        >>> from gardenpy.utils.algorithms import Initializers
-        >>> init = Initializers('gaussian', parameters={'mu': 1.0, 'sigma': 3.0})
-        >>> mat = init.initialize(3, 4)
+        Raises:
+            TypeError: If any hyperparameters were of the wrong type.
+            ValueError: If invalid values were passed for any of the hyperparameters.
         """
-        if not isinstance(rows, int):
-            # invalid datatype
-            raise TypeError(f"'rows' is not an integer: '{rows}'")
-        if not isinstance(columns, int):
-            # invalid datatype
-            raise TypeError(f"'columns' is not an integer: '{columns}'")
+        # allowed methods
+        self._possible_methods = self.methods
 
-        # return initialized tensor
-        if tens:
-            return Tensor(self._initializer(rows, columns))
-        else:
-            return self._initializer(rows, columns)
+        # internals
+        self._ikwiad = ikwiad
+        self._method, self._hyperparams = self._get_method(method, hyperparameters, **kwargs)
+
+        # set method
+        self._set_activator()
+
+    def _get_method(self, method, hyperparams, **kwargs):
+        # hyperparameter reference
+        default_hyperparams = {
+            'softmax': {
+                'default': {None},
+                'dtypes': {None},
+                'vtypes': {None},
+                'ctypes': {None}
+            },
+            'relu': {
+                'default': {None},
+                'dtypes': {None},
+                'vtypes': {None},
+                'ctypes': {None}
+            },
+            'lrelu': {
+                'default': {'beta': 1e-2},
+                'dtypes': {'beta': (float, int)},
+                'vtypes': {'beta': lambda x: 0 < x},
+                'ctypes': {'beta': lambda x: float(x)}
+            },
+            'sigmoid': {
+                'default': {None},
+                'dtypes': {None},
+                'vtypes': {None},
+                'ctypes': {None}
+            },
+            'tanh': {
+                'default': {None},
+                'dtypes': {None},
+                'vtypes': {None},
+                'ctypes': {None}
+            },
+            'softplus': {
+                'default': {'beta': 1.0},
+                'dtypes': {'beta': (float, int)},
+                'vtypes': {'beta': lambda x: 0 <= x},
+                'ctypes': {'beta': lambda x: float(x)}
+            },
+            'mish': {
+                'default': {'beta': 1.0},
+                'dtypes': {'beta': (float, int)},
+                'vtypes': {'beta': lambda x: 0 <= x},
+                'ctypes': {'beta': lambda x: float(x)}
+            }
+
+        }
+
+        # check method
+        if not isinstance(method, str):
+            raise TypeError("'method' must be a string")
+        if method not in self.methods:
+            raise ValueError(
+                f"Invalid method: {method}\n"
+                f"Choose from: {self.methods}"
+            )
+
+        # check hyperparameters
+        checker = ParamChecker(name=f'{method} Hyperparameters', ikwiad=self._ikwiad)
+        checker.set_types(**default_hyperparams[method])
+
+        # set internal hyperparameters
+        return method, checker.check_params(hyperparams, **kwargs)
+
+    def _set_activator(self):
+        # initializer wrapper
+        class Activator:
+            @staticmethod
+            def activate(x: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
+                ...
+
+        def activator(func):
+            def wrapper(x: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
+                r"""
+                Activates array with activation method.
+                Utilizes gradient tracking if the array is a Tensor.
+                Returns initialized Tensor with specified dimensions.
+
+                Args:
+                    x (Tensor | np.ndarray):
+                        Input array.
+
+                Returns:
+                    Tensor | np.ndarray:
+                        Activated array.
+
+                Raises:
+                    ValueError: If the dimensions weren't properly set.
+                """
+                if not isinstance(x, (Tensor, np.ndarray)):
+                    # invalid datatype
+                    raise TypeError(f"'x' must be a Tensor or NumPy array")
+
+                if isinstance(x, Tensor):
+                    # calculate result
+                    result = Tensor(func.forward(x.to_array()))
+                    # track operation
+                    x.tracker['opr'].append('activate')
+                    x.tracker['drv'].append(func.backward)
+                    x.tracker['chn'].append(func.chain)
+                    # track origin
+                    result.tracker['org'] = [x, '_']
+                    # track relation
+                    x.tracker['rlt'].append(['_', result])
+                    # return result
+                    return result
+                else:
+                    # return result
+                    return func.forward(x)
+            return wrapper
+
+        # hyperparameter reference
+        h = self._hyperparams
+
+        @activator
+        class Activator:
+            @staticmethod
+            def forward(x):
+                # softmax function
+                return np.exp(x) / np.sum(np.exp(x))
+
+
+        def relu(x):
+            # relu function
+            return np.maximum(0.0, x)
+
+        def lrelu(x):
+            # lrelu function
+            return np.maximum(h['beta'] * x, x)
+
+        def sigmoid(x):
+            # sigmoid function
+            return (np.exp(-x) + 1.0) ** -1.0
+
+        def tanh(x):
+            # tanh function
+            return np.tanh(x)
+
+        def softplus(x):
+            # softplus function
+            return np.log(np.exp(h['beta'] * x) + 1.0) / h['beta']
+
+        def mish(x):
+            # mish function
+            return x * np.tanh(np.log(np.exp(h['beta'] * x) + 1.0) / h['beta'])
+
+        # function reference
+        funcs = {
+            'softmax': softmax,
+            'relu': relu,
+            'lrelu': lrelu,
+            'sigmoid': sigmoid,
+            'tanh': tanh,
+            'softplus': softplus,
+            'mish': mish
+        }
+
+        # set initialize function
+        self.initialize = funcs[self._method]
 
 
 class Activators:

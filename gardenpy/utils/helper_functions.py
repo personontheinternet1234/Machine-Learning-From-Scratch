@@ -2,6 +2,7 @@ r"""
 helper_functions.py
 
 Includes basic helper functions for GardenPy.
+Contains ansi formats, a progress bar, a time converter, and credits.
 """
 
 import sys

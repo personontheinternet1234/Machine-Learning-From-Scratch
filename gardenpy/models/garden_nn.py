@@ -13,7 +13,7 @@ class Base:
     ...
 
 
-class DNN:
+class DNN(Base):
     ...
 
 
