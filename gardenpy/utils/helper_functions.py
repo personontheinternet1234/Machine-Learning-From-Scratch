@@ -42,7 +42,7 @@ def progress(idx: int, max_idx: int, *, desc: Optional[str] = None, b_len: int =
     r"""
     Prints a customizable progress bar for any sort of loop.
 
-    Parameters:
+    Args:
         idx (int):
             Current loop index.
         max_idx (int):
@@ -81,7 +81,7 @@ def convert_time(seconds: Union[float, int]) -> str:
     r"""
     Converts seconds to hours:minutes:seconds.
 
-    Parameters:
+    Args:
         seconds (float | int):
             Number of seconds.
 
@@ -102,14 +102,17 @@ def convert_time(seconds: Union[float, int]) -> str:
     return f"{hours:01}:{minutes:02}:{seconds:02}"
 
 
-def slow_print(text: str, *, delay: Union[float, int] = 0.1) -> None:
+def slow_print(text: str, *, delay: Union[float, int] = 0.05) -> None:
     r"""
-    Parameters:
+    Prints text with delay.
+
+    Args:
         text (str):
             Text to print.
 
         delay (float | int):
-            Delay between characters.
+            Delay between characters in seconds.
+            Defaults to 0.05
 
     Returns:
         None
@@ -132,7 +135,9 @@ def slow_print(text: str, *, delay: Union[float, int] = 0.1) -> None:
 
 def print_contributors(*, who: Optional[list] = None, cinematic: bool = False) -> None:
     r"""
-    Parameters:
+    Prints GardenPy contributors.
+
+    Args:
         who (list, optional):
             Type of contributors to print.
         cinematic (bool):
