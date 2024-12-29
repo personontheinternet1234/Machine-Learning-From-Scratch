@@ -50,13 +50,7 @@ class Tensor:
         self._id = len(Tensor._instances)
         self._tensor = obj
         self._type = 'mat'
-        self._tracker = {
-            'opr': [],
-            'drv': [],
-            'chn': [],
-            'rlt': [],
-            'org': []
-        }
+        self._tracker = {'opr': [], 'drv': [], 'chn': [], 'rlt': [], 'org': []}
 
         # update instances
         Tensor._instances.append(self)
@@ -70,9 +64,9 @@ class Tensor:
         """
         return str(self._tensor)
 
-    ####################################################################################################################
-    # Instance properties.
-    ####################################################################################################################
+    r"""
+    Properties.
+    """
 
     @property
     def id(self):
@@ -128,19 +122,13 @@ class Tensor:
         """
         return self._tensor
 
-    ####################################################################################################################
-    # Instance calls.
-    ####################################################################################################################
+    r"""
+    Instance calls.
+    """
 
     def instance_tracker_reset(self):
         # reset tensor tracker
-        self._tracker = {
-            'opr': [],
-            'drv': [],
-            'chn': [],
-            'rlt': [],
-            'org': []
-        }
+        self._tracker = {'opr': [], 'drv': [], 'chn': [], 'rlt': [], 'org': []}
         return None
 
     def instance_reset(self):
@@ -152,9 +140,9 @@ class Tensor:
         self._tracker = None
         return None
 
-    ####################################################################################################################
-    # Class methods.
-    ####################################################################################################################
+    r"""
+    Class methods.
+    """
 
     @classmethod
     def get_instances(cls):
@@ -232,9 +220,9 @@ class Tensor:
             itm._id = i
         return None
 
-    ####################################################################################################################
-    # Tensor trackers.
-    ####################################################################################################################
+    r"""
+    Tensor tracking methods.
+    """
 
     class TensorMethod:
         def __init__(self, prefix):
@@ -373,9 +361,9 @@ class Tensor:
             # return result
             return result
 
-    ####################################################################################################################
-    # Built-in methods.
-    ####################################################################################################################
+    r"""
+    Built-in methods.
+    """
 
     class Matmul(PairedTensorMethod):
         r"""Matrix multiplication built-in method."""
@@ -405,6 +393,9 @@ class Tensor:
         def __call__(self, main: "Tensor", other: "Tensor") -> "Tensor":
             return self.call(main, other)
 
+    def __matmul__(self, other):
+        return Tensor.Matmul()(self, other)
+
     class Pow(PairedTensorMethod):
         r"""Power built-in method."""
         def __init__(self):
@@ -432,6 +423,9 @@ class Tensor:
 
         def __call__(self, main: "Tensor", other: "Tensor") -> "Tensor":
             return self.call(main, other)
+
+    def __pow__(self, other):
+        return Tensor.Pow()(self, other)
 
     class Mul(PairedTensorMethod):
         r"""Hadamard multiplication built-in method."""
@@ -461,6 +455,9 @@ class Tensor:
         def __call__(self, main: "Tensor", other: "Tensor") -> "Tensor":
             return self.call(main, other)
 
+    def __mul__(self, other):
+        return Tensor.Mul()(self, other)
+
     class Truediv(PairedTensorMethod):
         r"""Hadamard division built-in method."""
         def __init__(self):
@@ -488,6 +485,9 @@ class Tensor:
 
         def __call__(self, main: "Tensor", other: "Tensor") -> "Tensor":
             return self.call(main, other)
+
+    def __truediv__(self, other):
+        return Tensor.Truediv()(self, other)
 
     class Add(PairedTensorMethod):
         r"""Addition built-in method."""
@@ -517,6 +517,9 @@ class Tensor:
         def __call__(self, main: "Tensor", other: "Tensor") -> "Tensor":
             return self.call(main, other)
 
+    def __add__(self, other):
+        return Tensor.Add()(self, other)
+
     class Sub(PairedTensorMethod):
         r"""Subtraction built-in method."""
         def __init__(self):
@@ -545,30 +548,11 @@ class Tensor:
         def __call__(self, main: "Tensor", other: "Tensor") -> "Tensor":
             return self.call(main, other)
 
-    ####################################################################################################################
-    # Callable forward methods.
-    ####################################################################################################################
-
-    def __matmul__(self, other):
-        return Tensor.Matmul()(self, other)
-
-    def __pow__(self, other):
-        return Tensor.Pow()(self, other)
-
-    def __mul__(self, other):
-        return Tensor.Mul()(self, other)
-
-    def __truediv__(self, other):
-        return Tensor.Truediv()(self, other)
-
-    def __add__(self, other):
-        return Tensor.Add()(self, other)
-
     def __sub__(self, other):
         return Tensor.Sub()(self, other)
 
-    ####################################################################################################################
-    # Gradient calculation methods.
-    ####################################################################################################################
+    r"""
+    Gradient calculation methods.
+    """
 
     ...
