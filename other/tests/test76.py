@@ -1,3 +1,3 @@
-from gardenpy.utils.helper_functions import print_contributors
+import numpy as np
 
-print_contributors(cinematic=False)
+arr1 = np.array(5)

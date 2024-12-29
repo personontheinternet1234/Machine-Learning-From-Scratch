@@ -5,10 +5,11 @@ Includes GardenPy's objects.
 Contains Tensor class.
 """
 
+from typing import Optional
 import numpy as np
 
 
-class Tensor2:
+class Tensor:
     r"""
     GardenPy's Tensor class, supporting automatic gradient calculation.
 
@@ -42,11 +43,11 @@ class Tensor2:
         """
         # check object
         obj = np.array(obj)
-        if not np.issubdtype(obj.dtype, np.number):
-            raise TypeError("'obj' must only contain numerical values")
+        if not np.issubdtype(obj.dtype, np.number) or len(obj.shape) != 2:
+            raise TypeError("'obj' must be a 2D matrix containing only numerical values")
 
         # set tensor internals
-        self._id = len(Tensor2._instances)
+        self._id = len(Tensor._instances)
         self._tensor = obj
         self._type = 'mat'
         self._tracker = {
@@ -54,19 +55,18 @@ class Tensor2:
             'drv': [],
             'chn': [],
             'rlt': [],
-            'org': [None]
+            'org': []
         }
 
         # update instances
-        Tensor2._instances.append(self)
+        Tensor._instances.append(self)
 
     def __repr__(self):
         r"""
         Human-readable format of the tensor.
 
         Returns:
-            str:
-                NumPy array representation of Tensor.
+            str: NumPy array representation of Tensor.
         """
         return str(self._tensor)
 
@@ -82,8 +82,7 @@ class Tensor2:
         If the instance of the Tensor has been deleted, will return None.
 
         Returns:
-            str | NoneType:
-                Current Tensor ID.
+            str | NoneType: Current Tensor ID.
         """
         return hex(self._id)
 
@@ -93,8 +92,7 @@ class Tensor2:
         Tensor type, ranging from 'mat' for matrices, 'grad' for gradients, and 'deleted' for deleted instances.
 
         Returns:
-            str:
-                Tensor type.
+            str: Tensor type.
         """
         return self._type
 
@@ -106,17 +104,16 @@ class Tensor2:
         relationships, and origin relationships.
 
         Returns:
-            dict:
-                Tensor tracker.
+            dict: Tensor tracker.
         """
         alt_tracker = self._tracker
         alt_tracker['rlt'] = [
-            [itm[0].id if isinstance(itm[0], Tensor2) else hex(id(itm[0])),
-             itm[1].id if isinstance(itm[1], Tensor2) else hex(id(itm[1]))]
+            [itm[0].id if isinstance(itm[0], Tensor) else hex(id(itm[0])),
+             itm[1].id if isinstance(itm[1], Tensor) else hex(id(itm[1]))]
             for itm in alt_tracker['rlt']
         ]
         alt_tracker['org'] = [
-            itm.id if isinstance(itm, Tensor2) else hex(id(itm))
+            itm.id if isinstance(itm, Tensor) else hex(id(itm))
             for itm in alt_tracker['org']
         ]
         return {'itm': self.id, **alt_tracker}
@@ -127,8 +124,7 @@ class Tensor2:
         Tensor NumPy Value.
 
         Returns:
-            np.ndarray:
-                NumPy array value of Tensor.
+            np.ndarray: NumPy array value of Tensor.
         """
         return self._tensor
 
@@ -143,13 +139,13 @@ class Tensor2:
             'drv': [],
             'chn': [],
             'rlt': [],
-            'org': [None]
+            'org': []
         }
         return None
 
     def instance_reset(self):
         # reset tensor
-        Tensor2._instances[self._id] = None
+        Tensor._instances[self._id] = None
         self._id = None
         self._tensor = None
         self._type = 'deleted'
@@ -196,7 +192,7 @@ class Tensor2:
             pass
 
         # get replaced tensor
-        if isinstance(replaced, Tensor2) and replaced.type != 'deleted':
+        if isinstance(replaced, Tensor) and replaced.type != 'deleted':
             # use object reference
             replaced_id = replaced._id
         elif isinstance(replaced, int) and replaced < len(cls._instances):
@@ -208,7 +204,7 @@ class Tensor2:
             raise ValueError("'replaced' must reference a non-deleted Tensor")
 
         # get replacer tensor
-        if isinstance(replacer, Tensor2) and replacer.type != 'deleted':
+        if isinstance(replacer, Tensor) and replacer.type != 'deleted':
             # use object reference
             replacer_id = replacer._id
         elif isinstance(replacer, int) and replacer < len(cls._instances):
@@ -242,13 +238,12 @@ class Tensor2:
 
     class TensorMethod:
         def __init__(self, prefix):
-            # prefix set
             self._prefix = prefix
 
         @staticmethod
         def _update_track(obj, opr, drv, chn, rlt):
             # tracker update
-            assert isinstance(obj, Tensor2)
+            assert isinstance(obj, Tensor)
             obj._tracker['opr'].append(opr)
             obj._tracker['drv'].append(drv)
             obj._tracker['chn'].append(chn)
@@ -256,27 +251,63 @@ class Tensor2:
             return None
 
         @staticmethod
-        def forward(main, other):
-            # forward method
+        def forward(main: np.ndarray, other: Optional[np.ndarray]) -> np.ndarray:
+            r"""
+            Forward function.
+
+            Args:
+                main (np.ndarray): Main array.
+                other (np.ndarray, optional): Other array.
+
+            Returns:
+                np.ndarray: Result.
+            """
             raise NotImplementedError("'forward' must be implemented in a subclass")
 
         @staticmethod
-        def backward(main, other):
-            # backward method
+        def backward(main: np.ndarray, other: Optional[np.ndarray]) -> np.ndarray:
+            r"""
+            Backward function.
+
+            Args:
+                main (np.ndarray): Main array.
+                other (np.ndarray, optional): Other array.
+
+            Returns:
+                np.ndarray: Result.
+            """
             raise NotImplementedError("'backward' must be implemented in a subclass")
 
         @staticmethod
-        def chain(down, up):
-            # chain method
+        def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+            r"""
+            Chain method.
+
+            Args:
+                down (np.ndarray): Downstream gradient.
+                up (np.ndarray): Upstream gradient.
+
+            Returns:
+                np.ndarray: Result.
+            """
             raise NotImplementedError("'chain' must be implemented in a subclass")
 
     class LoneTensorMethod(TensorMethod):
-        def call(self, main):
+        def call(self, main: "Tensor") -> "Tensor":
+            r"""
+            Function call.
+
+            Args:
+                main (Tensor): Non-deleted input Tensor.
+
+            Returns:
+                Tensor: Output Tensor.
+            """
             # check tensor
-            if not (isinstance(main, Tensor2)) or main.type == 'deleted':
+            if not (isinstance(main, Tensor)) or main.type == 'deleted':
                 raise TypeError("'main' must be a non-deleted Tensor")
             # calculate result
-            result = Tensor2(self.forward(main._tensor, None))
+            result = Tensor(self.forward(main._tensor, None))
             result._tracker['org'] = [main, None]
             # track main
             self._update_track(main, f"{self._prefix}", self.backward, self.chain, [None, result])
@@ -285,30 +316,58 @@ class Tensor2:
 
     class PairedTensorMethod(TensorMethod):
         @staticmethod
-        def backward_o(other, main):
-            # other backward method
+        def backward_o(other: np.ndarray, main: np.ndarray) -> np.ndarray:
+            r"""
+            Other backward function.
+
+            Args:
+                main (np.ndarray): Main array.
+                other (np.ndarray): Other array.
+
+            Returns:
+                np.ndarray: Result.
+            """
             raise NotImplementedError("'backward_o' must be implemented in a subclass")
 
         @staticmethod
-        def chain_o(down, up):
-            # other chain method
+        def chain_o(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+            r"""
+            Other chain method.
+
+            Args:
+                down (np.ndarray): Downstream gradient.
+                up (np.ndarray): Upstream gradient.
+
+            Returns:
+                np.ndarray: Result.
+            """
             raise NotImplementedError("'chain_o' must be implemented in a subclass")
 
-        def call(self, main, other):
+        def call(self, main: "Tensor", other: "Tensor") -> "Tensor":
+            r"""
+            Function call.
+
+            Args:
+                main (Tensor): Non-deleted input Tensor.
+                other (Tensor): Second non-deleted input Tensor.
+
+            Returns:
+                Tensor: Output Tensor.
+            """
             # check tensor
-            if not (isinstance(main, Tensor2)) or main.type == 'deleted':
+            if not (isinstance(main, Tensor)) or main.type == 'deleted':
                 raise TypeError("'main' must be a non-deleted Tensor")
             # set array
-            if isinstance(other, Tensor2):
+            if isinstance(other, Tensor):
                 arr = other._tensor
             else:
                 arr = other
             # calculate result
-            result = Tensor2(self.forward(main._tensor, arr))
+            result = Tensor(self.forward(main._tensor, arr))
             result._tracker['org'] = [main, other]
             # track main
             self._update_track(main, f"{self._prefix}", self.backward, self.chain, [other, result])
-            if isinstance(other, Tensor2):
+            if isinstance(other, Tensor):
                 # track other
                 self._update_track(other, f"{self._prefix}_o", self.backward_o, self.chain_o, [main, result])
             # return result
@@ -318,105 +377,195 @@ class Tensor2:
     # Built-in methods.
     ####################################################################################################################
 
-    class Pow(PairedTensorMethod):
-
+    class Matmul(PairedTensorMethod):
+        r"""Matrix multiplication built-in method."""
         def __init__(self):
-            # prefix set
+            super().__init__(prefix="matmul")
+
+        @staticmethod
+        def forward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
+            return main @ other
+
+        @staticmethod
+        def backward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
+            return ...
+
+        @staticmethod
+        def backward_o(other: np.ndarray, main: np.ndarray) -> np.ndarray:
+            return ...
+
+        @staticmethod
+        def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+            return ...
+
+        @staticmethod
+        def chain_o(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+            return ...
+
+        def __call__(self, main: "Tensor", other: "Tensor") -> "Tensor":
+            return self.call(main, other)
+
+    class Pow(PairedTensorMethod):
+        r"""Power built-in method."""
+        def __init__(self):
             super().__init__(prefix="pow")
 
         @staticmethod
-        def forward(main, other):
-            r"""
-            Forward operation of power.
-
-            Mathematical Representation:
-                $$\m^o$$
-
-            Args:
-                main (np.ndarray):
-                    Main object instance.
-                other (np.ndarray):
-                    Other object instance.
-            """
+        def forward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
             return main ** other
 
         @staticmethod
-        def backward(main, other):
-            r"""
-            Backward operation of power.
-
-            Mathematical Representation:
-                $$om^{o - 1}$$
-
-            Args:
-                main (np.ndarray):
-                    Main object instance.
-                other (np.ndarray):
-                    Other object instance.
-            """
+        def backward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
             return other * (main ** (other - 1)) * np.eye(main.shape[1])
 
         @staticmethod
-        def backward_o(other, main):
-            r"""
-            Other backward operation of power.
-
-            Mathematical Representation:
-                $$\ln{m} m^o$$
-
-            Args:
-                main (np.ndarray):
-                    Main object instance.
-                other (np.ndarray):
-                    Other object instance.
-            """
+        def backward_o(other: np.ndarray, main: np.ndarray) -> np.ndarray:
             return np.log(main) * (main ** other) * np.eye(other.shape[1])
 
         @staticmethod
-        def chain(down, up):
-            r"""
-            Chain operation of power.
-
-            Mathematical Representation:
-                $$du$$
-
-            Args:
-                down (np.ndarray):
-                    downstream gradient.
-                up (np.ndarray):
-                    upstream gradient.
-            """
+        def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
             return down * up
 
         @staticmethod
-        def chain_o(down, up):
-            r"""
-            Other chain operation of power.
-
-            Mathematical Representation:
-                $$du$$
-
-            Args:
-                down (np.ndarray):
-                    downstream gradient.
-                up (np.ndarray):
-                    upstream gradient.
-            """
+        def chain_o(down: np.ndarray, up: np.ndarray) -> np.ndarray:
             return down * up
 
-        def __call__(self, main, other):
-            r"""
-            ...
-            """
+        def __call__(self, main: "Tensor", other: "Tensor") -> "Tensor":
+            return self.call(main, other)
+
+    class Mul(PairedTensorMethod):
+        r"""Hadamard multiplication built-in method."""
+        def __init__(self):
+            super().__init__(prefix="mul")
+
+        @staticmethod
+        def forward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
+            return main * other
+
+        @staticmethod
+        def backward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
+            return other * (main * 0.0 + 1.0) * np.eye(main.shape[1])
+
+        @staticmethod
+        def backward_o(other: np.ndarray, main: np.ndarray) -> np.ndarray:
+            return main * (other * 0.0 + 1.0) * np.eye(other.shape[1])
+
+        @staticmethod
+        def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+            return down * up
+
+        @staticmethod
+        def chain_o(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+            return down * up
+
+        def __call__(self, main: "Tensor", other: "Tensor") -> "Tensor":
+            return self.call(main, other)
+
+    class Truediv(PairedTensorMethod):
+        r"""Hadamard division built-in method."""
+        def __init__(self):
+            super().__init__(prefix="truediv")
+
+        @staticmethod
+        def forward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
+            return main / other
+
+        @staticmethod
+        def backward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
+            return other * (main * 0.0 + 1.0) * np.eye(main.shape[1])
+
+        @staticmethod
+        def backward_o(other: np.ndarray, main: np.ndarray) -> np.ndarray:
+            return (other * 0.0 + 1.0) / main * np.eye(other.shape[1])
+
+        @staticmethod
+        def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+            return down * up
+
+        @staticmethod
+        def chain_o(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+            return down * up
+
+        def __call__(self, main: "Tensor", other: "Tensor") -> "Tensor":
+            return self.call(main, other)
+
+    class Add(PairedTensorMethod):
+        r"""Addition built-in method."""
+        def __init__(self):
+            super().__init__(prefix="add")
+
+        @staticmethod
+        def forward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
+            return main + other
+
+        @staticmethod
+        def backward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
+            return (main * 0.0 + 1.0) * np.eye(main.shape[1])
+
+        @staticmethod
+        def backward_o(other: np.ndarray, main: np.ndarray) -> np.ndarray:
+            return (other * 0.0 + 1.0) * np.eye(other.shape[1])
+
+        @staticmethod
+        def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+            return down * up
+
+        @staticmethod
+        def chain_o(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+            return down * up
+
+        def __call__(self, main: "Tensor", other: "Tensor") -> "Tensor":
+            return self.call(main, other)
+
+    class Sub(PairedTensorMethod):
+        r"""Subtraction built-in method."""
+        def __init__(self):
+            super().__init__(prefix="sub")
+
+        @staticmethod
+        def forward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
+            return main - other
+
+        @staticmethod
+        def backward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
+            return (main * 0.0 + 1.0) * np.eye(main.shape[1])
+
+        @staticmethod
+        def backward_o(other: np.ndarray, main: np.ndarray) -> np.ndarray:
+            return (other * 0.0 - 1.0) * np.eye(other.shape[1])
+
+        @staticmethod
+        def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+            return down * up
+
+        @staticmethod
+        def chain_o(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+            return down * up
+
+        def __call__(self, main: "Tensor", other: "Tensor") -> "Tensor":
             return self.call(main, other)
 
     ####################################################################################################################
     # Callable forward methods.
     ####################################################################################################################
 
+    def __matmul__(self, other):
+        return Tensor.Matmul()(self, other)
+
     def __pow__(self, other):
-        # pow dunder method
-        return Tensor2.Pow()(self, other)
+        return Tensor.Pow()(self, other)
+
+    def __mul__(self, other):
+        return Tensor.Mul()(self, other)
+
+    def __truediv__(self, other):
+        return Tensor.Truediv()(self, other)
+
+    def __add__(self, other):
+        return Tensor.Add()(self, other)
+
+    def __sub__(self, other):
+        return Tensor.Sub()(self, other)
 
     ####################################################################################################################
     # Gradient calculation methods.
