@@ -1,5 +1,3 @@
-def test_1():
-    def test_2():
-        print("a")
+from gardenpy.utils.helper_functions import print_contributors
 
-test_1.test_2()
+print_contributors(cinematic=False)

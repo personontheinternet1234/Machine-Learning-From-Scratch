@@ -18,9 +18,9 @@ class Initializers:
     r"""
     Initialization algorithms for weights and biases.
 
-    Creates GardenPy Tensors using the specified initialization method with the specified dimensions. It automatically
-    creates GardenPy Tensors, but these can be converted into NumPy arrays if wanted. Initialization methods can be
-    added with relative ease using the base structure provided within this class.
+    Creates GardenPy Tensors using the specified initialization method with the specified dimensions.
+    It automatically creates GardenPy Tensors, but these can be converted into NumPy arrays if wanted.
+    Initialization methods can be added with relative ease using the base structure provided within this class.
     """
     methods = [
         'xavier',
@@ -30,7 +30,8 @@ class Initializers:
 
     def __init__(self, method: str, *, hyperparameters: Optional[dict] = None, ikwiad: bool = False, **kwargs):
         r"""
-        Sets internal initializer method and hyperparameters. Used for reference when Tensor creation is called.
+        Sets internal initializer method and hyperparameters.
+        Used for reference when Tensor creation is called.
         Any hyperparameters not set will set to their default value.
 
         "xavier" (Xavier/Glorot)
@@ -58,7 +59,7 @@ class Initializers:
                 Method hyperparameters.
             ikwiad (bool):
                 "I know what I am doing" (ikwiad).
-                If True, removes all warning messages.
+                If True, remove all warning messages.
                 Defaults to False.
             **kwargs:
                 Alternate input format for method hyperparameters.
@@ -78,62 +79,22 @@ class Initializers:
         # hyperparameter reference
         default_hyperparams = {
             'xavier': {
-                'default': {
-                    'mu': 0.0,
-                    'sigma': 1.0,
-                    'kappa': 1.0
-                },
-                'dtypes': {
-                    'mu': (float, int),
-                    'sigma': (float, int),
-                    'kappa': (float, int)
-                },
-                'vtypes': {
-                    'mu': lambda x: True,
-                    'sigma': lambda x: 0 < x,
-                    'kappa': lambda x: True
-                },
-                'ctypes': {
-                    'mu': lambda x: float(x),
-                    'sigma': lambda x: float(x),
-                    'kappa': lambda x: float(x)
-                }
+                'default': {'mu': 0.0, 'sigma': 1.0, 'kappa': 1.0},
+                'dtypes': {'mu': (float, int), 'sigma': (float, int), 'kappa': (float, int)},
+                'vtypes': {'mu': lambda x: True, 'sigma': lambda x: 0 < x, 'kappa': lambda x: True},
+                'ctypes': {'mu': lambda x: float(x), 'sigma': lambda x: float(x), 'kappa': lambda x: float(x)}
             },
             'gaussian': {
-                'default': {
-                    'mu': 0.0,
-                    'sigma': 1.0,
-                    'kappa': 1.0
-                },
-                'dtypes': {
-                    'mu': (float, int),
-                    'sigma': (float, int),
-                    'kappa': (float, int)
-                },
-                'vtypes': {
-                    'mu': lambda x: True,
-                    'sigma': lambda x: 0 < x,
-                    'kappa': lambda x: True
-                },
-                'ctypes': {
-                    'mu': lambda x: float(x),
-                    'sigma': lambda x: float(x),
-                    'kappa': lambda x: float(x)
-                }
+                'default': {'mu': 0.0, 'sigma': 1.0, 'kappa': 1.0},
+                'dtypes': {'mu': (float, int), 'sigma': (float, int), 'kappa': (float, int)},
+                'vtypes': {'mu': lambda x: True, 'sigma': lambda x: 0 < x, 'kappa': lambda x: True},
+                'ctypes': {'mu': lambda x: float(x), 'sigma': lambda x: float(x), 'kappa': lambda x: float(x)}
             },
             'kappa': {
-                'default': {
-                    'kappa': 1.0
-                },
-                'dtypes': {
-                    'kappa': (float, int)
-                },
-                'vtypes': {
-                    'kappa': lambda x: True
-                },
-                'ctypes': {
-                    'kappa': lambda x: float(x)
-                }
+                'default': {'kappa': 1.0},
+                'dtypes': {'kappa': (float, int)},
+                'vtypes': {'kappa': lambda x: True},
+                'ctypes': {'kappa': lambda x: float(x)}
             }
         }
 
@@ -214,12 +175,14 @@ class Activators2:
     r"""
     Activation algorithms for arrays.
 
-    Applies an activation function to arrays. If used with GardenPy's Tensors, activation function utilizes the autograd
-    methods, allowing for automatic gradient calculation and tracking with the activation functions. These activation
-    functions can be used with NumPy arrays, but will lose automatic gradient tracking methods. The derivative of these
-    activation functions can be called if using NumPy arrays, but function calls will go through no checks. If using
-    Tensors, the derivatives will be automatically utilized during a nabla call. Activation methods can be added with
-    relative ease using the base structure provided within this class.
+    Applies an activation function to arrays.
+    If used with GardenPy's Tensors, activation function utilizes the autograd methods, allowing for automatic gradient
+    calculation and tracking with the activation functions.
+    These activation functions can be used with NumPy arrays, but will lose automatic gradient tracking methods.
+    The derivative of these activation functions can be called if using NumPy arrays, but function calls will go through
+    no checks.
+    If using Tensors, the derivatives will be automatically utilized during a nabla call.
+    Activation methods can be added with relative ease using the base structure provided within this class.
     """
     methods = [
         'softmax',
@@ -233,8 +196,9 @@ class Activators2:
 
     def __init__(self, method: str, *, hyperparameters: Optional[dict] = None, ikwiad: bool = False, **kwargs):
         r"""
-        Sets internal activator method and hyperparameters. Used for reference when activation is called. Any
-        hyperparameters not set will set to their default value.
+        Sets internal activator method and hyperparameters.
+        Used for reference when activation is called.
+        Any hyperparameters not set will set to their default value.
 
         "softmax" (Softmax)
             - None
@@ -261,7 +225,7 @@ class Activators2:
                 Method hyperparameters.
             ikwiad (bool):
                 "I know what I am doing" (ikwiad).
-                If True, removes all warning messages.
+                If True, remove all warning messages.
                 Defaults to False.
             **kwargs:
                 Alternate input format for method hyperparameters.
@@ -354,7 +318,7 @@ class Activators2:
         def activator(func):
             def wrapper(x: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
                 r"""
-                Activates array with activation method.
+                Activates an array with activation method.
                 Utilizes gradient tracking if the array is a Tensor.
                 Returns initialized Tensor with specified dimensions.
 
@@ -400,7 +364,6 @@ class Activators2:
             def forward(x):
                 # softmax function
                 return np.exp(x) / np.sum(np.exp(x))
-
 
         def relu(x):
             # relu function

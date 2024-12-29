@@ -33,7 +33,7 @@ class ParamChecker:
                 Defaults to "Parameters".
             ikwiad (bool):
                 "I know what I am doing" (ikwiad).
-                If True, removes all warning messages.
+                If True, remove all warning messages.
                 Defaults to False.
         """
         # warning settings
@@ -111,7 +111,7 @@ class ParamChecker:
 
     def check_params(self, params: Optional[dict] = None, **kwargs) -> dict:
         r"""
-        Checks parameters.
+        Check parameters.
 
         Args:
             params (dict, optional):

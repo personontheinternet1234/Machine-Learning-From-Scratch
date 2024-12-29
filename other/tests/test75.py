@@ -1,10 +1,8 @@
 import numpy as np
-from gardenpy.utils.objects_2 import Tensor2 as Tensor
+from gardenpy.utils.operators_2 import tensor
 
-tens1 = Tensor(np.random.randn(5, 5))
-tens2 = Tensor(np.random.randn(5, 5))
-print(tens2.id)
-print(Tensor._instances)
-tens2 = tens2.to_array()
-print(Tensor._instances)
-Tensor.reset_tracker()
+tens1 = tensor(np.abs(np.random.randn(5, 5)))
+tens2 = tensor(np.abs(np.random.randn(5, 5)))
+tens3 = tens1 ** tens2
+print(tens3.tracker)
+print(tens1.tracker)

@@ -44,16 +44,14 @@ def progress(idx: int, max_idx: int, *, desc: Optional[str] = None, b_len: int =
     Prints a customizable progress bar for any sort of loop.
 
     Args:
-        idx (int):
+        idx (int), 0 < idx:
             Current loop index.
-        max_idx (int):
+        max_idx (int), 0 < max_idx:
             Maximum loop index.
-        desc (str, optional):
+        desc (str, optional), default = None:
             Progress bar description.
-            Defaults to no description
-        b_len (int, optional):
+        b_len (int, optional), default = 50, 0 < b_len:
             Bar length.
-            Defaults to 50 characters.
 
     Returns:
         None
@@ -83,7 +81,7 @@ def convert_time(seconds: Union[float, int]) -> str:
     Converts seconds to hours:minutes:seconds.
 
     Args:
-        seconds (float | int):
+        seconds (float | int), 0 < seconds:
             Number of seconds.
 
     Returns:
@@ -111,9 +109,8 @@ def slow_print(text: str, *, delay: Union[float, int] = 0.05) -> None:
         text (str):
             Text to print.
 
-        delay (float | int):
+        delay (float | int), default = 0.05, 0 < delay:
             Delay between characters in seconds.
-            Defaults to 0.05
 
     Returns:
         None
@@ -136,14 +133,13 @@ def slow_print(text: str, *, delay: Union[float, int] = 0.05) -> None:
 
 def print_contributors(*, who: Optional[list] = None, cinematic: bool = False) -> None:
     r"""
-    Prints GardenPy contributors.
+    Prints GardenPy contributors in alphabetical order.
 
     Args:
-        who (list, optional):
+        who (list, optional), default = all:
             Type of contributors to print.
-        cinematic (bool):
+        cinematic (bool), default = False:
             Cinematic-style printing of contributors.
-            Defaults to False.
 
     Returns:
         None
@@ -188,13 +184,13 @@ def print_contributors(*, who: Optional[list] = None, cinematic: bool = False) -
     # print contributors
     if cinematic:
         print(f"{ansi['reset']}", end='')
-        slow_print("The <", delay=0.05)
+        slow_print("The [", delay=0.05)
         print(f"{ansi['bold']}", end='')
         slow_print("MACHINE LEARNING ", delay=0.05)
         print(f"{ansi['reset']}{ansi['white']}{ansi['italic']}", end='')
         slow_print("from scratch", delay=0.05)
         print(f"{ansi['reset']}", end='')
-        slow_print("> team presents", delay=0.05)
+        slow_print("] team presents", delay=0.05)
         print(f"{ansi['reset']}")
         time.sleep(0.5)
         print(f"{ansi['bold']}{ansi['green']}", end='')
@@ -234,6 +230,10 @@ def print_contributors(*, who: Optional[list] = None, cinematic: bool = False) -
                 slow_print(f"for {row[2]}", delay=0.05)
             print(f"{ansi['reset']}", end='\n')
             time.sleep(0.5)
+        print(f"{ansi['white']}", end='')
+        slow_print("Thanks to everyone who supported this project in any way", delay=0.05)
+        print(f"{ansi['reset']}", end='\n')
+        time.sleep(0.5)
     else:
         print(f"{ansi['bold']}{ansi['green']}GardenPy{ansi['reset']}")
         if 'programmers' in who:
