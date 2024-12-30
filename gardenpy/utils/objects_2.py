@@ -291,10 +291,16 @@ class Tensor:
             if not (isinstance(main, Tensor)) or main.type == 'deleted':
                 raise TypeError("'main' must be a non-deleted Tensor")
             # calculate result
-            result = Tensor(self.forward(main._tensor))
+            result = Tensor(self.forward(main=main._tensor))
             result._tracker['org'] = [main, None]
             # track main
-            self._update_track(main, f"{self._prefix}", self.backward, self.chain, [None, result])
+            self._update_track(
+                obj=main,
+                opr=f"{self._prefix}",
+                drv=self.backward,
+                chn=self.chain,
+                rlt=[None, result]
+            )
             # return result
             return result
 
@@ -377,13 +383,25 @@ class Tensor:
                 arr = other
 
             # calculate result
-            result = Tensor(self.forward(main._tensor, arr))
+            result = Tensor(self.forward(main=main._tensor, other=arr))
             result._tracker['org'] = [main, other]
             # track main
-            self._update_track(main, f"{self._prefix}", self.backward, self.chain, [other, result])
+            self._update_track(
+                obj=main,
+                opr=f"{self._prefix}",
+                drv=self.backward,
+                chn=self.chain,
+                rlt=[other, result]
+            )
             if isinstance(other, Tensor):
                 # track other
-                self._update_track(other, f"{self._prefix}_o", self.backward_o, self.chain_o, [main, result])
+                self._update_track(
+                    obj=other,
+                    opr=f"{self._prefix}_o",
+                    drv=self.backward_o,
+                    chn=self.chain_o,
+                    rlt=[main, result]
+                )
             # return result
             return result
 
@@ -417,7 +435,7 @@ class Tensor:
                     relation = trace
                 else:
                     # relation search
-                    [_relate(origin, target, trace) for origin in origins]
+                    [_relate(item=origin, target=target, trace=trace) for origin in origins]
 
         # relate tensors
         _relate(grad, wrt)
@@ -431,7 +449,7 @@ class Tensor:
             strm_other = [rlt[0] for rlt in up._tracker['rlt']]
             # get operation
             operator = up._tracker['opr'][strm_result.index(down)]
-            derivative = up._tracker['drv'][strm_result.index(down)]
+            drv_operator = up._tracker['drv'][strm_result.index(down)]
             other = strm_other[strm_result.index(down)]
 
             if isinstance(other, Tensor):
@@ -440,15 +458,15 @@ class Tensor:
             # calculate local gradient
             try:
                 # pair derivative method
-                res = Tensor(derivative(up._tensor, other))
+                res = Tensor(drv_operator(main=up._tensor, other=other))
             except TypeError:
                 # lone derivative method
-                res = Tensor(derivative(up._tensor))
+                res = Tensor(drv_operator(main=up._tensor))
 
             # set local gradient internals
             res._type = 'grad'
             res._tracker['opr'].append(f'd_{operator}')
-            res._tracker['drv'].append(derivative)
+            res._tracker['drv'].append(drv_operator)
             res._tracker['chn'].append(down._tracker['chn'])
             res._tracker['rlt'] += [down, up]
             res._tracker['org'] = down
@@ -456,11 +474,11 @@ class Tensor:
             return res
 
         # calculate initial gradient
-        result = _derive(relation[-2], relation[-1])
+        result = _derive(down=relation[-2], up=relation[-1])
         del relation[-1]
         while 1 < len(relation):
             # chain rule gradients
-            result = Tensor.chain(_derive(relation[-2], relation[-1]), result)
+            result = Tensor.chain(down=_derive(down=relation[-2], up=relation[-1]), up=result)
             del relation[-1]
 
         # return final gradient

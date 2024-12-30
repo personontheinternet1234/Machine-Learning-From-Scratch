@@ -6,7 +6,7 @@ Algorithms can be easily added within each method.
 Contains an initializer, activator, loss, and optimizer.
 """
 
-from typing import Optional, Union
+from typing import Tuple, Optional, Union
 import warnings
 import numpy as np
 
@@ -57,7 +57,7 @@ class Initializers:
         """
         # internals
         self._ikwiad = bool(ikwiad)
-        self._method, self._hyperparams = self._get_method(method, hyperparameters, **kwargs)
+        self._method, self._hyperparams = self._get_method(method=method, hyperparams=hyperparameters, **kwargs)
 
         # set method
         self._set_initializer()
@@ -66,7 +66,7 @@ class Initializers:
     def methods(cls):
         return cls._methods
 
-    def _get_method(self, method, hyperparams, **kwargs):
+    def _get_method(self, method: str, hyperparams: dict, **kwargs) -> Tuple[str, dict]:
         # hyperparameter reference
         default_hyperparams = {
             'xavier': {
@@ -109,7 +109,7 @@ class Initializers:
         # initializer wrapper
         def initializer(func):
             def wrapper(*args: int) -> Tensor:
-                # check for errors
+                # check dimensions
                 if len(args) != 2:
                     raise ValueError("Initialization must occur with 2 dimensions")
                 if not all(isinstance(arg, int) and 0 < arg for arg in args):
@@ -221,7 +221,7 @@ class Activators:
 
         # internals
         self._ikwiad = bool(ikwiad)
-        self._method, self._hyperparams = self._get_method(method, hyperparameters, **kwargs)
+        self._method, self._hyperparams = self._get_method(method=method, hyperparams=hyperparameters, **kwargs)
 
         # set method
         self._set_activator()
@@ -230,7 +230,7 @@ class Activators:
     def methods(cls):
         return cls._methods
 
-    def _get_method(self, method, hyperparams, **kwargs):
+    def _get_method(self, method: str, hyperparams: dict, **kwargs) -> Tuple[str, dict]:
         # hyperparameter reference
         default_hyperparams = {
             'softmax': {
