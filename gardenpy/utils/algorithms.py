@@ -10,7 +10,7 @@ from typing import Optional, Union
 import warnings
 import numpy as np
 
-from .objects import Tensor
+from .objects_2 import Tensor
 from ..utils.utils import ParamChecker
 
 
@@ -22,7 +22,7 @@ class Initializers:
     It automatically creates GardenPy Tensors, but these can be converted into NumPy arrays if wanted.
     Initialization methods can be added with relative ease using the base structure provided within this class.
     """
-    methods = [
+    _methods = [
         'xavier',
         'gaussian',
         'uniform'
@@ -34,46 +34,37 @@ class Initializers:
         Used for reference when Tensor creation is called.
         Any hyperparameters not set will set to their default value.
 
-        "xavier" (Xavier/Glorot)
-            - "mu" (float | int), default = 0.0
-                Distribution mean.
-            - "sigma" (float | int), default = 1.0, 0.0 < sigma
-                Distribution standard deviation.
-            - "kappa" (float | int), default = 1.0
-                Distribution gain.
-        "gaussian" (Gaussian/Normal)
-            - "mu" (float | int), default = 0.0
-                Distribution mean.
-            - "sigma" (float | int), default = 1.0, 0.0 < sigma
-                Distribution standard deviation.
-            - "kappa" (float | int), default = 1.0
-                Distribution gain.
-        "uniform" (Uniform)
-            - "kappa" (float | int), default = 1.0
-                Uniform value.
+        xavier (Xavier/Glorot)
+            - mu (float | int), default = 0.0: Distribution mean.
+            - sigma (float | int), default = 1.0, 0.0 < sigma: Distribution standard deviation.
+            - kappa (float | int), default = 1.0: Distribution gain.
+        gaussian (Gaussian/Normal)
+            - mu (float | int), default = 0.0: Distribution mean.
+            - sigma (float | int), default = 1.0, 0.0 < sigma: Distribution standard deviation.
+            - kappa (float | int), default = 1.0: Distribution gain.
+        uniform (Uniform)
+            - kappa (float | int), default = 1.0: Uniform value.
 
         Args:
-            method (str):
-                Initializer method.
-            hyperparameters (dict, optional):
-                Method hyperparameters.
-            ikwiad (bool):
-                "I know what I am doing" (ikwiad).
-                If True, remove all warning messages.
-                Defaults to False.
-            **kwargs:
-                Alternate input format for method hyperparameters.
+            method (str): Initializer method.
+            hyperparameters (dict, optional): Method hyperparameters.
+            ikwiad (bool), default = False: Remove all warning messages ("I know what I am doing" - ikwiad).
+            **kwargs: Alternate input format for method hyperparameters.
 
         Raises:
             TypeError: If any hyperparameters were of the wrong type.
             ValueError: If invalid values were passed for any of the hyperparameters.
         """
         # internals
-        self._ikwiad = ikwiad
+        self._ikwiad = bool(ikwiad)
         self._method, self._hyperparams = self._get_method(method, hyperparameters, **kwargs)
 
         # set method
         self._set_initializer()
+
+    @classmethod
+    def methods(cls):
+        return cls._methods
 
     def _get_method(self, method, hyperparams, **kwargs):
         # hyperparameter reference
@@ -101,14 +92,14 @@ class Initializers:
         # check method
         if not isinstance(method, str):
             raise TypeError("'method' must be a string")
-        if method not in self.methods:
+        if method not in Initializers._methods:
             raise ValueError(
                 f"Invalid method: {method}\n"
-                f"Choose from: {self.methods}"
+                f"Choose from: {Initializers._methods}"
             )
 
         # check hyperparameters
-        checker = ParamChecker(name=f'{method} Hyperparameters', ikwiad=self._ikwiad)
+        checker = ParamChecker(name=f'{method} hyperparameters', ikwiad=self._ikwiad)
         checker.set_types(**default_hyperparams[method])
 
         # set internal hyperparameters
@@ -117,25 +108,10 @@ class Initializers:
     def _set_initializer(self):
         # initializer wrapper
         def initializer(func):
-            def wrapper(*args) -> Tensor:
-                r"""
-                Returns initialized Tensor with specified dimensions.
-
-                Args:
-                    *args:
-                        Tensor's dimensions.
-                        Must consist of at least two dimensions of positive integers.
-
-                Returns:
-                    Tensor:
-                        Initialized Tensor.
-
-                Raises:
-                    ValueError: If the dimensions weren't properly set.
-                """
+            def wrapper(*args: int) -> Tensor:
                 # check for errors
-                if not 2 <= len(args):
-                    raise ValueError("Initialization must occur with at least 2 dimensions")
+                if len(args) != 2:
+                    raise ValueError("Initialization must occur with 2 dimensions")
                 if not all(isinstance(arg, int) and 0 < arg for arg in args):
                     raise ValueError("Each dimension must be a positive integer")
                 # initialize tensor
@@ -146,17 +122,17 @@ class Initializers:
         h = self._hyperparams
 
         @initializer
-        def xavier(*args):
+        def xavier(*args: int) -> np.ndarray:
             # xavier method function
             return h['kappa'] * np.sqrt(2.0 / float(args[-2] + args[-1])) * np.random.normal(loc=h['mu'], scale=h['sigma'], size=args)
 
         @initializer
-        def gaussian(*args):
+        def gaussian(*args: int) -> np.ndarray:
             # gaussian method function
             return h['kappa'] * np.random.normal(loc=h['mu'], scale=h['sigma'], size=args)
 
         @initializer
-        def uniform(*args):
+        def uniform(*args: int) -> np.ndarray:
             # uniform method function
             return h['kappa'] * np.ones(args, dtype=np.float64)
 
@@ -168,10 +144,25 @@ class Initializers:
         }
 
         # set initialize function
-        self.initialize = funcs[self._method]
+        def initialize(*args: int) -> Tensor:
+            r"""
+            Returns initialized Tensor with specified dimensions.
+
+            Args:
+                *args: Tensor's two dimensions of positive integers.
+
+            Returns:
+                Tensor: Initialized Tensor.
+
+            Raises:
+                ValueError: If the dimensions weren't properly set.
+            """
+            return funcs[self._method](*args)
+
+        self.initialize = initialize
 
 
-class Activators2:
+class Activators:
     r"""
     Activation algorithms for arrays.
 
@@ -184,7 +175,7 @@ class Activators2:
     If using Tensors, the derivatives will be automatically utilized during a nabla call.
     Activation methods can be added with relative ease using the base structure provided within this class.
     """
-    methods = [
+    _methods = [
         'softmax',
         'relu',
         'lrelu',
@@ -200,64 +191,59 @@ class Activators2:
         Used for reference when activation is called.
         Any hyperparameters not set will set to their default value.
 
-        "softmax" (Softmax)
+        softmax (Softmax)
             - None
-        "relu" (ReLU)
+        relu (ReLU)
             - None
-        "lrelu" (Leaky ReLU)
-            - "beta" (float | int), default = 1e-2, 0.0 < beta
-                Negative slope.
-        "sigmoid" (Sigmoid)
+        lrelu (Leaky ReLU)
+            - beta (float | int), default = 1e-2, 0.0 < beta: Negative slope.
+        sigmoid (Sigmoid)
             - None
-        "tanh" (Tanh)
+        tanh (Tanh)
             - None
-        "softplus" (Softplus)
-            - "beta" (float | int), default = 1.0, 0.0 <= beta
-                Vertical stretch.
-        "mish" (Mish)
-            - "beta" (float | int), default = 1.0, 0.0 <= beta
-                    Vertical stretch.
+        softplus (Softplus)
+            - beta (float | int), default = 1.0, 0.0 <= beta: Vertical stretch.
+        mish (Mish)
+            - beta (float | int), default = 1.0, 0.0 <= beta: Vertical stretch.
 
         Args:
-            method (str):
-                Activator method.
-            hyperparameters (dict, optional):
-                Method hyperparameters.
-            ikwiad (bool):
-                "I know what I am doing" (ikwiad).
-                If True, remove all warning messages.
-                Defaults to False.
-            **kwargs:
-                Alternate input format for method hyperparameters.
+            method (str): Activator method.
+            hyperparameters (dict, optional): Method hyperparameters.
+            ikwiad (bool), default = False: Remove all warning messages ("I know what I am doing" - ikwiad).
+            **kwargs: Alternate input format for method hyperparameters.
 
         Raises:
             TypeError: If any hyperparameters were of the wrong type.
             ValueError: If invalid values were passed for any of the hyperparameters.
         """
         # allowed methods
-        self._possible_methods = self.methods
+        self._possible_methods = Activators._methods
 
         # internals
-        self._ikwiad = ikwiad
+        self._ikwiad = bool(ikwiad)
         self._method, self._hyperparams = self._get_method(method, hyperparameters, **kwargs)
 
         # set method
         self._set_activator()
 
+    @classmethod
+    def methods(cls):
+        return cls._methods
+
     def _get_method(self, method, hyperparams, **kwargs):
         # hyperparameter reference
         default_hyperparams = {
             'softmax': {
-                'default': {None},
-                'dtypes': {None},
-                'vtypes': {None},
-                'ctypes': {None}
+                'default': None,
+                'dtypes': None,
+                'vtypes': None,
+                'ctypes': None
             },
             'relu': {
-                'default': {None},
-                'dtypes': {None},
-                'vtypes': {None},
-                'ctypes': {None}
+                'default': None,
+                'dtypes': None,
+                'vtypes': None,
+                'ctypes': None
             },
             'lrelu': {
                 'default': {'beta': 1e-2},
@@ -266,16 +252,16 @@ class Activators2:
                 'ctypes': {'beta': lambda x: float(x)}
             },
             'sigmoid': {
-                'default': {None},
-                'dtypes': {None},
-                'vtypes': {None},
-                'ctypes': {None}
+                'default': None,
+                'dtypes': None,
+                'vtypes': None,
+                'ctypes': None
             },
             'tanh': {
-                'default': {None},
-                'dtypes': {None},
-                'vtypes': {None},
-                'ctypes': {None}
+                'default': None,
+                'dtypes': None,
+                'vtypes': None,
+                'ctypes': None
             },
             'softplus': {
                 'default': {'beta': 1.0},
@@ -289,526 +275,202 @@ class Activators2:
                 'vtypes': {'beta': lambda x: 0 <= x},
                 'ctypes': {'beta': lambda x: float(x)}
             }
-
         }
 
         # check method
         if not isinstance(method, str):
             raise TypeError("'method' must be a string")
-        if method not in self.methods:
+        if method not in Activators._methods:
             raise ValueError(
                 f"Invalid method: {method}\n"
-                f"Choose from: {self.methods}"
+                f"Choose from: {Activators._methods}"
             )
 
         # check hyperparameters
-        checker = ParamChecker(name=f'{method} Hyperparameters', ikwiad=self._ikwiad)
+        checker = ParamChecker(name=f'{method} hyperparameters', ikwiad=self._ikwiad)
         checker.set_types(**default_hyperparams[method])
 
         # set internal hyperparameters
         return method, checker.check_params(hyperparams, **kwargs)
 
     def _set_activator(self):
-        # initializer wrapper
-        class Activator:
-            @staticmethod
-            def activate(x: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
-                ...
-
-        def activator(func):
-            def wrapper(x: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
-                r"""
-                Activates an array with activation method.
-                Utilizes gradient tracking if the array is a Tensor.
-                Returns initialized Tensor with specified dimensions.
-
-                Args:
-                    x (Tensor | np.ndarray):
-                        Input array.
-
-                Returns:
-                    Tensor | np.ndarray:
-                        Activated array.
-
-                Raises:
-                    ValueError: If the dimensions weren't properly set.
-                """
-                if not isinstance(x, (Tensor, np.ndarray)):
-                    # invalid datatype
-                    raise TypeError(f"'x' must be a Tensor or NumPy array")
-
-                if isinstance(x, Tensor):
-                    # calculate result
-                    result = Tensor(func.forward(x.to_array()))
-                    # track operation
-                    x.tracker['opr'].append('activate')
-                    x.tracker['drv'].append(func.backward)
-                    x.tracker['chn'].append(func.chain)
-                    # track origin
-                    result.tracker['org'] = [x, '_']
-                    # track relation
-                    x.tracker['rlt'].append(['_', result])
-                    # return result
-                    return result
-                else:
-                    # return result
-                    return func.forward(x)
-            return wrapper
-
         # hyperparameter reference
         h = self._hyperparams
 
-        @activator
-        class Activator:
+        class _Softmax(Tensor.LoneTensorMethod):
+            r"""Softmax built-in method."""
+            def __init__(self):
+                super().__init__(prefix="softmax")
+
             @staticmethod
-            def forward(x):
-                # softmax function
+            def forward(x: np.ndarray) -> np.ndarray:
                 return np.exp(x) / np.sum(np.exp(x))
 
-        def relu(x):
-            # relu function
-            return np.maximum(0.0, x)
+            @staticmethod
+            def backward(x: np.ndarray) -> np.ndarray:
+                return (np.sum(np.exp(x)) * np.exp(x) - np.exp(2.0 * x)) / (np.sum(np.exp(x)) ** 2.0) * np.eye(x.shape[1])
 
-        def lrelu(x):
-            # lrelu function
-            return np.maximum(h['beta'] * x, x)
+            @staticmethod
+            def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+                # todo: incorrect math
+                return down @ up
 
-        def sigmoid(x):
-            # sigmoid function
-            return (np.exp(-x) + 1.0) ** -1.0
+            def __call__(self, main: Tensor) -> Tensor:
+                return self.call(main)
 
-        def tanh(x):
-            # tanh function
-            return np.tanh(x)
+        class _ReLU(Tensor.LoneTensorMethod):
+            r"""ReLU built-in method."""
+            def __init__(self):
+                super().__init__(prefix="relu")
 
-        def softplus(x):
-            # softplus function
-            return np.log(np.exp(h['beta'] * x) + 1.0) / h['beta']
+            @staticmethod
+            def forward(x: np.ndarray) -> np.ndarray:
+                return np.maximum(0.0, x)
 
-        def mish(x):
-            # mish function
-            return x * np.tanh(np.log(np.exp(h['beta'] * x) + 1.0) / h['beta'])
+            @staticmethod
+            def backward(x: np.ndarray) -> np.ndarray:
+                return np.where(x > 0.0, 1.0, 0.0) * np.eye(x.shape[1])
 
-        # function reference
-        funcs = {
-            'softmax': softmax,
-            'relu': relu,
-            'lrelu': lrelu,
-            'sigmoid': sigmoid,
-            'tanh': tanh,
-            'softplus': softplus,
-            'mish': mish
+            @staticmethod
+            def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+                return down @ up
+
+            def __call__(self, main: Tensor) -> Tensor:
+                return self.call(main)
+
+        class _LeakyReLU(Tensor.LoneTensorMethod):
+            r"""LeakyReLU built-in method."""
+            def __init__(self):
+                super().__init__(prefix="lrelu")
+
+            @staticmethod
+            def forward(x: np.ndarray) -> np.ndarray:
+                return np.maximum(h['beta'] * x, x)
+
+            @staticmethod
+            def backward(x: np.ndarray) -> np.ndarray:
+                return np.where(x > 0.0, 1.0, h['beta']) * np.eye(x.shape[1])
+
+            @staticmethod
+            def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+                return down @ up
+
+            def __call__(self, main: Tensor) -> Tensor:
+                return self.call(main)
+
+        class _Sigmoid(Tensor.LoneTensorMethod):
+            r"""Sigmoid built-in method."""
+            def __init__(self):
+                super().__init__(prefix="sigmoid")
+
+            @staticmethod
+            def forward(x: np.ndarray) -> np.ndarray:
+                return (np.exp(-x) + 1.0) ** -1.0
+
+            @staticmethod
+            def backward(x: np.ndarray) -> np.ndarray:
+                return np.exp(-x) / ((np.exp(-x) + 1.0) ** 2.0) * np.eye(x.shape[1])
+
+            @staticmethod
+            def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+                return down @ up
+
+            def __call__(self, main: Tensor) -> Tensor:
+                return self.call(main)
+
+        class _Tanh(Tensor.LoneTensorMethod):
+            r"""Tanh built-in method."""
+            def __init__(self):
+                super().__init__(prefix="tanh")
+
+            @staticmethod
+            def forward(x: np.ndarray) -> np.ndarray:
+                return np.tanh(x)
+
+            @staticmethod
+            def backward(x: np.ndarray) -> np.ndarray:
+                return np.cosh(x) ** -2.0 * np.eye(x.shape[1])
+
+            @staticmethod
+            def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+                return down @ up
+
+            def __call__(self, main: Tensor) -> Tensor:
+                return self.call(main)
+
+        class _Softplus(Tensor.LoneTensorMethod):
+            r"""Softplus built-in method."""
+            def __init__(self):
+                super().__init__(prefix="softplus")
+
+            @staticmethod
+            def forward(x: np.ndarray) -> np.ndarray:
+                return np.log(np.exp(h['beta'] * x) + 1.0) / h['beta']
+
+            @staticmethod
+            def backward(x: np.ndarray) -> np.ndarray:
+                return h['beta'] * np.exp(h['beta'] * x) / (h['beta'] * np.exp(h['beta'] * x) + h['beta']) * np.eye(x.shape[1])
+
+            @staticmethod
+            def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+                return down @ up
+
+            def __call__(self, main: Tensor) -> Tensor:
+                return self.call(main)
+
+        class _Mish(Tensor.LoneTensorMethod):
+            r"""Mish built-in method."""
+            def __init__(self):
+                super().__init__(prefix="mish")
+
+            @staticmethod
+            def forward(x: np.ndarray) -> np.ndarray:
+                return x * np.tanh(np.log(np.exp(h['beta'] * x) + 1.0) / h['beta'])
+
+            @staticmethod
+            def backward(x: np.ndarray) -> np.ndarray:
+                return (np.tanh(np.log(np.exp(h['beta'] * x) + 1.0) / h['beta']) + x * (np.cosh(np.log(np.exp(h['beta'] * x) + 1.0) / h['beta']) ** -2.0) * (h['beta'] * np.exp(h['beta'] * x) / (h['beta'] * np.exp(h['beta'] * x) + h['beta']))) * np.eye(x.shape[1])
+
+            @staticmethod
+            def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+                return down @ up
+
+            def __call__(self, main: Tensor) -> Tensor:
+                return self.call(main)
+
+        # operator reference
+        ops = {
+            'softmax': _Softmax,
+            'relu': _ReLU,
+            'lrelu': _LeakyReLU,
+            'sigmoid': _Sigmoid,
+            'tanh': _Tanh,
+            'softplus': _Softplus,
+            'mish': _Mish
         }
 
-        # set initialize function
-        self.initialize = funcs[self._method]
+        # set method functions
+        def activate(x: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
+            r"""
+            for tensor or numpy
+            """
+            if isinstance(x, Tensor) and x.type == 'mat':
+                return ops[self._method]()(x)
+            elif isinstance(x, np.ndarray):
+                return ops[self._method].forward(x)
+            else:
+                raise TypeError("'x' must be a Tensor with the matrix type or a NumPy array")
 
+        def d_activate(x: np.ndarray) -> np.ndarray:
+            r"""
+            only for np
+            """
+            if not isinstance(x, np.ndarray):
+                raise TypeError("'x' must be a NumPy array")
+            return ops[self._method].backward(x)
 
-class Activators:
-    r"""
-    **Activation algorithms for GardenPy.**
-
-    These algorithms ideally support GardenPy Tensors, but are compatible with NumPy Arrays.
-    With NumPy Arrays, there will be no tracking.
-
-    Attributes:
-    ----------
-    **algorithm** : (*str*)
-        The activation algorithm.
-    **parameters** : (*dict*)
-        The parameters for the activation algorithm.
-
-    Methods:
-    ----------
-    **__init__(algorithm: str, *, parameters: dict = None, **kwargs)** :
-        Instantiates the object with the specified parameters.
-
-    **activate(self, x: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]** :
-        Activates values with the activation algorithm.
-        The activated values will retain the same datatype as x.
-        If x is a Tensor, Activators will automatically track the equation for automatic differentiation.
-
-    **d_activate(self, x: np.ndarray) -> np.ndarray** :
-        Calculates derivative of x based on the specified outputs.
-        Only supports NumPy Arrays for manual calculation.
-        Use 'nabla' from gardenpy.utils.operators for Tensor support.
-
-    Notes:
-    ----------
-    - Activators supports automatic differentiation built-in with Tensors.
-        - d_activate should never be called when using Tensors.
-        - Use 'nabla' from gardenpy.utils.operators for Tensor support.
-
-    - Refer to GardenPy's repository or GardenPy's docs for more information.
-    """
-    def __init__(self, algorithm: str, *, parameters: dict = None, **kwargs):
-        r"""
-        **Activator initialization with defined parameters.**
-
-        Parameters:
-        ----------
-        **algorithm** : (*str*) {'*softmax*', '*relu*', '*lrelu*', '*sigmoid*', '*tanh*', '*softplus*', '*mish*'}
-            The activator algorithm.
-
-            - *softmax* : Softmax.
-            - *relu*: Rectified Linear Unit.
-            - *lrelu*: Leaky Rectified Linear Unit.
-            - *sigmoid*: Sigmoid.
-            - *tanh*: Tanh.
-            - *softplus*: SoftPlus.
-            - *mish*: Mish.
-
-        **parameters** (*dict*, *optional*) :
-            The parameters for the activation algorithm.
-
-            - **lrelu** : (*dict*) {'*beta*'}
-                - *beta* : (float, int, 0.0<=beta), default=1e-2
-                    The negative slope.
-
-            - **softplus** : (*dict*) {'*beta*'}
-                - *beta* : (float, int, 0.0<=beta), default=1.0
-                    The vertical stretch.
-
-            - **mish** : (*dict*) {'*beta*'}
-                - *beta* : (float, int, 0.0<=beta), default=1.0
-                    The vertical stretch.
-
-        ****kwargs** (*any*, *optional*) :
-            The parameters for the activation algorithm with keyword arguments if desired.
-
-            To set a parameter, add a keyword argument that refers to one of the parameters.
-
-        Notes:
-        ----------
-        - Any parameters not specified will be set to their default values.
-
-        - Parameters that are specified but not used within the specified algorithm will be discarded.
-            - The user will receive a warning when this occurs.
-
-        - Activators supports GardenPy Tensors; however, Activators also works with NumPy Arrays.
-
-        Example:
-        -----
-        >>> from gardenpy.utils.algorithms import Activators
-        >>> optim = Activators('relu')
-        """
-        # activation algorithms
-        self.algorithms = [
-            'softmax',
-            'relu',
-            'lrelu',
-            'sigmoid',
-            'tanh',
-            'softplus',
-            'mish'
-        ]
-
-        # internal activation algorithm parameters
-        self._algorithm = self._check_algorithm(algorithm)
-        self._params = self._get_params(parameters, kwargs)
-
-        # activation algorithms
-        self._activator = self._get_activator()
-        self._d_activator = self._get_d_activator()
-
-    def _check_algorithm(self, algorithm):
-        # checks whether the activation algorithm is valid
-        if algorithm in self.algorithms:
-            # valid activation algorithm
-            return algorithm
-        else:
-            # invalid activation algorithm
-            raise ValueError(
-                f"Invalid activation algorithm: '{algorithm}'\n"
-                f"Choose from: '{[alg for alg in self.algorithms]}'"
-            )
-
-    def _get_params(self, params, kwargs):
-        # defines activation algorithm parameters
-        # default activation algorithm parameters
-        default = {
-            'softmax': None,
-            'relu': None,
-            'lrelu': {
-                'beta': 1e-2
-            },
-            'sigmoid': None,
-            'tanh': None,
-            'softplus': {
-                'beta': 1.0
-            },
-            'mish': {
-                'beta': 1.0
-            }
-        }
-        # default activation algorithm parameter datatypes
-        dtypes = {
-            'lrelu': {
-                'beta': (float, int)
-            },
-            'softplus': {
-                'beta': (float, int)
-            },
-            'mish': {
-                'beta': (float, int)
-            }
-        }
-        # default activation algorithm parameter value types
-        vtypes = {
-            'lrelu': {
-                'beta': lambda x: 0.0 < x
-            },
-            'softplus': {
-                'beta': lambda x: 0.0 <= x
-            },
-            'mish': {
-                'beta': lambda x: 0.0 <= x
-            }
-        }
-        # default activation algorithm parameter conversion types
-        ctypes = {
-            'lrelu': {
-                'beta': lambda x: float(x)
-            },
-            'softplus': {
-                'beta': lambda x: float(x)
-            },
-            'mish': {
-                'beta': lambda x: float(x)
-            }
-        }
-
-        # instantiate parameter dictionary
-        prms = default[self._algorithm]
-
-        # combine keyword arguments and parameters
-        if params and kwargs:
-            params.update(kwargs)
-        elif kwargs:
-            params = kwargs
-
-        if params and (prms is not None) and isinstance(params, dict):
-            # set defined parameter
-            for prm in params:
-                if prm not in prms:
-                    # invalid parameter
-                    print()
-                    warnings.warn(
-                        f"\nInvalid parameter for '{self._algorithm}': '{prm}'\n"
-                        f"Choose from: '{[prm for prm in prms]}'",
-                        UserWarning
-                    )
-                elif prm in prms and not isinstance(params[prm], dtypes[self._algorithm][prm]):
-                    # invalid datatype for parameter
-                    raise TypeError(
-                        f"Invalid datatype for '{self._algorithm}': '{prm}'\n"
-                        f"Choose from: '{dtypes[self._algorithm][prm]}'"
-                    )
-                elif prm in prms and not (vtypes[self._algorithm][prm](params[prm])):
-                    # invalid value for parameter
-                    raise TypeError(
-                        f"Invalid value for '{self._algorithm}': '{prm}'\n"
-                        f"Conditional: '{vtypes[self._algorithm][prm]}'"
-                    )
-                else:
-                    # valid parameter
-                    prms[prm] = ctypes[self._algorithm][prm](params[prm])
-        elif params and isinstance(params, dict):
-            # parameters not taken
-            print()
-            warnings.warn(f"\n'{self._algorithm}' does not take parameters", UserWarning)
-        elif params:
-            # invalid data type
-            raise TypeError(
-                f"'parameters' is not a dictionary: '{params}'\n"
-                f"Choose from: '{[prm for prm in prms]}'"
-            )
-
-        # return parameters
-        return prms
-
-    def _get_activator(self):
-        # defines activation algorithm
-        def softmax(x):
-            # Softmax activation
-            return np.exp(x) / np.sum(np.exp(x))
-
-        def relu(x):
-            # ReLU activation
-            return np.maximum(0.0, x)
-
-        def lrelu(x):
-            # Leaky ReLU activation
-            return np.maximum(self._params['beta'] * x, x)
-
-        def sigmoid(x):
-            # Sigmoid activation
-            return (np.exp(-x) + 1.0) ** -1.0
-
-        def tanh(x):
-            # Tanh activation
-            return np.tanh(x)
-
-        def softplus(x):
-            # Softplus activation
-            return np.log(np.exp(self._params['beta'] * x) + 1.0) / self._params['beta']
-
-        def mish(x):
-            # Mish activation
-            return x * np.tanh(np.log(np.exp(self._params['beta'] * x) + 1.0) / self._params['beta'])
-
-        # activation algorithm dictionary
-        act_funcs = {
-            'softmax': softmax,
-            'relu': relu,
-            'lrelu': lrelu,
-            'sigmoid': sigmoid,
-            'tanh': tanh,
-            'softplus': softplus,
-            'mish': mish
-        }
-
-        # return activation algorithm
-        return act_funcs[self._algorithm]
-
-    def _get_d_activator(self):
-        # defines derivative of activation algorithm
-        def d_softmax(x, _=None):
-            # derivative of Softmax activation
-            return (np.sum(np.exp(x)) * np.exp(x) - np.exp(2.0 * x)) / (np.sum(np.exp(x)) ** 2.0) * np.eye(x.shape[1])
-
-        def d_relu(x, _=None):
-            # derivative of ReLU activation
-            return np.where(x > 0.0, 1.0, 0.0) * np.eye(x.shape[1])
-
-        def d_lrelu(x, _=None):
-            # derivative of Leaky ReLU activation
-            return np.where(x > 0.0, 1.0, self._params['beta']) * np.eye(x.shape[1])
-
-        def d_sigmoid(x, _=None):
-            # derivative of Sigmoid activation
-            return np.exp(-x) / ((np.exp(-x) + 1.0) ** 2.0) * np.eye(x.shape[1])
-
-        def d_tanh(x, _=None):
-            # derivative of Tanh activation
-            return np.cosh(x) ** -2.0 * np.eye(x.shape[1])
-
-        def d_softplus(x, _=None):
-            # derivative of Softplus activation
-            return self._params['beta'] * np.exp(self._params['beta'] * x) / (self._params['beta'] * np.exp(self._params['beta'] * x) + self._params['beta']) * np.eye(x.shape[1])
-
-        def d_mish(x, _=None):
-            # derivative of Mish activation
-            return (np.tanh(np.log(np.exp(self._params['beta'] * x) + 1.0) / self._params['beta']) + x * (np.cosh(np.log(np.exp(self._params['beta'] * x) + 1.0) / self._params['beta']) ** -2.0) * (self._params['beta'] * np.exp(self._params['beta'] * x) / (self._params['beta'] * np.exp(self._params['beta'] * x) + self._params['beta']))) * np.eye(x.shape[1])
-
-        # derivative of activation algorithm dictionary
-        d_act_funcs = {
-            'softmax': d_softmax,
-            'relu': d_relu,
-            'lrelu': d_lrelu,
-            'sigmoid': d_sigmoid,
-            'tanh': d_tanh,
-            'softplus': d_softplus,
-            'mish': d_mish
-        }
-
-        # return derivative of activation algorithm
-        return d_act_funcs[self._algorithm]
-
-    @staticmethod
-    def _chain(upstream, downstream, _=None):
-        return upstream @ downstream
-
-    def activate(self, x: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
-        r"""
-        **Activates values with the activation algorithm.**
-
-        This function ideally supports GardenPy Tensors, but is compatible with NumPy Arrays.
-        If x is a Tensor, Activators will automatically track the equation for automatic differentiation.
-
-        Parameters:
-        ----------
-        - **yhat** : (*Union[Tensor, np.ndarray]*)
-            The initial values.
-
-        Returns:
-        ----------
-        - **y** : (*Union[Tensor, np.ndarray]*)
-            The activated values.
-
-        Notes:
-        ----------
-        - y will retain the same datatype as x.
-        - If x is a Tensor, Activators will automatically track the equation for automatic differentiation.
-
-        Example:
-        ----------
-        >>> from gardenpy.utils.objects import Tensor
-        >>> from gardenpy.utils.algorithms import Activators
-        >>> act = Activators('relu')
-        >>> in_value = Tensor([-0.5, 1])
-        >>> out_value = act.activate(in_value)
-        """
-        if not isinstance(x, (Tensor, np.ndarray)):
-            # invalid datatype
-            raise TypeError(f"'x' is not a Tensor or NumPy Array: '{x}'")
-
-        if isinstance(x, Tensor):
-            # calculate result
-            result = Tensor(self._activator(x.to_array()))
-            # track operation
-            x.tracker['opr'].append('activate')
-            x.tracker['drv'].append(self._d_activator)
-            x.tracker['chn'].append(self._chain)
-            # track origin
-            result.tracker['org'] = [x, '_']
-            # track relation
-            x.tracker['rlt'].append(['_', result])
-            # result.id = x.id + 1
-
-            # return result
-            return result
-        else:
-            # return result
-            return self._activator(x)
-
-    def d_activate(self, x: np.ndarray) -> np.ndarray:
-        r"""
-        **Calculates the gradient of x with respect to y.**
-
-        Only supports NumPy Arrays for manual calculation.
-        Use 'nabla' from gardenpy.utils.operators for Tensor support.
-
-        Parameters:
-        ----------
-        - **x** : (*np.ndarray*)
-            The initial values.
-
-        Returns:
-        ----------
-        - **y** : (*np.ndarray*)
-            The gradient of x with respect to y.
-
-        Notes:
-        ----------
-        - Only supports NumPy Arrays.
-            - For Tensor support, use 'nabla' from gardenpy.utils.operators.
-
-        Example:
-        ----------
-        >>> from numpy import array
-        >>> from gardenpy.utils.algorithms import Activators
-        >>> act = Activators('relu')
-        >>> in_value = array([0, 1])
-        >>> out_value = act.activate(in_value)
-        >>> grad_in = act.d_activate(in_value)
-        """
-        if not isinstance(x, np.ndarray):
-            # invalid datatype
-            raise TypeError(f"'x' is not a NumPy Array: '{x}'")
-
-        # return numpy array
-        return self._d_activator(x)
+        self.activate = activate
+        self.d_activate = d_activate
 
 
 class Losses:

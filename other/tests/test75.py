@@ -1,6 +1,13 @@
 import numpy as np
 from gardenpy.utils.objects_2 import Tensor
+from gardenpy.utils.algorithms import Initializers, Activators
 
-tens1 = Tensor(np.abs(np.random.randn(5, 5)))
-tens2 = Tensor(np.abs(np.random.randn(5, 5)))
-tens3 = tens1 * tens2
+g = Activators('lrelu').activate
+init = Initializers('xavier').initialize
+
+tens1 = init(5, 5)
+tens2 = init(5, 5)
+tens3 = g(tens1 * tens2)
+
+grad1 = Tensor.nabla(tens3, tens1)
+print(grad1)

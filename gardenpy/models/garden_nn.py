@@ -17,6 +17,6 @@ class DNN(Base):
     ...
 
 
-class CNN:
+class CNN(Base):
     def __init__(self):
         raise NotImplementedError("CNN has not been implemented yet.")

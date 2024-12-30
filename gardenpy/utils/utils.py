@@ -5,13 +5,11 @@ Includes utility functions for GardenPy.
 Contains a parameter checker.
 """
 
-from typing import Optional
+from typing import Optional, Union
 from types import LambdaType
 import warnings
 
-from .errors import (
-    MissingMethodError
-)
+from .errors import MissingMethodError
 
 
 class ParamChecker:
@@ -27,14 +25,8 @@ class ParamChecker:
         Initializes the ParamChecker class.
 
         Args:
-            name (str, optional):
-                Name of the ParamChecker instance.
-                Used when an error occurs for ease error traceback.
-                Defaults to "Parameters".
-            ikwiad (bool):
-                "I know what I am doing" (ikwiad).
-                If True, remove all warning messages.
-                Defaults to False.
+            name (str, optional), default = 'Parameters': Name of ParamChecker instance for error traceback.
+            ikwiad (bool), default = False: Remove all warning messages ("I know what I am doing" - ikwiad).
         """
         # warning settings
         self._name = str(name)
@@ -70,17 +62,10 @@ class ParamChecker:
         Sets the internal types of the parameter checker.
 
         Args:
-            default (dict):
-                Default parameter values.
-            dtypes (dict):
-                Possible datatypes of parameters.
-            vtypes (dict):
-                Lambda functions for conditionals of inputted parameters.
-            ctypes (dict):
-                Lambda functions for conversion types of passed parameters.
-
-        Returns:
-            None
+            default (dict): Default parameter values.
+            dtypes (dict): Possible datatypes of parameters.
+            vtypes (dict): Lambda functions for conditionals of inputted parameters.
+            ctypes (dict): Lambda functions for conversion types of passed parameters.
 
         Raises:
             TypeError: If dictionaries were of the wrong type.
@@ -88,6 +73,7 @@ class ParamChecker:
         """
         if default is None:
             # default none
+            self._is_set = True
             return None
 
         # validate dicts
@@ -109,19 +95,16 @@ class ParamChecker:
         self._is_set = True
         return None
 
-    def check_params(self, params: Optional[dict] = None, **kwargs) -> dict:
+    def check_params(self, params: Optional[dict] = None, **kwargs) -> Union[dict, None]:
         r"""
         Check parameters.
 
         Args:
-            params (dict, optional):
-                Parameters to be checked.
-            **kwargs:
-                kwargs of the parameters to be checked.
+            params (dict, optional): Parameters to be checked.
+            **kwargs: kwargs of the parameters to be checked.
 
         Returns:
-            dict:
-                The checked parameters.
+            dict: The checked parameters.
 
         Raises:
             MissingMethodError: If default values weren't set.
@@ -131,6 +114,10 @@ class ParamChecker:
         # check for default parameters
         if not self._is_set:
             raise MissingMethodError(f"Default parameters not set for '{self._name}'")
+
+        # check for no parameters
+        if self._default is None:
+            return None
 
         # initialize as default
         final = self._default.copy()

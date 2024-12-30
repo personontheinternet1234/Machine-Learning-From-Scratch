@@ -44,17 +44,10 @@ def progress(idx: int, max_idx: int, *, desc: Optional[str] = None, b_len: int =
     Prints a customizable progress bar for any sort of loop.
 
     Args:
-        idx (int), 0 < idx:
-            Current loop index.
-        max_idx (int), 0 < max_idx:
-            Maximum loop index.
-        desc (str, optional), default = None:
-            Progress bar description.
-        b_len (int, optional), default = 50, 0 < b_len:
-            Bar length.
-
-    Returns:
-        None
+        idx (int), 0 < idx: Current loop index.
+        max_idx (int), 0 < max_idx: Maximum loop index.
+        desc (str, optional), default = None: Progress bar description.
+        b_len (int, optional), default = 50, 0 < b_len: Bar length.
 
     Raises:
         TypeError: If parameters are of the wrong type.
@@ -81,12 +74,10 @@ def convert_time(seconds: Union[float, int]) -> str:
     Converts seconds to hours:minutes:seconds.
 
     Args:
-        seconds (float | int), 0 < seconds:
-            Number of seconds.
+        seconds (float | int), 0 < seconds: Number of seconds.
 
     Returns:
-        str:
-            Time in hours:minutes:seconds format.
+        str: Time in hours:minutes:seconds format.
 
     Raises:
         TypeError: If parameters are of the wrong type.
@@ -106,14 +97,8 @@ def slow_print(text: str, *, delay: Union[float, int] = 0.05) -> None:
     Prints text with delay.
 
     Args:
-        text (str):
-            Text to print.
-
-        delay (float | int), default = 0.05, 0 < delay:
-            Delay between characters in seconds.
-
-    Returns:
-        None
+        text (str): Text to print.
+        delay (float | int), default = 0.05, 0 < delay: Delay between characters in seconds.
 
     Raises:
         TypeError: If parameters are of the wrong type.
@@ -136,13 +121,8 @@ def print_contributors(*, who: Optional[list] = None, cinematic: bool = False) -
     Prints GardenPy contributors in alphabetical order.
 
     Args:
-        who (list, optional), default = all:
-            Type of contributors to print.
-        cinematic (bool), default = False:
-            Cinematic-style printing of contributors.
-
-    Returns:
-        None
+        who (list, optional), default = all: Type of contributors to print.
+        cinematic (bool), default = False: Cinematic-style printing of contributors.
 
     Raises:
         TypeError: If parameters are of the wrong type.
