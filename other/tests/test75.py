@@ -1,13 +1,17 @@
-import numpy as np
+from gardenpy.utils.algorithms import Initializers
 from gardenpy.utils.objects_2 import Tensor
-from gardenpy.utils.algorithms import Initializers, Activators
 
-g = Activators('lrelu').activate
-init = Initializers('xavier').initialize
+init = Initializers('gaussian').initialize
+nabla = Tensor.nabla
+chain = Tensor.chain
 
-tens1 = init(5, 5)
-tens2 = init(5, 5)
-tens3 = g(tens1 * tens2)
-
-grad1 = Tensor.nabla(tens3, tens1)
-print(grad1)
+t1 = init(5, 5)
+t2 = init(5, 5)
+t3 = init(5, 5)
+r1 = t1 * t2
+r2 = r1 + t3
+nabla(r1, t1)
+nabla(r2, t2)
+Tensor.zero_grad(t3)
+print(Tensor.get_instances())
+print(t3.tracker)

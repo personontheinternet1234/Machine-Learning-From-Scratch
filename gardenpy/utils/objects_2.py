@@ -1,8 +1,8 @@
 r"""
 objects.py
 
-Includes GardenPy's objects.
-Contains Tensor class.
+Dependencies:
+    - NumPy (>=1.26.1)
 """
 
 from warnings import warn
@@ -12,34 +12,64 @@ import numpy as np
 
 class Tensor:
     r"""
-    GardenPy's Tensor class, supporting automatic gradient calculation.
+    **GardenPy's Tensor, for automatic gradient calculation and tracking.**
 
-    This Tensor class calculates gradients through the nabla function call, and chain rules gradients through the chain
-    function call.
-    Chain rules are automatically applied in a nabla function call, but computational efficiency can be achieved by
-    using previously calculated gradients and manually signaling chain rules.
+    --------------------------------------------------------------------------------------------------------------------
 
-    Tensors support most dunder methods and necessary linear algebra operations.
+    Tensors are NumPy arrays with internals that track the operations, derivatives, and chain-rule methods of the
+    functions it is run through, as well as its relationship to other arrays and Tensors it is run with.
+    Through this, Tensors can effectively automatically find their relationship to other Tensors, and through reference
+    to the operations run on itself and other Tensors, can automatically calculate its gradient through a single
+    function call, referred to as the Tensor's autograd methods.
+    See :func:`Tensor.nabla` and :func:`Tensor.chain`.
 
-    Both within the class and each instance of the class, tracking of every object occurs.
-    These trackers do not automatically clear and accumulate over time.
+    Internally, the Tensor class tracks all instances, allowing for class-wide function calls.
+    A Tensor's internals can be retrieved, but most cannot be edited directly.
+
+    The functions for calculating and chain-ruling gradients are found within this class.
+
+    --------------------------------------------------------------------------------------------------------------------
+
+    Note:
+        As Tensors track all instances, over time, Tensor instances will accumulate, possibly reducing computational
+        efficiency.
+        Additionally, every instance of a method run on a Tensor is tracked, and if a single Tensor is constantly used,
+        its internal tracker will accumulate these instances that have a significant impact on the computational
+        efficiency of the binary search tree method of relating Tensors for autograd methods.
+        It is recommended to run the zero_grad method every so often to avoid these possible reductions in computational
+        efficiency.
+        See :func:`Tensor.zero_grad`.
+
+    Note:
+        Creation of Tensor methods can be done by referencing one of the Tensor method subclasses.
+        These subclasses automatically take care of anything necessary for gradient tracking for autograd methods.
+        As a result, direct editing of a Tensor's internals isn't necessary and is strongly discouraged.
+        See :class:`Tensor.LoneTensorMethod` and :class:`Tensor.PairedTensorMethod`.
     """
     _instances: List[Union['Tensor', None]] = []
     _ikwiad: bool = False
 
     def __init__(self, obj: any):
         r"""
-        Converts an object into a GardenPy Tensor.
+        **Creation of a GardenPy Tensor instance.**
 
-        This function call will initially convert the object into a NumPy array.
-        Tensor initialization automatically adds the instance to the running Tensor instance list and initializes the
-        proper internals.
+        ----------------------------------------------------------------------------------------------------------------
+
+        All creation instances of a Tensor will be added to the running track of all instances.
+        By default, newly created Tensors will have blank internals and be of the matrix type.
+
+        Objects fed into a Tensor instance will first attempt NumPy array conversion.
+        From there, the NumPy array will be checked to ensure it follows current requirements for Tensors.
+        Tensors currently support arrays of two dimensions consisting of numbers.
+
+        ----------------------------------------------------------------------------------------------------------------
 
         Args:
-            obj (any): Object consisting of numerical values to be converted into a GardenPy Tensor.
+            obj (any): Object to be turned into a Tensor.
+                Object must contain only numbers and be two-dimensional.
 
         Raises:
-            TypeError: If the object didn't only contain numerical values.
+            TypeError: If the object isn't a two-dimensional NumPy array consisting of only numbers.
         """
         # check object
         obj = np.array(obj)
@@ -59,19 +89,35 @@ class Tensor:
         self._is_valid_tensor(itm=self)
         return str(self._tensor)
 
-    r"""
-    Properties.
-    """
+    # Tensor properties.
+    # Tensor properties refer to internal properties of Tensors.
+    # These properties cannot be directly edited from any internal function.
+    # Editing of these properties can be done externally, but is strongly discouraged.
+    # To edit one of these properties, it's recommended to either use a subclass that does it for you, or create a new
+    # subclass that edits the property internally and makes an instance of the subclass externally.
 
     @property
     def id(self) -> Union[str, None]:
         r"""
-        ID of the Tensor instance in hexadecimal.
-        Correlates to the index within the class instance list.
+        **Hexadecimal ID of a Tensor instance.**
+
+        ----------------------------------------------------------------------------------------------------------------
+
+        A Tensor's id correlating to its index within the class instance list in hexadecimal.
         If the instance of the Tensor has been deleted, will return None.
+        IDs are used similarly to pointers, and internally are often used as pointers, since Python doesn't explicitly
+        support the use and modification of pointers.
+
+        ----------------------------------------------------------------------------------------------------------------
 
         Returns:
             str | NoneType: Current Tensor ID.
+                Returns None if the function is used on a deleted Tensor.
+
+        Raises:
+            UserWarning: If the function is used on a deleted Tensor.
+                Turned off by toggling ikwiad.
+                See :func:`Tensor.ikwiad`.
         """
         if self._is_valid_tensor(itm=self):
             return hex(self._id)
@@ -81,7 +127,14 @@ class Tensor:
     @property
     def type(self) -> str:
         r"""
-        Tensor type, ranging from 'mat' for matrices, 'grad' for gradients, and 'deleted' for deleted instances.
+        **String of the type of Tensor.**
+
+        ----------------------------------------------------------------------------------------------------------------
+
+        A Tensor's type, used for checking the validity of operations and internal setup.
+        ranges from 'mat' for matrices, 'grad' for gradients, and 'deleted' for deleted instances.
+
+        ----------------------------------------------------------------------------------------------------------------
 
         Returns:
             str: Tensor type.
@@ -91,12 +144,52 @@ class Tensor:
     @property
     def tracker(self) -> Union[dict, None]:
         r"""
-        Gets the internal Tensor tracker, referencing pointers to each object or the Tensor ID if applicable.
-        The tracker keeps track of the item ID, forward operations, derivative operations, chain-rule operations, object
-        relationships, and origin relationships.
+        **Tensor's internal tracker.**
+
+        ----------------------------------------------------------------------------------------------------------------
+
+        A Tensor's tracker contains all of a Tensor's relationships to everything it has been passed through.
+        It's vital for the gradient and chain-rule calculations.
+        Each specific type of Tensor has a slightly different tracker due to the nature of forward and backward methods.
+        As a result, different types of dictionaries are passed through
+
+        The tracker keeps track of a few things necessary for autograd.
+
+        First, it keeps track of all the operations it has gone through, referenced in the tracker as 'opr'.
+        These operation references are stored as strings and aren't used for any internal computation.
+        Instead, they are for user convenience in debugging.
+
+        Second, it keeps track of the derivative of the operations it has gone through, referenced in the tracker as
+        'drv'.
+        These derivative references are stored as functions and are vital for internal computation.
+
+        Third, it keeps track of the chain-rule of the operations it has gone through, referenced in the tracker as
+        'chn'.
+        These chain-rule references are stored as functions and are vital for internal computation.
+
+        Fourth, it keeps track of the relations of the operations it has gone through, referenced in the tracker as
+        'rlt'.
+        These relation references are stored as a Tensor or array and are returned as an ID or pointer.
+        They are necessary for gradient calculation and tracking in the autograd methods.
+
+        Fifth, it keeps track of the place the Tensor originated from, referenced in the tracker as 'org'.
+        This origin reference is stored as a Tensor or array and is returned as an ID or pointer.
+        It is necessary for gradient tracking in the autograd methods.
+
+        ----------------------------------------------------------------------------------------------------------------
 
         Returns:
-            dict | NoneType: Tensor tracker.
+            dict | NoneType: Dictionary of a Tensor's tracker and ID.
+
+        Raises:
+            UserWarning: If the function is used on a deleted Tensor.
+                Turned off by toggling ikwiad.
+                See :func:`Tensor.ikwiad`.
+
+        Note:
+            This tracker temporarily turns on ikwiad to allow the internal of gradients to be printed after the gradient
+            tracking has been reset.
+            After the tracker has been received, ikwiad is turned back to what the user set it as.
         """
         # turn on ikwiad
         user_ikwiad = Tensor._ikwiad
@@ -127,10 +220,17 @@ class Tensor:
     @property
     def array(self) -> Union[np.ndarray, None]:
         r"""
-        Tensor NumPy Value.
+        **Tensor's internal NumPy array.**
+
+        ----------------------------------------------------------------------------------------------------------------
 
         Returns:
-            np.ndarray | NoneType: NumPy array value of Tensor.
+            np.ndarray | NoneType: Tensor's internal NumPy array.
+
+        Raises:
+            UserWarning: If the function is used on a deleted Tensor.
+                Turned off by toggling ikwiad.
+                See :func:`Tensor.ikwiad`.
         """
         self._is_valid_tensor(itm=self)
         return self._tensor
@@ -235,7 +335,7 @@ class Tensor:
         if itm._type == 'deleted':
             # deleted Tensor
             if not Tensor._ikwiad:
-                warn("\nDetected deleted Tensor reference", UserWarning)
+                warn("Detected deleted Tensor reference", UserWarning)
             return False
         else:
             # non-deleted Tensor
@@ -260,7 +360,11 @@ class Tensor:
         elif isinstance(itm, int):
             # check index reference
             if len(Tensor._instances) <= itm:
-                raise ValueError("Reference brought up outside Tensor instance list")
+                raise ValueError(
+                    "Reference brought up outside Tensor instance list"
+                    f"Currently, instance list only contains {len(Tensor._instances)} items"
+                    f"A reference has been made to the {itm} index"
+                )
             # use index reference
             itm_id = itm
             itm = Tensor._instances[itm_id]
@@ -733,7 +837,7 @@ class Tensor:
         return Tensor._Add()(self, other)
 
     class _Sub(PairedTensorMethod):
-        r"""Subtraction built-in method."""
+        r"""Mathematical subtraction method."""
         def __init__(self):
             super().__init__(prefix="sub")
 

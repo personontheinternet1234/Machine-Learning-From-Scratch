@@ -140,10 +140,10 @@ def print_contributors(*, who: Optional[list] = None, cinematic: bool = False) -
             ["Kamalau Kimata", "Punahou School CO '25", "<kkimata25@punahou.edu>"]
         ],
         'thanks': [
-            ['Justin Johnson', 'The University of Michigan', 'his thorough video lectures'],
-            ['Josh Starmer', 'StatQuest', 'his informative videos'],
-            ['The PyTorch Team', 'PyTorch', 'their detailed documentation and resources'],
-            ['Grant Sanderson', '3Blue1Brown', 'his inspirational videos']
+            ['Justin Johnson', 'The University of Michigan'],
+            ['Josh Starmer', 'StatQuest'],
+            ['The PyTorch Team', 'PyTorch'],
+            ['Grant Sanderson', '3Blue1Brown']
         ]
     }
 
@@ -205,9 +205,7 @@ def print_contributors(*, who: Optional[list] = None, cinematic: bool = False) -
                 print(f"{ansi['reset']}", end='')
                 slow_print(f"{row[0]} ", delay=0.05)
                 print(f"{ansi['white']}", end='')
-                slow_print(f"from {row[1]} ", delay=0.05)
-                print(f"{ansi['bright_black']}", end='')
-                slow_print(f"for {row[2]}", delay=0.05)
+                slow_print(f"from {row[1]}", delay=0.05)
             print(f"{ansi['reset']}", end='\n')
             time.sleep(0.5)
         print(f"{ansi['white']}", end='')
@@ -227,5 +225,5 @@ def print_contributors(*, who: Optional[list] = None, cinematic: bool = False) -
         if 'thanks' in who:
             print(f"{ansi['bold']}Special Thanks To{ansi['reset']}", end='\n')
             for row in contributors['thanks']:
-                print(f"    {ansi['reset']}{row[0]} {ansi['white']}from {row[1]} {ansi['bright_black']}for {row[2]}{ansi['reset']}")
+                print(f"    {ansi['reset']}{row[0]} {ansi['white']}from {row[1]}{ansi['reset']}")
     return None
