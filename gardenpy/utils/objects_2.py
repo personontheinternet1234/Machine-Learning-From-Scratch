@@ -5,7 +5,8 @@ Includes GardenPy's objects.
 Contains Tensor class.
 """
 
-from typing import Dict, List, Optional, Union
+from warnings import warn
+from typing import Dict, List, Tuple, Optional, Union
 import numpy as np
 
 
@@ -24,6 +25,7 @@ class Tensor:
     These trackers do not automatically clear and accumulate over time.
     """
     _instances = []
+    _ikwiad = False
 
     def __init__(self, obj: any):
         r"""
@@ -54,6 +56,7 @@ class Tensor:
         Tensor._instances.append(self)
 
     def __repr__(self):
+        self._is_valid_tensor(itm=self)
         return str(self._tensor)
 
     r"""
@@ -61,7 +64,7 @@ class Tensor:
     """
 
     @property
-    def id(self) -> str:
+    def id(self) -> Union[str, None]:
         r"""
         ID of the Tensor instance in hexadecimal.
         Correlates to the index within the class instance list.
@@ -70,7 +73,10 @@ class Tensor:
         Returns:
             str | NoneType: Current Tensor ID.
         """
-        return hex(self._id)
+        if self._is_valid_tensor(itm=self):
+            return hex(self._id)
+        else:
+            return None
 
     @property
     def type(self) -> str:
@@ -83,37 +89,50 @@ class Tensor:
         return self._type
 
     @property
-    def tracker(self) -> dict:
+    def tracker(self) -> Union[dict, None]:
         r"""
         Gets the internal Tensor tracker, referencing pointers to each object or the Tensor ID if applicable.
         The tracker keeps track of the item ID, forward operations, derivative operations, chain-rule operations, object
         relationships, and origin relationships.
 
         Returns:
-            dict: Tensor tracker.
+            dict | NoneType: Tensor tracker.
         """
+        # turn on ikwiad
+        user_ikwiad = Tensor._ikwiad
+        Tensor._ikwiad = True
+        # get tracker reference
         alt_tracker = self._tracker
 
-        alt_tracker['rlt'] = [
-            [itm[0].id if isinstance(itm[0], Tensor) else hex(id(itm[0])),
-             itm[1].id if isinstance(itm[1], Tensor) else hex(id(itm[1]))]
-            for itm in alt_tracker['rlt']
-        ]
-        alt_tracker['org'] = [
-            itm.id if isinstance(itm, Tensor) else hex(id(itm))
-            for itm in alt_tracker['org']
-        ]
+        if not self._is_valid_tensor(itm=self):
+            return None
+        elif self._type == 'mat':
+            # matrix tracker
+            alt_tracker['rlt'] = [
+                [itm[0].id if isinstance(itm[0], Tensor) else hex(id(itm[0])),
+                 itm[1].id if isinstance(itm[1], Tensor) else hex(id(itm[1]))]
+                for itm in alt_tracker['rlt']
+            ]
+            alt_tracker['org'] = [itm.id if isinstance(itm, Tensor) else hex(id(itm)) for itm in alt_tracker['org']]
+        elif self._type == 'grad':
+            # gradient tracker
+            alt_tracker['rlt'] = [itm.id if isinstance(itm, Tensor) else hex(id(itm)) for itm in alt_tracker['rlt']]
+            alt_tracker['org'] = alt_tracker['org'].id
 
+        # return to user ikwiad
+        Tensor._ikwiad = user_ikwiad
+        # return tracker
         return {'itm': self.id, **alt_tracker}
 
     @property
-    def array(self) -> np.ndarray:
+    def array(self) -> Union[np.ndarray, None]:
         r"""
         Tensor NumPy Value.
 
         Returns:
-            np.ndarray: NumPy array value of Tensor.
+            np.ndarray | NoneType: NumPy array value of Tensor.
         """
+        self._is_valid_tensor(itm=self)
         return self._tensor
 
     r"""
@@ -122,16 +141,18 @@ class Tensor:
 
     def instance_grad_reset(self) -> None:
         # reset tensor tracker
-        self._tracker: Dict[Union[str, List[any], Tensor]] = {'opr': [], 'drv': [], 'chn': [], 'rlt': [], 'org': []}
+        if self._is_valid_tensor(itm=self):
+            self._tracker: Dict[Union[str, List[any], Tensor]] = {'opr': [], 'drv': [], 'chn': [], 'rlt': [], 'org': []}
         return None
 
     def instance_reset(self) -> None:
         # reset tensor
-        Tensor._instances[self._id] = None
-        self._id = None
-        self._tensor = None
-        self._type = 'deleted'
-        self._tracker = None
+        if self._is_valid_tensor(itm=self):
+            Tensor._instances[self._id] = None
+            self._id = None
+            self._tensor = None
+            self._type = 'deleted'
+            self._tracker = None
         return None
 
     r"""
@@ -144,58 +165,38 @@ class Tensor:
         return [instance.id if instance is not None else None for instance in cls._instances]
 
     @classmethod
-    def reset(cls) -> None:
-        # reset instance
-        for instance in cls._instances:
+    def reset(cls, *args: Union['Tensor', str, int]) -> None:
+        # find saved instances
+        args = list(args)
+        for i, arg in enumerate(args):
+            _, args[i] = cls._get_tensor_reference(arg)
+        # reset non-saved instance
+        non_saved = [itm for i, itm in enumerate(cls._instances) if i not in args]
+        for instance in non_saved:
             instance.instance_reset()
-        cls._instances = []
+        cls.clear_removed()
         return None
 
     @classmethod
     def grad_reset(cls) -> None:
+        # turn on ikwiad
+        user_ikwiad = Tensor._ikwiad
+        Tensor._ikwiad = True
         for instance in cls._instances:
             # reset tensor tracker
             instance.instance_grad_reset()
             if instance.type == 'grad':
                 # reset gradients
                 instance.instance_reset()
+        # return to user ikwiad
+        Tensor._ikwiad = user_ikwiad
         return None
 
     @classmethod
     def instance_replace(cls, replaced: Union['Tensor', str, int], replacer: Union['Tensor', str, int]) -> None:
-        # attempt hex to int conversion
-        try:
-            replaced = int(replaced, 16)
-        finally:
-            pass
-        try:
-            replacer = int(replacer, 16)
-        finally:
-            pass
-
-        # get replaced tensor
-        if isinstance(replaced, Tensor) and replaced.type != 'deleted':
-            # use object reference
-            replaced_id = replaced._id
-        elif isinstance(replaced, int) and replaced < len(cls._instances):
-            # use index reference
-            replaced_id = replaced
-            replaced = cls._instances[replaced_id]
-        else:
-            # invalid reference
-            raise ValueError("'replaced' must reference a non-deleted Tensor")
-
-        # get replacer tensor
-        if isinstance(replacer, Tensor) and replacer.type != 'deleted':
-            # use object reference
-            replacer_id = replacer._id
-        elif isinstance(replacer, int) and replacer < len(cls._instances):
-            # use index reference
-            replacer_id = replacer
-            replacer = cls._instances[replacer_id]
-        else:
-            # invalid reference
-            raise ValueError("'replacer' must reference a non-deleted Tensor")
+        # get tensors and ids
+        replaced, replaced_id = cls._get_tensor_reference(itm=replaced)
+        replacer, replacer_id = cls._get_tensor_reference(itm=replacer)
 
         # reset replaced tensor
         replaced.instance_reset()
@@ -215,9 +216,65 @@ class Tensor:
         return None
 
     @classmethod
-    def zero_grad(cls) -> None:
+    def zero_grad(cls, *args: Union['Tensor', str, int]) -> None:
+        # reset instances
+        cls.reset(*args)
+        # reset gradient tracking
         cls.grad_reset()
-        cls.clear_removed()
+
+    @classmethod
+    def ikwiad(cls, ikwiad: bool) -> None:
+        cls._ikwiad = bool(ikwiad)
+
+    r"""
+    Convenience methods.
+    """
+
+    @staticmethod
+    def _is_valid_tensor(itm: 'Tensor') -> bool:
+        if itm._type == 'deleted':
+            # deleted Tensor
+            if not Tensor._ikwiad:
+                warn("\nYou are referencing a deleted Tensor", UserWarning)
+            return False
+        else:
+            # non-deleted Tensor
+            return True
+
+    @staticmethod
+    def _get_tensor_reference(itm: Union['Tensor', str, int]) -> Tuple['Tensor', int]:
+        # turn on ikwiad
+        user_ikwiad = Tensor._ikwiad
+        Tensor._ikwiad = True
+        # attempt hex conversion
+        try:
+            itm = int(itm, 16)
+        except TypeError:
+            pass
+        except ValueError:
+            pass
+
+        if isinstance(itm, Tensor):
+            # use object reference
+            itm_id = itm._id
+        elif isinstance(itm, int):
+            # check index reference
+            if len(Tensor._instances) <= itm:
+                raise ValueError("Reference brought up outside Tensor instance list")
+            # use index reference
+            itm_id = itm
+            itm = Tensor._instances[itm_id]
+        else:
+            # invalid reference
+            raise TypeError("Invalid Tensor reference type")
+        if not Tensor._is_valid_tensor(itm=itm):
+            # invalid tensor
+            raise TypeError("Reference brought up with deleted Tensors")
+
+        # return to user ikwiad
+        Tensor._ikwiad = user_ikwiad
+        # return items
+        return itm, itm_id
 
     r"""
     Tensor tracking methods.
@@ -288,7 +345,7 @@ class Tensor:
                 Tensor: Output Tensor.
             """
             # check tensor
-            if not (isinstance(main, Tensor)) or main.type == 'deleted':
+            if not (isinstance(main, Tensor)) or main._type == 'deleted':
                 raise TypeError("'main' must be a non-deleted Tensor")
             # calculate result
             result = Tensor(self.forward(main=main._tensor))
@@ -373,7 +430,7 @@ class Tensor:
                 Tensor: Output Tensor.
             """
             # check tensor
-            if not (isinstance(main, Tensor)) or main.type == 'deleted':
+            if not (isinstance(main, Tensor)) or main._type == 'deleted':
                 raise TypeError("'main' must be a non-deleted Tensor")
 
             # set array
@@ -526,19 +583,19 @@ class Tensor:
 
         @staticmethod
         def backward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
-            return ...
+            ...
 
         @staticmethod
         def backward_o(other: np.ndarray, main: np.ndarray) -> np.ndarray:
-            return ...
+            ...
 
         @staticmethod
         def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return ...
+            return down @ up
 
         @staticmethod
         def chain_o(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return ...
+            return down @ up
 
         def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
             return self.call(main, other)
@@ -566,11 +623,11 @@ class Tensor:
 
         @staticmethod
         def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down * up
+            return down @ up
 
         @staticmethod
         def chain_o(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down * up
+            return down @ up
 
         def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
             return self.call(main, other)
@@ -598,11 +655,11 @@ class Tensor:
 
         @staticmethod
         def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down * up
+            return down @ up
 
         @staticmethod
         def chain_o(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down * up
+            return down @ up
 
         def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
             return self.call(main, other)
@@ -630,11 +687,11 @@ class Tensor:
 
         @staticmethod
         def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down * up
+            return down @ up
 
         @staticmethod
         def chain_o(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down * up
+            return down @ up
 
         def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
             return self.call(main, other)
@@ -662,11 +719,11 @@ class Tensor:
 
         @staticmethod
         def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down * up
+            return down @ up
 
         @staticmethod
         def chain_o(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down * up
+            return down @ up
 
         def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
             return self.call(main, other)
@@ -694,11 +751,11 @@ class Tensor:
 
         @staticmethod
         def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down * up
+            return down @ up
 
         @staticmethod
         def chain_o(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down * up
+            return down @ up
 
         def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
             return self.call(main, other)
