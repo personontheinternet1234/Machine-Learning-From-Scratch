@@ -6,7 +6,7 @@ Algorithms can be easily added within each method.
 Contains an initializer, activator, loss, and optimizer.
 """
 
-from typing import Tuple, Optional, Union
+from typing import List, Tuple, Optional, Union
 import warnings
 import numpy as np
 
@@ -22,7 +22,7 @@ class Initializers:
     It automatically creates GardenPy Tensors, but these can be converted into NumPy arrays if wanted.
     Initialization methods can be added with relative ease using the base structure provided within this class.
     """
-    _methods = [
+    _methods: List[str] = [
         'xavier',
         'gaussian',
         'uniform'
@@ -175,7 +175,7 @@ class Activators:
     If using Tensors, the derivatives will be automatically utilized during a nabla call.
     Activation methods can be added with relative ease using the base structure provided within this class.
     """
-    _methods = [
+    _methods: List[str] = [
         'softmax',
         'relu',
         'lrelu',

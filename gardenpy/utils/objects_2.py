@@ -24,8 +24,8 @@ class Tensor:
     Both within the class and each instance of the class, tracking of every object occurs.
     These trackers do not automatically clear and accumulate over time.
     """
-    _instances = []
-    _ikwiad = False
+    _instances: List[Union['Tensor', None]] = []
+    _ikwiad: bool = False
 
     def __init__(self, obj: any):
         r"""
@@ -55,7 +55,7 @@ class Tensor:
         # update instances
         Tensor._instances.append(self)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         self._is_valid_tensor(itm=self)
         return str(self._tensor)
 
@@ -235,7 +235,7 @@ class Tensor:
         if itm._type == 'deleted':
             # deleted Tensor
             if not Tensor._ikwiad:
-                warn("\nYou are referencing a deleted Tensor", UserWarning)
+                warn("\nDetected deleted Tensor reference", UserWarning)
             return False
         else:
             # non-deleted Tensor
