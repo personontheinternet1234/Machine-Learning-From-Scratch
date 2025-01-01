@@ -1,3 +1,3 @@
-from gardenpy.utils.helper_functions import print_contributors
-
-print_contributors(cinematic=False)
+x = 5
+y = divmod(x, 1)
+print(y[-1])

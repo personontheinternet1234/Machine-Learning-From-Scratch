@@ -341,8 +341,8 @@ class Tensor:
             # non-deleted Tensor
             return True
 
-    @staticmethod
-    def _get_tensor_reference(itm: Union['Tensor', str, int]) -> Tuple['Tensor', int]:
+    @classmethod
+    def _get_tensor_reference(cls, itm: Union['Tensor', str, int]) -> Tuple['Tensor', int]:
         # turn on ikwiad
         user_ikwiad = Tensor._ikwiad
         Tensor._ikwiad = True
@@ -359,19 +359,19 @@ class Tensor:
             itm_id = itm._id
         elif isinstance(itm, int):
             # check index reference
-            if len(Tensor._instances) <= itm:
+            if len(cls._instances) <= itm:
                 raise ValueError(
                     "Reference brought up outside Tensor instance list"
-                    f"Currently, instance list only contains {len(Tensor._instances)} items"
+                    f"Currently, instance list only contains {len(cls._instances)} items"
                     f"A reference has been made to the {itm} index"
                 )
             # use index reference
             itm_id = itm
-            itm = Tensor._instances[itm_id]
+            itm = cls._instances[itm_id]
         else:
             # invalid reference
             raise TypeError("Invalid Tensor reference type")
-        if not Tensor._is_valid_tensor(itm=itm):
+        if not cls._is_valid_tensor(itm=itm):
             # invalid tensor
             raise TypeError("Reference brought up with deleted Tensors")
 
@@ -409,7 +409,7 @@ class Tensor:
             Returns:
                 np.ndarray: Result.
             """
-            raise NotImplementedError("'chain' must be implemented in a subclass")
+            raise NotImplementedError("'chain' has not been implemented in a subclass")
 
     class LoneTensorMethod(TensorMethod):
         @staticmethod
@@ -423,7 +423,7 @@ class Tensor:
             Returns:
                 np.ndarray: Result.
             """
-            raise NotImplementedError("'forward' must be implemented in a subclass")
+            raise NotImplementedError("'forward' has not been implemented in a subclass")
 
         @staticmethod
         def backward(main: np.ndarray) -> np.ndarray:
@@ -436,7 +436,7 @@ class Tensor:
             Returns:
                 np.ndarray: Result.
             """
-            raise NotImplementedError("'backward' must be implemented in a subclass")
+            raise NotImplementedError("'backward' has not been implemented in a subclass")
 
         def call(self, main: 'Tensor') -> 'Tensor':
             r"""
@@ -478,7 +478,7 @@ class Tensor:
             Returns:
                 np.ndarray: Result.
             """
-            raise NotImplementedError("'forward' must be implemented in a subclass")
+            raise NotImplementedError("'forward' has not been implemented in a subclass")
 
         @staticmethod
         def backward(main: np.ndarray, other: Optional[np.ndarray]) -> np.ndarray:
@@ -492,7 +492,7 @@ class Tensor:
             Returns:
                 np.ndarray: Result.
             """
-            raise NotImplementedError("'backward' must be implemented in a subclass")
+            raise NotImplementedError("'backward' has not been implemented in a subclass")
 
         @staticmethod
         def backward_o(other: np.ndarray, main: np.ndarray) -> np.ndarray:
@@ -506,7 +506,7 @@ class Tensor:
             Returns:
                 np.ndarray: Result.
             """
-            raise NotImplementedError("'backward_o' must be implemented in a subclass")
+            raise NotImplementedError("'backward_o' has not been implemented in a subclass")
 
         @staticmethod
         def chain_o(down: np.ndarray, up: np.ndarray) -> np.ndarray:
@@ -520,7 +520,7 @@ class Tensor:
             Returns:
                 np.ndarray: Result.
             """
-            raise NotImplementedError("'chain_o' must be implemented in a subclass")
+            raise NotImplementedError("'chain_o' has not been implemented in a subclass")
 
         def call(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
             r"""

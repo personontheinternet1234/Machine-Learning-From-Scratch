@@ -474,358 +474,207 @@ class Activators:
 
 
 class Losses:
-    r"""
-    **Loss algorithms for GardenPy.**
+    _methods: List[str] = [
+        'centropy',
+        'focal',
+        'ssr',
+        'savr'
+    ]
 
-    These algorithms ideally support GardenPy Tensors, but are compatible with NumPy Arrays.
-    With NumPy Arrays, there will be no tracking.
+    def __init__(self, method: str, *, hyperparameters: Optional[dict] = None, ikwiad: bool = False, **kwargs):
+        # allowed methods
+        self._possible_methods = Losses._methods
 
-    Attributes:
-    ----------
-    **algorithm** : (*str*)
-        The loss algorithm.
-    **parameters** : (*dict*)
-        The parameters for the loss algorithm.
+        # internals
+        self._ikwiad = bool(ikwiad)
+        self._method, self._hyperparams = self._get_method(method=method, hyperparams=hyperparameters, **kwargs)
 
-    Methods:
-    ----------
-    **__init__(algorithm: str, *, parameters: dict = None, **kwargs)** :
-        Instantiates the object with the specified parameters.
+        # set method
+        self._set_loss()
 
-    **loss(yhat: Union[Tensor, np.ndarray], y: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]** :
-        Calculates loss based on the specified outputs.
-        The loss will retain the same datatype as yhat.
-        If yhat is a Tensor, Losses will automatically track the equation for automatic differentiation.
+    @classmethod
+    def methods(cls):
+        return cls._methods
 
-    **d_loss(yhat: np.ndarray, y: np.ndarray) -> np.ndarray** :
-        Calculates derivative of the loss based on the specified outputs.
-        Only supports NumPy Arrays for manual calculation.
-        Use 'nabla' from gardenpy.utils.operators for Tensor support.
-
-    Notes:
-    ----------
-    - Losses supports automatic differentiation built-in with Tensors.
-        - d_loss should never be called when using Tensors.
-        - Use 'nabla' from gardenpy.utils.operators for Tensor support.
-
-    - Losses supports GardenPy Tensors; however, Losses also works with NumPy Arrays.
-
-    - Refer to GardenPy's repository or GardenPy's docs for more information.
-    """
-    def __init__(self, algorithm: str, *, parameters: dict = None, **kwargs):
-        r"""
-        **Loss initialization with defined parameters.**
-
-        Parameters:
-        ----------
-        **algorithm** : (*str*) {'*centropy*', '*ssr*', '*savr*'}
-            The loss algorithm.
-
-            - *centropy* : Categorical Cross-Entropy.
-            - *ssr*: Sum of the Squared Residuals.
-            - *savr*: Sum of the Absolute Value Residuals.
-
-        **parameters** (*dict*, *optional*) :
-            The parameters for the loss algorithm.
-
-            Currently, no loss algorithms accept parameters.
-
-        ****kwargs** (*any*, *optional*) :
-            The parameters for the loss algorithm with keyword arguments if desired.
-
-            To set a parameter, add a keyword argument that refers to one of the parameters.
-
-        Notes:
-        ----------
-        - Any parameters not specified will be set to their default values.
-
-        - Parameters that are specified but not used within the specified algorithm will be discarded.
-            - The user will receive a warning when this occurs.
-
-        Example:
-        -----
-        >>> from gardenpy.utils.algorithms import Losses
-        >>> optim = Losses('centropy')
-        """
-        # loss algorithms
-        self.algorithms = [
-            'centropy',
-            'focal',
-            'ssr',
-            'savr'
-        ]
-
-        # internal loss algorithm parameters
-        self._algorithm = self._check_algorithm(algorithm)
-        self._params = self._get_params(parameters, kwargs)
-
-        # loss algorithms
-        self._loss = self._get_loss()
-        self._d_loss = self._get_d_loss()
-
-    def _check_algorithm(self, algorithm):
-        # checks whether the loss algorithm is valid
-        if algorithm in self.algorithms:
-            # valid loss algorithm
-            return algorithm
-        else:
-            # invalid loss algorithm
-            raise ValueError(
-                f"Invalid loss algorithm: '{algorithm}'\n"
-                f"Choose from: '{[alg for alg in self.algorithms]}'"
-            )
-
-    def _get_params(self, params, kwargs):
-        # defines loss algorithm parameters
-        # default loss algorithm parameters
-        default = {
-            'centropy': None,
-            'focal': {
-                'alpha': 1.0,
-                'gamma': 2.0
+    def _get_method(self, method: str, hyperparams: dict, **kwargs) -> Tuple[str, dict]:
+        # hyperparameter reference
+        default_hyperparams = {
+            'centropy': {
+                'default': {'epsilon': 1e-10},
+                'dtypes': {'epsilon': float},
+                'vtypes': {'epsilon': lambda x: 0.0 < x < 1.0},
+                'ctypes': {'epsilon': lambda x: x}
             },
-            'ssr': None,
-            'savr': None
-        }
-        # default loss algorithm parameter datatypes
-        dtypes = {
             'focal': {
-                'alpha': (float, int),
-                'gamma': (float, int)
-            }
-        }
-        # default loss algorithm parameter value types
-        vtypes = {
-            'focal': {
-                'alpha': lambda x: 0.0 < x <= 1.0,
-                'gamma': lambda x: 0.0 <= x
-            }
-        }
-        # default loss algorithm parameter conversion types
-        ctypes = {
-            'focal': {
-                'alpha': lambda x: float(x),
-                'gamma': lambda x: float(x)
+                'default': {
+                    'alpha': 1.0,
+                    'gamma': 1.0,
+                    'epsilon': 1e-10
+                },
+                'dtypes': {
+                    'alpha': (float, int),
+                    'gamma': (float, int),
+                    'epsilon': float
+                },
+                'vtypes': {
+                    'alpha': lambda x: 0.0 < x <= 1.0,
+                    'gamma': lambda x: 0.0 <= x and divmod(x, 1)[-1] == 0,
+                    'epsilon': lambda x: 0.0 < x < 1.0
+                },
+                'ctypes': {
+                    'alpha': lambda x: float(x),
+                    'gamma': lambda x: float(x),
+                    'epsilon': lambda x: x
+                }
+            },
+            'ssr': {
+                'default': None,
+                'dtypes': None,
+                'vtypes': None,
+                'ctypes': None
+            },
+            'savr': {
+                'default': None,
+                'dtypes': None,
+                'vtypes': None,
+                'ctypes': None
             }
         }
 
-        # instantiate parameter dictionary
-        prms = default[self._algorithm]
-
-        # combine keyword arguments and parameters
-        if params and kwargs:
-            params.update(kwargs)
-        elif kwargs:
-            params = kwargs
-
-        if params and (prms is not None) and isinstance(params, dict):
-            # set defined parameter
-            for prm in params:
-                if prm not in prms:
-                    # invalid parameter
-                    print()
-                    warnings.warn(
-                        f"\nInvalid parameter for '{self._algorithm}': '{prm}'\n"
-                        f"Choose from: '{[prm for prm in prms]}'",
-                        UserWarning
-                    )
-                elif prm in prms and not isinstance(params[prm], dtypes[self._algorithm][prm]):
-                    # invalid datatype for parameter
-                    raise TypeError(
-                        f"Invalid datatype for '{self._algorithm}': '{prm}'\n"
-                        f"Choose from: '{dtypes[self._algorithm][prm]}'"
-                    )
-                elif prm in prms and not (vtypes[self._algorithm][prm](params[prm])):
-                    # invalid value for parameter
-                    raise TypeError(
-                        f"Invalid value for '{self._algorithm}': '{prm}'\n"
-                        f"Conditional: '{vtypes[self._algorithm][prm]}'"
-                    )
-                else:
-                    # valid parameter
-                    prms[prm] = ctypes[self._algorithm][prm](params[prm])
-        elif params and isinstance(params, dict):
-            # parameters not taken
-            print()
-            warnings.warn(f"\n'{self._algorithm}' does not take parameters", UserWarning)
-        elif params:
-            # invalid data type
-            raise TypeError(
-                f"'parameters' is not a dictionary: '{params}'\n"
-                f"Choose from: '{[prm for prm in prms]}'"
+        # check method
+        if not isinstance(method, str):
+            raise TypeError("'method' must be a string")
+        if method not in Losses._methods:
+            raise ValueError(
+                f"Invalid method: {method}\n"
+                f"Choose from: {Losses._methods}"
             )
 
-        # return parameters
-        return prms
+        # check hyperparameters
+        checker = ParamChecker(name=f'{method} hyperparameters', ikwiad=self._ikwiad)
+        checker.set_types(**default_hyperparams[method])
 
-    def _get_loss(self):
-        # defines loss algorithm
-        def centropy(yhat, y):
-            # Cross-Entropy loss
-            return -np.sum(y * np.log(yhat))
+        # set internal hyperparameters
+        return method, checker.check_params(hyperparams, **kwargs)
 
-        def focal(yhat, y):
-            # Focal loss
-            return -np.sum(self._params['alpha'] * (y - yhat) ** self._params['gamma'] * np.log(yhat))
+    def _set_loss(self):
+        # hyperparameter reference
+        h = self._hyperparams
 
-        def ssr(yhat, y):
-            # Sum of the Squared Residuals loss
-            return np.sum((y - yhat) ** 2.0)
+        class _CrossEntropy(Tensor.PairedTensorMethod):
+            r"""Cross Entropy built-in method."""
+            def __init__(self):
+                super().__init__(prefix="centropy")
 
-        def savr(yhat, y):
-            # Sum of the Absolute Valued Residuals loss
-            return np.sum(np.abs(y - yhat))
+            @staticmethod
+            def forward(y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
+                return np.array([[-np.sum(y * np.log(yhat + h['epsilon']))]])
 
-        # loss algorithm dictionary
-        loss_funcs = {
-            'centropy': centropy,
-            'focal': focal,
-            'ssr': ssr,
-            'savr': savr
+            @staticmethod
+            def backward(y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
+                return -y / (yhat + h['epsilon'])
+
+            @staticmethod
+            def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+                return down @ up
+
+            def __call__(self, main: Tensor, other: Tensor) -> Tensor:
+                return self.call(main, other)
+
+        class _FocalLoss(Tensor.PairedTensorMethod):
+            r"""Focal loss built-in method."""
+            def __init__(self):
+                super().__init__(prefix="focal")
+
+            @staticmethod
+            def forward(y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
+                return np.array([[-np.sum(h['alpha'] * (y - yhat) ** h['gamma'] * np.log(yhat + h['epsilon']))]])
+
+            @staticmethod
+            def backward(y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
+                return -h["alpha"] * (y - yhat) ** h["gamma"] / (yhat + h['epsilon']) - h["alpha"] * h["gamma"] * (y - yhat) ** (h["gamma"] - 1.0) * np.log(yhat + h['epsilon'])
+
+            @staticmethod
+            def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+                return down @ up
+
+            def __call__(self, main: Tensor, other: Tensor) -> Tensor:
+                return self.call(main, other)
+
+        class _SumOfSquaredResiduals(Tensor.PairedTensorMethod):
+            r"""Sum of the squared residuals built-in method."""
+            def __init__(self):
+                super().__init__(prefix="ssr")
+
+            @staticmethod
+            def forward(y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
+                return np.array([[np.sum((y - yhat) ** 2.0)]])
+
+            @staticmethod
+            def backward(y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
+                return -2.0 * (y - yhat)
+
+            @staticmethod
+            def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+                return down @ up
+
+            def __call__(self, main: Tensor, other: Tensor) -> Tensor:
+                return self.call(main, other)
+
+        class _SumOfAbsoluteValueResiduals(Tensor.PairedTensorMethod):
+            r"""Sum of the absolute value residuals built-in method."""
+            def __init__(self):
+                super().__init__(prefix="savr")
+
+            @staticmethod
+            def forward(y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
+                return np.array([[np.sum(np.abs(y - yhat))]])
+
+            @staticmethod
+            def backward(y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
+                return -np.sign(y - yhat)
+
+            @staticmethod
+            def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
+                return down @ up
+
+            def __call__(self, main: Tensor, other: Tensor) -> Tensor:
+                return self.call(main, other)
+
+        # operator reference
+        ops = {
+            'centropy': _CrossEntropy,
+            'focal': _FocalLoss,
+            'ssr': _SumOfSquaredResiduals,
+            'savr': _SumOfAbsoluteValueResiduals
         }
 
-        # return loss algorithm
-        return loss_funcs[self._algorithm]
+        # set method functions
+        def loss(x: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
+            r"""
+            for tensor or numpy
+            """
+            if isinstance(x, Tensor) and x.type == 'mat':
+                return ops[self._method]()(x)
+            elif isinstance(x, np.ndarray):
+                return ops[self._method].forward(x)
+            else:
+                raise TypeError("'x' must be a Tensor with the matrix type or a NumPy array")
 
-    def _get_d_loss(self):
-        # defines derivative of loss algorithm
-        def d_centropy(yhat, y):
-            # derivative of Cross-Entropy loss
-            return -y / (yhat + 1e-8)
+        def d_loss(x: np.ndarray) -> np.ndarray:
+            r"""
+            only for np
+            """
+            if not isinstance(x, np.ndarray):
+                raise TypeError("'x' must be a NumPy array")
+            return ops[self._method].backward(x)
 
-        def d_focal(yhat, y):
-            # derivative of Focal loss
-            return -1 * self._params["alpha"] * (y - yhat) ** self._params["gamma"] / yhat - self._params["alpha"] * self._params["gamma"] * (y - yhat) ** (self._params["gamma"] - 1.0) * np.log(yhat)
+        self.loss = loss
+        self.d_loss = d_loss
 
-        def d_ssr(yhat, y):
-            # derivative of Sum of the Squared Residuals loss
-            return -2.0 * (y - yhat)
 
-        def d_savr(yhat, y):
-            # derivative of Sum of the Absolute Valued Residuals loss
-            return -np.sign(y - yhat)
+class Optimizers2:
 
-        # derivative of loss algorithm dictionary
-        d_loss_funcs = {
-            'centropy': d_centropy,
-            'focal': d_focal,
-            'ssr': d_ssr,
-            'savr': d_savr
-        }
-
-        # return derivative of loss algorithm
-        return d_loss_funcs[self._algorithm]
-
-    @staticmethod
-    def _chain(downstream, upstream, _=None):
-        return downstream @ upstream
-
-    def loss(self, yhat: Union[Tensor, np.ndarray], y: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
-        r"""
-        **Calculates loss based on the specified outputs.**
-
-        This function ideally supports GardenPy Tensors, but is compatible with NumPy Arrays.
-        If yhat is a Tensor, loss will automatically track the equation for automatic differentiation.
-
-        Parameters:
-        ----------
-        - **yhat** : (*Union[Tensor, np.ndarray]*)
-            The predicted values.
-        - **y** : (*Union[Tensor, np.ndarray]*)
-            The expected values.
-
-        Returns:
-        ----------
-        - **loss** : (*Union[Tensor, np.ndarray]*)
-            The calculated loss.
-
-        Notes:
-        ----------
-        - The loss will retain the same datatype as yhat.
-        - If yhat is a Tensor, Losses will automatically track the equation for automatic differentiation.
-
-        Example:
-        ----------
-        >>> from gardenpy.utils.objects import Tensor
-        >>> from gardenpy.utils.algorithms import Losses
-        >>> loss = Losses('ssr')
-        >>> expected = Tensor([0, 1])
-        >>> predicted = Tensor([0.2, 0.5])
-        >>> cost = loss.loss(expected, predicted)
-        """
-        if not isinstance(yhat, (Tensor, np.ndarray)):
-            # invalid datatype
-            raise TypeError(f"'yhat' is not a Tensor or NumPy Array: '{yhat}'")
-        if not isinstance(y, (Tensor, np.ndarray)):
-            # invalid datatype
-            raise TypeError(f"'y' is not a Tensor or NumPy Array: '{y}'")
-        y_arr = y
-        if isinstance(y, Tensor):
-            # convert to numpy array to avoid unnecessary tracking
-            y_arr = y.to_array()
-
-        if isinstance(yhat, Tensor):
-            # calculate result
-            result = Tensor([self._loss(yhat.to_array(), y_arr)])
-            # track operation
-            yhat.tracker['opr'].append('loss')
-            yhat.tracker['drv'].append(self._d_loss)
-            yhat.tracker['chn'].append(self._chain)
-            # track origin
-            result.tracker['org'] = [yhat, y]
-            # track relation
-            yhat.tracker['rlt'].append([y, result])
-            # result.id = yhat.id + 1
-
-            # return result
-            return result
-        else:
-            # return result
-            return self._loss(yhat, y_arr)
-
-    def d_loss(self, yhat: np.ndarray, y: np.ndarray) -> np.ndarray:
-        r"""
-        **Calculates the gradient of loss with respect to yhat based on the specified outputs.**
-
-        Only supports NumPy Arrays for manual calculation.
-        Use 'nabla' from gardenpy.utils.operators for Tensor support.
-
-        Parameters:
-        ----------
-        - **yhat** : (*np.ndarray*)
-            The predicted values.
-        - **y** : (*np.ndarray*)
-            The expected values.
-
-        Returns:
-        ----------
-        - **grad_yhat** : (*np.ndarray*)
-            The gradient of loss with respect to yhat.
-
-        Notes:
-        ----------
-        - Only supports NumPy Arrays.
-            - For Tensor support, use 'nabla' from gardenpy.utils.operators.
-
-        Example:
-        ----------
-        >>> from numpy import array
-        >>> from gardenpy.utils.algorithms import Losses
-        >>> loss = Losses('ssr')
-        >>> expected = array([0, 1])
-        >>> predicted = array([0.2, 0.5])
-        >>> cost = loss.loss(expected, predicted)
-        >>> d_cost = loss.d_loss(expected, predicted)
-        """
-        if not isinstance(yhat, np.ndarray):
-            # invalid datatype
-            raise TypeError(f"'yhat' is not a NumPy Array: '{yhat}'")
-        if not isinstance(y, np.ndarray):
-            # invalid datatype
-            raise TypeError(f"'y' is not a NumPy Array: '{y}'")
-
-        # return numpy array
-        return self._d_loss(yhat, y)
 
 
 class Optimizers:
