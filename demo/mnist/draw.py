@@ -4,18 +4,6 @@ Trained Model application for MNIST on user-drawn numbers.
 
 import os
 
-import numpy as np
-import pygame
-from PIL import Image
-
-from gardenpy import (
-    CNN,
-    CNNTorch,
-    DNN,
-    DNNTorch
-)
-from gardenpy.utils.algorithms import Activators
-
 # model type
 model_type = 'dnn'
 model_types = ['cnn', 'cnn_torch', 'dnn', 'dnn_torch']

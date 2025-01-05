@@ -1,9 +1,4 @@
-r"""
-helper_functions.py
-
-Includes basic helper functions for GardenPy.
-Contains ansi formats, a progress bar, a time converter, and credits.
-"""
+r"""Helpers."""
 
 import sys
 from typing import Optional, Union
@@ -41,7 +36,9 @@ ansi = {
 
 def progress(idx: int, max_idx: int, *, desc: Optional[str] = None, b_len: int = 50) -> None:
     r"""
-    Prints a customizable progress bar for any sort of loop.
+    **Prints a customizable progress bar for any sort of loop.**
+
+    --------------------------------------------------------------------------------------------------------------------
 
     Args:
         idx (int), 0 < idx: Current loop index.
@@ -71,7 +68,9 @@ def progress(idx: int, max_idx: int, *, desc: Optional[str] = None, b_len: int =
 
 def convert_time(seconds: Union[float, int]) -> str:
     r"""
-    Converts seconds to hours:minutes:seconds.
+    **Converts seconds to hours:minutes:seconds.**
+
+    --------------------------------------------------------------------------------------------------------------------
 
     Args:
         seconds (float | int), 0 < seconds: Number of seconds.
@@ -94,7 +93,9 @@ def convert_time(seconds: Union[float, int]) -> str:
 
 def slow_print(text: str, *, delay: Union[float, int] = 0.05) -> None:
     r"""
-    Prints text with delay.
+    **Prints text with delay.**
+
+    --------------------------------------------------------------------------------------------------------------------
 
     Args:
         text (str): Text to print.
@@ -118,7 +119,17 @@ def slow_print(text: str, *, delay: Union[float, int] = 0.05) -> None:
 
 def print_contributors(*, who: Optional[list] = None, cinematic: bool = False) -> None:
     r"""
-    Prints GardenPy contributors in alphabetical order.
+    **Prints GardenPy contributors in alphabetical order.**
+
+    --------------------------------------------------------------------------------------------------------------------
+
+    The Machine Learning from Scratch team created GardenPy and our other resources with the help of many others.
+    In this contributor printing function, we try to give thanks to the main resources and people that aided us in the
+    creation of our project.
+    At the same time, this function misses many vital contributors responsible for aiding us in the creation of our
+    project, and we wish to thank anyone who helped us in any way.
+
+    --------------------------------------------------------------------------------------------------------------------
 
     Args:
         who (list, optional), default = all: Type of contributors to print.

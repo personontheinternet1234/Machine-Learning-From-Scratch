@@ -13,21 +13,19 @@ import warnings
 
 import numpy as np
 
-from ..utils.operators import (
+from other.deprecated.operators import (
     nabla,
     chain
 )
-from ..utils.objects import Tensor
-from ..utils.algorithms import (
+from other.deprecated.objects import Tensor
+from functional.algorithms import (
     Initializers,
     Activators,
     Losses,
     Optimizers
 )
-from ..utils.dataloaders import DataLoader
-from ..utils.helper_functions import (
-    progress,
-    convert_time,
+from ..utils.data_utils import DataLoader
+from ..utils.helpers import (
     ansi
 )
 

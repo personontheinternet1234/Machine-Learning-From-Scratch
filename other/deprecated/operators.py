@@ -13,7 +13,7 @@ Notes:
 - Refer to GardenPy's repository or GardenPy's docs for more information.
 """
 
-from .objects import Tensor
+from other.deprecated.objects import Tensor
 
 
 def nabla(gradient: Tensor, respect: Tensor) -> Tensor:

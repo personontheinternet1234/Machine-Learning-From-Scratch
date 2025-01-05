@@ -1,9 +1,8 @@
-from gardenpy.utils.algorithms import Initializers
-from gardenpy.utils.objects_2 import Tensor
+from functional.algorithms import Initializers
+from functional.objects import Tensor
+from functional.operators import nabla
 
 init = Initializers('gaussian').initialize
-nabla = Tensor.nabla
-chain = Tensor.chain
 
 t1 = init(5, 5)
 t2 = init(5, 5)

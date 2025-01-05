@@ -1,13 +1,10 @@
-r"""
-objects.py
-
-Dependencies:
-    - NumPy (>=1.26.1)
-"""
+r"""Internal objects."""
 
 from warnings import warn
 from typing import Callable, Dict, List, Tuple, Optional, Union
 import numpy as np
+
+from utils.errors import TrackingError
 
 
 class Tensor:
@@ -18,9 +15,9 @@ class Tensor:
 
     Tensors are NumPy arrays with internals that track the operations, derivatives, and chain-rule methods of the
     functions it is run through, as well as its relationship to other arrays and Tensors it is run with.
-    Through this, Tensors can effectively automatically find their relationship to other Tensors, and through reference
-    to the operations run on itself and other Tensors, can automatically calculate its gradient through a single
-    function call, referred to as the Tensor's autograd methods.
+    Through this, Tensors can effectively automatically find their relationship to other Tensors.
+    Through reference to the operations run on itself and other Tensors, Tensors can automatically calculate its
+    gradient through a single function call, referred to as the Tensor's autograd methods.
     See :func:`Tensor.nabla` and :func:`Tensor.chain`.
 
     Internally, the Tensor class tracks all instances, allowing for class-wide function calls.
@@ -33,9 +30,10 @@ class Tensor:
     Note:
         As Tensors track all instances, over time, Tensor instances will accumulate, possibly reducing computational
         efficiency.
-        Additionally, every instance of a method run on a Tensor is tracked, and if a single Tensor is constantly used,
-        its internal tracker will accumulate these instances that have a significant impact on the computational
-        efficiency of the binary search tree method of relating Tensors for autograd methods.
+        Additionally, every instance of a method run on a Tensor is tracked.
+        If a single Tensor is constantly used, its internal tracker will accumulate these instances that have a
+        significant impact on the computational efficiency of the binary search tree method of relating Tensors for
+        autograd methods.
         It is recommended to run the zero_grad method every so often to avoid these possible reductions in computational
         efficiency.
         See :func:`Tensor.zero_grad`.
@@ -139,12 +137,12 @@ class Tensor:
     @property
     def type(self) -> str:
         r"""
-        **String of the type of Tensor.**
+        **String of the Tensor type.**
 
         ----------------------------------------------------------------------------------------------------------------
 
         A Tensor's type, used for checking the validity of operations and internal setup.
-        ranges from 'mat' for matrices, 'grad' for gradients, and 'deleted' for deleted instances.
+        Ranges from 'mat' for matrices, 'grad' for gradients, and 'deleted' for deleted instances.
 
         ----------------------------------------------------------------------------------------------------------------
 
@@ -162,7 +160,7 @@ class Tensor:
 
         A Tensor's tracker contains all of a Tensor's relationships to everything it has been passed through.
         It's vital for the gradient and chain-rule calculations.
-        Each specific type of Tensor has a slightly different tracker due to the nature of forward and backward methods.
+        Each type of Tensor has a slightly different tracker due to the nature of forward and backward methods.
         As a result, different types of dictionaries are passed through
 
         The tracker keeps track of a few things necessary for autograd.
@@ -171,15 +169,15 @@ class Tensor:
         These operation references are stored as strings and aren't used for any internal computation.
         Instead, they are for user convenience in debugging.
 
-        Second, it keeps track of the derivative of the operations it has gone through, referenced in the tracker as
+        Second, it tracks the derivative of the operations it has gone through, referenced in the tracker as
         'drv'.
         These derivative references are stored as functions and are vital for internal computation.
 
-        Third, it keeps track of the chain-rule of the operations it has gone through, referenced in the tracker as
+        Third, it tracks the chain-rule of the operations it has gone through, referenced in the tracker as
         'chn'.
         These chain-rule references are stored as functions and are vital for internal computation.
 
-        Fourth, it keeps track of the relations of the operations it has gone through, referenced in the tracker as
+        Fourth, it tracks the relations of the operations it has gone through, referenced in the tracker as
         'rlt'.
         These relation references are stored as a Tensor or array and are returned as an ID or pointer.
         They are necessary for gradient calculation and tracking in the autograd methods.
@@ -199,8 +197,7 @@ class Tensor:
                 See :func:`Tensor.ikwiad`.
 
         Note:
-            This tracker temporarily turns on ikwiad to allow the internal of gradients to be printed after the gradient
-            tracking has been reset.
+            This tracker temporarily turns on ikwiad to allow printing deleted gradients in the relations.
             After the tracker has been received, ikwiad is turned back to what the user set it as.
         """
         # turn on ikwiad
@@ -616,6 +613,10 @@ class Tensor:
             return Tensor(func(*args))
         return wrapper
 
+    class PointerMethod:
+        def __init__(self):
+            ...
+
     @staticmethod
     def lone_pointer_method(func: Callable) -> Callable:
         def wrapper(main: 'Tensor') -> 'Tensor':
@@ -667,7 +668,7 @@ class Tensor:
             # second instance.
             # Implementing merging path functionality will slightly reduce relation speed and require some rewrites.
             # At this current time, adding the gradients seems to be the method.
-            # If implemented, this will need to be checked for weird edge cases that may or may not exist where the
+            # If implemented, this will need to be checked for edge cases that may or may not exist where the
             # gradients are of different sizes.
             nonlocal relation
             if not trace:
@@ -689,7 +690,7 @@ class Tensor:
         _relate(grad, wrt)
         if not isinstance(relation, list):
             # no relation
-            raise ValueError("No relationship found between Tensors")
+            raise TrackingError(grad=grad, wrt=wrt)
 
         def _derive(down: 'Tensor', up: 'Tensor') -> 'Tensor':
             # get relations

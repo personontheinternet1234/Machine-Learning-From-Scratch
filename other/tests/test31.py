@@ -1,7 +1,7 @@
 import numpy as np
 
-from gardenpy.utils.objects import Tensor
-from gardenpy.utils.operators import nabla2
+from other.deprecated.objects import Tensor
+from other.deprecated.operators import nabla2
 
 t1 = Tensor(np.random.randn(3, 3))
 t2 = Tensor(np.random.randn(3, 3))

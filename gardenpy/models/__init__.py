@@ -4,6 +4,8 @@ r"""
 Refer to 'todo' for in-depth documentation on all models.
 """
 
+# this stuff is pretty outdated and should probably just be rewritten
+
 from .dnn import DNN
 from .dnn_torch import DNNTorch
 from .cnn import CNN

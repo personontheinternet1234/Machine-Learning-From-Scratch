@@ -6,7 +6,7 @@ import os
 
 from gardenpy.models import DNN
 from gardenpy.utils import DataLoaderCSV, ansi
-from gardenpy.utils.helper_functions import print_contributors
+from gardenpy.utils.helpers import print_contributors
 
 print()
 print_contributors()

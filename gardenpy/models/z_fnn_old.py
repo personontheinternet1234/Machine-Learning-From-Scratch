@@ -10,16 +10,13 @@ import time
 import numpy as np
 import pandas as pd
 
-from gardenpy.utils.algorithms import (
-    Initializers,
-    Activators,
-    Losses,
-    Optimizers
+from functional.algorithms import (
+    Initializers
 )
 from gardenpy.metrics.metrics import (
     cm
 )
-from gardenpy.utils.dataloaders import (
+from gardenpy.utils.data_utils import (
     shuffle as mix  # todo: why naming?
 )
 

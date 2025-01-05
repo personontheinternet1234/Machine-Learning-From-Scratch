@@ -17,6 +17,7 @@ import numpy as np
 
 
 class Tensor:
+    # this class is outdated and will soon be deprecated
     r"""
     **Matrix with automatic tracking for automatic differentiation**
 

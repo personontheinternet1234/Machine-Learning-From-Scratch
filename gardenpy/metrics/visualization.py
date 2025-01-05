@@ -1,4 +1,4 @@
-# todo: recode
+# todo: super duper outdated, recode
 
 """
 result visualization functions
@@ -12,7 +12,7 @@ Works for Derek's computer
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-from gardenpy.utils.helper_functions import print_color
+from gardenpy.utils.helpers import print_color
 
 from matplotlib import pyplot as plt
 import seaborn as sns

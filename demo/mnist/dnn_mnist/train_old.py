@@ -10,8 +10,8 @@ from gardenpy.metrics import (
     visualization as vis
 )
 from gardenpy.utils import (
-    dataloaders as du,
-    helper_functions as hf
+    data_utils as du,
+    helpers as hf
 )
 
 from gardenpy.models.z_fnn_old import (

@@ -17,7 +17,7 @@ from gardenpy.utils import (
     progress,
     convert_time
 )
-from gardenpy.utils.helper_functions import print_contributors
+from gardenpy.utils.helpers import print_contributors
 
 ##########
 

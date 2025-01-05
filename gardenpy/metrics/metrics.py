@@ -4,7 +4,7 @@ r"""
 'metrics' includes:
     'cm': A confusion matrix generator.
 
-Refer to 'todo' for in-depth documentation on these metrics.
+Refer to ... for in-depth documentation on these metrics.
 """
 
 import numpy as np
