@@ -5,7 +5,7 @@ import warnings
 import numpy as np
 
 from .objects import Tensor
-from utils.checkers import ParamChecker
+from utils.checkers import Params, ParamChecker
 
 
 class Initializers:
@@ -65,24 +65,24 @@ class Initializers:
     def _get_method(self, method: str, hyperparams: dict, **kwargs) -> Tuple[str, dict]:
         # hyperparameter reference
         default_hyperparams = {
-            'xavier': {
-                'default': {'mu': 0.0, 'sigma': 1.0, 'kappa': 1.0},
-                'dtypes': {'mu': (float, int), 'sigma': (float, int), 'kappa': (float, int)},
-                'vtypes': {'mu': lambda x: True, 'sigma': lambda x: 0 < x, 'kappa': lambda x: True},
-                'ctypes': {'mu': lambda x: float(x), 'sigma': lambda x: float(x), 'kappa': lambda x: float(x)}
-            },
-            'gaussian': {
-                'default': {'mu': 0.0, 'sigma': 1.0, 'kappa': 1.0},
-                'dtypes': {'mu': (float, int), 'sigma': (float, int), 'kappa': (float, int)},
-                'vtypes': {'mu': lambda x: True, 'sigma': lambda x: 0 < x, 'kappa': lambda x: True},
-                'ctypes': {'mu': lambda x: float(x), 'sigma': lambda x: float(x), 'kappa': lambda x: float(x)}
-            },
-            'kappa': {
-                'default': {'kappa': 1.0},
-                'dtypes': {'kappa': (float, int)},
-                'vtypes': {'kappa': lambda x: True},
-                'ctypes': {'kappa': lambda x: float(x)}
-            }
+            'xavier': Params(
+                default={'mu': 0.0, 'sigma': 1.0, 'kappa': 1.0},
+                dtypes={'mu': (float, int), 'sigma': (float, int), 'kappa': (float, int)},
+                vtypes={'mu': lambda x: True, 'sigma': lambda x: 0 < x, 'kappa': lambda x: True},
+                ctypes={'mu': lambda x: float(x), 'sigma': lambda x: float(x), 'kappa': lambda x: float(x)}
+            ),
+            'gaussian': Params(
+                default={'mu': 0.0, 'sigma': 1.0, 'kappa': 1.0},
+                dtypes={'mu': (float, int), 'sigma': (float, int), 'kappa': (float, int)},
+                vtypes={'mu': lambda x: True, 'sigma': lambda x: 0 < x, 'kappa': lambda x: True},
+                ctypes={'mu': lambda x: float(x), 'sigma': lambda x: float(x), 'kappa': lambda x: float(x)}
+            ),
+            'uniform': Params(
+                default={'kappa': 1.0},
+                dtypes={'kappa': float},
+                vtypes={'kappa': lambda x: True},
+                ctypes={'kappa': lambda x: float(x)}
+            )
         }
 
         # check method
@@ -94,12 +94,15 @@ class Initializers:
                 f"Choose from: {Initializers._methods}"
             )
 
-        # check hyperparameters
-        checker = ParamChecker(name=f'{method} hyperparameters', ikwiad=self._ikwiad)
-        checker.set_types(**default_hyperparams[method])
+        # set checker
+        checker = ParamChecker(
+            prefix=f'{method} hyperparameters',
+            parameters=default_hyperparams[method],
+            ikwiad=self._ikwiad
+        )
 
-        # set internal hyperparameters
-        return method, checker.check_params(hyperparams, **kwargs)
+        # return hyperparameters
+        return method, checker.check_params(params=hyperparams, **kwargs)
 
     def _set_initializer(self) -> None:
         # hyperparameter reference
@@ -221,48 +224,42 @@ class Activators:
     def _get_method(self, method: str, hyperparams: dict, **kwargs) -> Tuple[str, dict]:
         # hyperparameter reference
         default_hyperparams = {
-            'softmax': {
-                'default': None,
-                'dtypes': None,
-                'vtypes': None,
-                'ctypes': None
-            },
-            'relu': {
-                'default': None,
-                'dtypes': None,
-                'vtypes': None,
-                'ctypes': None
-            },
-            'lrelu': {
-                'default': {'beta': 1e-2},
-                'dtypes': {'beta': (float, int)},
-                'vtypes': {'beta': lambda x: 0 < x},
-                'ctypes': {'beta': lambda x: float(x)}
-            },
-            'sigmoid': {
-                'default': None,
-                'dtypes': None,
-                'vtypes': None,
-                'ctypes': None
-            },
-            'tanh': {
-                'default': None,
-                'dtypes': None,
-                'vtypes': None,
-                'ctypes': None
-            },
-            'softplus': {
-                'default': {'beta': 1.0},
-                'dtypes': {'beta': (float, int)},
-                'vtypes': {'beta': lambda x: 0 <= x},
-                'ctypes': {'beta': lambda x: float(x)}
-            },
-            'mish': {
-                'default': {'beta': 1.0},
-                'dtypes': {'beta': (float, int)},
-                'vtypes': {'beta': lambda x: 0 <= x},
-                'ctypes': {'beta': lambda x: float(x)}
-            }
+            'softmax': Params(
+                default=None,
+                dtypes=None,
+                vtypes=None,
+                ctypes=None
+            ),
+            'relu': Params(
+                default=None,
+                dtypes=None,
+                vtypes=None,
+                ctypes=None
+            ),
+            'lrelu': Params(
+                default={'beta': 1e-02},
+                dtypes={'beta': (float, int)},
+                vtypes={'beta': lambda x: x < 0},
+                ctypes={'beta': lambda x: float(x)}
+            ),
+            'sigmoid': Params(
+                default=None,
+                dtypes=None,
+                vtypes=None,
+                ctypes=None
+            ),
+            'softplus': Params(
+                default={'beta': 1.0},
+                dtypes={'beta': (float, int)},
+                vtypes={'beta': lambda x: x < 0},
+                ctypes={'beta': lambda x: float(x)}
+            ),
+            'mish': Params(
+                default={'beta': 1.0},
+                dtypes={'beta': (float, int)},
+                vtypes={'beta': lambda x: x < 0},
+                ctypes={'beta': lambda x: float(x)}
+            )
         }
 
         # check method
@@ -274,12 +271,15 @@ class Activators:
                 f"Choose from: {Activators._methods}"
             )
 
-        # check hyperparameters
-        checker = ParamChecker(name=f'{method} hyperparameters', ikwiad=self._ikwiad)
-        checker.set_types(**default_hyperparams[method])
+        # set checker
+        checker = ParamChecker(
+            prefix=f'{method} hyperparameters',
+            parameters=default_hyperparams[method],
+            ikwiad=self._ikwiad
+        )
 
-        # set internal hyperparameters
-        return method, checker.check_params(hyperparams, **kwargs)
+        # return hyperparameters
+        return method, checker.check_params(params=hyperparams, **kwargs)
 
     def _set_activator(self) -> None:
         # hyperparameter reference
@@ -484,7 +484,6 @@ class Activators:
 class Losses:
     _methods: List[str] = [
         'centropy',
-        'focal',
         'ssr',
         'savr'
     ]
@@ -507,46 +506,24 @@ class Losses:
     def _get_method(self, method: str, hyperparams: dict, **kwargs) -> Tuple[str, dict]:
         # hyperparameter reference
         default_hyperparams = {
-            'centropy': {
-                'default': {'epsilon': 1e-10},
-                'dtypes': {'epsilon': float},
-                'vtypes': {'epsilon': lambda x: 0.0 < x < 1.0},
-                'ctypes': {'epsilon': lambda x: x}
-            },
-            'focal': {
-                'default': {
-                    'alpha': 1.0,
-                    'gamma': 1.0,
-                    'epsilon': 1e-10
-                },
-                'dtypes': {
-                    'alpha': (float, int),
-                    'gamma': (float, int),
-                    'epsilon': float
-                },
-                'vtypes': {
-                    'alpha': lambda x: 0.0 < x <= 1.0,
-                    'gamma': lambda x: 0.0 <= x and divmod(x, 1)[-1] == 0,
-                    'epsilon': lambda x: 0.0 < x < 1.0
-                },
-                'ctypes': {
-                    'alpha': lambda x: float(x),
-                    'gamma': lambda x: float(x),
-                    'epsilon': lambda x: x
-                }
-            },
-            'ssr': {
-                'default': None,
-                'dtypes': None,
-                'vtypes': None,
-                'ctypes': None
-            },
-            'savr': {
-                'default': None,
-                'dtypes': None,
-                'vtypes': None,
-                'ctypes': None
-            }
+            'centropy': Params(
+                default={'epsilon': 1e-10},
+                dtypes={'epsilon': float},
+                vtypes={'epsilon': lambda x: 0.0 < x < 1.0},
+                ctypes={'epsilon': lambda x: x}
+            ),
+            'ssr': Params(
+                default=None,
+                dtypes=None,
+                vtypes=None,
+                ctypes=None
+            ),
+            'savr': Params(
+                default=None,
+                dtypes=None,
+                vtypes=None,
+                ctypes=None
+            ),
         }
 
         # check method
@@ -558,12 +535,15 @@ class Losses:
                 f"Choose from: {Losses._methods}"
             )
 
-        # check hyperparameters
-        checker = ParamChecker(name=f'{method} hyperparameters', ikwiad=self._ikwiad)
-        checker.set_types(**default_hyperparams[method])
+        # set checker
+        checker = ParamChecker(
+            prefix=f'{method} hyperparameters',
+            parameters=default_hyperparams[method],
+            ikwiad=self._ikwiad
+        )
 
-        # set internal hyperparameters
-        return method, checker.check_params(hyperparams, **kwargs)
+        # return hyperparameters
+        return method, checker.check_params(params=hyperparams, **kwargs)
 
     def _set_loss(self) -> None:
         # hyperparameter reference
@@ -582,32 +562,6 @@ class Losses:
             @staticmethod
             def backward(y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
                 return -y / (yhat + h['epsilon'])
-
-            @staticmethod
-            def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-                return down @ up
-
-            def __call__(self, main: Tensor, other: Tensor) -> Tensor:
-                return self.call(main, other)
-
-        class _FocalLoss(Tensor.PairedTensorMethod):
-            r"""Focal loss built-in method."""
-
-            def __init__(self):
-                super().__init__(prefix="focal")
-
-            @staticmethod
-            def forward(y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
-                return np.array([[-np.sum(h['alpha'] * (y - yhat) ** h['gamma'] * np.log(yhat + h['epsilon']))]])
-
-            @staticmethod
-            def backward(y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
-                return (
-                    -h["alpha"] * (y - yhat) ** h["gamma"] /
-                    (yhat + h['epsilon']) -
-                    h["alpha"] * h["gamma"] * (y - yhat) ** (h["gamma"] - 1.0) *
-                    np.log(yhat + h['epsilon'])
-                )
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
@@ -661,7 +615,6 @@ class Losses:
         # operator reference
         ops = {
             'centropy': _CrossEntropy,
-            'focal': _FocalLoss,
             'ssr': _SumOfSquaredResiduals,
             'savr': _SumOfAbsoluteValueResiduals
         }
@@ -721,8 +674,8 @@ class Optimizers:
     def _get_method(self, method: str, hyperparams: dict, **kwargs) -> Tuple[str, dict]:
         # hyperparameter reference
         default_hyperparams = {
-            'adam': {
-                'default': {
+            'adam': Params(
+                default={
                     'alpha': 1e-3,
                     'lambda_d': 0.0,
                     'beta1': 0.9,
@@ -730,7 +683,7 @@ class Optimizers:
                     'epsilon': 1e-10,
                     'ams': False
                 },
-                'dtypes': {
+                dtypes={
                     'alpha': (float, int),
                     'lambda_d': (float, int),
                     'beta1': (float, int),
@@ -738,7 +691,7 @@ class Optimizers:
                     'epsilon': (float, int),
                     'ams': (bool, int)
                 },
-                'vtypes': {
+                vtypes={
                     'alpha': lambda x: True,
                     'lambda_d': lambda x: 0.0 <= x < 1.0,
                     'beta1': lambda x: 0.0 < x < 1.0,
@@ -746,7 +699,7 @@ class Optimizers:
                     'epsilon': lambda x: 0.0 < x <= 1e-2,
                     'ams': lambda x: True
                 },
-                'ctypes': {
+                ctypes={
                     'alpha': lambda x: float(x),
                     'lambda_d': lambda x: float(x),
                     'beta1': lambda x: float(x),
@@ -754,114 +707,117 @@ class Optimizers:
                     'epsilon': lambda x: float(x),
                     'ams': lambda x: bool(x)
                 }
-            },
-            'sgd': {
-                'default': {
+            ),
+            'sgd': Params(
+                default={
                     'alpha': 1e-3,
                     'lambda_d': 0.0,
                     'mu': 0.0,
                     'tau': 0.0,
                     'nesterov': False
                 },
-                'dtypes': {
+                dtypes={
                     'alpha': (float, int),
                     'lambda_d': (float, int),
                     'mu': (float, int),
                     'tau': (float, int),
                     'nesterov': (bool, int)
                 },
-                'vtypes': {
+                vtypes={
                     'alpha': lambda x: True,
                     'lambda_d': lambda x: 0.0 <= x < 1.0,
                     'mu': lambda x: 0.0 <= x < 1.0,
                     'tau': lambda x: 0.0 <= x < 1.0,
                     'nesterov': lambda x: True
                 },
-                'ctypes': {
+                ctypes={
                     'alpha': lambda x: float(x),
                     'lambda_d': lambda x: float(x),
                     'mu': lambda x: float(x),
                     'tau': lambda x: float(x),
                     'nesterov': lambda x: bool(x)
                 }
-            },
-            'rmsp': {
-                'default': {
+            ),
+            'rmsp': Params(
+                default={
                     'alpha': 1e-3,
                     'lambda_d': 0.0,
                     'beta2': 0.99,
                     'mu': 0.0,
                     'epsilon': 1e-10
                 },
-                'dtypes': {
+                dtypes={
                     'alpha': (float, int),
                     'lambda_d': (float, int),
                     'beta2': (float, int),
                     'mu': (float, int),
                     'epsilon': (float, int)
                 },
-                'vtypes': {
+                vtypes={
                     'alpha': lambda x: True,
                     'lambda_d': lambda x: 0.0 <= x < 1.0,
                     'beta2': lambda x: 0.0 <= x < 1.0,
                     'mu': lambda x: 0.0 <= x < 1.0,
                     'epsilon': lambda x: 0.0 < x <= 1e-2
                 },
-                'ctypes': {
+                ctypes={
                     'alpha': lambda x: float(x),
                     'lambda_d': lambda x: float(x),
                     'beta2': lambda x: float(x),
                     'mu': lambda x: float(x),
                     'epsilon': lambda x: float(x)
                 }
-            },
-            'adag': {
-                'default': {
+            ),
+            'adag': Params(
+                default={
                     'alpha': 1e-3,
                     'lambda_d': 0.0,
                     'tau': 0.0,
                     'nu': 0.0,
                     'epsilon': 1e-10
                 },
-                'dtypes': {
+                dtypes={
                     'alpha': (float, int),
                     'lambda_d': (float, int),
                     'tau': (float, int),
                     'nu': (float, int),
                     'epsilon': (float, int)
                 },
-                'vtypes': {
+                vtypes={
                     'alpha': lambda x: True,
                     'lambda_d': lambda x: 0.0 <= x < 1.0,
                     'tau': lambda x: 0.0 <= x <= 1.0,
                     'nu': lambda x: 0.0 <= x <= 1.0,
                     'epsilon': lambda x: 0.0 < x <= 1e-2
                 },
-                'ctypes': {
+                ctypes={
                     'alpha': lambda x: float(x),
                     'lambda_d': lambda x: float(x),
                     'tau': lambda x: float(x),
                     'nu': lambda x: float(x),
                     'epsilon': lambda x: float(x)
                 }
-            }
+            )
         }
 
         # check method
         if not isinstance(method, str):
             raise TypeError("'method' must be a string")
-        if method not in Optimizers2._methods:
+        if method not in Optimizers._methods:
             raise ValueError(
                 f"Invalid method: {method}\n"
-                f"Choose from: {Optimizers2._methods}"
+                f"Choose from: {Optimizers._methods}"
             )
 
-        # check hyperparameters
-        checker = ParamChecker(name=f'{method} hyperparameters', ikwiad=self._ikwiad)
-        checker.set_types(**default_hyperparams[method])
+        # set checker
+        checker = ParamChecker(
+            prefix=f'{method} hyperparameters',
+            parameters=default_hyperparams[method],
+            ikwiad=self._ikwiad
+        )
 
-        # set internal hyperparameters
-        return method, checker.check_params(hyperparams, **kwargs)
+        # return hyperparameters
+        return method, checker.check_params(params=hyperparams, **kwargs)
 
     @staticmethod
     def _get_memories(method: str) -> dict:

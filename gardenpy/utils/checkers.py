@@ -1,6 +1,6 @@
 r"""Utility functions."""
 
-from typing import Any, Dict, Tuple, Type, Optional, Union
+from typing import Callable, Dict, Optional, Union
 from types import LambdaType
 import warnings
 
@@ -11,9 +11,9 @@ class Params:
     def __init__(
             self,
             default: Union[Dict[str, Union[int, float, str, bool]], None],
-            dtypes: Union[Dict[str, Union[Tuple[Type[Any]], Type[Any]]], None],
-            vtypes: Union[Dict[str, LambdaType], None],
-            ctypes: Union[Dict[str, LambdaType], None]
+            dtypes: Union[Dict[str, Union[tuple, any]], None],
+            vtypes: Union[Dict[str, Callable], None],
+            ctypes: Union[Dict[str, Callable], None]
     ):
         self._default = self._check_default(default)
         self._dtypes = self._check_dtypes(dtypes)
@@ -93,15 +93,15 @@ class Params:
         return self._default
 
     @property
-    def dtypes(self) -> Union[Dict[str, Union[Tuple[Type[Any]], Type[Any]]], None]:
+    def dtypes(self) -> Union[Dict[str, Union[tuple, any]], None]:
         return self._dtypes
 
     @property
-    def vtypes(self) -> Union[Dict[str, LambdaType], None]:
+    def vtypes(self) -> Union[Dict[str, Callable], None]:
         return self._vtypes
 
     @property
-    def ctypes(self) -> Union[Dict[str, LambdaType], None]:
+    def ctypes(self) -> Union[Dict[str, Callable], None]:
         return self._ctypes
 
 
