@@ -6,7 +6,7 @@ Dependencies:
 """
 
 from warnings import warn
-from typing import Dict, List, Tuple, Optional, Union
+from typing import Callable, Dict, List, Tuple, Optional, Union
 import numpy as np
 
 
@@ -47,9 +47,10 @@ class Tensor:
         See :class:`Tensor.LoneTensorMethod` and :class:`Tensor.PairedTensorMethod`.
     """
     _instances: List[Union['Tensor', None]] = []
+    _pointer_counter: int = 0
     _ikwiad: bool = False
 
-    def __init__(self, obj: any):
+    def __init__(self, obj: any, *, _gradient_override: bool = False):
         r"""
         **Creation of a GardenPy Tensor instance.**
 
@@ -73,25 +74,29 @@ class Tensor:
         """
         # check object
         obj = np.array(obj)
-        if not np.issubdtype(obj.dtype, np.number) or len(obj.shape) != 2:
+        if (not np.issubdtype(obj.dtype, np.number) or len(obj.shape) != 2) and not _gradient_override:
+            # NB: Currently, Tensors can only be two-dimensional.
+            # Due to the existence of three-dimensional gradients, this lock can be overwritten, but only internally.
             raise TypeError("'obj' must be a 2D matrix containing only numerical values")
 
         # set tensor internals
-        self._id = len(Tensor._instances)
-        self._tensor = obj
-        self._type = 'mat'
+        self._id: Union[int, None] = len(Tensor._instances)
+        self._pointer: Union[int, None] = Tensor._pointer_counter
+        self._tensor: Union[np.ndarray, None] = obj
+        self._type: str = 'mat'
         self._tracker: Dict[Union[str, List[any], Tensor]] = {'opr': [], 'drv': [], 'chn': [], 'rlt': [], 'org': []}
 
         # update instances
         Tensor._instances.append(self)
+        Tensor._pointer_counter += 1
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         self._is_valid_tensor(itm=self)
         return str(self._tensor)
 
     # Tensor properties.
     # Tensor properties refer to internal properties of Tensors.
-    # These properties cannot be directly edited from any internal function.
+    # These properties should only be edited using one of the Tensor's methods.
     # Editing of these properties can be done externally, but is strongly discouraged.
     # To edit one of these properties, it's recommended to either use a subclass that does it for you, or create a new
     # subclass that edits the property internally and makes an instance of the subclass externally.
@@ -121,6 +126,13 @@ class Tensor:
         """
         if self._is_valid_tensor(itm=self):
             return hex(self._id)
+        else:
+            return None
+
+    @property
+    def pointer(self) -> Union[str, None]:
+        if self._is_valid_tensor(itm=self):
+            return self._pointer
         else:
             return None
 
@@ -235,17 +247,43 @@ class Tensor:
         self._is_valid_tensor(itm=self)
         return self._tensor
 
-    r"""
-    Instance calls.
-    """
+    # External alteration of a Tensor's properties.
+    # Resets or alters the internal properties of a Tensor.
+    # Resetting a Tensor's properties periodically is important to prevent memory leaks.
+    # Class methods utilize these Tensor methods across all instances of a Tensor.
+    # These Tensor methods can be used if only one Tensor is to be edited.
 
     def instance_grad_reset(self) -> None:
+        r"""
+        **Reset a Tensor's internal tracker.**
+
+        ----------------------------------------------------------------------------------------------------------------
+
+        Raises:
+            UserWarning: If the function is used on a deleted Tensor.
+                Turned off by toggling ikwiad.
+                See :func:`Tensor.ikwiad`.
+        """
         # reset tensor tracker
         if self._is_valid_tensor(itm=self):
             self._tracker: Dict[Union[str, List[any], Tensor]] = {'opr': [], 'drv': [], 'chn': [], 'rlt': [], 'org': []}
         return None
 
     def instance_reset(self) -> None:
+        r"""
+        **Reset a Tensor.**
+
+        ----------------------------------------------------------------------------------------------------------------
+
+        ...
+
+        ----------------------------------------------------------------------------------------------------------------
+
+        Raises:
+            UserWarning: If the function is used on a deleted Tensor.
+                Turned off by toggling ikwiad.
+                See :func:`Tensor.ikwiad`.
+        """
         # reset tensor
         if self._is_valid_tensor(itm=self):
             Tensor._instances[self._id] = None
@@ -522,7 +560,7 @@ class Tensor:
             """
             raise NotImplementedError("'chain_o' has not been implemented in a subclass")
 
-        def call(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
+        def call(self, main: 'Tensor', other: Union['Tensor', np.ndarray, float, int]) -> 'Tensor':
             r"""
             Function call.
 
@@ -566,6 +604,48 @@ class Tensor:
             # return result
             return result
 
+    @staticmethod
+    def initializer_method(func: Callable) -> Callable:
+        def wrapper(*args: int) -> 'Tensor':
+            # check dimensions
+            if len(args) != 2:
+                raise ValueError("Initialization must occur with 2 dimensions")
+            if not all(isinstance(arg, int) and 0 < arg for arg in args):
+                raise ValueError("Each dimension must be a positive integer")
+            # initialize tensor
+            return Tensor(func(*args))
+        return wrapper
+
+    @staticmethod
+    def lone_pointer_method(func: Callable) -> Callable:
+        def wrapper(main: 'Tensor') -> 'Tensor':
+            # check tensor
+            if not isinstance(main, Tensor) or main._type == 'deleted':
+                raise TypeError("Main item must be a non-deleted Tensor")
+            # function execution
+            result = Tensor(func(main._tensor))
+            # conserve pointer
+            result._pointer = main._pointer
+            main.instance_reset()
+            return result
+        return wrapper
+
+    @staticmethod
+    def paired_pointer_method(func: Callable) -> Callable:
+        def wrapper(main: 'Tensor', other: 'Tensor') -> 'Tensor':
+            # check tensors
+            if not isinstance(main, Tensor) or main._type == 'deleted':
+                raise TypeError("'main' must be a non-deleted Tensor")
+            if not isinstance(other, Tensor) or other._type == 'deleted':
+                raise TypeError("'other' must be a non-deleted Tensor")
+            # function execution
+            result = Tensor(func(main._tensor, other._tensor))
+            # conserve pointer
+            result._pointer = main._pointer
+            main.instance_reset()
+            return result
+        return wrapper
+
     r"""
     Gradient calculation methods.
     """
@@ -582,6 +662,13 @@ class Tensor:
         relation = None
 
         def _relate(item, target, trace=None):
+            # NB: This method only relates the first relation instance.
+            # If two alternate paths merge onto a single path, the binary search tree will stop before reaching the
+            # second instance.
+            # Implementing merging path functionality will slightly reduce relation speed and require some rewrites.
+            # At this current time, adding the gradients seems to be the method.
+            # If implemented, this will need to be checked for weird edge cases that may or may not exist where the
+            # gradients are of different sizes.
             nonlocal relation
             if not trace:
                 # reset trace
@@ -619,10 +706,10 @@ class Tensor:
             # calculate local gradient
             try:
                 # pair derivative method
-                res = Tensor(drv_operator(main=up._tensor, other=other))
+                res = Tensor(obj=drv_operator(main=up._tensor, other=other), _gradient_override=True)
             except TypeError:
                 # lone derivative method
-                res = Tensor(drv_operator(main=up._tensor))
+                res = Tensor(obj=drv_operator(main=up._tensor), _gradient_override=True)
 
             # set local gradient internals
             res._type = 'grad'
@@ -657,7 +744,7 @@ class Tensor:
         up_relation = up._tracker['org']
         if down_relation == up_relation:
             # chain gradients
-            result = Tensor(up._tracker['chn'][0][0](down._tensor, up._tensor))
+            result = Tensor(obj=up._tracker['chn'][0][0](down._tensor, up._tensor), _gradient_override=True)
             # set gradient internals
             result._type = 'grad'
             result._tracker['rlt'] = down._tracker['rlt'] + up._tracker['rlt'][1:]

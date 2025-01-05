@@ -16,7 +16,9 @@ from ..utils.utils import ParamChecker
 
 class Initializers:
     r"""
-    Initialization algorithms for weights and biases.
+    **Initialization algorithms for weights and biases.**
+
+    --------------------------------------------------------------------------------------------------------------------
 
     Creates GardenPy Tensors using the specified initialization method with the specified dimensions.
     It automatically creates GardenPy Tensors, but these can be converted into NumPy arrays if wanted.
@@ -63,7 +65,7 @@ class Initializers:
         self._set_initializer()
 
     @classmethod
-    def methods(cls):
+    def methods(cls) -> list:
         return cls._methods
 
     def _get_method(self, method: str, hyperparams: dict, **kwargs) -> Tuple[str, dict]:
@@ -105,33 +107,25 @@ class Initializers:
         # set internal hyperparameters
         return method, checker.check_params(hyperparams, **kwargs)
 
-    def _set_initializer(self):
-        # initializer wrapper
-        def initializer(func):
-            def wrapper(*args: int) -> Tensor:
-                # check dimensions
-                if len(args) != 2:
-                    raise ValueError("Initialization must occur with 2 dimensions")
-                if not all(isinstance(arg, int) and 0 < arg for arg in args):
-                    raise ValueError("Each dimension must be a positive integer")
-                # initialize tensor
-                return Tensor(func(*args))
-            return wrapper
-
+    def _set_initializer(self) -> None:
         # hyperparameter reference
         h = self._hyperparams
 
-        @initializer
+        @Tensor.initializer_method
         def xavier(*args: int) -> np.ndarray:
             # xavier method function
-            return h['kappa'] * np.sqrt(2.0 / float(args[-2] + args[-1])) * np.random.normal(loc=h['mu'], scale=h['sigma'], size=args)
+            return (
+                    h['kappa'] *
+                    np.sqrt(2.0 / float(args[-2] + args[-1])) *
+                    np.random.normal(loc=h['mu'], scale=h['sigma'], size=args)
+            )
 
-        @initializer
+        @Tensor.initializer_method
         def gaussian(*args: int) -> np.ndarray:
             # gaussian method function
             return h['kappa'] * np.random.normal(loc=h['mu'], scale=h['sigma'], size=args)
 
-        @initializer
+        @Tensor.initializer_method
         def uniform(*args: int) -> np.ndarray:
             # uniform method function
             return h['kappa'] * np.ones(args, dtype=np.float64)
@@ -227,7 +221,7 @@ class Activators:
         self._set_activator()
 
     @classmethod
-    def methods(cls):
+    def methods(cls) -> list:
         return cls._methods
 
     def _get_method(self, method: str, hyperparams: dict, **kwargs) -> Tuple[str, dict]:
@@ -293,12 +287,13 @@ class Activators:
         # set internal hyperparameters
         return method, checker.check_params(hyperparams, **kwargs)
 
-    def _set_activator(self):
+    def _set_activator(self) -> None:
         # hyperparameter reference
         h = self._hyperparams
 
         class _Softmax(Tensor.LoneTensorMethod):
             r"""Softmax built-in method."""
+
             def __init__(self):
                 super().__init__(prefix="softmax")
 
@@ -308,7 +303,10 @@ class Activators:
 
             @staticmethod
             def backward(x: np.ndarray) -> np.ndarray:
-                return (np.sum(np.exp(x)) * np.exp(x) - np.exp(2.0 * x)) / (np.sum(np.exp(x)) ** 2.0) * np.eye(x.shape[1])
+                return (
+                    (np.sum(np.exp(x)) * np.exp(x) - np.exp(2.0 * x)) /
+                    (np.sum(np.exp(x)) ** 2.0) * np.eye(x.shape[1])
+                )
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
@@ -320,6 +318,7 @@ class Activators:
 
         class _ReLU(Tensor.LoneTensorMethod):
             r"""ReLU built-in method."""
+
             def __init__(self):
                 super().__init__(prefix="relu")
 
@@ -340,6 +339,7 @@ class Activators:
 
         class _LeakyReLU(Tensor.LoneTensorMethod):
             r"""LeakyReLU built-in method."""
+
             def __init__(self):
                 super().__init__(prefix="lrelu")
 
@@ -360,6 +360,7 @@ class Activators:
 
         class _Sigmoid(Tensor.LoneTensorMethod):
             r"""Sigmoid built-in method."""
+
             def __init__(self):
                 super().__init__(prefix="sigmoid")
 
@@ -380,6 +381,7 @@ class Activators:
 
         class _Tanh(Tensor.LoneTensorMethod):
             r"""Tanh built-in method."""
+
             def __init__(self):
                 super().__init__(prefix="tanh")
 
@@ -400,6 +402,7 @@ class Activators:
 
         class _Softplus(Tensor.LoneTensorMethod):
             r"""Softplus built-in method."""
+
             def __init__(self):
                 super().__init__(prefix="softplus")
 
@@ -409,7 +412,11 @@ class Activators:
 
             @staticmethod
             def backward(x: np.ndarray) -> np.ndarray:
-                return h['beta'] * np.exp(h['beta'] * x) / (h['beta'] * np.exp(h['beta'] * x) + h['beta']) * np.eye(x.shape[1])
+                return (
+                    h['beta'] * np.exp(h['beta'] * x) /
+                    (h['beta'] * np.exp(h['beta'] * x) + h['beta']) *
+                    np.eye(x.shape[1])
+                )
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
@@ -420,6 +427,7 @@ class Activators:
 
         class _Mish(Tensor.LoneTensorMethod):
             r"""Mish built-in method."""
+
             def __init__(self):
                 super().__init__(prefix="mish")
 
@@ -429,7 +437,13 @@ class Activators:
 
             @staticmethod
             def backward(x: np.ndarray) -> np.ndarray:
-                return (np.tanh(np.log(np.exp(h['beta'] * x) + 1.0) / h['beta']) + x * (np.cosh(np.log(np.exp(h['beta'] * x) + 1.0) / h['beta']) ** -2.0) * (h['beta'] * np.exp(h['beta'] * x) / (h['beta'] * np.exp(h['beta'] * x) + h['beta']))) * np.eye(x.shape[1])
+                return (
+                    (
+                        np.tanh(np.log(np.exp(h['beta'] * x) + 1.0) / h['beta']) +
+                        x * (np.cosh(np.log(np.exp(h['beta'] * x) + 1.0) / h['beta']) ** -2.0) *
+                        (h['beta'] * np.exp(h['beta'] * x) / (h['beta'] * np.exp(h['beta'] * x) + h['beta']))
+                    ) * np.eye(x.shape[1])
+                )  # aughhhhhh!!!
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
@@ -557,12 +571,13 @@ class Losses:
         # set internal hyperparameters
         return method, checker.check_params(hyperparams, **kwargs)
 
-    def _set_loss(self):
+    def _set_loss(self) -> None:
         # hyperparameter reference
         h = self._hyperparams
 
         class _CrossEntropy(Tensor.PairedTensorMethod):
             r"""Cross Entropy built-in method."""
+
             def __init__(self):
                 super().__init__(prefix="centropy")
 
@@ -583,6 +598,7 @@ class Losses:
 
         class _FocalLoss(Tensor.PairedTensorMethod):
             r"""Focal loss built-in method."""
+
             def __init__(self):
                 super().__init__(prefix="focal")
 
@@ -592,7 +608,12 @@ class Losses:
 
             @staticmethod
             def backward(y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
-                return -h["alpha"] * (y - yhat) ** h["gamma"] / (yhat + h['epsilon']) - h["alpha"] * h["gamma"] * (y - yhat) ** (h["gamma"] - 1.0) * np.log(yhat + h['epsilon'])
+                return (
+                    -h["alpha"] * (y - yhat) ** h["gamma"] /
+                    (yhat + h['epsilon']) -
+                    h["alpha"] * h["gamma"] * (y - yhat) ** (h["gamma"] - 1.0) *
+                    np.log(yhat + h['epsilon'])
+                )
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
@@ -603,6 +624,7 @@ class Losses:
 
         class _SumOfSquaredResiduals(Tensor.PairedTensorMethod):
             r"""Sum of the squared residuals built-in method."""
+
             def __init__(self):
                 super().__init__(prefix="ssr")
 
@@ -623,6 +645,7 @@ class Losses:
 
         class _SumOfAbsoluteValueResiduals(Tensor.PairedTensorMethod):
             r"""Sum of the absolute value residuals built-in method."""
+
             def __init__(self):
                 super().__init__(prefix="savr")
 
@@ -674,7 +697,283 @@ class Losses:
 
 
 class Optimizers2:
+    _methods: List[str] = [
+        'adam',
+        'rmsp',
+        'sgd'
+    ]
 
+    def __init__(
+            self,
+            method: str,
+            *,
+            hyperparameters: Optional[dict] = None,
+            correlator: bool = True,
+            ikwiad: bool = False,
+            **kwargs
+    ):
+        # internals
+        self._ikwiad = bool(ikwiad)
+        self._method, self._hyperparams = self._get_method(method=method, hyperparams=hyperparameters, **kwargs)
+        self._memories = self._get_memories(method=method)
+
+        # set method
+        self._set_optimizer()
+
+    @classmethod
+    def methods(cls) -> list:
+        return cls._methods
+
+    def _get_method(self, method: str, hyperparams: dict, **kwargs) -> Tuple[str, dict]:
+        # hyperparameter reference
+        default_hyperparams = {
+            'adam': {
+                'default': {
+                    'alpha': 1e-3,
+                    'lambda_d': 0.0,
+                    'beta1': 0.9,
+                    'beta2': 0.999,
+                    'epsilon': 1e-10,
+                    'ams': False
+                },
+                'dtypes': {
+                    'alpha': (float, int),
+                    'lambda_d': (float, int),
+                    'beta1': (float, int),
+                    'beta2': (float, int),
+                    'epsilon': (float, int),
+                    'ams': (bool, int)
+                },
+                'vtypes': {
+                    'alpha': lambda x: True,
+                    'lambda_d': lambda x: 0.0 <= x < 1.0,
+                    'beta1': lambda x: 0.0 < x < 1.0,
+                    'beta2': lambda x: 0.0 < x < 1.0,
+                    'epsilon': lambda x: 0.0 < x <= 1e-2,
+                    'ams': lambda x: True
+                },
+                'ctypes': {
+                    'alpha': lambda x: float(x),
+                    'lambda_d': lambda x: float(x),
+                    'beta1': lambda x: float(x),
+                    'beta2': lambda x: float(x),
+                    'epsilon': lambda x: float(x),
+                    'ams': lambda x: bool(x)
+                }
+            },
+            'sgd': {
+                'default': {
+                    'alpha': 1e-3,
+                    'lambda_d': 0.0,
+                    'mu': 0.0,
+                    'tau': 0.0,
+                    'nesterov': False
+                },
+                'dtypes': {
+                    'alpha': (float, int),
+                    'lambda_d': (float, int),
+                    'mu': (float, int),
+                    'tau': (float, int),
+                    'nesterov': (bool, int)
+                },
+                'vtypes': {
+                    'alpha': lambda x: True,
+                    'lambda_d': lambda x: 0.0 <= x < 1.0,
+                    'mu': lambda x: 0.0 <= x < 1.0,
+                    'tau': lambda x: 0.0 <= x < 1.0,
+                    'nesterov': lambda x: True
+                },
+                'ctypes': {
+                    'alpha': lambda x: float(x),
+                    'lambda_d': lambda x: float(x),
+                    'mu': lambda x: float(x),
+                    'tau': lambda x: float(x),
+                    'nesterov': lambda x: bool(x)
+                }
+            },
+            'rmsp': {
+                'default': {
+                    'alpha': 1e-3,
+                    'lambda_d': 0.0,
+                    'beta2': 0.99,
+                    'mu': 0.0,
+                    'epsilon': 1e-10
+                },
+                'dtypes': {
+                    'alpha': (float, int),
+                    'lambda_d': (float, int),
+                    'beta2': (float, int),
+                    'mu': (float, int),
+                    'epsilon': (float, int)
+                },
+                'vtypes': {
+                    'alpha': lambda x: True,
+                    'lambda_d': lambda x: 0.0 <= x < 1.0,
+                    'beta2': lambda x: 0.0 <= x < 1.0,
+                    'mu': lambda x: 0.0 <= x < 1.0,
+                    'epsilon': lambda x: 0.0 < x <= 1e-2
+                },
+                'ctypes': {
+                    'alpha': lambda x: float(x),
+                    'lambda_d': lambda x: float(x),
+                    'beta2': lambda x: float(x),
+                    'mu': lambda x: float(x),
+                    'epsilon': lambda x: float(x)
+                }
+            },
+            'adag': {
+                'default': {
+                    'alpha': 1e-3,
+                    'lambda_d': 0.0,
+                    'tau': 0.0,
+                    'nu': 0.0,
+                    'epsilon': 1e-10
+                },
+                'dtypes': {
+                    'alpha': (float, int),
+                    'lambda_d': (float, int),
+                    'tau': (float, int),
+                    'nu': (float, int),
+                    'epsilon': (float, int)
+                },
+                'vtypes': {
+                    'alpha': lambda x: True,
+                    'lambda_d': lambda x: 0.0 <= x < 1.0,
+                    'tau': lambda x: 0.0 <= x <= 1.0,
+                    'nu': lambda x: 0.0 <= x <= 1.0,
+                    'epsilon': lambda x: 0.0 < x <= 1e-2
+                },
+                'ctypes': {
+                    'alpha': lambda x: float(x),
+                    'lambda_d': lambda x: float(x),
+                    'tau': lambda x: float(x),
+                    'nu': lambda x: float(x),
+                    'epsilon': lambda x: float(x)
+                }
+            }
+        }
+
+        # check method
+        if not isinstance(method, str):
+            raise TypeError("'method' must be a string")
+        if method not in Optimizers2._methods:
+            raise ValueError(
+                f"Invalid method: {method}\n"
+                f"Choose from: {Optimizers2._methods}"
+            )
+
+        # check hyperparameters
+        checker = ParamChecker(name=f'{method} hyperparameters', ikwiad=self._ikwiad)
+        checker.set_types(**default_hyperparams[method])
+
+        # set internal hyperparameters
+        return method, checker.check_params(hyperparams, **kwargs)
+
+    @staticmethod
+    def _get_memories(method: str) -> dict:
+        # instantiates memory dictionary
+        # required memory components for each optimization algorithm
+        memories = {
+            'adam': {
+                'psi_p': None,
+                'omega_p': None,
+                'iota': 1.0,
+                'omega_hat_max': None
+            },
+            'sgd': {
+                'delta_p': None
+            },
+            'rmsp': {
+                'delta_p': None,
+                'omega_p': None
+            },
+            'adag': {
+                'iota': 1.0,
+                'tau': None
+            }
+        }
+        # return memory dictionary
+        return memories[method]
+
+    def _set_optimizer(self) -> None:
+        # initializer wrapper
+        def optimizer(func):
+            def wrapper(obj: Tensor, grad: Tensor) -> Tensor:
+                # check items
+                if not isinstance(obj, Tensor) and obj.type != 'mat':
+                    raise TypeError("Optimization can only be done on a Tensor that is of the matrix type")
+                if not isinstance(grad, Tensor) and grad.type != 'grad':
+                    raise TypeError("Optimization can only be done with a Tensor that is of the gradient type")
+                # optimize Tensor
+            return wrapper
+
+        # hyperparameter reference
+        h = self._hyperparams
+
+        @Tensor.paired_pointer_method
+        def adam(thetas: Tensor, nablas: Tensor) -> Tensor:
+            if h['lambda_d']:
+                # weight decay
+                nablas = nablas + h['lambda_d'] * thetas
+
+            if self._memories['deltas_p'] is not None:
+                # zero-biased first moment estimate
+                deltas = h['beta1'] * self._memories['deltas_p'] + (1.0 - h['beta1']) * nablas
+            else:
+                # zero-biased initialized first moment estimate
+                deltas = (1.0 - self._hyps['beta1']) * nablas
+            # zero-biased first moment memory update
+            self._memory['deltas_p'] = deltas
+
+            if self._memory['upsilons_p'] is not None:
+                # zero-biased second raw moment estimate
+                upsilons = self._hyps['beta2'] * self._memory['upsilons_p'] + (
+                        1.0 - self._hyps['beta2']) * nablas ** 2.0
+            else:
+                # zero-biased initialized second raw moment estimate
+                upsilons = (1.0 - self._hyps['beta2']) * nablas ** 2.0
+            # zero-biased second raw moment memory update
+            self._memories['upsilons_p'] = upsilons
+
+            # zero-bias correction
+            deltas_hat = deltas / (1.0 - self._hyps['beta1'] ** self._memory['iota'])
+            upsilons_hat = upsilons / (1.0 - self._hyps['beta2'] ** self._memory['iota'])
+            # zero-bias factor update
+            self._memories['iota'] += 1.0
+
+            if self._hyps['ams']:
+                # strongly non-convex decaying learning rate variant
+                if self._memories['upsilons_hat_mx'] is not None:
+                    # maximum zero-biased second raw moment estimate
+                    upsilons_hat_mx = np.maximum(self._memories['upsilons_hat_mx'], upsilons_hat)
+                else:
+                    # initial maximum zero-biased second raw moment estimate
+                    upsilons_hat_mx = np.maximum(0.0 * upsilons_hat, upsilons_hat)
+                upsilons_hat = upsilons_hat_mx
+                # maximum zero-biased second raw moment memory update
+                self._memories['upsilons_hat_mx'] = upsilons_hat_mx
+
+            # optimization
+            thetas -= self._hyps['alpha'] * deltas_hat / (np.sqrt(upsilons_hat) + self._hyps['epsilon'])
+            return thetas
+
+        # set initialize function
+        def optimize(obj: Tensor) -> Tensor:
+            r"""
+            Returns initialized Tensor with specified dimensions.
+
+            Args:
+                obj: Tensor's two dimensions of positive integers.
+
+            Returns:
+                Tensor: Initialized Tensor.
+
+            Raises:
+                ValueError: If the dimensions weren't properly set.
+            """
+            return funcs[self._method](obj)
+
+        self.optimize = optimize
 
 
 class Optimizers:
@@ -714,6 +1013,7 @@ class Optimizers:
 
     - Refer to GardenPy's repository or GardenPy's docs for more information.
     """
+
     def __init__(self, algorithm: str, *, hyperparameters: dict = None, correlator=True, **kwargs):
         r"""
         **Optimizer initialization with defined hyperparameters.**
@@ -1049,7 +1349,8 @@ class Optimizers:
 
             if self._memory['upsilons_p'] is not None:
                 # zero-biased second raw moment estimate
-                upsilons = self._hyps['beta2'] * self._memory['upsilons_p'] + (1.0 - self._hyps['beta2']) * nablas ** 2.0
+                upsilons = self._hyps['beta2'] * self._memory['upsilons_p'] + (
+                            1.0 - self._hyps['beta2']) * nablas ** 2.0
             else:
                 # zero-biased initialized second raw moment estimate
                 upsilons = (1.0 - self._hyps['beta2']) * nablas ** 2.0
@@ -1114,7 +1415,8 @@ class Optimizers:
 
             if self._memory['upsilons_p'] is not None:
                 # zero-biased second raw moment estimate
-                upsilons = self._hyps['beta2'] * self._memory['upsilons_p'] + (1.0 - self._hyps['beta2']) * nablas ** 2.0
+                upsilons = self._hyps['beta2'] * self._memory['upsilons_p'] + (
+                            1.0 - self._hyps['beta2']) * nablas ** 2.0
             else:
                 # zero-biased initialized second raw moment estimate
                 upsilons = (1.0 - self._hyps['beta2']) * nablas ** 2.0
@@ -1173,7 +1475,8 @@ class Optimizers:
         # return optimization algorithm
         return optim_funcs[self._algorithm]
 
-    def optimize(self, thetas: Union[Tensor, np.ndarray], nablas: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
+    def optimize(self, thetas: Union[Tensor, np.ndarray], nablas: Union[Tensor, np.ndarray]) -> Union[
+        Tensor, np.ndarray]:
         r"""
         **Optimizes the thetas of a model based on the specified gradients.**
 
