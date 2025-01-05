@@ -33,6 +33,6 @@ def main(a0=None):
 
 
 if __name__ == '__main__':
-    # todo: set input image here
+    # set input image here
     image = ...
     main(image)

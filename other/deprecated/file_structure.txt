@@ -71,4 +71,4 @@ machine-learning-scratch/
 ├── README.md
 ├── requirements.txt
 ├── setup.py
-└── todo.txt
+└── do_list.txt

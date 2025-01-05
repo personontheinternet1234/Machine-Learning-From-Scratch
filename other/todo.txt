@@ -1,4 +1,4 @@
-todo list
+This is wildly outdated
 
 update README.md (most incomplete)
 edit Keras_Drawing.py to utilize the Garden class instead of defining everything at the top of the line

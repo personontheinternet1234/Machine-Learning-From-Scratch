@@ -17,7 +17,6 @@ def g2(v):
 
 
 def dg2(v):
-    # todo
     return v
 
 
