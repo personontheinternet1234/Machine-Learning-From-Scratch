@@ -10,10 +10,10 @@ from .errors import MissingMethodError
 class Params:
     def __init__(
             self,
-            default: Union[None, Dict[str, Union[int, float, str, bool]]],
-            dtypes: Union[None, Dict[str, Union[Tuple[Type[Any]], Type[Any]]]],
-            vtypes: Union[None, Dict[str, LambdaType]],
-            ctypes: Union[None, Dict[str, LambdaType]]
+            default: Union[Dict[str, Union[int, float, str, bool]], None],
+            dtypes: Union[Dict[str, Union[Tuple[Type[Any]], Type[Any]]], None],
+            vtypes: Union[Dict[str, LambdaType], None],
+            ctypes: Union[Dict[str, LambdaType], None]
     ):
         self._default = self._check_default(default)
         self._dtypes = self._check_dtypes(dtypes)
@@ -37,7 +37,7 @@ class Params:
         return itm
 
     @staticmethod
-    def _check_default(default: Union[None, dict]) -> Union[None, dict]:
+    def _check_default(default: Union[dict, None]) -> Union[dict, None]:
         # check dict
         Params._check_type(default)
         # check default
@@ -50,7 +50,7 @@ class Params:
         return default
 
     @staticmethod
-    def _check_dtypes(dtypes: Union[None, dict]) -> Union[None, dict]:
+    def _check_dtypes(dtypes: Union[dict, None]) -> Union[dict, None]:
         # check dict
         Params._check_type(dtypes)
         # check dtypes
@@ -63,7 +63,7 @@ class Params:
         return dtypes
 
     @staticmethod
-    def _check_vtypes(vtypes: Union[None, dict]) -> Union[None, dict]:
+    def _check_vtypes(vtypes: Union[dict, None]) -> Union[dict, None]:
         # check dict
         Params._check_type(vtypes)
         # check vtypes
@@ -76,7 +76,7 @@ class Params:
         return vtypes
 
     @staticmethod
-    def _check_ctypes(ctypes: Union[None, dict]) -> Union[None, dict]:
+    def _check_ctypes(ctypes: Union[dict, None]) -> Union[dict, None]:
         # check dict
         Params._check_type(ctypes)
         # check ctypes
@@ -89,19 +89,19 @@ class Params:
         return ctypes
 
     @property
-    def default(self) -> Union[None, Dict[str, Union[int, float, str, bool]]]:
+    def default(self) -> Union[Dict[str, Union[int, float, str, bool]], None]:
         return self._default
 
     @property
-    def dtypes(self) -> Union[None, Dict[str, Union[Tuple[Type[Any]], Type[Any]]]]:
+    def dtypes(self) -> Union[Dict[str, Union[Tuple[Type[Any]], Type[Any]]], None]:
         return self._dtypes
 
     @property
-    def vtypes(self) -> Union[None, Dict[str, LambdaType]]:
+    def vtypes(self) -> Union[Dict[str, LambdaType], None]:
         return self._vtypes
 
     @property
-    def ctypes(self) -> Union[None, Dict[str, LambdaType]]:
+    def ctypes(self) -> Union[Dict[str, LambdaType], None]:
         return self._ctypes
 
 
@@ -117,7 +117,14 @@ class ParamChecker:
     def parameters(self):
         return self._params
 
-    def _validate_dict(self, param_dict, name, check_callable=False, check_lambda=False):
+    def _validate_dict(
+            self,
+            param_dict: dict,
+            name: str,
+            check_callable:
+            bool = False,
+            check_lambda: bool = False
+    ) -> None:
         # validate dictionary
         if not isinstance(param_dict, dict):
             raise TypeError(f"'{name}' in {self._prefix} must be a dict")
@@ -126,6 +133,7 @@ class ParamChecker:
                 raise TypeError(f"Invalid lambda in '{name}' in {self._prefix}: {key} -> {value}")
             if check_callable and callable(value):
                 raise TypeError(f"Callable not allowed in '{name}' in {self._prefix}: {key} -> {value}")
+        return None
 
     def _validate_params(self, params: Params) -> Params:
         if not isinstance(params, Params):
@@ -149,22 +157,43 @@ class ParamChecker:
 
         return params
 
-    def check_params(self, params: Params = _none_params) -> dict:
-        if not isinstance(params, Params):
-            raise TypeError(f"'params' in {self._prefix} must be Params")
+    def check_params(self, params: Union[dict, None] = None, **kwargs) -> Union[dict, None]:
+        r"""
+        **Checks parameters.**
 
+        ----------------------------------------------------------------------------------------------------------------
+
+        Args:
+            params (dict, optional): Parameters to be checked.
+            **kwargs: Key-word args of the parameters to be checked.
+
+        Returns:
+            dict | NoneType: The checked parameters.
+                Returns None of no parameters are taken.
+
+        Raises:
+            TypeError: If any parameters were of the wrong type.
+            ValueError: If invalid values were passed for any of the parameters.
+        """
         # check for no parameters
         if self._params.default is None:
-            return self._none_params.default
+            return None
 
         # initialize as default
         final = self._params.default.copy()
 
-        if params.default is None:
+        if params is None and kwargs is None:
             # return default
             return final
 
-        for key, prm in params.default:
+        # set params
+        if params and not isinstance(params, dict):
+            raise TypeError(f"'params' in {self._prefix} must be a dictionary")
+        params = params if params else {}
+        if kwargs:
+            params.update(kwargs)
+
+        for key, prm in params.items():
             if key not in self._params.default and self._ikwiad:
                 # invalid key and warning
                 print()
@@ -181,16 +210,16 @@ class ParamChecker:
             # datatype check
             if not isinstance(prm, self._params.dtypes[key]):
                 raise ValueError(
-                    f"Invalid datatype for '{self._name}' '{key}': '{prm}'\n"
-                    f"Choose from: {self._dtypes[key]}"
+                    f"Invalid datatype for '{self._prefix}' '{key}': '{prm}'\n"
+                    f"Choose from: {self._params.dtypes[key]}"
                 )
-            if not self._vtypes[key](prm):
+            if not self._params.vtypes[key](prm):
                 raise ValueError(
-                    f"Invalid value for '{self._name}' '{key}': '{prm}'\n"
-                    f"Failed conditional: {self._vtypes[key]}"
+                    f"Invalid value for '{self._prefix}' '{key}': '{prm}'\n"
+                    f"Failed conditional: {self._params.vtypes[key]}"
                 )
             # set parameter
-            final[key] = self._ctypes[key](prm)
+            final[key] = self._params.ctypes[key](prm)
 
         # return parameters
         return final
