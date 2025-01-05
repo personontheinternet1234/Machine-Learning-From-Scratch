@@ -29,7 +29,6 @@ class TrackingError(Exception):
             A built-in error message reports common information about the tracking error if no message is given.
         """
         # message check
-        assert message is None or isinstance(message, str)
         # error message
         if message is None:
             message = (
@@ -39,4 +38,4 @@ class TrackingError(Exception):
                 "deletion of Tensors, "
                 "or accidental reference to the wrong Tensor"
             )
-        super().__init__(message)
+        super().__init__(str(message))
