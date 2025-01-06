@@ -850,7 +850,7 @@ class Optimizers:
         h = self._hyperparams.copy()
         m = self._memory
 
-        class AdaptiveMomentEstimation(Tensor.PairedTensorMethod):
+        class AdaptiveMomentEstimation(Tensor.PairedPointerMethod):
             r"""Adaptive moment estimation built-in method."""
             def __init__(self):
                 super().__init__(prefix='adam')
@@ -877,7 +877,7 @@ class Optimizers:
             def __call__(self, theta: Tensor, nabla: Tensor) -> Tensor:
                 return self.call(main=theta, other=nabla)
 
-        class StochasticGradientDescent(Tensor.PairedTensorMethod):
+        class StochasticGradientDescent(Tensor.PairedPointerMethod):
             r"""Stochastic gradient descent built-in method."""
             def __init__(self):
                 super().__init__(prefix='sgd')
@@ -897,7 +897,7 @@ class Optimizers:
             def __call__(self, theta: Tensor, nabla: Tensor) -> Tensor:
                 return self.call(main=theta, other=nabla)
 
-        class RootMeanSquaredPropagation(Tensor.PairedTensorMethod):
+        class RootMeanSquaredPropagation(Tensor.PairedPointerMethod):
             r"""Root mean squared propagation built-in method."""
             def __init__(self):
                 super().__init__(prefix='rmsp')

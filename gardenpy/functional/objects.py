@@ -641,6 +641,9 @@ class Tensor:
     class PairedPointerMethod(PointerMethod):
         @staticmethod
         def method(main: np.ndarray, other: np.ndarray) -> np.ndarray:
+            r"""
+            we love docstrings
+            """
             raise NotImplementedError("'method' has not been implemented in a subclass")
 
         def call(self, main: 'Tensor', other: Union['Tensor', np.ndarray, float, int]) -> 'Tensor':
