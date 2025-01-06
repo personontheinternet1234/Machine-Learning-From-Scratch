@@ -871,7 +871,7 @@ class Optimizers:
                     m['omega_hat_max'] = np.maximum(omega_hat, m['omega_hat_max'])
                     omega_hat = m['omega_hat_max']
 
-                m['iota'] += 1
+                m['iota'] += 1.0
                 return h['alpha'] * psi_hat / (np.sqrt(omega_hat) + h['epsilon'])
 
             def __call__(self, theta: Tensor, nabla: Tensor) -> Tensor:
@@ -932,6 +932,7 @@ class Optimizers:
                 omega = m['omega_p'] + gamma ** 2.0
                 m['omega_p'] = omega
 
+                m['iota'] += 1.0
                 return alpha_hat * gamma / (np.sqrt(omega) + h['epsilon'])
 
             def __call__(self, theta: Tensor, nabla: Tensor) -> Tensor:
