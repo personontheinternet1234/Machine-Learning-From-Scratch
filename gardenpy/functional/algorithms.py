@@ -971,7 +971,7 @@ class Optimizers:
                 if self._memories is None:
                     self._memories = self._get_memories(theta=theta)
                 elif self._correlator:
-                    self._memory = self._memories[0]
+                    _, self._memory = next(iter(self._memories.items()))
                 else:
                     self._memory = self._memories
                 return algorithm.method(theta=theta, nabla=nabla)
