@@ -1,16 +1,21 @@
-from functional.algorithms import Initializers
+import numpy as np
+from functional.algorithms import Initializers, Losses, Optimizers
+from functional.operators import tensor, nabla
 from functional.objects import Tensor
-from functional.operators import nabla
 
 init = Initializers('gaussian').initialize
+criterion = Losses('ssr').loss
+optim = Optimizers('adam').optimize
 
-t1 = init(5, 5)
-t2 = init(5, 5)
-t3 = init(5, 5)
-r1 = t1 * t2
-r2 = r1 + t3
-nabla(r1, t1)
-nabla(r2, t2)
-Tensor.zero_grad(t3)
-print(Tensor.get_instances())
-print(t3.tracker)
+x = tensor([[1, 0.5]])
+w = tensor([[0.5, 0.5]])
+y = tensor([[0.5, 1]])
+
+for i in range(1000):
+    yhat = x * w
+    loss = criterion(yhat, y)
+    grad_w = nabla(w, loss)
+    w -= grad_w * np.array([[0.01]])
+    print(yhat)
+    Tensor.zero_grad(x, w, y)
+

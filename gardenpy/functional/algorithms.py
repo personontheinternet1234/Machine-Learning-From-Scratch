@@ -106,7 +106,8 @@ class Initializers:
 
     def _set_initializer(self) -> None:
         # hyperparameter reference
-        h = self._hyperparams.copy()
+        if self._hyperparams is not None:
+            h = self._hyperparams.copy()
 
         @Tensor.initializer_method
         def xavier(*args: int) -> np.ndarray:
@@ -283,7 +284,8 @@ class Activators:
 
     def _set_activator(self) -> None:
         # hyperparameter reference
-        h = self._hyperparams.copy()
+        if self._hyperparams is not None:
+            h = self._hyperparams.copy()
 
         class _Softmax(Tensor.LoneTensorMethod):
             r"""Softmax built-in method."""
@@ -547,7 +549,8 @@ class Losses:
 
     def _set_loss(self) -> None:
         # hyperparameter reference
-        h = self._hyperparams.copy()
+        if self._hyperparams is not None:
+            h = self._hyperparams.copy()
 
         class _CrossEntropy(Tensor.PairedTensorMethod):
             r"""Cross Entropy built-in method."""
@@ -555,11 +558,11 @@ class Losses:
                 super().__init__(prefix="centropy")
 
             @staticmethod
-            def forward(y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
+            def forward(yhat: np.ndarray, y: np.ndarray) -> np.ndarray:
                 return np.array([[-np.sum(y * np.log(yhat + h['epsilon']))]])
 
             @staticmethod
-            def backward(y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
+            def backward(yhat: np.ndarray, y: np.ndarray) -> np.ndarray:
                 return -y / (yhat + h['epsilon'])
 
             @staticmethod
@@ -575,11 +578,11 @@ class Losses:
                 super().__init__(prefix="ssr")
 
             @staticmethod
-            def forward(y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
+            def forward(yhat: np.ndarray, y: np.ndarray) -> np.ndarray:
                 return np.array([[np.sum((y - yhat) ** 2.0)]])
 
             @staticmethod
-            def backward(y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
+            def backward(yhat: np.ndarray, y: np.ndarray) -> np.ndarray:
                 return -2.0 * (y - yhat)
 
             @staticmethod
@@ -595,11 +598,11 @@ class Losses:
                 super().__init__(prefix="savr")
 
             @staticmethod
-            def forward(y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
+            def forward(yhat: np.ndarray, y: np.ndarray) -> np.ndarray:
                 return np.array([[np.sum(np.abs(y - yhat))]])
 
             @staticmethod
-            def backward(y: np.ndarray, yhat: np.ndarray) -> np.ndarray:
+            def backward(yhat: np.ndarray, y: np.ndarray) -> np.ndarray:
                 return -np.sign(y - yhat)
 
             @staticmethod
@@ -617,24 +620,26 @@ class Losses:
         }
 
         # set method functions
-        def loss(x: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
+        def loss(yhat: Union[Tensor, np.ndarray], y: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
             r"""
             for tensor or numpy
             """
-            if isinstance(x, Tensor) and x.type == 'mat':
-                return ops[self._method]()(x)
-            elif isinstance(x, np.ndarray):
-                return ops[self._method].forward(x)
+            if isinstance(yhat, Tensor) and yhat.type == 'mat':
+                return ops[self._method]()(yhat, y)
+            elif isinstance(yhat, np.ndarray):
+                return ops[self._method].forward(yhat, y)
             else:
-                raise TypeError("'x' must be a Tensor with the matrix type or a NumPy array")
+                raise TypeError("'y' must be a Tensor with the matrix type or an array")
 
-        def d_loss(x: np.ndarray) -> np.ndarray:
+        def d_loss(yhat: Union[Tensor, np.ndarray], y: Union[Tensor, np.ndarray]) -> np.ndarray:
             r"""
             only for np
             """
-            if not isinstance(x, np.ndarray):
-                raise TypeError("'x' must be a NumPy array")
-            return ops[self._method].backward(x)
+            if not isinstance(yhat, np.ndarray):
+                raise TypeError("'yhat' must be an array")
+            if not isinstance(y, np.ndarray):
+                raise TypeError("'y' must be an array")
+            return ops[self._method].backward(y, yhat)
 
         self.loss = loss
         self.d_loss = d_loss
@@ -664,7 +669,6 @@ class Optimizers:
             self._memories = {}
         else:
             self._memories = None
-        self._memory = None
 
         # set method
         self._set_optimizer()
@@ -680,32 +684,32 @@ class Optimizers:
                 default={
                     'alpha': 1e-03,
                     'lambda_d': 0.0,
-                    'beta1': 0.9,
-                    'beta2': 0.999,
+                    'beta_1': 0.9,
+                    'beta_2': 0.999,
                     'epsilon': 1e-10,
                     'ams': False
                 },
                 dtypes={
                     'alpha': (float, int),
                     'lambda_d': (float, int),
-                    'beta1': (float, int),
-                    'beta2': (float, int),
+                    'beta_1': (float, int),
+                    'beta_2': (float, int),
                     'epsilon': (float, int),
                     'ams': (bool, int)
                 },
                 vtypes={
                     'alpha': lambda x: True,
                     'lambda_d': lambda x: 0.0 <= x < 1.0,
-                    'beta1': lambda x: 0.0 < x < 1.0,
-                    'beta2': lambda x: 0.0 < x < 1.0,
+                    'beta_1': lambda x: 0.0 < x < 1.0,
+                    'beta_2': lambda x: 0.0 < x < 1.0,
                     'epsilon': lambda x: 0.0 < x <= 1e-02,
                     'ams': lambda x: True
                 },
                 ctypes={
                     'alpha': lambda x: float(x),
                     'lambda_d': lambda x: float(x),
-                    'beta1': lambda x: float(x),
-                    'beta2': lambda x: float(x),
+                    'beta_1': lambda x: float(x),
+                    'beta_2': lambda x: float(x),
                     'epsilon': lambda x: float(x),
                     'ams': lambda x: bool(x)
                 }
@@ -774,28 +778,24 @@ class Optimizers:
                 default={
                     'alpha': 1e-03,
                     'lambda_d': 0.0,
-                    'tau': 0.0,
                     'nu': 0.0,
                     'epsilon': 1e-10
                 },
                 dtypes={
                     'alpha': (float, int),
                     'lambda_d': (float, int),
-                    'tau': (float, int),
                     'nu': (float, int),
                     'epsilon': (float, int)
                 },
                 vtypes={
                     'alpha': lambda x: True,
                     'lambda_d': lambda x: 0.0 <= x < 1.0,
-                    'tau': lambda x: 0.0 <= x <= 1e-02,
                     'nu': lambda x: 0.0 <= x <= 1.0,
                     'epsilon': lambda x: 0.0 < x <= 1e-02
                 },
                 ctypes={
                     'alpha': lambda x: float(x),
                     'lambda_d': lambda x: float(x),
-                    'tau': lambda x: float(x),
                     'nu': lambda x: float(x),
                     'epsilon': lambda x: float(x)
                 }
@@ -838,7 +838,7 @@ class Optimizers:
                 'omega_p': 0.0 * theta
             },
             'adag': {
-                'omega_p': self._hyperparams['tau'] * theta,
+                'omega_p': 0.0 * theta,
                 'iota': 1.0
             }
         }
@@ -847,16 +847,27 @@ class Optimizers:
 
     def _set_optimizer(self) -> None:
         # hyperparameter reference
-        h = self._hyperparams.copy()
-        m = self._memory
+        if self._hyperparams is not None:
+            h = self._hyperparams.copy()
 
         class AdaptiveMomentEstimation(Tensor.PairedPointerMethod):
             r"""Adaptive moment estimation built-in method."""
+            _memory = None
+
             def __init__(self):
                 super().__init__(prefix='adam')
 
+            @classmethod
+            def get_memory(cls):
+                return cls._memory
+
+            @classmethod
+            def set_memory(cls, memory):
+                cls._memory = memory
+
             @staticmethod
             def method(theta: np.ndarray, nabla: np.ndarray) -> np.ndarray:
+                m = AdaptiveMomentEstimation._memory
                 gamma = nabla + h['lambda_d'] * theta
 
                 psi = h['beta_1'] * m['psi_p'] + (1.0 - h['beta_1']) * gamma
@@ -879,11 +890,22 @@ class Optimizers:
 
         class StochasticGradientDescent(Tensor.PairedPointerMethod):
             r"""Stochastic gradient descent built-in method."""
+            _memory = None
+
             def __init__(self):
                 super().__init__(prefix='sgd')
 
+            @classmethod
+            def get_memory(cls):
+                return cls._memory
+
+            @classmethod
+            def set_memory(cls, memory):
+                cls._memory = memory
+
             @staticmethod
             def method(theta: np.ndarray, nabla: np.ndarray) -> np.ndarray:
+                m = StochasticGradientDescent._memory
                 gamma = nabla + h['lambda_d'] * theta
 
                 delta = h['mu'] * m['delta_p'] + (1.0 - h['tau']) * gamma
@@ -899,11 +921,22 @@ class Optimizers:
 
         class RootMeanSquaredPropagation(Tensor.PairedPointerMethod):
             r"""Root mean squared propagation built-in method."""
+            _memory = None
+
             def __init__(self):
                 super().__init__(prefix='rmsp')
 
+            @classmethod
+            def get_memory(cls):
+                return cls._memory
+
+            @classmethod
+            def set_memory(cls, memory):
+                cls._memory = memory
+
             @staticmethod
             def method(theta: np.ndarray, nabla: np.ndarray) -> np.ndarray:
+                m = RootMeanSquaredPropagation._memory
                 gamma = nabla + h['lambda_d'] * theta
 
                 omega = h['beta'] * m['omega_p'] + (1.0 - h['beta']) * gamma ** 2.0
@@ -919,12 +952,22 @@ class Optimizers:
 
         class AdaptiveGradientAlgorithm(Tensor.PairedPointerMethod):
             r"""Adaptive gradient algorithm propagation built-in method."""
-            # untested method
+            _memory = None
+
             def __init__(self):
                 super().__init__(prefix='adag')
 
+            @classmethod
+            def get_memory(cls):
+                return cls._memory
+
+            @classmethod
+            def set_memory(cls, memory):
+                cls._memory = memory
+
             @staticmethod
             def method(theta: np.ndarray, nabla: np.ndarray) -> np.ndarray:
+                m = AdaptiveGradientAlgorithm._memory
                 gamma = nabla + h['lambda_d'] * theta
 
                 alpha_hat = h['alpha'] / (1.0 + (m['iota'] - 1.0) * h['nu'])
@@ -953,12 +996,12 @@ class Optimizers:
             if self._correlator and isinstance(theta, Tensor):
                 if theta.pointer not in self._memories.keys():
                     self._memories.update({f'{theta.pointer}': self._get_memories(theta=theta.array)})
-                self._memory = self._memories[f'{theta.pointer}']
+                algorithm.set_memory(self._memories[f'{theta.pointer}'])
                 return algorithm()(theta=theta, nabla=nabla)
             elif isinstance(theta, Tensor):
                 if self._memories is None:
                     self._memories = self._get_memories(theta=theta.array)
-                self._memory = self._memories
+                algorithm.set_memory(self._memories)
                 return algorithm()(theta=theta, nabla=nabla)
             elif isinstance(theta, np.ndarray):
                 if self._correlator and not self._ikwiad:
@@ -970,10 +1013,12 @@ class Optimizers:
                     )
                 if self._memories is None:
                     self._memories = self._get_memories(theta=theta)
+                    algorithm.set_memory(self._memories)
                 elif self._correlator:
-                    _, self._memory = next(iter(self._memories.items()))
+                    _, memory = next(iter(self._memories.items()))
+                    algorithm.set_memory(memory)
                 else:
-                    self._memory = self._memories
+                    algorithm.set_memory(self._memories)
                 return algorithm.method(theta=theta, nabla=nabla)
             else:
                 raise ValueError("'theta' must be a Tensor or array")

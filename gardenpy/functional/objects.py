@@ -487,7 +487,7 @@ class Tensor:
             if not (isinstance(main, Tensor)) or main._type == 'deleted':
                 raise TypeError("'main' must be a non-deleted Tensor")
             # calculate result
-            result = Tensor(self.forward(main=main._tensor))
+            result = Tensor(self.forward(main._tensor))
             result._tracker['org'] = [main, None]
             # track main
             self._update_track(
@@ -579,7 +579,7 @@ class Tensor:
                 arr = other
 
             # calculate result
-            result = Tensor(self.forward(main=main._tensor, other=arr))
+            result = Tensor(self.forward(main._tensor, arr))
             result._tracker['org'] = [main, other]
             # track main
             self._update_track(
@@ -633,7 +633,7 @@ class Tensor:
                 raise TypeError("'main' must be a non-deleted Tensor")
 
             # function execution
-            result = Tensor(self.method(main=main._tensor))
+            result = Tensor(self.method(main._tensor))
             # conserve pointer
             self._conserve_pointer(origin=main, final=result)
             return result
@@ -658,7 +658,7 @@ class Tensor:
                 arr = other
 
             # function execution
-            result = Tensor(self.method(main=main._tensor, other=arr))
+            result = Tensor(self.method(main._tensor, arr))
             # conserve pointer
             self._conserve_pointer(origin=main, final=result)
             return result
@@ -703,7 +703,7 @@ class Tensor:
                     [_relate(item=origin, target=target, trace=trace) for origin in origins]
 
         # relate tensors
-        _relate(grad, wrt)
+        _relate(wrt, grad)
         if not isinstance(relation, list):
             # no relation
             raise TrackingError(grad=grad, wrt=wrt)
@@ -723,10 +723,10 @@ class Tensor:
             # calculate local gradient
             try:
                 # pair derivative method
-                res = Tensor(obj=drv_operator(main=up._tensor, other=other), _gradient_override=True)
+                res = Tensor(obj=drv_operator(up._tensor, other), _gradient_override=True)
             except TypeError:
                 # lone derivative method
-                res = Tensor(obj=drv_operator(main=up._tensor), _gradient_override=True)
+                res = Tensor(obj=drv_operator(up._tensor), _gradient_override=True)
 
             # set local gradient internals
             res._type = 'grad'

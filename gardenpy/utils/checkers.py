@@ -30,7 +30,7 @@ class Params:
 
     @staticmethod
     def _check_type(itm):
-        if itm is not None or not isinstance(itm, dict):
+        if itm is not None and not isinstance(itm, dict):
             # check itm
             raise TypeError("Each parameter item must be None or a dictionary")
         # return itm
@@ -43,7 +43,7 @@ class Params:
         # check default
         if (
                 isinstance(default, dict) and
-                not all([isinstance(itm, (int, float, str, bool)) for itm in default.items()])
+                not all([isinstance(itm, (int, float, str, bool)) for itm in default.values()])
         ):
             raise TypeError("Some items in 'default' weren't of the accepted type")
         # return default
@@ -56,7 +56,7 @@ class Params:
         # check dtypes
         if (
                 isinstance(dtypes, dict) and
-                not all([itm is not callable for itm in dtypes.items()])
+                not all([itm is not callable for itm in dtypes.values()])
         ):
             raise TypeError("Some items in 'dtypes' weren't of the accepted type")
         # return dtypes
@@ -69,7 +69,7 @@ class Params:
         # check vtypes
         if (
                 isinstance(vtypes, dict) and
-                not all([isinstance(itm, LambdaType) for itm in vtypes.items()])
+                not all([isinstance(itm, LambdaType) for itm in vtypes.values()])
         ):
             raise TypeError("Some items in 'vtypes' weren't of the accepted type")
         # return vtypes
@@ -82,7 +82,7 @@ class Params:
         # check ctypes
         if (
                 isinstance(ctypes, dict) and
-                not all([isinstance(itm, LambdaType) for itm in ctypes.items()])
+                not all([isinstance(itm, LambdaType) for itm in ctypes.values()])
         ):
             raise TypeError("Some items in 'ctypes' weren't of the accepted type")
         # return ctypes
