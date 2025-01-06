@@ -614,38 +614,51 @@ class Tensor:
         return wrapper
 
     class PointerMethod:
-        def __init__(self):
-            ...
+        def __init__(self, prefix):
+            self._prefix = str(prefix)
 
-    @staticmethod
-    def lone_pointer_method(func: Callable) -> Callable:
-        def wrapper(main: 'Tensor') -> 'Tensor':
+        @staticmethod
+        def _conserve_pointer(origin: 'Tensor', final: 'Tensor') -> None:
+            final._pointer = origin._pointer
+            origin.instance_reset()
+
+    class LonePointerMethod(PointerMethod):
+        @staticmethod
+        def method(main: np.ndarray) -> np.ndarray:
+            raise NotImplementedError("'method' has not been implemented in a subclass")
+
+        def call(self, main: 'Tensor') -> 'Tensor':
             # check tensor
             if not isinstance(main, Tensor) or main._type == 'deleted':
-                raise TypeError("Main item must be a non-deleted Tensor")
-            # function execution
-            result = Tensor(func(main._tensor))
-            # conserve pointer
-            result._pointer = main._pointer
-            main.instance_reset()
-            return result
-        return wrapper
+                raise TypeError("'main' must be a non-deleted Tensor")
 
-    @staticmethod
-    def paired_pointer_method(func: Callable) -> Callable:
-        def wrapper(main: 'Tensor', other: 'Tensor') -> 'Tensor':
-            # check tensors
+            # function execution
+            result = Tensor(self.method(main=main._tensor))
+            # conserve pointer
+            self._conserve_pointer(origin=main, final=result)
+            return result
+
+    class PairedPointerMethod(PointerMethod):
+        @staticmethod
+        def method(main: np.ndarray, other: np.ndarray) -> np.ndarray:
+            raise NotImplementedError("'method' has not been implemented in a subclass")
+
+        def call(self, main: 'Tensor', other: Union['Tensor', np.ndarray, float, int]) -> 'Tensor':
+            # check tensor
             if not isinstance(main, Tensor) or main._type == 'deleted':
                 raise TypeError("'main' must be a non-deleted Tensor")
-            if not isinstance(other, Tensor) or other._type == 'deleted':
-                raise TypeError("'other' must be a non-deleted Tensor")
+
+            # set array
+            if isinstance(other, Tensor):
+                arr = other._tensor
+            else:
+                arr = other
+
             # function execution
-            result = Tensor(func(main._tensor, other._tensor))
+            result = Tensor(self.method(main=main._tensor, other=arr))
             # conserve pointer
-            result._pointer = main._pointer
-            main.instance_reset()
+            self._conserve_pointer(origin=main, final=result)
             return result
-        return wrapper
 
     r"""
     Gradient calculation methods.
