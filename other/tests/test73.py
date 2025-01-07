@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def _get_solver(self):
     if self._batching == 1:
         def backward(a, y):

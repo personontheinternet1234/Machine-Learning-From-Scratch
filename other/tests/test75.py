@@ -18,4 +18,3 @@ for i in range(1000):
     w -= grad_w * np.array([[0.01]])
     print(yhat)
     Tensor.zero_grad(x, w, y)
-

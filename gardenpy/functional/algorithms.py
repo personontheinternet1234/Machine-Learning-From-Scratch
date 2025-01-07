@@ -399,7 +399,6 @@ class Activators:
 
         class _Softplus(Tensor.LoneTensorMethod):
             r"""Softplus built-in method."""
-
             def __init__(self):
                 super().__init__(prefix="softplus")
 

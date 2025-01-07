@@ -22,7 +22,7 @@ print('chain-ruled gradients')
 print(nabla(r2, t2))
 print(chain(nabla(r2, r1), nabla(r1, t2)))
 
-# if I introduce a tensor that isn't related to any of the calculations, an error appears
+# if I introduce a tensor not related to any of the calculations, an error appears
 u1 = Tensor(np.random.randn(1, 5))
 print(nabla(t1, u1))
 
