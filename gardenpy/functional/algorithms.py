@@ -216,6 +216,7 @@ class Activators:
         self._method, self._hyperparams = self._get_method(method=method, hyperparams=hyperparameters, **kwargs)
 
         # set method
+        self._op = None
         self._set_activator()
 
     @classmethod
@@ -458,6 +459,7 @@ class Activators:
             'softplus': _Softplus,
             'mish': _Mish
         }
+        self._op = ops[self._method]
 
         # set method functions
         def activate(x: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
@@ -465,9 +467,9 @@ class Activators:
             for tensor or numpy
             """
             if isinstance(x, Tensor) and x.type == 'mat':
-                return ops[self._method]()(x)
+                return self._op(x)
             elif isinstance(x, np.ndarray):
-                return ops[self._method].forward(x)
+                return self._op.forward(x)
             else:
                 raise TypeError("'x' must be a Tensor with the matrix type or a NumPy array")
 
@@ -477,7 +479,7 @@ class Activators:
             """
             if not isinstance(x, np.ndarray):
                 raise TypeError("'x' must be a NumPy array")
-            return ops[self._method].backward(x)
+            return self._op.backward(x)
 
         self.activate = activate
         self.d_activate = d_activate
@@ -499,6 +501,7 @@ class Losses:
         self._method, self._hyperparams = self._get_method(method=method, hyperparams=hyperparameters, **kwargs)
 
         # set method
+        self._op = None
         self._set_loss()
 
     @classmethod
@@ -618,6 +621,7 @@ class Losses:
             'ssr': _SumOfSquaredResiduals,
             'savr': _SumOfAbsoluteValueResiduals
         }
+        self._op = ops[self._method]()
 
         # set method functions
         def loss(yhat: Union[Tensor, np.ndarray], y: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
@@ -625,9 +629,9 @@ class Losses:
             for tensor or numpy
             """
             if isinstance(yhat, Tensor) and yhat.type == 'mat':
-                return ops[self._method]()(yhat, y)
+                return self._op(yhat, y)
             elif isinstance(yhat, np.ndarray):
-                return ops[self._method].forward(yhat, y)
+                return self._op.forward(yhat, y)
             else:
                 raise TypeError("'y' must be a Tensor with the matrix type or an array")
 
@@ -639,7 +643,7 @@ class Losses:
                 raise TypeError("'yhat' must be an array")
             if not isinstance(y, np.ndarray):
                 raise TypeError("'y' must be an array")
-            return ops[self._method].backward(y, yhat)
+            return self._op.backward(y, yhat)
 
         self.loss = loss
         self.d_loss = d_loss
@@ -889,6 +893,7 @@ class Optimizers:
                 return self.call(main=theta, other=nabla)
 
         class StochasticGradientDescent(Tensor.PairedPointerMethod):
+            # todo: I think I might need to store memories in these classes themselves or somehow grab them.
             r"""Stochastic gradient descent built-in method."""
             _memory = None
 
