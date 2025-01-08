@@ -8,8 +8,9 @@ One model is coded entirely from Scratch, only utilizing NumPy and Pandas.
 Refer to 'todo' for in-depth documentation on this package.
 """
 
-from .utils import (
+from .functional import (
     Tensor,
+    tensor,
     nabla,
     chain,
     Initializers,
@@ -17,25 +18,18 @@ from .utils import (
     Losses,
     Optimizers
 )
-from .models import (
-    DNN,
-    DNNTorch,
-    CNN,
-    CNNTorch
-)
+from .utils import progress
 
 __all__ = [
     'Tensor',
+    'tensor',
     'nabla',
     'chain',
     'Initializers',
     'Activators',
     'Losses',
     'Optimizers',
-    'DNN',
-    'DNNTorch',
-    'CNN',
-    'CNNTorch'
+    'progress'
 ]
 
 __version__ = '0.0.8'

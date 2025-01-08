@@ -1,2 +1,14 @@
-dict1 = {'a': 1, 'b': 2}
-print(list(dict1.values())[0])
+import gardenpy as gp
+
+init = gp.Initializers('gaussian').initialize
+
+t1 = init(5, 5)
+t2 = init(5, 5)
+t3 = init(5, 5)
+r1 = t1 * t2
+r2 = r1 + t3
+print(gp.nabla(t1, r2))
+gp.Tensor.zero_grad(t3)
+print(gp.Tensor.get_instances())
+t4 = init(5, 5)
+print(gp.Tensor.get_instances())

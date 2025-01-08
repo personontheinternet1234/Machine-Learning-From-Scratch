@@ -309,6 +309,8 @@ class Tensor:
         user_ikwiad = Tensor._ikwiad
         Tensor._ikwiad = True
         for instance in cls._instances:
+            if instance is None:
+                continue
             if instance.type == 'grad':
                 # reset gradients
                 instance.instance_reset()
@@ -665,10 +667,16 @@ class Tensor:
             # calculate local gradient
             try:
                 # pair derivative method
-                res = Tensor(obj=drv_operator(up._tensor, other), _gradient_override=True)
+                res = drv_operator(up._tensor, other)
             except TypeError:
                 # lone derivative method
-                res = Tensor(obj=drv_operator(up._tensor), _gradient_override=True)
+                res = drv_operator(up._tensor)
+
+            # identity conversion
+            if len(res.squeeze().shape) == 1:
+                res = res * np.eye(res.shape[0])
+            # tensor conversion
+            res = Tensor(obj=res, _gradient_override=True)
 
             # set local gradient internals
             res._type = 'grad'
@@ -765,11 +773,11 @@ class Tensor:
 
         @staticmethod
         def backward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
-            return other * (main ** (other - 1)) * np.eye(main.shape[1])
+            return other * (main ** (other - 1))
 
         @staticmethod
         def backward_o(other: np.ndarray, main: np.ndarray) -> np.ndarray:
-            return np.log(main) * (main ** other) * np.eye(other.shape[1])
+            return np.log(main) * (main ** other)
 
         @staticmethod
         def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
@@ -797,11 +805,11 @@ class Tensor:
 
         @staticmethod
         def backward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
-            return other * (main * 0.0 + 1.0) * np.eye(main.shape[1])
+            return other * (main * 0.0 + 1.0)
 
         @staticmethod
         def backward_o(other: np.ndarray, main: np.ndarray) -> np.ndarray:
-            return main * (other * 0.0 + 1.0) * np.eye(other.shape[1])
+            return main * (other * 0.0 + 1.0)
 
         @staticmethod
         def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
@@ -829,11 +837,11 @@ class Tensor:
 
         @staticmethod
         def backward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
-            return other * (main * 0.0 + 1.0) * np.eye(main.shape[1])
+            return other * (main * 0.0 + 1.0)
 
         @staticmethod
         def backward_o(other: np.ndarray, main: np.ndarray) -> np.ndarray:
-            return (other * 0.0 + 1.0) / main * np.eye(other.shape[1])
+            return (other * 0.0 + 1.0) / main
 
         @staticmethod
         def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
@@ -893,11 +901,11 @@ class Tensor:
 
         @staticmethod
         def backward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
-            return (main * 0.0 + 1.0) * np.eye(main.shape[1])
+            return main * 0.0 + 1.0
 
         @staticmethod
         def backward_o(other: np.ndarray, main: np.ndarray) -> np.ndarray:
-            return (other * 0.0 - 1.0) * np.eye(other.shape[1])
+            return other * 0.0 - 1.0
 
         @staticmethod
         def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
