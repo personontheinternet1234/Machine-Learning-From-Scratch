@@ -1,11 +1,14 @@
-list1 = [1, 2, 3, 4]
+def do_replace(lst: list, itm: int) -> list:
+    try:
+        idx = lst.index(None)
+        lst[idx] = itm
+    except ValueError:
+        lst.append(itm)
+    return lst
 
-list2 = list1
-list3 = list1.copy()
 
-list2[0] = 0.5
-# list3[0] = 0.5
+item = 10
+list1 = [1, 3, 6, None, 2, None, 5]
 
+do_replace(list1, item)
 print(list1)
-print(list2)
-print(list3)

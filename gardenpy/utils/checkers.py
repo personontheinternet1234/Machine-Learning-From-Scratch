@@ -1,10 +1,8 @@
 r"""Utility functions."""
 
-from typing import Callable, Dict, Optional, Union
+from typing import Callable, Dict, Union
 from types import LambdaType
 import warnings
-
-from .errors import MissingMethodError
 
 
 class Params:

@@ -44,8 +44,9 @@ class Tensor:
         As a result, direct editing of a Tensor's internals isn't necessary and is strongly discouraged.
         See :class:`Tensor.LoneTensorMethod` and :class:`Tensor.PairedTensorMethod`.
     """
+    # instance reference
     _instances: List[Union['Tensor', None]] = []
-    _pointer_counter: int = 0
+    # class ikwiad reference
     _ikwiad: bool = False
 
     def __init__(self, obj: any, *, _gradient_override: bool = False):
@@ -78,15 +79,13 @@ class Tensor:
             raise TypeError("'obj' must be a 2D matrix containing only numerical values")
 
         # set tensor internals
-        self._id: Union[int, None] = len(Tensor._instances)
-        self._pointer: Union[int, None] = Tensor._pointer_counter
+        self._id: Union[int, None] = None
         self._tensor: Union[np.ndarray, None] = obj
         self._type: str = 'mat'
         self._tracker: Dict[Union[str, List[any], Tensor]] = {'opr': [], 'drv': [], 'chn': [], 'rlt': [], 'org': []}
 
-        # update instances
-        Tensor._instances.append(self)
-        Tensor._pointer_counter += 1
+        # update instances and id
+        Tensor._add_instance(self)
 
     def __repr__(self):
         self._is_valid_tensor(itm=self)
@@ -124,13 +123,6 @@ class Tensor:
         """
         if self._is_valid_tensor(itm=self):
             return hex(self._id)
-        else:
-            return None
-
-    @property
-    def pointer(self) -> Union[str, None]:
-        if self._is_valid_tensor(itm=self):
-            return self._pointer
         else:
             return None
 
@@ -309,7 +301,6 @@ class Tensor:
         non_saved = [itm for i, itm in enumerate(cls._instances) if i not in args]
         for instance in non_saved:
             instance.instance_reset()
-        cls.clear_removed()
         return None
 
     @classmethod
@@ -318,11 +309,11 @@ class Tensor:
         user_ikwiad = Tensor._ikwiad
         Tensor._ikwiad = True
         for instance in cls._instances:
-            # reset tensor tracker
-            instance.instance_grad_reset()
             if instance.type == 'grad':
                 # reset gradients
                 instance.instance_reset()
+            # reset tensor tracker
+            instance.instance_grad_reset()
         # return to user ikwiad
         Tensor._ikwiad = user_ikwiad
         return None
@@ -339,15 +330,6 @@ class Tensor:
         replacer._id = replaced_id
         cls._instances[replaced_id] = replacer
         cls._instances[replacer_id] = None
-        return None
-
-    @classmethod
-    def clear_removed(cls) -> None:
-        # filter deleted tensors
-        cls._instances = [instance for instance in cls._instances if instance is not None]
-        for i, itm in enumerate(cls._instances):
-            # update id
-            itm._id = i
         return None
 
     @classmethod
@@ -414,6 +396,16 @@ class Tensor:
         Tensor._ikwiad = user_ikwiad
         # return items
         return itm, itm_id
+
+    @classmethod
+    def _add_instance(cls, itm: 'Tensor') -> None:
+        try:
+            cls._instances[cls._instances.index(None)] = itm
+            itm._id = cls._instances.index(None)
+        except ValueError:
+            cls._instances.append(itm)
+            itm._id = len(cls._instances) - 1
+        return None
 
     r"""
     Tensor tracking methods.
@@ -612,56 +604,6 @@ class Tensor:
             # initialize tensor
             return Tensor(func(*args))
         return wrapper
-
-    class PointerMethod:
-        def __init__(self, prefix):
-            self._prefix = str(prefix)
-
-        @staticmethod
-        def _conserve_pointer(origin: 'Tensor', final: 'Tensor') -> None:
-            final._pointer = origin._pointer
-            origin.instance_reset()
-
-    class LonePointerMethod(PointerMethod):
-        @staticmethod
-        def method(main: np.ndarray) -> np.ndarray:
-            raise NotImplementedError("'method' has not been implemented in a subclass")
-
-        def call(self, main: 'Tensor') -> 'Tensor':
-            # check tensor
-            if not isinstance(main, Tensor) or main._type == 'deleted':
-                raise TypeError("'main' must be a non-deleted Tensor")
-
-            # function execution
-            result = Tensor(self.method(main._tensor))
-            # conserve pointer
-            self._conserve_pointer(origin=main, final=result)
-            return result
-
-    class PairedPointerMethod(PointerMethod):
-        @staticmethod
-        def method(main: np.ndarray, other: np.ndarray) -> np.ndarray:
-            r"""
-            we love docstrings
-            """
-            raise NotImplementedError("'method' has not been implemented in a subclass")
-
-        def call(self, main: 'Tensor', other: Union['Tensor', np.ndarray, float, int]) -> 'Tensor':
-            # check tensor
-            if not isinstance(main, Tensor) or main._type == 'deleted':
-                raise TypeError("'main' must be a non-deleted Tensor")
-
-            # set array
-            if isinstance(other, Tensor):
-                arr = other._tensor
-            else:
-                arr = other
-
-            # function execution
-            result = Tensor(self.method(main._tensor, arr))
-            # conserve pointer
-            self._conserve_pointer(origin=main, final=result)
-            return result
 
     r"""
     Gradient calculation methods.

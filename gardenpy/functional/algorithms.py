@@ -1,7 +1,6 @@
 r"""Implemented machine learning algorithms"""
 
-from typing import List, Tuple, Optional, Union
-from warnings import warn
+from typing import Callable, List, Tuple, Optional, Union
 import numpy as np
 
 from .objects import Tensor
@@ -56,6 +55,7 @@ class Initializers:
         self._method, self._hyperparams = self._get_method(method=method, hyperparams=hyperparameters, **kwargs)
 
         # set method
+        self._func = None
         self._set_initializer()
 
     @classmethod
@@ -109,7 +109,19 @@ class Initializers:
         if self._hyperparams is not None:
             h = self._hyperparams.copy()
 
-        @Tensor.initializer_method
+        def initializer_method(func: Callable) -> Callable:
+            def wrapper(*args: int) -> 'Tensor':
+                # check dimensions
+                if len(args) != 2:
+                    raise ValueError("Initialization must occur with 2 dimensions")
+                if not all(isinstance(arg, int) and 0 < arg for arg in args):
+                    raise ValueError("Each dimension must be a positive integer")
+                # initialize tensor
+                return Tensor(func(*args))
+
+            return wrapper
+
+        @initializer_method
         def xavier(*args: int) -> np.ndarray:
             # xavier method function
             return (
@@ -118,12 +130,12 @@ class Initializers:
                     np.random.normal(loc=h['mu'], scale=h['sigma'], size=args)
             )
 
-        @Tensor.initializer_method
+        @initializer_method
         def gaussian(*args: int) -> np.ndarray:
             # gaussian method function
             return h['kappa'] * np.random.normal(loc=h['mu'], scale=h['sigma'], size=args)
 
-        @Tensor.initializer_method
+        @initializer_method
         def uniform(*args: int) -> np.ndarray:
             # uniform method function
             return h['kappa'] * np.ones(args, dtype=np.float64)
@@ -134,6 +146,7 @@ class Initializers:
             'gaussian': gaussian,
             'uniform': uniform
         }
+        self._func = funcs[self._method]
 
         # set initialize function
         def initialize(*args: int) -> Tensor:
@@ -149,7 +162,7 @@ class Initializers:
             Raises:
                 ValueError: If the dimensions weren't properly set.
             """
-            return funcs[self._method](*args)
+            return self._func(*args)
 
         self.initialize = initialize
 
@@ -674,6 +687,7 @@ class Optimizers:
             self._memories = None
 
         # set method
+        self._alg = None
         self._set_optimizer()
 
     @classmethod
@@ -853,179 +867,94 @@ class Optimizers:
         if self._hyperparams is not None:
             h = self._hyperparams.copy()
 
-        class AdaptiveMomentEstimation(Tensor.PairedPointerMethod):
-            r"""Adaptive moment estimation built-in method."""
-            _memory = None
+        def adam(theta: np.ndarray, nabla: np.ndarray, m: dict) -> np.ndarray:
+            gamma = nabla + h['lambda_d'] * theta
 
-            def __init__(self):
-                super().__init__(prefix='adam')
+            psi = h['beta_1'] * m['psi_p'] + (1.0 - h['beta_1']) * gamma
+            omega = h['beta_2'] * m['omega_p'] + (1.0 - h['beta_2']) * gamma ** 2.0
+            m['psi_p'] = psi
+            m['omega_p'] = omega
 
-            @classmethod
-            def get_memory(cls):
-                return cls._memory
+            psi_hat = psi / (1.0 - h['beta_1'] ** m['iota'])
+            omega_hat = omega / (1.0 - h['beta_2'] ** m['iota'])
 
-            @classmethod
-            def set_memory(cls, memory):
-                cls._memory = memory
+            if h['ams']:
+                m['omega_hat_max'] = np.maximum(omega_hat, m['omega_hat_max'])
+                omega_hat = m['omega_hat_max']
 
-            @staticmethod
-            def method(theta: np.ndarray, nabla: np.ndarray) -> np.ndarray:
-                m = AdaptiveMomentEstimation._memory
-                gamma = nabla + h['lambda_d'] * theta
+            m['iota'] += 1.0
+            return h['alpha'] * psi_hat / (np.sqrt(omega_hat) + h['epsilon'])
 
-                psi = h['beta_1'] * m['psi_p'] + (1.0 - h['beta_1']) * gamma
-                omega = h['beta_2'] * m['omega_p'] + (1.0 - h['beta_2']) * gamma ** 2.0
-                m['psi_p'] = psi
-                m['omega_p'] = omega
+        def sgd(theta: np.ndarray, nabla: np.ndarray, m: dict) -> np.ndarray:
+            gamma = nabla + h['lambda_d'] * theta
 
-                psi_hat = psi / (1.0 - h['beta_1'] ** m['iota'])
-                omega_hat = omega / (1.0 - h['beta_2'] ** m['iota'])
+            delta = h['mu'] * m['delta_p'] + (1.0 - h['tau']) * gamma
 
-                if h['ams']:
-                    m['omega_hat_max'] = np.maximum(omega_hat, m['omega_hat_max'])
-                    omega_hat = m['omega_hat_max']
+            if h['nesterov']:
+                delta = h['mu'] * delta + gamma
+            m['delta_p'] = delta
 
-                m['iota'] += 1.0
-                return h['alpha'] * psi_hat / (np.sqrt(omega_hat) + h['epsilon'])
+            return h['alpha'] * delta
 
-            def __call__(self, theta: Tensor, nabla: Tensor) -> Tensor:
-                return self.call(main=theta, other=nabla)
+        def rmsp(theta: np.ndarray, nabla: np.ndarray, m: dict) -> np.ndarray:
+            gamma = nabla + h['lambda_d'] * theta
 
-        class StochasticGradientDescent(Tensor.PairedPointerMethod):
-            # todo: I think I might need to store memories in these classes themselves or somehow grab them.
-            r"""Stochastic gradient descent built-in method."""
-            _memory = None
+            omega = h['beta'] * m['omega_p'] + (1.0 - h['beta']) * gamma ** 2.0
+            m['omega_p'] = omega
 
-            def __init__(self):
-                super().__init__(prefix='sgd')
+            delta = h['mu'] * m['delta_p'] + gamma / (np.sqrt(omega) + h['epsilon'])
+            m['delta_p'] = delta
 
-            @classmethod
-            def get_memory(cls):
-                return cls._memory
+            return h['alpha'] * delta
 
-            @classmethod
-            def set_memory(cls, memory):
-                cls._memory = memory
+        def adag(theta: np.ndarray, nabla: np.ndarray, m: dict) -> np.ndarray:
+            gamma = nabla + h['lambda_d'] * theta
 
-            @staticmethod
-            def method(theta: np.ndarray, nabla: np.ndarray) -> np.ndarray:
-                m = StochasticGradientDescent._memory
-                gamma = nabla + h['lambda_d'] * theta
+            alpha_hat = h['alpha'] / (1.0 + (m['iota'] - 1.0) * h['nu'])
 
-                delta = h['mu'] * m['delta_p'] + (1.0 - h['tau']) * gamma
+            omega = m['omega_p'] + gamma ** 2.0
+            m['omega_p'] = omega
 
-                if h['nesterov']:
-                    delta = h['mu'] * delta + gamma
-                m['delta_p'] = delta
-
-                return h['alpha'] * delta
-
-            def __call__(self, theta: Tensor, nabla: Tensor) -> Tensor:
-                return self.call(main=theta, other=nabla)
-
-        class RootMeanSquaredPropagation(Tensor.PairedPointerMethod):
-            r"""Root mean squared propagation built-in method."""
-            _memory = None
-
-            def __init__(self):
-                super().__init__(prefix='rmsp')
-
-            @classmethod
-            def get_memory(cls):
-                return cls._memory
-
-            @classmethod
-            def set_memory(cls, memory):
-                cls._memory = memory
-
-            @staticmethod
-            def method(theta: np.ndarray, nabla: np.ndarray) -> np.ndarray:
-                m = RootMeanSquaredPropagation._memory
-                gamma = nabla + h['lambda_d'] * theta
-
-                omega = h['beta'] * m['omega_p'] + (1.0 - h['beta']) * gamma ** 2.0
-                m['omega_p'] = omega
-
-                delta = h['mu'] * m['delta_p'] + gamma / (np.sqrt(omega) + h['epsilon'])
-                m['delta_p'] = delta
-
-                return h['alpha'] * delta
-
-            def __call__(self, theta: Tensor, nabla: Tensor) -> Tensor:
-                return self.call(main=theta, other=nabla)
-
-        class AdaptiveGradientAlgorithm(Tensor.PairedPointerMethod):
-            r"""Adaptive gradient algorithm propagation built-in method."""
-            _memory = None
-
-            def __init__(self):
-                super().__init__(prefix='adag')
-
-            @classmethod
-            def get_memory(cls):
-                return cls._memory
-
-            @classmethod
-            def set_memory(cls, memory):
-                cls._memory = memory
-
-            @staticmethod
-            def method(theta: np.ndarray, nabla: np.ndarray) -> np.ndarray:
-                m = AdaptiveGradientAlgorithm._memory
-                gamma = nabla + h['lambda_d'] * theta
-
-                alpha_hat = h['alpha'] / (1.0 + (m['iota'] - 1.0) * h['nu'])
-
-                omega = m['omega_p'] + gamma ** 2.0
-                m['omega_p'] = omega
-
-                m['iota'] += 1.0
-                return alpha_hat * gamma / (np.sqrt(omega) + h['epsilon'])
-
-            def __call__(self, theta: Tensor, nabla: Tensor) -> Tensor:
-                return self.call(main=theta, other=nabla)
+            m['iota'] += 1.0
+            return alpha_hat * gamma / (np.sqrt(omega) + h['epsilon'])
 
         # method reference
         algs = {
-            'adam': AdaptiveMomentEstimation,
-            'sgd': StochasticGradientDescent,
-            'rmsp': RootMeanSquaredPropagation,
-            'adag': AdaptiveGradientAlgorithm
+            'adam': adam,
+            'sgd': sgd,
+            'rmsp': rmsp,
+            'adag': adag
         }
         # get method
-        algorithm = algs[self._method]
+        self._alg = algs[self._method]
 
         # set initialize function
         def optimize(theta: Union[Tensor, np.ndarray], nabla: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
-            if self._correlator and isinstance(theta, Tensor):
-                if theta.pointer not in self._memories.keys():
-                    self._memories.update({f'{theta.pointer}': self._get_memories(theta=theta.array)})
-                algorithm.set_memory(self._memories[f'{theta.pointer}'])
-                return algorithm()(theta=theta, nabla=nabla)
+            if isinstance(nabla, Tensor):
+                nabla = nabla.array
+            elif not isinstance(nabla, np.ndarray):
+                raise TypeError("'nabla' must be a Tensor or array")
+
+            if isinstance(theta, Tensor) and self._correlator:
+                t_id = theta.id
+                if t_id not in self._memories.keys():
+                    self._memories.update({f'{t_id}': self._get_memories(theta=theta.array)})
+                result = Tensor(self._alg(theta=theta.array, nabla=nabla, m=self._memories[f'{t_id}']))
+                Tensor.instance_replace(replaced=t_id, replacer=result.id)
+                return result
             elif isinstance(theta, Tensor):
+                t_id = theta.id
                 if self._memories is None:
                     self._memories = self._get_memories(theta=theta.array)
-                algorithm.set_memory(self._memories)
-                return algorithm()(theta=theta, nabla=nabla)
-            elif isinstance(theta, np.ndarray):
-                if self._correlator and not self._ikwiad:
-                    warn(
-                        f"The theta was not a Tensor, despite the correlator being used\n"
-                        f"The algorithm will attempt to use the first memory it can find, if any\n"
-                        f"This may and likely will cause an error\n"
-                        f"If intending to use arrays instead of Tensors, turn off the correlator", UserWarning
-                    )
+                result = Tensor(self._alg(theta=theta.array, nabla=nabla, m=self._memories))
+                Tensor.instance_replace(replaced=t_id, replacer=result.id)
+                return result
+            elif isinstance(theta, np.ndarray) and not self._correlator:
                 if self._memories is None:
                     self._memories = self._get_memories(theta=theta)
-                    algorithm.set_memory(self._memories)
-                elif self._correlator:
-                    _, memory = next(iter(self._memories.items()))
-                    algorithm.set_memory(memory)
-                else:
-                    algorithm.set_memory(self._memories)
-                return algorithm.method(theta=theta, nabla=nabla)
+                return self._alg(theta=theta, nabla=nabla, m=self._memories)
             else:
-                raise ValueError("'theta' must be a Tensor or array")
+                raise ValueError("Turn off correlator if using arrays")
 
         self.optimize = optimize
 
