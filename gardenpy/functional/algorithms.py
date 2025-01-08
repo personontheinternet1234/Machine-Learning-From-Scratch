@@ -602,7 +602,10 @@ class Losses:
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-                return down @ up
+                try:
+                    return down @ up
+                except ValueError:
+                    return down * up
 
             def __call__(self, main: Tensor, other: Tensor) -> Tensor:
                 return self.call(main, other)
