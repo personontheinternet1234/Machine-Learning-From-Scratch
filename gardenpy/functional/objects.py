@@ -402,11 +402,13 @@ class Tensor:
     @classmethod
     def _add_instance(cls, itm: 'Tensor') -> None:
         try:
-            itm._id = cls._instances.index(None)
-            cls._instances[cls._instances.index(None)] = itm
+            open_id = cls._instances.index(None)
+            itm._id = open_id
+            cls._instances[open_id] = itm
         except ValueError:
-            itm._id = len(cls._instances)
+            open_id = len(cls._instances)
             cls._instances.append(itm)
+            itm._id = open_id
         return None
 
     r"""
