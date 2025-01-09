@@ -12,7 +12,7 @@ w = tensor([[0.5, 0.5]])
 y = tensor([[0.5, 1]])
 alpha = tensor(np.array([[0.01, 0.01]]))
 
-for i in range(5):
+for i in range(2500):
     yhat = x * w
     loss = criterion(yhat, y)
     grad_w = nabla(w, loss)
@@ -20,5 +20,5 @@ for i in range(5):
     step = alpha * grad_w
     w = w - step
     Tensor.instance_replace(itm_id, w)
+    print(yhat)
     Tensor.zero_grad(x, w, y, alpha)
-    print(i + 1)

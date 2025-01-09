@@ -402,11 +402,11 @@ class Tensor:
     @classmethod
     def _add_instance(cls, itm: 'Tensor') -> None:
         try:
-            cls._instances[cls._instances.index(None)] = itm
             itm._id = cls._instances.index(None)
+            cls._instances[cls._instances.index(None)] = itm
         except ValueError:
+            itm._id = len(cls._instances)
             cls._instances.append(itm)
-            itm._id = len(cls._instances) - 1
         return None
 
     r"""
@@ -564,9 +564,6 @@ class Tensor:
             """
             # check tensor
             if not (isinstance(main, Tensor)) or main._type == 'deleted':
-                print(type(main))
-                print(main._tensor)
-                print(main._type)  # this is the issue, I don't really know why :(
                 raise TypeError("'main' must be a non-deleted Tensor")
 
             # set array
