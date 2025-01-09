@@ -298,7 +298,7 @@ class Tensor:
         for i, arg in enumerate(args):
             _, args[i] = cls._get_tensor_reference(arg)
         # reset non-saved instance
-        non_saved = [itm for i, itm in enumerate(cls._instances) if i not in args]
+        non_saved = [itm for i, itm in enumerate(cls._instances) if i not in args and itm is not None]
         for instance in non_saved:
             instance.instance_reset()
         return None
@@ -564,6 +564,9 @@ class Tensor:
             """
             # check tensor
             if not (isinstance(main, Tensor)) or main._type == 'deleted':
+                print(type(main))
+                print(main._tensor)
+                print(main._type)  # this is the issue, I don't really know why :(
                 raise TypeError("'main' must be a non-deleted Tensor")
 
             # set array
@@ -758,9 +761,11 @@ class Tensor:
         def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
             return self.call(main, other)
 
+    matmul = _MatMul()
+
     def __matmul__(self, other: Union['Tensor', np.ndarray]) -> 'Tensor':
         r"""Matrix multiplication of two Tensors."""
-        return Tensor._MatMul()(self, other)
+        return self.matmul(self, other)
 
     class _Pow(PairedTensorMethod):
         r"""Hadamard power built-in method."""
@@ -790,9 +795,11 @@ class Tensor:
         def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
             return self.call(main, other)
 
+    pow = _Pow()
+
     def __pow__(self, other: Union['Tensor', np.ndarray]) -> 'Tensor':
         r"""Hadamard power of two Tensors."""
-        return Tensor._Pow()(self, other)
+        return pow(self, other)
 
     class _Mul(PairedTensorMethod):
         r"""Hadamard multiplication built-in method."""
@@ -822,9 +829,11 @@ class Tensor:
         def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
             return self.call(main, other)
 
+    mul = _Mul()
+
     def __mul__(self, other: Union['Tensor', np.ndarray]) -> 'Tensor':
         r"""Hadamard multiplication of two Tensors"""
-        return Tensor._Mul()(self, other)
+        return self.mul(self, other)
 
     class _TrueDiv(PairedTensorMethod):
         r"""Hadamard division built-in method."""
@@ -854,9 +863,11 @@ class Tensor:
         def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
             return self.call(main, other)
 
+    truediv = _TrueDiv()
+
     def __truediv__(self, other: Union['Tensor', np.ndarray]) -> 'Tensor':
         r"""Hadamard division of two Tensors."""
-        return Tensor._TrueDiv()(self, other)
+        return self.truediv(self, other)
 
     class _Add(PairedTensorMethod):
         r"""Addition built-in method."""
@@ -886,9 +897,11 @@ class Tensor:
         def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
             return self.call(main, other)
 
+    add = _Add()
+
     def __add__(self, other: Union['Tensor', np.ndarray]) -> 'Tensor':
         r"""Addition of two Tensors."""
-        return Tensor._Add()(self, other)
+        return self.add(self, other)
 
     class _Sub(PairedTensorMethod):
         r"""Mathematical subtraction method."""
@@ -918,6 +931,8 @@ class Tensor:
         def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
             return self.call(main, other)
 
+    sub = _Sub()
+
     def __sub__(self, other: Union['Tensor', np.ndarray]) -> 'Tensor':
         r"""Subtraction of two Tensors."""
-        return Tensor._Sub()(self, other)
+        return self.sub(self, other)
