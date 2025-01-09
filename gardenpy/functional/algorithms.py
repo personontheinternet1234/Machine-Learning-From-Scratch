@@ -768,28 +768,28 @@ class Optimizers:
                 default={
                     'alpha': 1e-03,
                     'lambda_d': 0.0,
-                    'beta2': 0.99,
+                    'beta': 0.99,
                     'mu': 0.0,
                     'epsilon': 1e-10
                 },
                 dtypes={
                     'alpha': (float, int),
                     'lambda_d': (float, int),
-                    'beta2': (float, int),
+                    'beta': (float, int),
                     'mu': (float, int),
                     'epsilon': (float, int)
                 },
                 vtypes={
                     'alpha': lambda x: True,
                     'lambda_d': lambda x: 0.0 <= x < 1.0,
-                    'beta2': lambda x: 0.0 <= x < 1.0,
+                    'beta': lambda x: 0.0 <= x < 1.0,
                     'mu': lambda x: 0.0 <= x < 1.0,
                     'epsilon': lambda x: 0.0 < x <= 1e-02
                 },
                 ctypes={
                     'alpha': lambda x: float(x),
                     'lambda_d': lambda x: float(x),
-                    'beta2': lambda x: float(x),
+                    'beta': lambda x: float(x),
                     'mu': lambda x: float(x),
                     'epsilon': lambda x: float(x)
                 }
