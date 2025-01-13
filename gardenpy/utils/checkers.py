@@ -6,6 +6,13 @@ import warnings
 
 
 class Params:
+    r"""
+    ...
+
+    --------------------------------------------------------------------------------------------------------------------
+
+    ...
+    """
     def __init__(
             self,
             default: Union[Dict[str, Union[int, float, str, bool]], None],
@@ -13,6 +20,13 @@ class Params:
             vtypes: Union[Dict[str, Callable], None],
             ctypes: Union[Dict[str, Callable], None]
     ):
+        r"""
+        ...
+
+        ----------------------------------------------------------------------------------------------------------------
+
+        ...
+        """
         self._default = self._check_default(default)
         self._dtypes = self._check_dtypes(dtypes)
         self._vtypes = self._check_vtypes(vtypes)
@@ -88,22 +102,57 @@ class Params:
 
     @property
     def default(self) -> Union[Dict[str, Union[int, float, str, bool]], None]:
+        r"""
+        ...
+
+        ----------------------------------------------------------------------------------------------------------------
+
+        ...
+        """
         return self._default
 
     @property
     def dtypes(self) -> Union[Dict[str, Union[tuple, any]], None]:
+        r"""
+        ...
+
+        ----------------------------------------------------------------------------------------------------------------
+
+        ...
+        """
         return self._dtypes
 
     @property
     def vtypes(self) -> Union[Dict[str, Callable], None]:
+        r"""
+        ...
+
+        ----------------------------------------------------------------------------------------------------------------
+
+        ...
+        """
         return self._vtypes
 
     @property
     def ctypes(self) -> Union[Dict[str, Callable], None]:
+        r"""
+        ...
+
+        ----------------------------------------------------------------------------------------------------------------
+
+        ...
+        """
         return self._ctypes
 
 
 class ParamChecker:
+    r"""
+    ...
+
+    --------------------------------------------------------------------------------------------------------------------
+
+    ...
+    """
     _none_params = Params(default=None, dtypes=None, vtypes=None, ctypes=None)
 
     def __init__(self, prefix: str = 'Parameters', parameters: Params = _none_params, *, ikwiad: bool = False):
@@ -112,7 +161,19 @@ class ParamChecker:
         self._params = self._validate_params(params=parameters)
 
     @property
-    def parameters(self):
+    def parameters(self) -> Params:
+        r"""
+        **Returns internal parameters.**
+
+        ----------------------------------------------------------------------------------------------------------------
+
+        ...
+
+        ----------------------------------------------------------------------------------------------------------------
+
+        Returns:
+            Params: Internal parameters.
+        """
         return self._params
 
     def _validate_dict(

@@ -196,7 +196,7 @@ class Tensor:
         user_ikwiad = Tensor._ikwiad
         Tensor._ikwiad = True
         # get tracker reference
-        alt_tracker = self._tracker
+        alt_tracker = self._tracker.copy()
 
         if not self._is_valid_tensor(itm=self):
             return None
@@ -614,7 +614,7 @@ class Tensor:
     """
 
     @staticmethod
-    def nabla(grad: 'Tensor', wrt: 'Tensor') -> 'Tensor':
+    def nabla(grad: 'Tensor', wrt: 'Tensor', *, binary: bool = True) -> 'Tensor':
         # check tensors
         if not isinstance(grad, Tensor) or grad._type != 'mat':
             raise TypeError("'grad' must be a Tensor with the matrix type")
@@ -622,22 +622,22 @@ class Tensor:
             raise TypeError("'wrt' must be a Tensor with the matrix type")
 
         # set gradient relation
-        relation = None
+        if binary:
+            relation = None
+        else:
+            relation = []
 
         def _relate(item, target, trace=None):
-            # NB: This method only relates the first relation instance.
-            # If two alternate paths merge onto a single path, the binary search tree will stop before reaching the
-            # second instance.
-            # Implementing merging path functionality will slightly reduce relation speed and require some rewrites.
-            # At this current time, adding the gradients seems to be the method.
-            # If implemented, this will need to be checked for edge cases that may or may not exist where the
-            # gradients are of different sizes.
             nonlocal relation
             if not trace:
                 # reset trace
                 trace = []
-            if relation is None and isinstance(item, Tensor):
-                # get downstream
+            # NB: This only gets origins if the item is a matrix.
+            # Tracing gradients through gradients is possible, but requires a lot of modification and significantly
+            # increases computational time, even if it's never used.
+            # Tensors allow operations on gradients for simplicity, but don't allow autograd with them.
+            if binary and (relation is None) and isinstance(item, Tensor) and item._type == 'mat':
+                # get origins
                 origins = item._tracker['org']
                 trace.append(item)
                 if target in origins:
@@ -647,10 +647,21 @@ class Tensor:
                 else:
                     # relation search
                     [_relate(item=origin, target=target, trace=trace) for origin in origins]
+            elif not binary and isinstance(item, Tensor) and item._type == 'mat':
+                # get origins
+                origins = item._tracker['org']
+                trace.append(item)
+                if target in origins:
+                    # related
+                    trace.append(target)
+                    relation.append(trace)
+                else:
+                    # relation search
+                    [_relate(item=origin, target=target, trace=trace) for origin in origins]
 
         # relate tensors
         _relate(wrt, grad)
-        if not isinstance(relation, list):
+        if relation is None or relation == []:
             # no relation
             raise TrackingError(grad=grad, wrt=wrt)
 
@@ -659,6 +670,7 @@ class Tensor:
             strm_result = [rlt[1] for rlt in up._tracker['rlt']]
             strm_other = [rlt[0] for rlt in up._tracker['rlt']]
             # get operation
+            print(up._tracker['opr'])
             operator = up._tracker['opr'][strm_result.index(down)]
             drv_operator = up._tracker['drv'][strm_result.index(down)]
             other = strm_other[strm_result.index(down)]
@@ -676,7 +688,7 @@ class Tensor:
 
             # identity conversion
             if len(res.squeeze().shape) == 1:
-                res = res * np.eye(res.shape[0])
+                res = res * np.eye(res.squeeze().shape[0])
             # tensor conversion
             res = Tensor(obj=res, _gradient_override=True)
 
@@ -691,12 +703,26 @@ class Tensor:
             return res
 
         # calculate initial gradient
-        result = _derive(down=relation[-2], up=relation[-1])
-        del relation[-1]
-        while 1 < len(relation):
-            # chain rule gradients
-            result = Tensor.chain(down=_derive(down=relation[-2], up=relation[-1]), up=result)
+        if binary:
+            result = _derive(down=relation[-2], up=relation[-1])
             del relation[-1]
+            while 1 < len(relation):
+                # chain rule gradients
+                result = Tensor.chain(down=_derive(down=relation[-2], up=relation[-1]), up=result)
+                del relation[-1]
+        else:
+            grads = []
+            for itm in relation:
+                op_res = _derive(down=itm[-2], up=itm[-1])
+                del itm[-1]
+                while 1 < len(itm):
+                    # chain rule gradients
+                    op_res = Tensor.chain(down=_derive(down=itm[-2], up=itm[-1]), up=op_res)
+                    del itm[-1]
+                grads.append(op_res)
+            result = 0
+            for grad in grads:
+                result += grad
 
         # return final gradient
         return result
