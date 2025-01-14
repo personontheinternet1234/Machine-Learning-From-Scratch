@@ -1,4 +1,11 @@
-import numpy as np
+list1 = [['a'], ['b'], ['c']]
+for itm in list1:
+    itm += 'e'
+print(list1)
 
-arr1 = np.random.randn(1, 5)
-print(arr1.squeeze().shape[0])
+list2 = ['a', 'b', 'c']
+for itm in list2:
+    itm += 'e'
+print(list2)
+
+# this is great! super fun! (kill me)

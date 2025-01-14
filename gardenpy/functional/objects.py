@@ -298,6 +298,13 @@ class Tensor:
         return [instance.id if instance is not None else None for instance in cls._instances]
 
     @classmethod
+    def instance(cls, idx: Union[str, int]) -> 'Tensor':
+        # get reference
+        itm, _ = cls._get_tensor_reference(itm=idx)
+        # return reference
+        return itm
+
+    @classmethod
     def reset(cls, *args: Union['Tensor', str, int]) -> None:
         # find saved instances
         args = list(args)
