@@ -11,7 +11,7 @@ def tensor(obj: any) -> Tensor:
 
 
 @wraps(wrapped=Tensor.nabla)
-def nabla(grad: Tensor, wrt: Tensor, *, binary: bool = False) -> Tensor:
+def nabla(grad: Tensor, wrt: Tensor, *, binary: bool = True) -> Tensor:
     return Tensor.nabla(grad=grad, wrt=wrt, binary=binary)
 
 

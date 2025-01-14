@@ -83,6 +83,7 @@ class Tensor:
         self._tensor: Union[np.ndarray, None] = obj
         self._type: str = 'mat'
         self._tracker: Dict[Union[str, List[any], Tensor]] = {'opr': [], 'drv': [], 'chn': [], 'rlt': [], 'org': []}
+        self._tags: List[str] = []
 
         # update instances and id
         Tensor._add_instance(self)
@@ -236,6 +237,10 @@ class Tensor:
         self._is_valid_tensor(itm=self)
         return self._tensor
 
+    @property
+    def tags(self) -> list:
+        return self._tags
+
     # External alteration of a Tensor's properties.
     # Resets or alters the internal properties of a Tensor.
     # Resetting a Tensor's properties periodically is important to prevent memory leaks.
@@ -280,6 +285,7 @@ class Tensor:
             self._tensor = None
             self._type = 'deleted'
             self._tracker = None
+            self._tags = ['deleted']
         return None
 
     r"""
@@ -629,7 +635,7 @@ class Tensor:
 
         def _relate(item, target, trace=None):
             nonlocal relation
-            if not trace:
+            if trace is None:
                 # reset trace
                 trace = []
             # NB: This only gets origins if the item is a matrix.
@@ -643,7 +649,7 @@ class Tensor:
                 if target in origins:
                     # related
                     trace.append(target)
-                    relation = trace
+                    relation = trace.copy()
                 else:
                     # relation search
                     [_relate(item=origin, target=target, trace=trace) for origin in origins]
@@ -654,7 +660,7 @@ class Tensor:
                 if target in origins:
                     # related
                     trace.append(target)
-                    relation.append(trace)
+                    relation.append(trace.copy())
                 else:
                     # relation search
                     [_relate(item=origin, target=target, trace=trace) for origin in origins]
@@ -670,7 +676,6 @@ class Tensor:
             strm_result = [rlt[1] for rlt in up._tracker['rlt']]
             strm_other = [rlt[0] for rlt in up._tracker['rlt']]
             # get operation
-            print(up._tracker['opr'])
             operator = up._tracker['opr'][strm_result.index(down)]
             drv_operator = up._tracker['drv'][strm_result.index(down)]
             other = strm_other[strm_result.index(down)]
@@ -702,6 +707,10 @@ class Tensor:
             # return local gradient
             return res
 
+        # linear connection override
+        linear_override = False
+        if binary and len(relation):
+            linear_override = True
         # calculate initial gradient
         if binary:
             result = _derive(down=relation[-2], up=relation[-1])
@@ -711,7 +720,9 @@ class Tensor:
                 result = Tensor.chain(down=_derive(down=relation[-2], up=relation[-1]), up=result)
                 del relation[-1]
         else:
+            # accumulate grads
             grads = []
+            track = None
             for itm in relation:
                 op_res = _derive(down=itm[-2], up=itm[-1])
                 del itm[-1]
@@ -719,12 +730,18 @@ class Tensor:
                     # chain rule gradients
                     op_res = Tensor.chain(down=_derive(down=itm[-2], up=itm[-1]), up=op_res)
                     del itm[-1]
-                grads.append(op_res)
+                grads.append(op_res._tensor)
+                track = op_res._tracker
             result = 0
             for grad in grads:
                 result += grad
+            result = Tensor(obj=result, _gradient_override=True)
+            result._type = 'grad'
+            result._tracker = track
 
         # return final gradient
+        if linear_override:
+            result._tags.append('linear_override')
         return result
 
     @staticmethod
