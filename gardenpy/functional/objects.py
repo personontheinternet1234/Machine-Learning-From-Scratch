@@ -718,7 +718,7 @@ class Tensor:
 
         # linear connection override
         linear_override = False
-        if binary and len(relation):
+        if binary and len(relation) != 1:
             linear_override = True
         # calculate initial gradient
         if binary:
@@ -750,7 +750,7 @@ class Tensor:
 
         # return final gradient
         if linear_override:
-            result._tags.append('linear_override')
+            result._tags.append('linear override')
         return result
 
     @staticmethod
@@ -786,6 +786,10 @@ class Tensor:
     class _MatMul(PairedTensorMethod):
         r"""Matrix multiplication built-in method."""
         # todo: fix this class
+        # NB: This is the most significant mathematical issue that needs to be worked through.
+        # It might require some work through with code along with math to work properly.
+        # I want to fully implement all main methods properly before diving into the mathematics for this.
+        # For now, it'll just remain broken (sorry!).
         def __init__(self):
             super().__init__(prefix="matmul")
 
@@ -803,11 +807,17 @@ class Tensor:
 
         @staticmethod
         def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down @ up
+            try:
+                return down @ up
+            except ValueError:
+                return down * up
 
         @staticmethod
         def chain_o(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down @ up
+            try:
+                return down @ up
+            except ValueError:
+                return down * up
 
         def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
             return self.call(main, other)
@@ -837,11 +847,17 @@ class Tensor:
 
         @staticmethod
         def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down @ up
+            try:
+                return down @ up
+            except ValueError:
+                return down * up
 
         @staticmethod
         def chain_o(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down @ up
+            try:
+                return down @ up
+            except ValueError:
+                return down * up
 
         def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
             return self.call(main, other)
@@ -871,11 +887,17 @@ class Tensor:
 
         @staticmethod
         def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down @ up
+            try:
+                return down @ up
+            except ValueError:
+                return down * up
 
         @staticmethod
         def chain_o(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down @ up
+            try:
+                return down @ up
+            except ValueError:
+                return down * up
 
         def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
             return self.call(main, other)
@@ -905,11 +927,17 @@ class Tensor:
 
         @staticmethod
         def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down @ up
+            try:
+                return down @ up
+            except ValueError:
+                return down * up
 
         @staticmethod
         def chain_o(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down @ up
+            try:
+                return down @ up
+            except ValueError:
+                return down * up
 
         def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
             return self.call(main, other)
@@ -939,11 +967,17 @@ class Tensor:
 
         @staticmethod
         def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down @ up
+            try:
+                return down @ up
+            except ValueError:
+                return down * up
 
         @staticmethod
         def chain_o(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down @ up
+            try:
+                return down @ up
+            except ValueError:
+                return down * up
 
         def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
             return self.call(main, other)
@@ -973,11 +1007,17 @@ class Tensor:
 
         @staticmethod
         def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down @ up
+            try:
+                return down @ up
+            except ValueError:
+                return down * up
 
         @staticmethod
         def chain_o(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-            return down @ up
+            try:
+                return down @ up
+            except ValueError:
+                return down * up
 
         def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
             return self.call(main, other)
