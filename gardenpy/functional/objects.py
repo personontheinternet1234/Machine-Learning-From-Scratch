@@ -193,6 +193,8 @@ class Tensor:
             This tracker temporarily turns on ikwiad to allow printing deleted gradients in the relations.
             After the tracker has been received, ikwiad is turned back to what the user set it as.
         """
+        # do error messages
+        self._is_valid_tensor(itm=self)
         # turn on ikwiad
         user_ikwiad = Tensor._ikwiad
         Tensor._ikwiad = True
