@@ -680,7 +680,7 @@ class Tensor:
             # no relation
             raise TrackingError(grad=grad, wrt=wrt)
 
-        def _derive(down: 'Tensor', up: 'Tensor') -> 'Tensor':
+        def _derive(down: 'Tensor', up: 'Tensor', _identity: bool = False) -> 'Tensor':
             # get relations
             strm_result = [rlt[1] for rlt in up._tracker['rlt']]
             strm_other = [rlt[0] for rlt in up._tracker['rlt']]
@@ -701,17 +701,8 @@ class Tensor:
                 res = drv_operator(up._tensor)
 
             # identity conversion
-            if len(res.squeeze().shape) == 1:
-                # todo: fix this mess
-                # This is actually the biggest mess I've ever had to deal with.
-                # I do not understand how this doesn't work, since I literally used this exact logic chain earlier and
-                # I swear it worked.
-                # This is more of a math issue but seriously what.
-
-                # print(res.shape[0])
-                # print(res)
-                # print(res * np.eye(res.squeeze().shape[0]))
-                # print(res.squeeze().shape[0])
+            if _identity and len(res.squeeze().shape) == 1:
+                # this is disabled automatically, but is still here incase it's used later on
                 res = res * np.eye(res.squeeze().shape[0])
             # tensor conversion
             res = Tensor(obj=res, _gradient_override=True)

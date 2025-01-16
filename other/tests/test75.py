@@ -15,7 +15,6 @@ for i in range(10000):
     yhat = x * w
     loss = criterion(yhat, y)
     grad_w = nabla(w, loss)
-    itm_id = w.id
     w = optim(w, grad_w)
     if print_loss:
         print(f"Loss: {str(loss)[2:-2]}")
