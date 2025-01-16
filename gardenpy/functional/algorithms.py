@@ -966,18 +966,17 @@ class Optimizers:
                 raise TypeError("'nabla' must be a Tensor or array")
 
             if isinstance(theta, Tensor) and self._correlator:
-                t_id = theta.id
-                if t_id not in self._memories.keys():
-                    self._memories.update({f'{t_id}': self._get_memories(theta=theta.array)})
-                result = Tensor(self._alg(theta=theta.array, nabla=nabla, m=self._memories[f'{t_id}']))
-                Tensor.instance_replace(replaced=t_id, replacer=result.id)
+                if theta.id not in self._memories.keys():
+                    self._memories.update({theta.id: self._get_memories(theta=theta.array)})
+                result = Tensor(theta.array - 0.01 * nabla)
+                # result = Tensor(self._alg(theta=theta.array, nabla=nabla, m=self._memories[theta.id]))
+                Tensor.instance_replace(replaced=theta, replacer=result)
                 return result
             elif isinstance(theta, Tensor):
-                t_id = theta.id
                 if self._memories is None:
                     self._memories = self._get_memories(theta=theta.array)
                 result = Tensor(self._alg(theta=theta.array, nabla=nabla, m=self._memories))
-                Tensor.instance_replace(replaced=t_id, replacer=result.id)
+                Tensor.instance_replace(replaced=theta, replacer=result)
                 return result
             elif isinstance(theta, np.ndarray) and not self._correlator:
                 if self._memories is None:

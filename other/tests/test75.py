@@ -16,6 +16,8 @@ for i in range(1000):
     loss = criterion(yhat, y)
     grad_w = nabla(w, loss)
     itm_id = w.id
-    w = optim(w, grad_w)
+    w = w - grad_w * np.array([[0.01]])
+    Tensor.instance_replace(itm_id, w)
+    # w = optim(w, grad_w)
     print(f"Loss: {str(loss)[2:-2]}")
     Tensor.zero_grad(x, w, y)
