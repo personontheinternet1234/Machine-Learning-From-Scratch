@@ -5,7 +5,7 @@ from functional.objects import Tensor
 
 init = Initializers('gaussian').initialize
 criterion = Losses('ssr').loss
-optim = Optimizers('sgd', alpha=0.01).optimize
+optim = Optimizers('adam', alpha=0.01).optimize
 
 x = tensor([[1, 0.5]])
 w = init(1, 2)
@@ -16,8 +16,6 @@ for i in range(1000):
     loss = criterion(yhat, y)
     grad_w = nabla(w, loss)
     itm_id = w.id
-    w = w - grad_w * np.array([[0.01]])
-    Tensor.instance_replace(itm_id, w)
-    # w = optim(w, grad_w)
-    print(f"Loss: {str(loss)[2:-2]}")
+    w = optim(w, grad_w)
+    # print(f"Loss: {str(loss)[2:-2]}")
     Tensor.zero_grad(x, w, y)

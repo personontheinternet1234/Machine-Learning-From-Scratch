@@ -651,7 +651,7 @@ class Tensor:
             # Tracing gradients through gradients is possible, but requires a lot of modification and significantly
             # increases computational time, even if it's never used.
             # Tensors allow operations on gradients for simplicity, but don't allow autograd with them.
-            if binary and (relation is None) and isinstance(item, Tensor) and item._type == 'mat':
+            if binary and relation is None and isinstance(item, Tensor) and item._type == 'mat':
                 # get origins
                 origins = item._tracker['org']
                 trace.append(item)
@@ -676,7 +676,7 @@ class Tensor:
 
         # relate tensors
         _relate(wrt, grad)
-        if relation is None or relation == []:
+        if not relation:
             # no relation
             raise TrackingError(grad=grad, wrt=wrt)
 
@@ -702,7 +702,11 @@ class Tensor:
 
             # identity conversion
             if len(res.squeeze().shape) == 1:
-                res = res * np.eye(res.squeeze().shape[0])
+                # todo: literally what is happening here
+                # print(res.shape[0])
+                # print(np.eye(1))
+                # print(res.squeeze().shape[0])
+                res = res * np.eye(res.shape[0])
             # tensor conversion
             res = Tensor(obj=res, _gradient_override=True)
 
@@ -718,10 +722,10 @@ class Tensor:
 
         # linear connection override
         linear_override = False
-        if binary and len(relation) != 1:
+        if not binary and len(relation) != 1:
             linear_override = True
-        # calculate initial gradient
         if binary:
+            # calculate initial gradient
             result = _derive(down=relation[-2], up=relation[-1])
             del relation[-1]
             while 1 < len(relation):
