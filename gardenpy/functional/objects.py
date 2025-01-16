@@ -702,7 +702,7 @@ class Tensor:
 
             # identity conversion
             if len(res.squeeze().shape) == 1:
-                # todo: literally what is happening here
+                # todo: fix this mess
                 # This is actually the biggest mess I've ever had to deal with.
                 # I do not understand how this doesn't work, since I literally used this exact logic chain earlier and
                 # I swear it worked.
@@ -712,7 +712,7 @@ class Tensor:
                 # print(res)
                 # print(res * np.eye(res.squeeze().shape[0]))
                 # print(res.squeeze().shape[0])
-                res = res * np.eye(res.shape[0])  # this literally does nothing??
+                res = res * np.eye(res.squeeze().shape[0])
             # tensor conversion
             res = Tensor(obj=res, _gradient_override=True)
 
