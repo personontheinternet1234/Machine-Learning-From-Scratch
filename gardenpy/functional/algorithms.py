@@ -320,8 +320,10 @@ class Activators:
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-                # todo: incorrect math
-                return down @ up
+                try:
+                    return down @ up
+                except ValueError:
+                    return down * up
 
             def __call__(self, main: Tensor) -> Tensor:
                 return self.call(main)
@@ -342,7 +344,10 @@ class Activators:
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-                return down @ up
+                try:
+                    return down @ up
+                except ValueError:
+                    return down * up
 
             def __call__(self, main: Tensor) -> Tensor:
                 return self.call(main)
@@ -363,7 +368,10 @@ class Activators:
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-                return down @ up
+                try:
+                    return down @ up
+                except ValueError:
+                    return down * up
 
             def __call__(self, main: Tensor) -> Tensor:
                 return self.call(main)
@@ -384,7 +392,10 @@ class Activators:
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-                return down @ up
+                try:
+                    return down @ up
+                except ValueError:
+                    return down * up
 
             def __call__(self, main: Tensor) -> Tensor:
                 return self.call(main)
@@ -405,7 +416,10 @@ class Activators:
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-                return down @ up
+                try:
+                    return down @ up
+                except ValueError:
+                    return down * up
 
             def __call__(self, main: Tensor) -> Tensor:
                 return self.call(main)
@@ -429,7 +443,10 @@ class Activators:
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-                return down @ up
+                try:
+                    return down @ up
+                except ValueError:
+                    return down * up
 
             def __call__(self, main: Tensor) -> Tensor:
                 return self.call(main)
@@ -456,7 +473,10 @@ class Activators:
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-                return down @ up
+                try:
+                    return down @ up
+                except ValueError:
+                    return down * up
 
             def __call__(self, main: Tensor) -> Tensor:
                 return self.call(main)
@@ -582,7 +602,10 @@ class Losses:
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-                return down @ up
+                try:
+                    return down @ up
+                except ValueError:
+                    return down * up
 
             def __call__(self, main: Tensor, other: Tensor) -> Tensor:
                 return self.call(main, other)
@@ -625,7 +648,10 @@ class Losses:
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-                return down @ up
+                try:
+                    return down @ up
+                except ValueError:
+                    return down * up
 
             def __call__(self, main: Tensor, other: Tensor) -> Tensor:
                 return self.call(main, other)
@@ -665,6 +691,7 @@ class Losses:
 
 
 class Optimizers:
+    # todo: this is broken, and I'm not totally sure why
     _methods: List[str] = [
         'adam',
         'sgd',
@@ -886,7 +913,7 @@ class Optimizers:
                 omega_hat = m['omega_hat_max']
 
             m['iota'] += 1.0
-            return h['alpha'] * psi_hat / (np.sqrt(omega_hat) + h['epsilon'])
+            return theta - h['alpha'] * psi_hat / (np.sqrt(omega_hat) + h['epsilon'])
 
         def sgd(theta: np.ndarray, nabla: np.ndarray, m: dict) -> np.ndarray:
             gamma = nabla + h['lambda_d'] * theta
@@ -897,7 +924,7 @@ class Optimizers:
                 delta = h['mu'] * delta + gamma
             m['delta_p'] = delta
 
-            return h['alpha'] * delta
+            return theta - h['alpha'] * delta
 
         def rmsp(theta: np.ndarray, nabla: np.ndarray, m: dict) -> np.ndarray:
             gamma = nabla + h['lambda_d'] * theta
@@ -908,7 +935,7 @@ class Optimizers:
             delta = h['mu'] * m['delta_p'] + gamma / (np.sqrt(omega) + h['epsilon'])
             m['delta_p'] = delta
 
-            return h['alpha'] * delta
+            return theta - h['alpha'] * delta
 
         def adag(theta: np.ndarray, nabla: np.ndarray, m: dict) -> np.ndarray:
             gamma = nabla + h['lambda_d'] * theta
@@ -919,7 +946,7 @@ class Optimizers:
             m['omega_p'] = omega
 
             m['iota'] += 1.0
-            return alpha_hat * gamma / (np.sqrt(omega) + h['epsilon'])
+            return theta - alpha_hat * gamma / (np.sqrt(omega) + h['epsilon'])
 
         # method reference
         algs = {
