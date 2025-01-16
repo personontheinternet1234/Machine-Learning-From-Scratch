@@ -695,7 +695,8 @@ class Optimizers:
     _methods: List[str] = [
         'adam',
         'sgd',
-        'rmsp'
+        'rmsp',
+        'adag'
     ]
 
     def __init__(
