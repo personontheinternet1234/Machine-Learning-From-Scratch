@@ -87,7 +87,6 @@ class Tensor:
         **Tensor ID.**
 
         ID correlating to its position within the class's instance list.
-        Modified externally with :func:`Tensor.replace`.
 
         Returns:
             str | NoneType: Current Tensor ID.
@@ -118,8 +117,6 @@ class Tensor:
         r"""
         **Tensor's internal tracker.**
 
-        Internal tracking of objects and operations that relate to a Tensor used in autograd.
-
         Returns:
             dict | NoneType: Dictionary of a Tensor's tracker and ID.
 
@@ -127,9 +124,6 @@ class Tensor:
             UserWarning: If the function is used on a deleted Tensor.
                 Turned off by toggling ikwiad.
                 See :func:`Tensor.ikwiad`.
-
-        Note:
-            Represents items as IDs or pointers, rather than using their representation.
         """
         # do error messages
         self._is_valid_tensor(itm=self)
