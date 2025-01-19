@@ -341,9 +341,6 @@ class Activators:
                 except ValueError:
                     return down * up
 
-            def __call__(self, main: Tensor) -> Tensor:
-                return self.call(main)
-
         class _ReLU(Tensor.LoneTensorMethod):
             r"""ReLU built-in method."""
 
@@ -364,9 +361,6 @@ class Activators:
                     return down @ up
                 except ValueError:
                     return down * up
-
-            def __call__(self, main: Tensor) -> Tensor:
-                return self.call(main)
 
         class _LeakyReLU(Tensor.LoneTensorMethod):
             r"""LeakyReLU built-in method."""
@@ -389,9 +383,6 @@ class Activators:
                 except ValueError:
                     return down * up
 
-            def __call__(self, main: Tensor) -> Tensor:
-                return self.call(main)
-
         class _Sigmoid(Tensor.LoneTensorMethod):
             r"""Sigmoid built-in method."""
 
@@ -413,9 +404,6 @@ class Activators:
                 except ValueError:
                     return down * up
 
-            def __call__(self, main: Tensor) -> Tensor:
-                return self.call(main)
-
         class _Tanh(Tensor.LoneTensorMethod):
             r"""Tanh built-in method."""
 
@@ -436,9 +424,6 @@ class Activators:
                     return down @ up
                 except ValueError:
                     return down * up
-
-            def __call__(self, main: Tensor) -> Tensor:
-                return self.call(main)
 
         class _Softplus(Tensor.LoneTensorMethod):
             r"""Softplus built-in method."""
@@ -463,9 +448,6 @@ class Activators:
                     return down @ up
                 except ValueError:
                     return down * up
-
-            def __call__(self, main: Tensor) -> Tensor:
-                return self.call(main)
 
         class _Mish(Tensor.LoneTensorMethod):
             r"""Mish built-in method."""
@@ -494,9 +476,6 @@ class Activators:
                 except ValueError:
                     return down * up
 
-            def __call__(self, main: Tensor) -> Tensor:
-                return self.call(main)
-
         # operator reference
         ops = {
             'softmax': _Softmax,
@@ -515,7 +494,7 @@ class Activators:
             for tensor or numpy
             """
             if isinstance(x, Tensor) and x.type == 'mat':
-                return self._op(x)
+                return self._op.main(x)
             elif isinstance(x, np.ndarray):
                 return self._op.forward(x)
             else:
@@ -623,9 +602,6 @@ class Losses:
                 except ValueError:
                     return down * up
 
-            def __call__(self, main: Tensor, other: Tensor) -> Tensor:
-                return self.call(main, other)
-
         class _SumOfSquaredResiduals(Tensor.PairedTensorMethod):
             r"""Sum of the squared residuals built-in method."""
             def __init__(self):
@@ -645,9 +621,6 @@ class Losses:
                     return down @ up
                 except ValueError:
                     return down * up
-
-            def __call__(self, main: Tensor, other: Tensor) -> Tensor:
-                return self.call(main, other)
 
         class _SumOfAbsoluteValueResiduals(Tensor.PairedTensorMethod):
             r"""Sum of the absolute value residuals built-in method."""
@@ -669,9 +642,6 @@ class Losses:
                 except ValueError:
                     return down * up
 
-            def __call__(self, main: Tensor, other: Tensor) -> Tensor:
-                return self.call(main, other)
-
         # operator reference
         ops = {
             'centropy': _CrossEntropy,
@@ -686,7 +656,7 @@ class Losses:
             for tensor or numpy
             """
             if isinstance(yhat, Tensor) and yhat.type == 'mat':
-                return self._op(yhat, y)
+                return self._op.main(yhat, y)
             elif isinstance(yhat, np.ndarray):
                 return self._op.forward(yhat, y)
             else:
@@ -707,7 +677,6 @@ class Losses:
 
 
 class Optimizers:
-    # todo: this is broken, and I'm not totally sure why
     _methods: List[str] = [
         'adam',
         'sgd',
