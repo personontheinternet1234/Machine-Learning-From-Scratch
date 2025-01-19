@@ -6,7 +6,7 @@ from warnings import warn
 from typing import Dict, List, Tuple, Optional, Union
 import numpy as np
 
-from utils.errors import TrackingError
+from ..utils.errors import TrackingError
 
 
 class Tensor:
@@ -44,8 +44,6 @@ class Tensor:
         Creates a matrix-type Tensor with a blank tracker.
         Adds Tensor to internal instances at the first open spot.
         Currently only supports two-dimensional arrays that consist of real numbers.
-
-        ----------------------------------------------------------------------------------------------------------------
 
         Args:
             obj (any): Object to be turned into a Tensor.

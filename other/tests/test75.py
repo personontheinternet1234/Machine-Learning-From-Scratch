@@ -1,6 +1,6 @@
-from functional.algorithms import Initializers, Losses, Optimizers
-from functional.operators import tensor, nabla
-from functional.objects import Tensor
+from gardenpy.functional.algorithms import Initializers, Losses, Optimizers
+from gardenpy.functional.operators import tensor, nabla
+from gardenpy.functional.objects import Tensor
 
 init = Initializers('gaussian').initialize
 criterion = Losses('ssr').loss

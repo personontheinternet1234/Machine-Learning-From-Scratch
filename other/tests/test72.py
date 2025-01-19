@@ -16,13 +16,12 @@ print(t3)
 r1 = t1 * t2
 r2 = r1 * t3
 print('individual gradients')
-print(nabla(r1, t2))
-print(nabla(r2, r1))
+print(nabla(t2, r1))
+print(nabla(r1, r2))
 print('chain-ruled gradients')
-print(nabla(r2, t2))
-print(chain(nabla(r2, r1), nabla(r1, t2)))
+print(nabla(t2, r2))
+print(chain(nabla(r1, r2), nabla(t2, r1)))
 
 # if I introduce a tensor not related to any of the calculations, an error appears
 u1 = Tensor(np.random.randn(1, 5))
-print(nabla(t1, u1))
-
+print(nabla(u1, t1))

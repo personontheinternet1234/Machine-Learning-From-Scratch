@@ -4,7 +4,7 @@ from typing import Callable, List, Tuple, Optional, Union
 import numpy as np
 
 from .objects import Tensor
-from utils.checkers import Params, ParamChecker
+from ..utils.checkers import Params, ParamChecker
 
 
 class Initializers:
