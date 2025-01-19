@@ -657,8 +657,7 @@ class Optimizers:
     _methods: List[str] = [
         'adam',
         'sgd',
-        'rmsp',
-        'adag'
+        'rmsp'
     ]
 
     def __init__(
@@ -901,6 +900,7 @@ class Optimizers:
             return theta - h['alpha'] * delta
 
         def adag(theta: np.ndarray, nabla: np.ndarray, m: dict) -> np.ndarray:
+            # todo: correct implementation
             gamma = nabla + h['lambda_d'] * theta
 
             alpha_hat = h['alpha'] / (1.0 + (m['iota'] - 1.0) * h['nu'])
@@ -931,8 +931,7 @@ class Optimizers:
             if isinstance(theta, Tensor) and self._correlator:
                 if theta.id not in self._memories.keys():
                     self._memories.update({theta.id: self._get_memories(theta=theta.array)})
-                result = Tensor(theta.array - 0.01 * nabla)
-                # result = Tensor(self._alg(theta=theta.array, nabla=nabla, m=self._memories[theta.id]))
+                result = Tensor(self._alg(theta=theta.array, nabla=nabla, m=self._memories[theta.id]))
                 Tensor.replace(replaced=theta, replacer=result)
                 return result
             elif isinstance(theta, Tensor):

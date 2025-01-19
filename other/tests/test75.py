@@ -4,7 +4,7 @@ from gardenpy.functional.objects import Tensor
 
 init = Initializers('gaussian').initialize
 criterion = Losses('ssr').loss
-optim = Optimizers('adam').optimize
+optim = Optimizers('rmsp').optimize
 
 x = tensor([[1, 0.5]])
 w = init(1, 2)
