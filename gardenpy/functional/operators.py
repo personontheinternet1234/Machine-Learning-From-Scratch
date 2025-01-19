@@ -1,5 +1,6 @@
 r"""External object operator references."""
 
+from typing import Union
 from functools import wraps
 
 from .objects import Tensor
@@ -8,6 +9,16 @@ from .objects import Tensor
 @wraps(wrapped=Tensor.__init__)
 def tensor(obj: any) -> Tensor:
     return Tensor(obj=obj)
+
+
+@wraps(wrapped=Tensor.replace)
+def replace(replaced: Union[Tensor, str, int], replacer: Union[Tensor, str, int]) -> None:
+    return Tensor.replace(replaced=replaced, replacer=replacer)
+
+
+@wraps(wrapped=Tensor.zero_grad)
+def zero_grad(*args: Union[Tensor, str, int]) -> None:
+    Tensor.zero_grad(*args)
 
 
 @wraps(wrapped=Tensor.nabla)

@@ -25,9 +25,13 @@ class Initializers:
 
     def __init__(self, method: str, *, hyperparameters: Optional[dict] = None, ikwiad: bool = False, **kwargs):
         r"""
-        Sets internal initializer method and hyperparameters.
-        Used for reference when Tensor creation is called.
-        Any hyperparameters not set will set to their default value.
+        **Set internal initializer method and hyperparameters.**
+
+        ----------------------------------------------------------------------------------------------------------------
+
+        All Initializer instances are kept separate.
+        Any hyperparameters that remain unfilled are set to their default value.
+        Tensors currently support arrays of two dimensions.
 
         xavier (Xavier/Glorot)
             - mu (float | int), default = 0.0: Distribution mean.
@@ -39,6 +43,8 @@ class Initializers:
             - kappa (float | int), default = 1.0: Distribution gain.
         uniform (Uniform)
             - kappa (float | int), default = 1.0: Uniform value.
+
+        ----------------------------------------------------------------------------------------------------------------
 
         Args:
             method (str): Initializer method.
@@ -60,6 +66,14 @@ class Initializers:
 
     @classmethod
     def methods(cls) -> list:
+        r"""
+        **Returns possible initialization methods.**
+
+        ----------------------------------------------------------------------------------------------------------------
+
+        Returns:
+            list: Possible initialization methods.
+        """
         return cls._methods
 
     def _get_method(self, method: str, hyperparams: dict, **kwargs) -> Tuple[str, dict]:
@@ -151,7 +165,9 @@ class Initializers:
         # set initialize function
         def initialize(*args: int) -> Tensor:
             r"""
-            Returns initialized Tensor with specified dimensions.
+            **Returns initialized Tensor with specified dimensions and initialization method.**
+
+            ------------------------------------------------------------------------------------------------------------
 
             Args:
                 *args: Tensor's two dimensions of positive integers.
@@ -971,13 +987,13 @@ class Optimizers:
                     self._memories.update({theta.id: self._get_memories(theta=theta.array)})
                 result = Tensor(theta.array - 0.01 * nabla)
                 # result = Tensor(self._alg(theta=theta.array, nabla=nabla, m=self._memories[theta.id]))
-                Tensor.instance_replace(replaced=theta, replacer=result)
+                Tensor.replace(replaced=theta, replacer=result)
                 return result
             elif isinstance(theta, Tensor):
                 if self._memories is None:
                     self._memories = self._get_memories(theta=theta.array)
                 result = Tensor(self._alg(theta=theta.array, nabla=nabla, m=self._memories))
-                Tensor.instance_replace(replaced=theta, replacer=result)
+                Tensor.replace(replaced=theta, replacer=result)
                 return result
             elif isinstance(theta, np.ndarray) and not self._correlator:
                 if self._memories is None:

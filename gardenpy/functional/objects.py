@@ -1,7 +1,9 @@
-r"""Internal objects."""
+r"""
+**GardenPy's objects.**
+"""
 
 from warnings import warn
-from typing import Callable, Dict, List, Tuple, Optional, Union
+from typing import Dict, List, Tuple, Optional, Union
 import numpy as np
 
 from utils.errors import TrackingError
@@ -11,38 +13,24 @@ class Tensor:
     r"""
     **GardenPy's Tensor, for automatic gradient calculation and tracking.**
 
-    --------------------------------------------------------------------------------------------------------------------
-
-    Tensors are NumPy arrays with internals that track the operations, derivatives, and chain-rule methods of the
-    functions it is run through, as well as its relationship to other arrays and Tensors it is run with.
-    Through this, Tensors can effectively automatically find their relationship to other Tensors.
-    Through reference to the operations run on itself and other Tensors, Tensors can automatically calculate its
-    gradient through a single function call, referred to as the Tensor's autograd methods.
+    Tensors are arrays that track objects and operations related to itself, creating a computation graph.
+    Tensors utilize this computational graph in tape-based autograd to calculate gradients.
     See :func:`Tensor.nabla` and :func:`Tensor.chain`.
 
-    Internally, the Tensor class tracks all instances, allowing for class-wide function calls.
-    A Tensor's internals can be retrieved, but most cannot be edited directly.
-
-    The functions for calculating and chain-ruling gradients are found within this class.
-
-    --------------------------------------------------------------------------------------------------------------------
+    Note:
+        Tensors don't automatically reset.
+        Internally, tracks will accumulate references and the instance list will clog with unused Tensors.
+        This will cause issues with the search tree for autograd and memory leaks, respectively.
+        It's recommended to clear unused Tensors frequently using :func:`Tensor.zero_grad`.
 
     Note:
-        As Tensors track all instances, over time, Tensor instances will accumulate, possibly reducing computational
-        efficiency.
-        Additionally, every instance of a method run on a Tensor is tracked.
-        If a single Tensor is constantly used, its internal tracker will accumulate these instances that have a
-        significant impact on the computational efficiency of the binary search tree method of relating Tensors for
-        autograd methods.
-        It is recommended to run the zero_grad method every so often to avoid these possible reductions in computational
-        efficiency.
-        See :func:`Tensor.zero_grad`.
+        Autograd methods can be created by inheriting a Tensor method class.
+        These will automatically modify internals, which shouldn't be edited externally.
 
     Note:
-        Creation of Tensor methods can be done by referencing one of the Tensor method subclasses.
-        These subclasses automatically take care of anything necessary for gradient tracking for autograd methods.
-        As a result, direct editing of a Tensor's internals isn't necessary and is strongly discouraged.
-        See :class:`Tensor.LoneTensorMethod` and :class:`Tensor.PairedTensorMethod`.
+        Internal autograd function calls are found within this class.
+        However, some commonly called functions have shorthand function calls.
+        See :module:`gardenpy.functional.operators`
     """
     # instance reference
     _instances: List[Union['Tensor', None]] = []
@@ -51,16 +39,11 @@ class Tensor:
 
     def __init__(self, obj: any, *, _gradient_override: bool = False):
         r"""
-        **Creation of a GardenPy Tensor instance.**
+        **Creates a Tensor.**
 
-        ----------------------------------------------------------------------------------------------------------------
-
-        All creation instances of a Tensor will be added to the running track of all instances.
-        By default, newly created Tensors will have blank internals and be of the matrix type.
-
-        Objects fed into a Tensor instance will first attempt NumPy array conversion.
-        From there, the NumPy array will be checked to ensure it follows current requirements for Tensors.
-        Tensors currently support arrays of two dimensions consisting of numbers.
+        Creates a matrix-type Tensor with a blank tracker.
+        Adds Tensor to internal instances at the first open spot.
+        Currently only supports two-dimensional arrays that consist of real numbers.
 
         ----------------------------------------------------------------------------------------------------------------
 
@@ -70,6 +53,9 @@ class Tensor:
 
         Raises:
             TypeError: If the object isn't a two-dimensional NumPy array consisting of only numbers.
+
+        Note:
+            Objects meant for Tensors will undergo NumPy array conversion.
         """
         # check object
         obj = np.array(obj)
@@ -92,26 +78,15 @@ class Tensor:
         self._is_valid_tensor(itm=self)
         return str(self._tensor)
 
-    # Tensor properties.
-    # Tensor properties refer to internal properties of Tensors.
-    # These properties should only be edited using one of the Tensor's methods.
-    # Editing of these properties can be done externally, but is strongly discouraged.
-    # To edit one of these properties, it's recommended to either use a subclass that does it for you, or create a new
-    # subclass that edits the property internally and makes an instance of the subclass externally.
+    ####################################################################################################################
 
     @property
     def id(self) -> Union[str, None]:
         r"""
-        **Hexadecimal ID of a Tensor instance.**
+        **Tensor ID.**
 
-        ----------------------------------------------------------------------------------------------------------------
-
-        A Tensor's id correlating to its index within the class instance list in hexadecimal.
-        If the instance of the Tensor has been deleted, will return None.
-        IDs are used similarly to pointers, and internally are often used as pointers, since Python doesn't explicitly
-        support the use and modification of pointers.
-
-        ----------------------------------------------------------------------------------------------------------------
+        ID correlating to its position within the class's instance list.
+        Modified externally with :func:`Tensor.replace`.
 
         Returns:
             str | NoneType: Current Tensor ID.
@@ -130,14 +105,7 @@ class Tensor:
     @property
     def type(self) -> str:
         r"""
-        **String of the Tensor type.**
-
-        ----------------------------------------------------------------------------------------------------------------
-
-        A Tensor's type, used for checking the validity of operations and internal setup.
-        Ranges from 'mat' for matrices, 'grad' for gradients, and 'deleted' for deleted instances.
-
-        ----------------------------------------------------------------------------------------------------------------
+        **Tensor's type.**
 
         Returns:
             str: Tensor type.
@@ -149,37 +117,7 @@ class Tensor:
         r"""
         **Tensor's internal tracker.**
 
-        ----------------------------------------------------------------------------------------------------------------
-
-        A Tensor's tracker contains all of a Tensor's relationships to everything it has been passed through.
-        It's vital for the gradient and chain-rule calculations.
-        Each type of Tensor has a slightly different tracker due to the nature of forward and backward methods.
-        As a result, different types of dictionaries are passed through
-
-        The tracker keeps track of a few things necessary for autograd.
-
-        First, it keeps track of all the operations it has gone through, referenced in the tracker as 'opr'.
-        These operation references are stored as strings and aren't used for any internal computation.
-        Instead, they are for user convenience in debugging.
-
-        Second, it tracks the derivative of the operations it has gone through, referenced in the tracker as
-        'drv'.
-        These derivative references are stored as functions and are vital for internal computation.
-
-        Third, it tracks the chain-rule of the operations it has gone through, referenced in the tracker as
-        'chn'.
-        These chain-rule references are stored as functions and are vital for internal computation.
-
-        Fourth, it tracks the relations of the operations it has gone through, referenced in the tracker as
-        'rlt'.
-        These relation references are stored as a Tensor or array and are returned as an ID or pointer.
-        They are necessary for gradient calculation and tracking in the autograd methods.
-
-        Fifth, it keeps track of the place the Tensor originated from, referenced in the tracker as 'org'.
-        This origin reference is stored as a Tensor or array and is returned as an ID or pointer.
-        It is necessary for gradient tracking in the autograd methods.
-
-        ----------------------------------------------------------------------------------------------------------------
+        Internal tracking of objects and operations that relate to a Tensor used in autograd.
 
         Returns:
             dict | NoneType: Dictionary of a Tensor's tracker and ID.
@@ -190,8 +128,7 @@ class Tensor:
                 See :func:`Tensor.ikwiad`.
 
         Note:
-            This tracker temporarily turns on ikwiad to allow printing deleted gradients in the relations.
-            After the tracker has been received, ikwiad is turned back to what the user set it as.
+            Represents items as IDs or pointers, rather than using their representation.
         """
         # do error messages
         self._is_valid_tensor(itm=self)
@@ -226,8 +163,6 @@ class Tensor:
         r"""
         **Tensor's internal NumPy array.**
 
-        ----------------------------------------------------------------------------------------------------------------
-
         Returns:
             np.ndarray | NoneType: Tensor's internal NumPy array.
 
@@ -241,19 +176,19 @@ class Tensor:
 
     @property
     def tags(self) -> list:
+        r"""
+        **Tensor's tags.**""
+
+        Returns:
+            list: Tensor's tags.
+        """
         return self._tags
 
-    # External alteration of a Tensor's properties.
-    # Resets or alters the internal properties of a Tensor.
-    # Resetting a Tensor's properties periodically is important to prevent memory leaks.
-    # Class methods utilize these Tensor methods across all instances of a Tensor.
-    # These Tensor methods can be used if only one Tensor is to be edited.
+    ####################################################################################################################
 
     def instance_grad_reset(self) -> None:
         r"""
         **Reset a Tensor's internal tracker.**
-
-        ----------------------------------------------------------------------------------------------------------------
 
         Raises:
             UserWarning: If the function is used on a deleted Tensor.
@@ -262,18 +197,14 @@ class Tensor:
         """
         # reset tensor tracker
         if self._is_valid_tensor(itm=self):
-            self._tracker: Dict[Union[str, List[any], Tensor]] = {'opr': [], 'drv': [], 'chn': [], 'rlt': [], 'org': []}
+            self._tracker = {'opr': [], 'drv': [], 'chn': [], 'rlt': [], 'org': []}
         return None
 
     def instance_reset(self) -> None:
         r"""
         **Reset a Tensor.**
 
-        ----------------------------------------------------------------------------------------------------------------
-
-        ...
-
-        ----------------------------------------------------------------------------------------------------------------
+        Removes all identifying features of a Tensor, including its value, and opens its spot within the instance list.
 
         Raises:
             UserWarning: If the function is used on a deleted Tensor.
@@ -290,40 +221,83 @@ class Tensor:
             self._tags = ['deleted']
         return None
 
-    r"""
-    Class methods.
-    """
+    def matrix(self) -> Union['Tensor', None]:
+        if self._type != 'grad':
+            if not self._ikwiad:
+                warn("Conversion to matrices can only occur with gradients.", UserWarning)
+            return None
+        return Tensor(self._tensor)
+
+    ####################################################################################################################
 
     @classmethod
-    def get_instances(cls) -> list:
+    def instances(cls) -> list:
+        r"""
+        **Tensor instances.**
+
+        Returns:
+            list: All Tensor instances referenced by ID.
+        """
         # return instances
         return [instance.id if instance is not None else None for instance in cls._instances]
 
     @classmethod
     def instance(cls, idx: Union[str, int]) -> 'Tensor':
+        r"""
+        **Gets Tensor from an index reference.**
+
+        Args:
+            idx (str | int): Index reference to a Tensor in the instances list.
+
+        Returns:
+            Tensor: Referenced Tensor.
+
+        Raises:
+            ValueError: Invalid Tensor reference.
+            TypeError: Invalid reference type or deleted Tensor reference.
+        """
         # get reference
         itm, _ = cls._get_tensor_reference(itm=idx)
         # return reference
         return itm
 
     @classmethod
-    def reset(cls, *args: Union['Tensor', str, int]) -> None:
-        # find saved instances
+    def reset(cls, *args: Optional[Union['Tensor', str, int]]) -> None:
+        r"""
+        **Resets Tensor instances.**
+
+        Args:
+            *args (Tensor | str | None, optional): Tensors to save.
+        """
+        # find non-saved instances
         args = list(args)
         for i, arg in enumerate(args):
             _, args[i] = cls._get_tensor_reference(arg)
-        # reset non-saved instance
         non_saved = [itm for i, itm in enumerate(cls._instances) if i not in args and itm is not None]
+        # reset non-saved instance
         for instance in non_saved:
             instance.instance_reset()
         return None
 
     @classmethod
-    def grad_reset(cls) -> None:
+    def grad_reset(cls, *args: Optional[Union['Tensor', str, int]]) -> None:
+        r"""
+        **Resets Tensor trackers and deletes gradients.**
+
+        Args:
+            *args (Tensor | str | None, optional): Tensors to retain trackers.
+        """
         # turn on ikwiad
         user_ikwiad = Tensor._ikwiad
         Tensor._ikwiad = True
-        for instance in cls._instances:
+
+        # find non-saved instances
+        args = list(args)
+        for i, arg in enumerate(args):
+            _, args[i] = cls._get_tensor_reference(arg)
+        non_saved = [itm for i, itm in enumerate(cls._instances) if i not in args and itm is not None]
+
+        for instance in non_saved:
             if instance is None:
                 continue
             if instance.type == 'grad':
@@ -336,7 +310,17 @@ class Tensor:
         return None
 
     @classmethod
-    def instance_replace(cls, replaced: Union['Tensor', str, int], replacer: Union['Tensor', str, int]) -> None:
+    def replace(cls, replaced: Union['Tensor', str, int], replacer: Union['Tensor', str, int]) -> None:
+        r"""
+        **Replaces a Tensor with another Tensor in the reference list
+
+        Args:
+            replaced (Tensor, str, int): Replaced Tensor.
+            replacer (Tensor, str, int): Replacer Tensor.
+
+        Note:
+            Deletes the replaced Tensor using :func:`Tensor.instance_reset`.
+        """
         # get tensors and ids
         replaced, replaced_id = cls._get_tensor_reference(itm=replaced)
         replacer, replacer_id = cls._get_tensor_reference(itm=replacer)
@@ -351,6 +335,12 @@ class Tensor:
 
     @classmethod
     def zero_grad(cls, *args: Union['Tensor', str, int]) -> None:
+        r"""
+        **Resets Tensor instances and trackers.**
+
+        Args:
+            *args (Tensor | str | None, optional): Tensors to save.
+        """
         # reset instances
         cls.reset(*args)
         # reset gradient tracking
@@ -358,11 +348,15 @@ class Tensor:
 
     @classmethod
     def ikwiad(cls, ikwiad: bool) -> None:
+        r"""
+        **Turns off warning messages.**
+
+        Args:
+            ikwiad (bool): ikwiad state.
+        """
         cls._ikwiad = bool(ikwiad)
 
-    r"""
-    Convenience methods.
-    """
+    ####################################################################################################################
 
     @staticmethod
     def _is_valid_tensor(itm: 'Tensor') -> bool:
@@ -374,6 +368,15 @@ class Tensor:
         else:
             # non-deleted Tensor
             return True
+
+    @staticmethod
+    def _update_track(obj: 'Tensor', opr: any, drv: any, chn: any, rlt: any) -> None:
+        # tracker update
+        obj._tracker['opr'].append(opr)
+        obj._tracker['drv'].append(drv)
+        obj._tracker['chn'].append(chn)
+        obj._tracker['rlt'].append(rlt)
+        return None
 
     @classmethod
     def _get_tensor_reference(cls, itm: Union['Tensor', str, int]) -> Tuple['Tensor', int]:
@@ -426,27 +429,19 @@ class Tensor:
             itm._id = open_id
         return None
 
-    r"""
-    Tensor tracking methods.
-    """
+    ####################################################################################################################
 
     class TensorMethod:
+        r"""
+        **Base class for Tensor methods.**
+        """
         def __init__(self, prefix):
             self._prefix = str(prefix)
 
         @staticmethod
-        def _update_track(obj: 'Tensor', opr: any, drv: any, chn: any, rlt: any) -> None:
-            # tracker update
-            obj._tracker['opr'].append(opr)
-            obj._tracker['drv'].append(drv)
-            obj._tracker['chn'].append(chn)
-            obj._tracker['rlt'].append(rlt)
-            return None
-
-        @staticmethod
         def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
             r"""
-            Chain method.
+            **Chain rule method.**
 
             Args:
                 down (np.ndarray): Downstream gradient.
@@ -455,13 +450,21 @@ class Tensor:
             Returns:
                 np.ndarray: Result.
             """
-            raise NotImplementedError("'chain' has not been implemented in a subclass")
+            raise NotImplementedError(
+                "Attempted function call without redefinition in subclass.\n"
+                "Either define this call, or avoid referencing it."
+            )
 
     class LoneTensorMethod(TensorMethod):
+        r"""
+        **Paired Tensor method structure.**
+
+        Used for autograd methods that involve one Tensor.
+        """
         @staticmethod
         def forward(main: np.ndarray) -> np.ndarray:
             r"""
-            Forward function.
+            **Forward method.**
 
             Args:
                 main (np.ndarray): Main array.
@@ -469,12 +472,15 @@ class Tensor:
             Returns:
                 np.ndarray: Result.
             """
-            raise NotImplementedError("'forward' has not been implemented in a subclass")
+            raise NotImplementedError(
+                "Attempted function call without redefinition in subclass.\n"
+                "Either define this call, or avoid referencing it."
+            )
 
         @staticmethod
         def backward(main: np.ndarray) -> np.ndarray:
             r"""
-            Backward function.
+            **Backward method.**
 
             Args:
                 main (np.ndarray): Main array.
@@ -482,11 +488,14 @@ class Tensor:
             Returns:
                 np.ndarray: Result.
             """
-            raise NotImplementedError("'backward' has not been implemented in a subclass")
+            raise NotImplementedError(
+                "Attempted function call without redefinition in subclass.\n"
+                "Either define this call, or avoid referencing it."
+            )
 
-        def call(self, main: 'Tensor') -> 'Tensor':
+        def main(self, main: 'Tensor') -> 'Tensor':
             r"""
-            Function call.
+            **Main function call.**
 
             Args:
                 main (Tensor): Non-deleted input Tensor.
@@ -495,13 +504,20 @@ class Tensor:
                 Tensor: Output Tensor.
             """
             # check tensor
-            if not (isinstance(main, Tensor)) or main._type == 'deleted':
-                raise TypeError("'main' must be a non-deleted Tensor")
+            if not (isinstance(main, Tensor)) or main._type != 'mat':
+                if not (isinstance(main, Tensor)) or main._type != 'mat':
+                    raise TypeError(
+                        "Attempted call without main object being the right kind of Tensor.\n"
+                        "To call this function, try:\n"
+                        "   Converting the object into a Tensor if it isn't already.\n"
+                        "   Using the .matrix() function to convert a matrix.\n"
+                        "   Creating a blank Tensor using the internal array."
+                    )
             # calculate result
             result = Tensor(self.forward(main._tensor))
             result._tracker['org'] = [main, None]
             # track main
-            self._update_track(
+            Tensor._update_track(
                 obj=main,
                 opr=f"{self._prefix}",
                 drv=self.backward,
@@ -512,38 +528,15 @@ class Tensor:
             return result
 
     class PairedTensorMethod(TensorMethod):
+        r"""
+        **Paired Tensor method structure.**
+
+        Used for autograd methods that involve two Tensors.
+        """
         @staticmethod
-        def forward(main: np.ndarray, other: Optional[np.ndarray]) -> np.ndarray:
+        def forward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
             r"""
-            Forward function.
-
-            Args:
-                main (np.ndarray): Main array.
-                other (np.ndarray, optional): Other array.
-
-            Returns:
-                np.ndarray: Result.
-            """
-            raise NotImplementedError("'forward' has not been implemented in a subclass")
-
-        @staticmethod
-        def backward(main: np.ndarray, other: Optional[np.ndarray]) -> np.ndarray:
-            r"""
-            Backward function.
-
-            Args:
-                main (np.ndarray): Main array.
-                other (np.ndarray, optional): Other array.
-
-            Returns:
-                np.ndarray: Result.
-            """
-            raise NotImplementedError("'backward' has not been implemented in a subclass")
-
-        @staticmethod
-        def backward_o(other: np.ndarray, main: np.ndarray) -> np.ndarray:
-            r"""
-            Other backward function.
+            **Forward method.**
 
             Args:
                 main (np.ndarray): Main array.
@@ -552,12 +545,49 @@ class Tensor:
             Returns:
                 np.ndarray: Result.
             """
-            raise NotImplementedError("'backward_o' has not been implemented in a subclass")
+            raise NotImplementedError(
+                "Attempted function call without redefinition in subclass.\n"
+                "Either define this call, or avoid referencing it."
+            )
+
+        @staticmethod
+        def backward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
+            r"""
+            **Backward method.**
+
+            Args:
+                main (np.ndarray): Main array.
+                other (np.ndarray): Other array.
+
+            Returns:
+                np.ndarray: Result.
+            """
+            raise NotImplementedError(
+                "Attempted function call without redefinition in subclass.\n"
+                "Either define this call, or avoid referencing it."
+            )
+
+        @staticmethod
+        def backward_o(other: np.ndarray, main: np.ndarray) -> np.ndarray:
+            r"""
+            **Secondary backward method.**
+
+            Args:
+                main (np.ndarray): Main array.
+                other (np.ndarray): Other array.
+
+            Returns:
+                np.ndarray: Result.
+            """
+            raise NotImplementedError(
+                "Attempted function call without redefinition in subclass.\n"
+                "Either define this call, or avoid referencing it."
+            )
 
         @staticmethod
         def chain_o(down: np.ndarray, up: np.ndarray) -> np.ndarray:
             r"""
-            Other chain method.
+            **Secondary chain rule method.**
 
             Args:
                 down (np.ndarray): Downstream gradient.
@@ -566,11 +596,14 @@ class Tensor:
             Returns:
                 np.ndarray: Result.
             """
-            raise NotImplementedError("'chain_o' has not been implemented in a subclass")
+            raise NotImplementedError(
+                "Attempted function call without redefinition in subclass.\n"
+                "Either define this call, or avoid referencing it."
+            )
 
-        def call(self, main: 'Tensor', other: Union['Tensor', np.ndarray, float, int]) -> 'Tensor':
+        def main(self, main: 'Tensor', other: Union['Tensor', np.ndarray, float, int]) -> 'Tensor':
             r"""
-            Function call.
+            **Main function call.**
 
             Args:
                 main (Tensor): Non-deleted input Tensor.
@@ -580,8 +613,14 @@ class Tensor:
                 Tensor: Output Tensor.
             """
             # check tensor
-            if not (isinstance(main, Tensor)) or main._type == 'deleted':
-                raise TypeError("'main' must be a non-deleted Tensor")
+            if not (isinstance(main, Tensor)) or main._type != 'mat':
+                raise TypeError(
+                    "Attempted call without main object being the right kind of Tensor.\n"
+                    "To call this function, try:\n"
+                    "   Converting the object into a Tensor if it isn't already.\n"
+                    "   Using the .matrix() function to convert a matrix.\n"
+                    "   Creating a blank Tensor using the internal array."
+                )
 
             # set array
             if isinstance(other, Tensor):
@@ -593,7 +632,7 @@ class Tensor:
             result = Tensor(self.forward(main._tensor, arr))
             result._tracker['org'] = [main, other]
             # track main
-            self._update_track(
+            Tensor._update_track(
                 obj=main,
                 opr=f"{self._prefix}",
                 drv=self.backward,
@@ -602,7 +641,7 @@ class Tensor:
             )
             if isinstance(other, Tensor):
                 # track other
-                self._update_track(
+                Tensor._update_track(
                     obj=other,
                     opr=f"{self._prefix}_o",
                     drv=self.backward_o,
@@ -612,29 +651,47 @@ class Tensor:
             # return result
             return result
 
-    @staticmethod
-    def initializer_method(func: Callable) -> Callable:
-        def wrapper(*args: int) -> 'Tensor':
-            # check dimensions
-            if len(args) != 2:
-                raise ValueError("Initialization must occur with 2 dimensions")
-            if not all(isinstance(arg, int) and 0 < arg for arg in args):
-                raise ValueError("Each dimension must be a positive integer")
-            # initialize tensor
-            return Tensor(func(*args))
-        return wrapper
-
-    r"""
-    Gradient calculation methods.
-    """
+    ####################################################################################################################
 
     @staticmethod
     def nabla(grad: 'Tensor', wrt: 'Tensor', *, binary: bool = True) -> 'Tensor':
+        r"""
+        **Calculates the gradient of two Tensors.**
+
+        Using the computational graph, the two Tensors are related by a search tree.
+        If a relationship has been found, backward and chain rule methods are called to calculate the gradient.
+
+        Args:
+            grad (Tensor): Object of the matrix type to calculate the gradient.
+            wrt (Tensor): Object of the matrix gradient is calculated with respect to.
+            binary (Tensor): Whether to utilize a binary search tree or just a search tree.
+                If binary is on, only the first relationship is found.
+                Otherwise, all relationships are found and the gradients are added together.
+
+        Returns:
+            Tensor: The calculated gradient with set internals.
+
+        Note:
+            This function automatically calls :func:`Tensor.chain` to chain rule gradients.
+            However, it doesn't attempt to find already calculated gradients.
+            Computational speed can be increased by using pre-calculated gradients and manually calling
+            :func:`Tensor.chain`.
+
+        Note:
+            The gradient's tracker won't reference the full path if binary is toggled off.
+            This doesn't have an impact on computation and is reflected in the gradient's tags as 'linear override'.
+        """
         # check tensors
         if not isinstance(grad, Tensor) or grad._type != 'mat':
-            raise TypeError("'grad' must be a Tensor with the matrix type")
+            raise TypeError(
+                "Attempted gradient calculation with grad object that was either"
+                "not a Tensor or not a matrix subtype."
+            )
         if not isinstance(wrt, Tensor) or wrt._type != 'mat':
-            raise TypeError("'wrt' must be a Tensor with the matrix type")
+            raise TypeError(
+                "Attempted gradient calculation with wrt object that was either"
+                "not a Tensor or not a matrix subtype."
+            )
 
         # set gradient relation
         if binary:
@@ -700,10 +757,6 @@ class Tensor:
                 # lone derivative method
                 res = drv_operator(up._tensor)
 
-            # identity conversion
-            if _identity and len(res.squeeze().shape) == 1:
-                # this is disabled automatically, but is still here incase it's used later on
-                res = res * np.eye(res.squeeze().shape[0])
             # tensor conversion
             res = Tensor(obj=res, _gradient_override=True)
 
@@ -756,6 +809,9 @@ class Tensor:
 
     @staticmethod
     def chain(down: 'Tensor', up: 'Tensor') -> 'Tensor':
+        r"""
+        also really needs a docstring
+        """
         if not isinstance(down, Tensor) or down._type != 'grad':
             raise TypeError("'down' must be a Tensor with the gradient type")
         if not isinstance(up, Tensor) or up._type != 'grad':
@@ -780,17 +836,12 @@ class Tensor:
             # no relation
             raise ValueError("No relationship found between Tensors")
 
-    r"""
-    Built-in methods.
-    """
+    ####################################################################################################################
 
     class _MatMul(PairedTensorMethod):
-        r"""Matrix multiplication built-in method."""
+        # matrix multiplication
+
         # todo: fix this class
-        # NB: This is the most significant mathematical issue that needs to be worked through.
-        # It might require some work through with code along with math to work properly.
-        # I want to fully implement all main methods properly before diving into the mathematics for this.
-        # For now, it'll just remain broken (sorry!).
         def __init__(self):
             super().__init__(prefix="matmul")
 
@@ -820,17 +871,8 @@ class Tensor:
             except ValueError:
                 return down * up
 
-        def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
-            return self.call(main, other)
-
-    matmul = _MatMul()
-
-    def __matmul__(self, other: Union['Tensor', np.ndarray]) -> 'Tensor':
-        r"""Matrix multiplication of two Tensors."""
-        return self.matmul(self, other)
-
     class _Pow(PairedTensorMethod):
-        r"""Hadamard power built-in method."""
+        # hadamard power
         def __init__(self):
             super().__init__(prefix="pow")
 
@@ -860,17 +902,8 @@ class Tensor:
             except ValueError:
                 return down * up
 
-        def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
-            return self.call(main, other)
-
-    pow = _Pow()
-
-    def __pow__(self, other: Union['Tensor', np.ndarray]) -> 'Tensor':
-        r"""Hadamard power of two Tensors."""
-        return pow(self, other)
-
     class _Mul(PairedTensorMethod):
-        r"""Hadamard multiplication built-in method."""
+        # hadamard multiplication
         def __init__(self):
             super().__init__(prefix="mul")
 
@@ -900,17 +933,8 @@ class Tensor:
             except ValueError:
                 return down * up
 
-        def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
-            return self.call(main, other)
-
-    mul = _Mul()
-
-    def __mul__(self, other: Union['Tensor', np.ndarray]) -> 'Tensor':
-        r"""Hadamard multiplication of two Tensors"""
-        return self.mul(self, other)
-
     class _TrueDiv(PairedTensorMethod):
-        r"""Hadamard division built-in method."""
+        # hadamard division
         def __init__(self):
             super().__init__(prefix="truediv")
 
@@ -940,17 +964,8 @@ class Tensor:
             except ValueError:
                 return down * up
 
-        def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
-            return self.call(main, other)
-
-    truediv = _TrueDiv()
-
-    def __truediv__(self, other: Union['Tensor', np.ndarray]) -> 'Tensor':
-        r"""Hadamard division of two Tensors."""
-        return self.truediv(self, other)
-
     class _Add(PairedTensorMethod):
-        r"""Addition built-in method."""
+        # addition
         def __init__(self):
             super().__init__(prefix="add")
 
@@ -980,17 +995,8 @@ class Tensor:
             except ValueError:
                 return down * up
 
-        def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
-            return self.call(main, other)
-
-    add = _Add()
-
-    def __add__(self, other: Union['Tensor', np.ndarray]) -> 'Tensor':
-        r"""Addition of two Tensors."""
-        return self.add(self, other)
-
     class _Sub(PairedTensorMethod):
-        r"""Mathematical subtraction method."""
+        # subtraction
         def __init__(self):
             super().__init__(prefix="sub")
 
@@ -1020,11 +1026,33 @@ class Tensor:
             except ValueError:
                 return down * up
 
-        def __call__(self, main: 'Tensor', other: 'Tensor') -> 'Tensor':
-            return self.call(main, other)
+    _matmul = _MatMul()
+    _pow = _Pow()
+    _mul = _Mul()
+    _truediv = _TrueDiv()
+    _add = _Add()
+    _sub = _Sub()
 
-    sub = _Sub()
+    def __matmul__(self, other: Union['Tensor', np.ndarray]) -> 'Tensor':
+        r"""**Matrix multiplication.**"""
+        return self._matmul.main(self, other)
+
+    def __pow__(self, other: Union['Tensor', np.ndarray]) -> 'Tensor':
+        r"""**Hadamard power.**"""
+        return self._pow.main(self, other)
+
+    def __mul__(self, other: Union['Tensor', np.ndarray]) -> 'Tensor':
+        r"""**Hadamard multiplication.**"""
+        return self._mul.main(self, other)
+
+    def __truediv__(self, other: Union['Tensor', np.ndarray]) -> 'Tensor':
+        r"""**Hadamard division.**"""
+        return self._truediv.main(self, other)
+
+    def __add__(self, other: Union['Tensor', np.ndarray]) -> 'Tensor':
+        r"""**Addition.**"""
+        return self._add.main(self, other)
 
     def __sub__(self, other: Union['Tensor', np.ndarray]) -> 'Tensor':
-        r"""Subtraction of two Tensors."""
-        return self.sub(self, other)
+        r"""**Subtraction.**"""
+        return self._sub.main(self, other)
