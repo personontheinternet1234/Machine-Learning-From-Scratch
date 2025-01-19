@@ -1,4 +1,18 @@
-r"""Functional."""
+r"""
+**Functional GardenPy components.**
+
+Contains:
+    - :module:`objects`
+    - :module:`operators`
+    - :module:`algorithms`
+    - :class:`Tensor`
+    - :func:`tensor`
+    - :class:`chain`
+    - :class:`Initializers`
+    - :class:`Activators`
+    - :class:`Losses`
+    - :class:`Optimizers`
+"""
 
 from .objects import Tensor
 from .operators import (

@@ -1,5 +1,8 @@
 r"""
 **GardenPy's objects.**
+
+Contains:
+    - :class:`Tensor`
 """
 
 from warnings import warn
@@ -60,7 +63,7 @@ class Tensor:
         if (not np.issubdtype(obj.dtype, np.number) or len(obj.shape) != 2) and not _gradient_override:
             # NB: Currently, Tensors can only be two-dimensional.
             # Due to the existence of three-dimensional gradients, this lock can be overwritten, but only internally.
-            raise TypeError("'obj' must be a 2D matrix containing only numerical values")
+            raise TypeError("Attempted creation with object that wasn't two-dimensional with only real numbers.")
 
         # set tensor internals
         self._id: Union[int, None] = None
@@ -251,8 +254,8 @@ class Tensor:
             Tensor: Referenced Tensor.
 
         Raises:
-            ValueError: Invalid Tensor reference.
-            TypeError: Invalid reference type or deleted Tensor reference.
+            ValueError: If there was an invalid Tensor reference.
+            TypeError: If there was an invalid reference type or deleted Tensor reference.
         """
         # get reference
         itm, _ = cls._get_tensor_reference(itm=idx)
@@ -347,7 +350,7 @@ class Tensor:
     @classmethod
     def ikwiad(cls, ikwiad: bool) -> None:
         r"""
-        **Turns off warning messages.**
+        **Turns off warning messages ("I know what I am doing" - ikwiad).**
 
         Args:
             ikwiad (bool): ikwiad state.
@@ -396,19 +399,19 @@ class Tensor:
             # check index reference
             if len(cls._instances) <= itm:
                 raise ValueError(
-                    "Reference brought up outside Tensor instance list"
-                    f"Currently, instance list only contains {len(cls._instances)} items"
-                    f"A reference has been made to the {itm} index"
+                    "Attempted reference outside Tensor instance list."
+                    f"Currently, instance list only contains {len(cls._instances)} items."
+                    f"A reference has been made to the {itm} index."
                 )
             # use index reference
             itm_id = itm
             itm = cls._instances[itm_id]
         else:
             # invalid reference
-            raise TypeError("Invalid Tensor reference type")
+            raise TypeError("Attempted Tensor reference with an invalid type.")
         if not cls._is_valid_tensor(itm=itm):
             # invalid tensor
-            raise TypeError("Reference brought up with deleted Tensors")
+            raise TypeError("Attempted reference to a deleted Tensor.")
 
         # return to user ikwiad
         Tensor._ikwiad = user_ikwiad
@@ -458,6 +461,7 @@ class Tensor:
         **Paired Tensor method structure.**
 
         Used for autograd methods that involve one Tensor.
+        Autograd can be called with this function without further modification to Tensors once all methods are defined.
         """
         @staticmethod
         def forward(main: np.ndarray) -> np.ndarray:
@@ -530,6 +534,7 @@ class Tensor:
         **Paired Tensor method structure.**
 
         Used for autograd methods that involve two Tensors.
+        Autograd can be called with this function without further modification to Tensors once all methods are defined.
         """
         @staticmethod
         def forward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
@@ -656,7 +661,7 @@ class Tensor:
         r"""
         **Calculates the gradient of two Tensors.**
 
-        Using the computational graph, the two Tensors are related by a search tree.
+        Using the computational graph, the two Tensors are related using a search tree.
         If a relationship has been found, backward and chain rule methods are called to calculate the gradient.
 
         Args:
@@ -667,7 +672,11 @@ class Tensor:
                 Otherwise, all relationships are found and the gradients are added together.
 
         Returns:
-            Tensor: The calculated gradient with set internals.
+            Tensor: Calculated gradient with set internals.
+        
+        Raises:
+            TypeError: If the Tensors were of the wrong type.
+            TrackingError: If no relationship could be found between the Tensors.
 
         Note:
             This function automatically calls :func:`Tensor.chain` to chain rule gradients.
@@ -808,12 +817,36 @@ class Tensor:
     @staticmethod
     def chain(down: 'Tensor', up: 'Tensor') -> 'Tensor':
         r"""
-        also really needs a docstring
+        **Chain-rule gradients.**
+        
+        Checks if there is an immediate link between the downstream and upstream gradients.
+        If there is a link, the chain-rule operation is called to link the gradients.
+        
+        Args:
+            down (Tensor): Downstream gradient.
+            up (Tensor): Upstream gradient.
+            
+        Returns:
+            Tensor: Chain ruled gradient with set internals.
+        
+        Raises:
+            TrackingError: If no relationship could be found between the Tensors.
+        
+        Note:
+            :func:`Tensor.nabla`automatically chain rules gradients.
+            However, it doesn't attempt to find already calculated gradients.
+            Computational speed can be increased by using pre-calculated gradients and manually calling this function.
         """
         if not isinstance(down, Tensor) or down._type != 'grad':
-            raise TypeError("'down' must be a Tensor with the gradient type")
+            raise TypeError(
+                "Attempted chain-rule calculation with down object that was either"
+                "not a Tensor or not a gradient subtype."
+            )
         if not isinstance(up, Tensor) or up._type != 'grad':
-            raise TypeError("'up' must be a Tensor with the gradient type")
+            raise TypeError(
+                "Attempted chain-rule calculation with up object that was either"
+                "not a Tensor or not a gradient subtype."
+            )
 
         # check relation
         down_relation = down._tracker['rlt'][-1]
@@ -832,14 +865,13 @@ class Tensor:
             return result
         else:
             # no relation
-            raise ValueError("No relationship found between Tensors")
+            raise TrackingError(grad=down, wrt=up)
 
     ####################################################################################################################
 
     class _MatMul(PairedTensorMethod):
         # matrix multiplication
-
-        # todo: fix this class
+        # todo: correct implementation
         def __init__(self):
             super().__init__(prefix="matmul")
 
@@ -849,11 +881,11 @@ class Tensor:
 
         @staticmethod
         def backward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
-            ...
+            raise NotImplementedError("Currently not implemented.")
 
         @staticmethod
         def backward_o(other: np.ndarray, main: np.ndarray) -> np.ndarray:
-            ...
+            raise NotImplementedError("Currently not implemented.")
 
         @staticmethod
         def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:

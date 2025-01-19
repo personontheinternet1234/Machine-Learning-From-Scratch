@@ -1,4 +1,12 @@
-r"""Implemented machine learning algorithms"""
+r"""
+**Machine learning algorithms.**
+
+Contains:
+    - :class:`Initializers`
+    - :class:`Activators`
+    - :class:`Losses`
+    - :class:`Optimizers`
+"""
 
 from typing import Callable, List, Tuple, Optional, Union
 import numpy as np
@@ -10,12 +18,6 @@ from ..utils.checkers import Params, ParamChecker
 class Initializers:
     r"""
     **Initialization algorithms for weights and biases.**
-
-    --------------------------------------------------------------------------------------------------------------------
-
-    Creates GardenPy Tensors using the specified initialization method with the specified dimensions.
-    It automatically creates GardenPy Tensors, but these can be converted into NumPy arrays if wanted.
-    Initialization methods can be added with relative ease using the base structure provided within this class.
     """
     _methods: List[str] = [
         'xavier',
@@ -25,13 +27,10 @@ class Initializers:
 
     def __init__(self, method: str, *, hyperparameters: Optional[dict] = None, ikwiad: bool = False, **kwargs):
         r"""
-        **Set internal initializer method and hyperparameters.**
+        **Set initializer method and hyperparameters.**
 
-        ----------------------------------------------------------------------------------------------------------------
-
-        All Initializer instances are kept separate.
         Any hyperparameters that remain unfilled are set to their default value.
-        Tensors currently support arrays of two dimensions.
+        Currently only supports two-dimensional arrays that consist of real numbers.
 
         xavier (Xavier/Glorot)
             - mu (float | int), default = 0.0: Distribution mean.
@@ -44,12 +43,10 @@ class Initializers:
         uniform (Uniform)
             - kappa (float | int), default = 1.0: Uniform value.
 
-        ----------------------------------------------------------------------------------------------------------------
-
         Args:
             method (str): Initializer method.
             hyperparameters (dict, optional): Method hyperparameters.
-            ikwiad (bool), default = False: Remove all warning messages ("I know what I am doing" - ikwiad).
+            ikwiad (bool), default = False: Turns off all warning messages ("I know what I am doing" - ikwiad).
             **kwargs: Alternate input format for method hyperparameters.
 
         Raises:
@@ -67,9 +64,7 @@ class Initializers:
     @classmethod
     def methods(cls) -> list:
         r"""
-        **Returns possible initialization methods.**
-
-        ----------------------------------------------------------------------------------------------------------------
+        **Possible initialization methods.**
 
         Returns:
             list: Possible initialization methods.
@@ -137,7 +132,7 @@ class Initializers:
 
         @initializer_method
         def xavier(*args: int) -> np.ndarray:
-            # xavier method function
+            # xavier method
             return (
                     h['kappa'] *
                     np.sqrt(2.0 / float(args[-2] + args[-1])) *
@@ -146,12 +141,12 @@ class Initializers:
 
         @initializer_method
         def gaussian(*args: int) -> np.ndarray:
-            # gaussian method function
+            # gaussian method
             return h['kappa'] * np.random.normal(loc=h['mu'], scale=h['sigma'], size=args)
 
         @initializer_method
         def uniform(*args: int) -> np.ndarray:
-            # uniform method function
+            # uniform method
             return h['kappa'] * np.ones(args, dtype=np.float64)
 
         # function reference
@@ -165,9 +160,7 @@ class Initializers:
         # set initialize function
         def initialize(*args: int) -> Tensor:
             r"""
-            **Returns initialized Tensor with specified dimensions and initialization method.**
-
-            ------------------------------------------------------------------------------------------------------------
+            **Returns initialized Tensor with specified dimensions using initialization method.**
 
             Args:
                 *args: Tensor's two dimensions of positive integers.
@@ -185,16 +178,11 @@ class Initializers:
 
 class Activators:
     r"""
-    Activation algorithms for arrays.
+    **Activation algorithms for arrays.**
 
-    Applies an activation function to arrays.
-    If used with GardenPy's Tensors, activation function utilizes the autograd methods, allowing for automatic gradient
-    calculation and tracking with the activation functions.
-    These activation functions can be used with NumPy arrays, but will lose automatic gradient tracking methods.
-    The derivative of these activation functions can be called if using NumPy arrays, but function calls will go through
-    no checks.
-    If using Tensors, the derivatives will be automatically utilized during a nabla call.
-    Activation methods can be added with relative ease using the base structure provided within this class.
+    If used with GardenPy's Tensors, activation function utilizes autograd methods.
+    These activation functions can be used with NumPy arrays, but won't utilize autograd.
+    The derivative of these activation functions can be called if using NumPy arrays.
     """
     _methods: List[str] = [
         'softmax',
@@ -208,9 +196,9 @@ class Activators:
 
     def __init__(self, method: str, *, hyperparameters: Optional[dict] = None, ikwiad: bool = False, **kwargs):
         r"""
-        Sets internal activator method and hyperparameters.
-        Used for reference when activation is called.
-        Any hyperparameters not set will set to their default value.
+        **Set activator method and hyperparameters.**
+
+        Any hyperparameters that remain unfilled are set to their default value.
 
         softmax (Softmax)
             - None
@@ -230,7 +218,7 @@ class Activators:
         Args:
             method (str): Activator method.
             hyperparameters (dict, optional): Method hyperparameters.
-            ikwiad (bool), default = False: Remove all warning messages ("I know what I am doing" - ikwiad).
+            ikwiad (bool), default = False: Turns off all warning messages ("I know what I am doing" - ikwiad).
             **kwargs: Alternate input format for method hyperparameters.
 
         Raises:
@@ -250,6 +238,12 @@ class Activators:
 
     @classmethod
     def methods(cls) -> list:
+        r"""
+        **Possible activator methods.**
+
+        Returns:
+            list: Possible activator methods.
+        """
         return cls._methods
 
     def _get_method(self, method: str, hyperparams: dict, **kwargs) -> Tuple[str, dict]:
@@ -318,8 +312,7 @@ class Activators:
             h = self._hyperparams.copy()
 
         class _Softmax(Tensor.LoneTensorMethod):
-            r"""Softmax built-in method."""
-
+            # softmax
             def __init__(self):
                 super().__init__(prefix="softmax")
 
@@ -329,21 +322,15 @@ class Activators:
 
             @staticmethod
             def backward(x: np.ndarray) -> np.ndarray:
-                return (
-                    (np.sum(np.exp(x)) * np.exp(x) - np.exp(2.0 * x)) /
-                    (np.sum(np.exp(x)) ** 2.0) * np.eye(x.shape[1])
-                )
+                return (np.sum(np.exp(x)) * np.exp(x) - np.exp(2.0 * x)) / (np.sum(np.exp(x)) ** 2.0)
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
-                try:
-                    return down @ up
-                except ValueError:
-                    return down * up
+                # todo: correct implementation
+                raise NotImplementedError("Currently not implemented.")
 
         class _ReLU(Tensor.LoneTensorMethod):
-            r"""ReLU built-in method."""
-
+            # relu
             def __init__(self):
                 super().__init__(prefix="relu")
 
@@ -353,7 +340,7 @@ class Activators:
 
             @staticmethod
             def backward(x: np.ndarray) -> np.ndarray:
-                return np.where(x > 0.0, 1.0, 0.0) * np.eye(x.shape[1])
+                return np.where(x > 0.0, 1.0, 0.0)
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
@@ -363,8 +350,7 @@ class Activators:
                     return down * up
 
         class _LeakyReLU(Tensor.LoneTensorMethod):
-            r"""LeakyReLU built-in method."""
-
+            # leaky relu
             def __init__(self):
                 super().__init__(prefix="lrelu")
 
@@ -374,7 +360,7 @@ class Activators:
 
             @staticmethod
             def backward(x: np.ndarray) -> np.ndarray:
-                return np.where(x > 0.0, 1.0, h['beta']) * np.eye(x.shape[1])
+                return np.where(x > 0.0, 1.0, h['beta'])
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
@@ -384,8 +370,7 @@ class Activators:
                     return down * up
 
         class _Sigmoid(Tensor.LoneTensorMethod):
-            r"""Sigmoid built-in method."""
-
+            # sigmoid
             def __init__(self):
                 super().__init__(prefix="sigmoid")
 
@@ -395,7 +380,7 @@ class Activators:
 
             @staticmethod
             def backward(x: np.ndarray) -> np.ndarray:
-                return np.exp(-x) / ((np.exp(-x) + 1.0) ** 2.0) * np.eye(x.shape[1])
+                return np.exp(-x) / ((np.exp(-x) + 1.0) ** 2.0)
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
@@ -405,8 +390,7 @@ class Activators:
                     return down * up
 
         class _Tanh(Tensor.LoneTensorMethod):
-            r"""Tanh built-in method."""
-
+            # tanh
             def __init__(self):
                 super().__init__(prefix="tanh")
 
@@ -416,7 +400,7 @@ class Activators:
 
             @staticmethod
             def backward(x: np.ndarray) -> np.ndarray:
-                return np.cosh(x) ** -2.0 * np.eye(x.shape[1])
+                return np.cosh(x) ** -2.0
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
@@ -426,7 +410,7 @@ class Activators:
                     return down * up
 
         class _Softplus(Tensor.LoneTensorMethod):
-            r"""Softplus built-in method."""
+            # softplus
             def __init__(self):
                 super().__init__(prefix="softplus")
 
@@ -436,11 +420,7 @@ class Activators:
 
             @staticmethod
             def backward(x: np.ndarray) -> np.ndarray:
-                return (
-                    h['beta'] * np.exp(h['beta'] * x) /
-                    (h['beta'] * np.exp(h['beta'] * x) + h['beta']) *
-                    np.eye(x.shape[1])
-                )
+                return h['beta'] * np.exp(h['beta'] * x) / (h['beta'] * np.exp(h['beta'] * x) + h['beta'])
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:
@@ -450,8 +430,7 @@ class Activators:
                     return down * up
 
         class _Mish(Tensor.LoneTensorMethod):
-            r"""Mish built-in method."""
-
+            # mish
             def __init__(self):
                 super().__init__(prefix="mish")
 
@@ -462,12 +441,10 @@ class Activators:
             @staticmethod
             def backward(x: np.ndarray) -> np.ndarray:
                 return (
-                    (
-                        np.tanh(np.log(np.exp(h['beta'] * x) + 1.0) / h['beta']) +
-                        x * (np.cosh(np.log(np.exp(h['beta'] * x) + 1.0) / h['beta']) ** -2.0) *
-                        (h['beta'] * np.exp(h['beta'] * x) / (h['beta'] * np.exp(h['beta'] * x) + h['beta']))
-                    ) * np.eye(x.shape[1])
-                )  # aughhhhhh!!!
+                    np.tanh(np.log(np.exp(h['beta'] * x) + 1.0) / h['beta']) +
+                    x * (np.cosh(np.log(np.exp(h['beta'] * x) + 1.0) / h['beta']) ** -2.0) *
+                    (h['beta'] * np.exp(h['beta'] * x) / (h['beta'] * np.exp(h['beta'] * x) + h['beta']))
+                )
 
             @staticmethod
             def chain(down: np.ndarray, up: np.ndarray) -> np.ndarray:

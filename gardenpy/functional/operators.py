@@ -1,4 +1,13 @@
-r"""External object operator references."""
+r"""
+**Main operators.**
+
+Contains:
+    - :func:`tensor`
+    - :func:`replace`
+    - :func:`zero_grad`
+    - :func:`nabla`
+    - :func:`chain`
+"""
 
 from typing import Union
 from functools import wraps

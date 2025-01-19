@@ -1,11 +1,20 @@
-r"""Helpers."""
+r"""
+**Helpers functions.**
+
+Contains:
+    - :dict:`ansi`
+    - :func:`progress`
+    - :func:`convert_time`
+    - :func:`slow_print`
+    - :func:`print_contributors`
+"""
 
 import sys
 from typing import Optional, Union
 import time
 
 ansi = {
-        # common ANSI formats
+        # common ansi formats
         'reset': '\033[0m',
         'black': '\033[30m',
         'red': '\033[31m',
@@ -36,9 +45,7 @@ ansi = {
 
 def progress(idx: int, max_idx: int, *, desc: Optional[str] = None, b_len: int = 50) -> None:
     r"""
-    **Prints a customizable progress bar for any sort of loop.**
-
-    --------------------------------------------------------------------------------------------------------------------
+    **Customizable progress bar.**
 
     Args:
         idx (int), 0 < idx: Current loop index.
@@ -50,16 +57,21 @@ def progress(idx: int, max_idx: int, *, desc: Optional[str] = None, b_len: int =
         TypeError: If parameters are of the wrong type.
     """
     # check for errors
-    if not isinstance(idx, int):
-        raise TypeError("'idx' must be an integer")
+    if not (isinstance(idx, int) and 0 < idx):
+        raise TypeError("Referenced loop index must be a positive integer.")
     if not (isinstance(max_idx, int) and 0 < max_idx):
-        raise TypeError("'max_idx' must be a positive integer")
+        raise TypeError("Maximum loop index must be a positive integer.")
     if not (isinstance(b_len, int) and 0 < b_len):
-        raise TypeError("'b_len' must be a positive integer")
+        raise TypeError("Bar length must be a positive integer.")
     # completed progress
     completed = (idx + 1) / max_idx
     # make progress bar
-    sys.stdout.write(f"\r{ansi['reset']}[{ansi['green']}{'—' * int(b_len * completed)}{ansi['red']}{'—' * (b_len - int(b_len * completed))}{ansi['reset']}]  {desc or ''}")
+    sys.stdout.write(
+        f"\r{ansi['reset']}"
+        f"[{ansi['green']}{'—' * int(b_len * completed)}"
+        f"{ansi['red']}{'—' * (b_len - int(b_len * completed))}"
+        f"{ansi['reset']}]  {desc or ''}"
+    )
     sys.stdout.flush()
     if completed == 1:
         sys.stdout.write("\n")
@@ -69,8 +81,6 @@ def progress(idx: int, max_idx: int, *, desc: Optional[str] = None, b_len: int =
 def convert_time(seconds: Union[float, int]) -> str:
     r"""
     **Converts seconds to hours:minutes:seconds.**
-
-    --------------------------------------------------------------------------------------------------------------------
 
     Args:
         seconds (float | int), 0 < seconds: Number of seconds.
@@ -83,7 +93,7 @@ def convert_time(seconds: Union[float, int]) -> str:
     """
     # check for errors
     if not (isinstance(seconds, (float, int)) and 0 < seconds):
-        raise TypeError("'seconds' must be a positive float or integer")
+        raise TypeError("Converted seconds must be a positive real number.")
     # calculate hours and minutes
     minutes, seconds = divmod(int(seconds), 60)
     hours, minutes = divmod(minutes, 60)
@@ -94,8 +104,6 @@ def convert_time(seconds: Union[float, int]) -> str:
 def slow_print(text: str, *, delay: Union[float, int] = 0.05) -> None:
     r"""
     **Prints text with delay.**
-
-    --------------------------------------------------------------------------------------------------------------------
 
     Args:
         text (str): Text to print.
@@ -121,15 +129,11 @@ def print_contributors(*, who: Optional[list] = None, cinematic: bool = False) -
     r"""
     **Prints GardenPy contributors in alphabetical order.**
 
-    --------------------------------------------------------------------------------------------------------------------
-
     The Machine Learning from Scratch team created GardenPy and our other resources with the help of many others.
     In this contributor printing function, we try to give thanks to the main resources and people that aided us in the
     creation of our project.
     At the same time, this function misses many vital contributors responsible for aiding us in the creation of our
     project, and we wish to thank anyone who helped us in any way.
-
-    --------------------------------------------------------------------------------------------------------------------
 
     Args:
         who (list, optional), default = all: Type of contributors to print.
@@ -143,6 +147,7 @@ def print_contributors(*, who: Optional[list] = None, cinematic: bool = False) -
     contributors = {
         'programmers': [
             ["Christian SW Host-Madsen", "Punahou School CO '25", "<c.host.madsen25@gmail.com>"],
+            ["Doyoung Kim", "Punahou School CO '25", "<dkim25@punahou.edu>"],
             ["Mason YY Morales", "Punahou School CO '25", "<mmorales25@punahou.edu>"],
             ["Isaac P Verbrugge", "Punahou School CO '25", "<isaacverbrugge@gmail.com>"],
             ["Derek S Yee", "Punahou School CO '25", "<dyee25@punahou.edu>"]
@@ -152,9 +157,9 @@ def print_contributors(*, who: Optional[list] = None, cinematic: bool = False) -
         ],
         'thanks': [
             ['Justin Johnson', 'The University of Michigan'],
-            ['Josh Starmer', 'StatQuest'],
             ['The PyTorch Team', 'PyTorch'],
-            ['Grant Sanderson', '3Blue1Brown']
+            ['Grant Sanderson', '3Blue1Brown'],
+            ['Josh Starmer', 'StatQuest']
         ]
     }
 
@@ -194,7 +199,10 @@ def print_contributors(*, who: Optional[list] = None, cinematic: bool = False) -
             print(f"{ansi['reset']}", end='\n')
             for row in contributors['programmers']:
                 time.sleep(0.5)
-                slow_print("    {reset}{:<30} {white}{:<25} {reset}{bright_black}{:<20}".format(row[0], row[1], row[2], **ansi), delay=0.05)
+                slow_print(
+                    "    {reset}{:<30} {white}{:<25} {reset}{bright_black}{:<20}"
+                    .format(row[0], row[1], row[2], **ansi), delay=0.05
+                )
                 print(f"{ansi['reset']}", end='\n')
         if 'artists' in who:
             time.sleep(0.5)
@@ -203,7 +211,10 @@ def print_contributors(*, who: Optional[list] = None, cinematic: bool = False) -
             print(f"{ansi['reset']}", end='\n')
             for row in contributors['artists']:
                 time.sleep(0.5)
-                slow_print("    {reset}{:<30} {white}{:<25} {reset}{bright_black}{:<20}".format(row[0], row[1], row[2], **ansi), delay=0.05)
+                slow_print(
+                    "    {reset}{:<30} {white}{:<25} {reset}{bright_black}{:<20}"
+                    .format(row[0], row[1], row[2], **ansi), delay=0.05
+                )
                 print(f"{ansi['reset']}", end='\n')
         if 'thanks' in who:
             time.sleep(0.5)
@@ -228,11 +239,17 @@ def print_contributors(*, who: Optional[list] = None, cinematic: bool = False) -
         if 'programmers' in who:
             print(f"{ansi['bold']}Programmers{ansi['reset']}", end='\n')
             for row in contributors['programmers']:
-                print("    {reset}{:<30} {white}{:<25}{reset} {bright_black}{:<20}{reset}".format(row[0], row[1], row[2], **ansi))
+                print(
+                    "    {reset}{:<30} {white}{:<25}{reset} {bright_black}{:<20}{reset}"
+                    .format(row[0], row[1], row[2], **ansi)
+                )
         if 'artists' in who:
             print(f"{ansi['bold']}Artists{ansi['reset']}", end='\n')
             for row in contributors['artists']:
-                print("    {reset}{:<30} {white}{:<25}{reset} {bright_black}{:<20}{reset}".format(row[0], row[1], row[2], **ansi))
+                print(
+                    "    {reset}{:<30} {white}{:<25}{reset} {bright_black}{:<20}{reset}"
+                    .format(row[0], row[1], row[2], **ansi)
+                )
         if 'thanks' in who:
             print(f"{ansi['bold']}Special Thanks To{ansi['reset']}", end='\n')
             for row in contributors['thanks']:

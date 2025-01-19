@@ -1,4 +1,10 @@
-r"""Utility functions."""
+r"""
+**Data checkers.**
+
+Contains:
+    - :class:`Params`
+    - :class:`ParamChecker`
+"""
 
 from typing import Callable, Dict, Union
 from types import LambdaType
