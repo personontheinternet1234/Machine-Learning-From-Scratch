@@ -6,4 +6,4 @@ Docs.
 
 ------------------------------------------------------------------------------------------------------------------------
 
-![Machine Learning from Scratch Logo](https://github.com/personontheinternet1234/Machine-Learning-From-Scratch/blob/main/gardenpy/_docs/machine_learning_from_scatch_logo.png)
+![Machine Learning from Scratch Logo](https://github.com/personontheinternet1234/Machine-Learning-From-Scratch/blob/main/gardenpy/_docs/machine_learning_from_scratch_flat_logo.png)
