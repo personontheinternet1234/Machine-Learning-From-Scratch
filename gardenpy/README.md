@@ -1,1 +1,1 @@
-:)
+![GardenPy Logo](...)

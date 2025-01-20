@@ -11,7 +11,7 @@ w = init(1, 2)
 y = tensor([[0.5, 1]])
 print_loss = True
 
-for i in range(10000):
+for i in range(1_000):
     yhat = x * w
     loss = criterion(yhat, y)
     grad_w = nabla(w, loss)

@@ -1,21 +1,30 @@
-# currently the absolute bare minimum amount of information for your computer to recognize this as a library
-# we'll actually make this file once gardenpy is functional
-# this is like the absolute bare minimum, so it doesn't install any dependencies or anything, it literally just makes the library findable
+r"""
+**Setup for library installation.**
 
-# to install on computer
-# 1. go to the root of this library, so gardenpy
-# 2. run either:
-#   pip install -e .
-#   pip3 install -e .
-# 3. go to the root of this repository, so NeuralNet
-# 4. run either:
-#   mac: export PYTHONPATH=$(pwd)
-#   windows: set PYTHONPATH=%cd%
+Run this file to install the GardenPy library.
+
+In the library root, run either:
+    - pip install .
+    - pip3 install .
+
+To install the library using editable mode, run either:
+    - pip install -e .
+    - pip3 install -e .
+
+Verify installation using either:
+    - pip list
+    - pip3 list
+"""
 
 from setuptools import setup, find_packages
 
+# get readme description
+with open("README.md", "r") as f:
+    long_desc = f.read()
+
+# setup
 setup(
     name='gardenpy',
-    version='0.0.8',
+    version='0.0.9',
     packages=find_packages(),
 )
