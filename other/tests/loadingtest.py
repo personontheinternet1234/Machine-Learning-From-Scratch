@@ -1,6 +1,6 @@
 # loading processed_data for testing
 from PIL import Image
-from gardenpy.models.z_fnn_old import NeuralNetwork as nnet
+from other.deprecated.z_fnn_old import NeuralNetwork as nnet
 import numpy as np
 from tqdm import tqdm
 import pandas as pd
@@ -9,7 +9,6 @@ import random
 from matplotlib import pyplot as plt
 from sklearn.metrics import ConfusionMatrixDisplay
 import seaborn as sns
-from sklearn.neural_network import MLPClassifier
 
 keras_weights = []
 keras_biases = []

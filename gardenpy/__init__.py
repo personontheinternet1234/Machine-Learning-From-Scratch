@@ -13,6 +13,10 @@ from .functional import (
     Losses,
     Optimizers
 )
+from .models import (
+    DNN,
+    CNN
+)
 from .utils import progress
 
 __all__ = [
@@ -24,6 +28,8 @@ __all__ = [
     'Activators',
     'Losses',
     'Optimizers',
+    'DNN',
+    'CNN',
     'progress'
 ]
 

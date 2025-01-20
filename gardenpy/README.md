@@ -2,7 +2,10 @@
 
 ------------------------------------------------------------------------------------------------------------------------
 
-Docs.
+GardenPy is a package that integrates an automatic differentiation library with machine learning algorithms to build
+machine learning from scratch.
+
+
 
 ------------------------------------------------------------------------------------------------------------------------
 

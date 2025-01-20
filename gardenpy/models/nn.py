@@ -20,13 +20,3 @@ class Base:
     def _step(self, x: Tensor, y: Tensor) -> Tensor:
         yhat = self._forward(x=x, y=y)
         nablas = self._backward(y=y, yhat=yhat)
-
-
-class DNN(Base):
-    ...
-
-
-class CNN(Base):
-    def __init__(self):
-        super().__init__()
-        raise NotImplementedError("CNN has not been implemented yet.")
