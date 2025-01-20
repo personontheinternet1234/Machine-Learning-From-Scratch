@@ -426,7 +426,7 @@ class Tensor:
 
     ####################################################################################################################
 
-    class TensorMethod:
+    class _TensorMethod:
         r"""
         **Base class for Tensor methods.**
         """
@@ -450,7 +450,7 @@ class Tensor:
                 "Either define this call, or avoid referencing it."
             )
 
-    class LoneTensorMethod(TensorMethod):
+    class LoneTensorMethod(_TensorMethod):
         r"""
         **Paired Tensor method structure.**
 
@@ -523,7 +523,7 @@ class Tensor:
             # return result
             return result
 
-    class PairedTensorMethod(TensorMethod):
+    class PairedTensorMethod(_TensorMethod):
         r"""
         **Paired Tensor method structure.**
 
