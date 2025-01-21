@@ -1050,6 +1050,7 @@ class Tensor:
             except ValueError:
                 return down * up
 
+    # internal instance
     _matmul = _MatMul()
     _pow = _Pow()
     _mul = _Mul()

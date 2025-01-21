@@ -1,5 +1,5 @@
 r"""
-**GardenPy's pre-built models.**
+**GardenPy pre-built models.**
 
 Contains:
     - :class:`DNN`

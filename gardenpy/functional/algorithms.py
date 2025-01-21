@@ -206,12 +206,13 @@ class Activators:
         **Set activator method and hyperparameters.**
 
         Any hyperparameters that remain unfilled are set to their default value.
+        Supports autograd with Tensors or raw operations with NumPy arrays.
 
         softmax (Softmax)
             - None
-        relu (ReLU)
+        relu (Rectified Linear Unit / ReLU)
             - None
-        lrelu (Leaky ReLU)
+        lrelu (Leaky Rectified Linear Unit / Leaky ReLU)
             - beta (float | int), default = 1e-2, 0.0 < beta: Negative slope.
         sigmoid (Sigmoid)
             - None
