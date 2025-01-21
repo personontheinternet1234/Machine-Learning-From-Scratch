@@ -2,9 +2,9 @@ from gardenpy.functional.algorithms import Initializers, Losses, Optimizers
 from gardenpy.functional.operators import tensor, nabla
 from gardenpy.functional.objects import Tensor
 
-init = Initializers('gaussian').initialize
-criterion = Losses('ssr').loss
-optim = Optimizers('rmsp').optimize
+init = Initializers('gaussian')
+criterion = Losses('ssr')
+optim = Optimizers('rmsp', alpha=1e-2)
 
 x = tensor([[1, 0.5]])
 w = init(1, 2)

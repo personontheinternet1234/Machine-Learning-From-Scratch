@@ -1,5 +1,5 @@
 r"""
-**Main operators.**
+**GardenPy operators.**
 
 Contains:
     - :func:`tensor`

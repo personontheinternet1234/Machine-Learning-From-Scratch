@@ -1,5 +1,5 @@
 r"""
-**Functional GardenPy components.**
+**GardenPy functional components.**
 
 Contains:
     - :module:`objects`

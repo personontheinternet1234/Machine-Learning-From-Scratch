@@ -1,5 +1,5 @@
 r"""
-**GardenPy's objects.**
+**GardenPy objects.**
 
 Contains:
     - :class:`Tensor`

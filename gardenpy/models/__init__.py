@@ -1,5 +1,9 @@
 r"""
-...
+**GardenPy's pre-built models.**
+
+Contains:
+    - :class:`DNN`
+    - :class:`CNN`
 """
 
 from .dnn import DNN

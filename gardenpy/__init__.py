@@ -1,6 +1,9 @@
 r"""
+**GardenPy**
+
 GardenPy is an autograd library with integrated machine learning algorithms.
 
+For more information, visit
 """
 
 from .functional import (

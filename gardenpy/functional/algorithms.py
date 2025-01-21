@@ -1,5 +1,5 @@
 r"""
-**Machine learning algorithms.**
+**GardenPy machine learning algorithms.**
 
 Contains:
     - :class:`Initializers`
@@ -18,6 +18,11 @@ from ..utils.checkers import Params, ParamChecker
 class Initializers:
     r"""
     **Initialization algorithms for weights and biases.**
+
+    Supports:
+        - Xavier/Glorot Initialization
+        - Gaussian Initialization
+        - Uniform Initialization
     """
     _methods: List[str] = [
         'xavier',
@@ -58,7 +63,6 @@ class Initializers:
         self._method, self._hyperparams = self._get_method(method=method, hyperparams=hyperparameters, **kwargs)
 
         # set method
-        self._func = None
         self._set_initializer()
 
     @classmethod
@@ -95,12 +99,10 @@ class Initializers:
         }
 
         # check method
-        if not isinstance(method, str):
-            raise TypeError("'method' must be a string")
         if method not in Initializers._methods:
             raise ValueError(
-                f"Invalid method: {method}\n"
-                f"Choose from: {Initializers._methods}"
+                f"Attempted call to an invalid method: {method}.\n"
+                f"Choose from: {Initializers._methods}."
             )
 
         # set checker
@@ -122,12 +124,11 @@ class Initializers:
             def wrapper(*args: int) -> 'Tensor':
                 # check dimensions
                 if len(args) != 2:
-                    raise ValueError("Initialization must occur with 2 dimensions")
+                    raise ValueError("Attempted initialization with more than two dimensions.")
                 if not all(isinstance(arg, int) and 0 < arg for arg in args):
-                    raise ValueError("Each dimension must be a positive integer")
+                    raise ValueError("Attempted initialization with dimensions that weren't positive integers.")
                 # initialize tensor
                 return Tensor(func(*args))
-
             return wrapper
 
         @initializer_method
@@ -150,30 +151,27 @@ class Initializers:
             return h['kappa'] * np.ones(args, dtype=np.float64)
 
         # function reference
-        funcs = {
+        inits = {
             'xavier': xavier,
             'gaussian': gaussian,
             'uniform': uniform
         }
-        self._func = funcs[self._method]
+        self._init = inits[self._method]
 
-        # set initialize function
-        def initialize(*args: int) -> Tensor:
-            r"""
-            **Returns initialized Tensor with specified dimensions using initialization method.**
+    def __call__(self, *args: int) -> Tensor:
+        r"""
+        **Returns initialized Tensor with specified dimensions using initialization method.**
 
-            Args:
-                *args: Tensor's two dimensions of positive integers.
+        Args:
+            *args: Tensor's two dimensions of positive integers.
 
-            Returns:
-                Tensor: Initialized Tensor.
+        Returns:
+            Tensor: Initialized Tensor.
 
-            Raises:
-                ValueError: If the dimensions weren't properly set.
-            """
-            return self._func(*args)
-
-        self.initialize = initialize
+        Raises:
+            ValueError: If the dimensions weren't properly set.
+        """
+        return self._init(*args)
 
 
 class Activators:
@@ -183,6 +181,15 @@ class Activators:
     If used with GardenPy's Tensors, activation function utilizes autograd methods.
     These activation functions can be used with NumPy arrays, but won't utilize autograd.
     The derivative of these activation functions can be called if using NumPy arrays.
+
+    Supports:
+        - Softmax
+        - Rectified Linear Unit (ReLU)
+        - Leaky Rectified Linear Unit (Leaky ReLU)
+        - Sigmoid
+        - Tanh
+        - Softplus
+        - Mish
     """
     _methods: List[str] = [
         'softmax',
@@ -233,7 +240,6 @@ class Activators:
         self._method, self._hyperparams = self._get_method(method=method, hyperparams=hyperparameters, **kwargs)
 
         # set method
-        self._op = None
         self._set_activator()
 
     @classmethod
@@ -288,12 +294,10 @@ class Activators:
         }
 
         # check method
-        if not isinstance(method, str):
-            raise TypeError("'method' must be a string")
         if method not in Activators._methods:
             raise ValueError(
-                f"Invalid method: {method}\n"
-                f"Choose from: {Activators._methods}"
+                f"Attempted call to an invalid method: {method}.\n"
+                f"Choose from: {Activators._methods}."
             )
 
         # set checker
@@ -465,28 +469,18 @@ class Activators:
         }
         self._op = ops[self._method]
 
-        # set method functions
-        def activate(x: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
-            r"""
-            for tensor or numpy
-            """
-            if isinstance(x, Tensor) and x.type == 'mat':
-                return self._op.main(x)
-            elif isinstance(x, np.ndarray):
-                return self._op.forward(x)
-            else:
-                raise TypeError("'x' must be a Tensor with the matrix type or a NumPy array")
+    def __call__(self, x: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
+        if isinstance(x, Tensor) and x.type == 'mat':
+            return self._op.main(x)
+        elif isinstance(x, np.ndarray):
+            return self._op.forward(x)
+        else:
+            raise TypeError("Attempted activation with an object that wasn't a matrix Tensor or NumPy array")
 
-        def d_activate(x: np.ndarray) -> np.ndarray:
-            r"""
-            only for np
-            """
-            if not isinstance(x, np.ndarray):
-                raise TypeError("'x' must be a NumPy array")
-            return self._op.backward(x)
-
-        self.activate = activate
-        self.d_activate = d_activate
+    def derivative(self, x: np.ndarray) -> np.ndarray:
+        if not isinstance(x, np.ndarray):
+            raise TypeError("Attempted derivative activation with an object that wasn't a NumPy array")
+        return self._op.backward(x)
 
 
 class Losses:
@@ -505,7 +499,6 @@ class Losses:
         self._method, self._hyperparams = self._get_method(method=method, hyperparams=hyperparameters, **kwargs)
 
         # set method
-        self._op = None
         self._set_loss()
 
     @classmethod
@@ -625,32 +618,32 @@ class Losses:
             'ssr': _SumOfSquaredResiduals,
             'savr': _SumOfAbsoluteValueResiduals
         }
-        self._op = ops[self._method]()
+        op = ops[self._method]()
 
         # set method functions
         def loss(yhat: Union[Tensor, np.ndarray], y: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
-            r"""
-            for tensor or numpy
-            """
             if isinstance(yhat, Tensor) and yhat.type == 'mat':
-                return self._op.main(yhat, y)
+                return op.main(yhat, y)
             elif isinstance(yhat, np.ndarray):
-                return self._op.forward(yhat, y)
+                return op.forward(yhat, y)
             else:
                 raise TypeError("'y' must be a Tensor with the matrix type or an array")
 
-        def d_loss(yhat: Union[Tensor, np.ndarray], y: Union[Tensor, np.ndarray]) -> np.ndarray:
-            r"""
-            only for np
-            """
+        def d_loss(yhat: np.ndarray, y: np.ndarray) -> np.ndarray:
             if not isinstance(yhat, np.ndarray):
                 raise TypeError("'yhat' must be an array")
             if not isinstance(y, np.ndarray):
                 raise TypeError("'y' must be an array")
-            return self._op.backward(y, yhat)
+            return op.backward(y, yhat)
 
-        self.loss = loss
-        self.d_loss = d_loss
+        self._op = loss
+        self._d_op = d_loss
+
+    def __call__(self, yhat: Union[Tensor, np.ndarray], y: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
+        return self._op(yhat=yhat, y=y)
+
+    def derivative(self, yhat: np.ndarray, y: np.ndarray) -> np.ndarray:
+        return self._d_op(yhat=yhat, y=y)
 
 
 class Optimizers:
@@ -679,7 +672,6 @@ class Optimizers:
             self._memories = None
 
         # set method
-        self._alg = None
         self._set_optimizer()
 
     @classmethod
@@ -919,10 +911,10 @@ class Optimizers:
             'adag': adag
         }
         # get method
-        self._alg = algs[self._method]
+        alg = algs[self._method]
 
         # set initialize function
-        def optimize(theta: Union[Tensor, np.ndarray], nabla: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
+        def algorithm(theta: Union[Tensor, np.ndarray], nabla: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
             if isinstance(nabla, Tensor):
                 nabla = nabla.array
             elif not isinstance(nabla, np.ndarray):
@@ -931,24 +923,26 @@ class Optimizers:
             if isinstance(theta, Tensor) and self._correlator:
                 if theta.id not in self._memories.keys():
                     self._memories.update({theta.id: self._get_memories(theta=theta.array)})
-                result = Tensor(self._alg(theta=theta.array, nabla=nabla, m=self._memories[theta.id]))
+                result = Tensor(alg(theta=theta.array, nabla=nabla, m=self._memories[theta.id]))
                 Tensor.replace(replaced=theta, replacer=result)
                 return result
             elif isinstance(theta, Tensor):
                 if self._memories is None:
                     self._memories = self._get_memories(theta=theta.array)
-                result = Tensor(self._alg(theta=theta.array, nabla=nabla, m=self._memories))
+                result = Tensor(alg(theta=theta.array, nabla=nabla, m=self._memories))
                 Tensor.replace(replaced=theta, replacer=result)
                 return result
             elif isinstance(theta, np.ndarray) and not self._correlator:
                 if self._memories is None:
                     self._memories = self._get_memories(theta=theta)
-                return self._alg(theta=theta, nabla=nabla, m=self._memories)
+                return alg(theta=theta, nabla=nabla, m=self._memories)
             else:
                 raise ValueError("Turn off correlator if using arrays")
 
-        self.optimize = optimize
+        self._alg = algorithm
 
+    def __call__(self, theta: Union[Tensor, np.ndarray], nabla: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
+        return self._alg(theta=theta, nabla=nabla)
 
 # this is here until I write the docstrings for the new optimizers class
 

@@ -1,13 +1,12 @@
 r"""
-'metrics' includes data evaluation functions for GardenPy.
+**GardenPy data visualization tools.**
 
-Refer to 'todo' for in-depth documentation on all metric functions.
+Contains:
+    - :func:`confusion_matrix`
 """
 
-# all metrics were coded for a version of this library that existed like a year ago, so they need to be recoded.
-
-from .metrics import cm
+from .metrics import confusion_matrix
 
 __all__ = [
-    'cm'
+    'confusion_matrix'
 ]
