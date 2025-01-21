@@ -319,7 +319,7 @@ class Activators:
         class _Softmax(Tensor.LoneTensorMethod):
             # softmax
             def __init__(self):
-                super().__init__(prefix="softmax")
+                super().__init__(prefix='softmax')
 
             @staticmethod
             def forward(x: np.ndarray) -> np.ndarray:
@@ -337,7 +337,7 @@ class Activators:
         class _ReLU(Tensor.LoneTensorMethod):
             # relu
             def __init__(self):
-                super().__init__(prefix="relu")
+                super().__init__(prefix='relu')
 
             @staticmethod
             def forward(x: np.ndarray) -> np.ndarray:
@@ -357,7 +357,7 @@ class Activators:
         class _LeakyReLU(Tensor.LoneTensorMethod):
             # leaky relu
             def __init__(self):
-                super().__init__(prefix="lrelu")
+                super().__init__(prefix='lrelu')
 
             @staticmethod
             def forward(x: np.ndarray) -> np.ndarray:
@@ -377,7 +377,7 @@ class Activators:
         class _Sigmoid(Tensor.LoneTensorMethod):
             # sigmoid
             def __init__(self):
-                super().__init__(prefix="sigmoid")
+                super().__init__(prefix='sigmoid')
 
             @staticmethod
             def forward(x: np.ndarray) -> np.ndarray:
@@ -397,7 +397,7 @@ class Activators:
         class _Tanh(Tensor.LoneTensorMethod):
             # tanh
             def __init__(self):
-                super().__init__(prefix="tanh")
+                super().__init__(prefix='tanh')
 
             @staticmethod
             def forward(x: np.ndarray) -> np.ndarray:
@@ -417,7 +417,7 @@ class Activators:
         class _Softplus(Tensor.LoneTensorMethod):
             # softplus
             def __init__(self):
-                super().__init__(prefix="softplus")
+                super().__init__(prefix='softplus')
 
             @staticmethod
             def forward(x: np.ndarray) -> np.ndarray:
@@ -437,7 +437,7 @@ class Activators:
         class _Mish(Tensor.LoneTensorMethod):
             # mish
             def __init__(self):
-                super().__init__(prefix="mish")
+                super().__init__(prefix='mish')
 
             @staticmethod
             def forward(x: np.ndarray) -> np.ndarray:
@@ -476,11 +476,11 @@ class Activators:
         elif isinstance(x, np.ndarray):
             return self._op.forward(x)
         else:
-            raise TypeError("Attempted activation with an object that wasn't a matrix Tensor or NumPy array")
+            raise TypeError("Attempted activation with an object that wasn't a matrix Tensor or NumPy array.")
 
     def derivative(self, x: np.ndarray) -> np.ndarray:
         if not isinstance(x, np.ndarray):
-            raise TypeError("Attempted derivative activation with an object that wasn't a NumPy array")
+            raise TypeError("Attempted derivative activation with an object that wasn't a NumPy array.")
         return self._op.backward(x)
 
 
@@ -556,7 +556,7 @@ class Losses:
         class _CrossEntropy(Tensor.PairedTensorMethod):
             r"""Cross Entropy built-in method."""
             def __init__(self):
-                super().__init__(prefix="centropy")
+                super().__init__(prefix='centropy')
 
             @staticmethod
             def forward(yhat: np.ndarray, y: np.ndarray) -> np.ndarray:
@@ -576,7 +576,7 @@ class Losses:
         class _SumOfSquaredResiduals(Tensor.PairedTensorMethod):
             r"""Sum of the squared residuals built-in method."""
             def __init__(self):
-                super().__init__(prefix="ssr")
+                super().__init__(prefix='ssr')
 
             @staticmethod
             def forward(yhat: np.ndarray, y: np.ndarray) -> np.ndarray:
@@ -596,7 +596,7 @@ class Losses:
         class _SumOfAbsoluteValueResiduals(Tensor.PairedTensorMethod):
             r"""Sum of the absolute value residuals built-in method."""
             def __init__(self):
-                super().__init__(prefix="savr")
+                super().__init__(prefix='savr')
 
             @staticmethod
             def forward(yhat: np.ndarray, y: np.ndarray) -> np.ndarray:

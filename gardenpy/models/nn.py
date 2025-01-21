@@ -1,6 +1,6 @@
 r"""Built-in models."""
 
-from functional.objects import Tensor
+from ..functional.objects import Tensor
 
 
 class Base:

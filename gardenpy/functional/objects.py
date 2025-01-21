@@ -151,7 +151,7 @@ class Tensor:
         # return to user ikwiad
         Tensor._ikwiad = user_ikwiad
         # return tracker
-        return {'itm': self.id, **alt_tracker}
+        return {'itm': self.id, 'tags': self._tags, **alt_tracker}
 
     @property
     def array(self) -> Union[np.ndarray, None]:
@@ -178,6 +178,16 @@ class Tensor:
             list: Tensor's tags.
         """
         return self._tags
+
+    @tags.setter
+    def tags(self, itm: str) -> None:
+        r"""
+        **Add an item to a Tensor's tags.**
+
+        Args:
+            itm (str): Added tag.
+        """
+        self._tags.append(str(itm))
 
     ####################################################################################################################
 
@@ -211,15 +221,23 @@ class Tensor:
             Tensor._instances[self._id] = None
             self._id = None
             self._tensor = None
-            self._type = 'deleted'
+            self._type = 'del'
             self._tracker = None
-            self._tags = ['deleted']
+            self._tags.append('deleted')
         return None
 
     def matrix(self) -> Union['Tensor', None]:
+        r"""
+        **Creates a new matrix-type Tensor if possible.**
+
+        Raises:
+            UserWarning: If matrix conversion was attempted on an invalid Tensor type.
+                Turned off by toggling ikwiad.
+                See :func:`Tensor.ikwiad`.
+        """
         if self._type != 'grad':
             if not self._ikwiad:
-                warn("Conversion to matrices can only occur with gradients.", UserWarning)
+                warn("Attempted matrix conversion on a Tensor that wasn't a gradient.", UserWarning)
             return None
         return Tensor(self._tensor)
 
@@ -355,14 +373,14 @@ class Tensor:
 
     @staticmethod
     def _is_valid_tensor(itm: 'Tensor') -> bool:
-        if itm._type == 'deleted':
-            # deleted Tensor
-            if not Tensor._ikwiad:
-                warn("Detected deleted Tensor reference", UserWarning)
-            return False
-        else:
+        if itm._type != 'del':
             # non-deleted Tensor
             return True
+        else:
+            # deleted Tensor
+            if not Tensor._ikwiad:
+                warn("Attempted deleted Tensor reference.", UserWarning)
+            return False
 
     @staticmethod
     def _update_track(obj: 'Tensor', opr: any, drv: any, chn: any, rlt: any) -> None:
@@ -667,7 +685,7 @@ class Tensor:
 
         Returns:
             Tensor: Calculated gradient with set internals.
-        
+
         Raises:
             TypeError: If the Tensors were of the wrong type.
             TrackingError: If no relationship could be found between the Tensors.
@@ -761,7 +779,7 @@ class Tensor:
             # tensor conversion
             res = Tensor(obj=res, _gradient_override=True)
 
-            # set local gradient internals
+            # set local grad internals
             res._type = 'grad'
             res._tracker['opr'].append(f'd_{operator}')
             res._tracker['drv'].append(drv_operator)
@@ -776,16 +794,17 @@ class Tensor:
         if not binary and len(relation) != 1:
             linear_override = True
         if binary:
-            # calculate initial gradient
+            # calculate initial grads
             result = _derive(down=relation[-2], up=relation[-1])
             del relation[-1]
             while 1 < len(relation):
-                # chain rule gradients
+                # chain rule grads
                 result = Tensor.chain(down=_derive(down=relation[-2], up=relation[-1]), up=result)
                 del relation[-1]
         else:
             # accumulate grads
             grads = []
+            grad_itms = []
             track = None
             for itm in relation:
                 op_res = _derive(down=itm[-2], up=itm[-1])
@@ -795,10 +814,12 @@ class Tensor:
                     op_res = Tensor.chain(down=_derive(down=itm[-2], up=itm[-1]), up=op_res)
                     del itm[-1]
                 grads.append(op_res._tensor)
+                grad_itms.append(op_res)
                 track = op_res._tracker
             result = 0
-            for grad in grads:
+            for grad, itm in zip(grads, grad_itms):
                 result += grad
+                itm.instance_reset()
             result = Tensor(obj=result, _gradient_override=True)
             result._type = 'grad'
             result._tracker = track
@@ -812,20 +833,20 @@ class Tensor:
     def chain(down: 'Tensor', up: 'Tensor') -> 'Tensor':
         r"""
         **Chain-rule gradients.**
-        
+
         Checks if there is an immediate link between the downstream and upstream gradients.
         If there is a link, the chain-rule operation is called to link the gradients.
-        
+
         Args:
             down (Tensor): Downstream gradient.
             up (Tensor): Upstream gradient.
-            
+
         Returns:
             Tensor: Chain ruled gradient with set internals.
-        
+
         Raises:
             TrackingError: If no relationship could be found between the Tensors.
-        
+
         Note:
             :func:`Tensor.nabla`automatically chain rules gradients.
             However, it doesn't attempt to find already calculated gradients.
@@ -867,7 +888,7 @@ class Tensor:
         # matrix multiplication
         # todo: correct implementation
         def __init__(self):
-            super().__init__(prefix="matmul")
+            super().__init__(prefix='matmul')
 
         @staticmethod
         def forward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
@@ -898,7 +919,7 @@ class Tensor:
     class _Pow(PairedTensorMethod):
         # hadamard power
         def __init__(self):
-            super().__init__(prefix="pow")
+            super().__init__(prefix='pow')
 
         @staticmethod
         def forward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
@@ -929,7 +950,7 @@ class Tensor:
     class _Mul(PairedTensorMethod):
         # hadamard multiplication
         def __init__(self):
-            super().__init__(prefix="mul")
+            super().__init__(prefix='mul')
 
         @staticmethod
         def forward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
@@ -960,7 +981,7 @@ class Tensor:
     class _TrueDiv(PairedTensorMethod):
         # hadamard division
         def __init__(self):
-            super().__init__(prefix="truediv")
+            super().__init__(prefix='truediv')
 
         @staticmethod
         def forward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
@@ -991,7 +1012,7 @@ class Tensor:
     class _Add(PairedTensorMethod):
         # addition
         def __init__(self):
-            super().__init__(prefix="add")
+            super().__init__(prefix='add')
 
         @staticmethod
         def forward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
@@ -1022,7 +1043,7 @@ class Tensor:
     class _Sub(PairedTensorMethod):
         # subtraction
         def __init__(self):
-            super().__init__(prefix="sub")
+            super().__init__(prefix='sub')
 
         @staticmethod
         def forward(main: np.ndarray, other: np.ndarray) -> np.ndarray:
