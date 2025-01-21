@@ -53,6 +53,6 @@ setup(
     url=meta('url'),
     download_url=meta('download_url'),
     license=meta('license'),
-    license_file=os.path.join(os.path.dirname(__file__), 'LISENCE'),
+    license_file=os.path.join(os.path.dirname(__file__), 'LICENCE'),
     packages=find_packages(),
 )

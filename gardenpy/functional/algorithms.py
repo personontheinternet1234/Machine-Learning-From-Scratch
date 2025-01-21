@@ -156,6 +156,7 @@ class Initializers:
             'gaussian': gaussian,
             'uniform': uniform
         }
+        # get function
         self._init = inits[self._method]
 
     def __call__(self, *args: int) -> Tensor:
@@ -171,6 +172,7 @@ class Initializers:
         Raises:
             ValueError: If the dimensions weren't properly set.
         """
+        # initialize
         return self._init(*args)
 
 
@@ -178,7 +180,7 @@ class Activators:
     r"""
     **Activation algorithms for arrays.**
 
-    If used with GardenPy's Tensors, activation function utilizes autograd methods.
+    If used with GardenPy's Tensors, activation functions utilize autograd methods.
     These activation functions can be used with NumPy arrays, but won't utilize autograd.
     The derivative of these activation functions can be called if using NumPy arrays.
 
@@ -468,23 +470,70 @@ class Activators:
             'softplus': _Softplus,
             'mish': _Mish
         }
-        self._op = ops[self._method]
+        # get operator
+        self._op = ops[self._method]()
 
     def __call__(self, x: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
+        r"""
+        **Forward function call.**
+
+        Autograd is automatically applied if Tensors are used.
+        Otherwise, raw operation is applied without autograd.
+
+        Args:
+            x (Tensor | np.ndarray): Inputted array.
+
+        Returns:
+            Tensor | np.ndarray: Activated array.
+
+        Raises:
+            TypeError: If an invalid object was passed for the operation.
+        """
         if isinstance(x, Tensor) and x.type == 'mat':
+            # x tensor
             return self._op.main(x)
         elif isinstance(x, np.ndarray):
+            # x array
             return self._op.forward(x)
         else:
+            # x error
             raise TypeError("Attempted activation with an object that wasn't a matrix Tensor or NumPy array.")
 
     def derivative(self, x: np.ndarray) -> np.ndarray:
+        r"""
+        **Backward function call.**
+
+        Automatically done with autograd for Tensors.
+        Raw derivative operation should only be done on NumPy arrays.
+
+        Args:
+            x (np.ndarray): Inputted array.
+
+        Returns:
+            np.ndarray: Derivative activated array.
+
+        Raises:
+            TypeError: If an invalid object was passed for the operation.
+        """
         if not isinstance(x, np.ndarray):
+            # x error
             raise TypeError("Attempted derivative activation with an object that wasn't a NumPy array.")
         return self._op.backward(x)
 
 
 class Losses:
+    r"""
+    **Loss algorithms for arrays.**
+
+    If used with GardenPy's Tensors, loss functions utilize autograd methods.
+    These loss functions can be used with NumPy arrays, but won't utilize autograd.
+    The derivative of these loss functions can be called if using NumPy arrays.
+
+    Supports:
+        - Cross Entropy
+        - Sum of the Squared Residuals
+        - Sum of the Absolute Value Residuals
+    """
     _methods: List[str] = [
         'centropy',
         'ssr',
@@ -492,6 +541,29 @@ class Losses:
     ]
 
     def __init__(self, method: str, *, hyperparameters: Optional[dict] = None, ikwiad: bool = False, **kwargs):
+        r"""
+        **Set loss method and hyperparameters.**
+
+        Any hyperparameters that remain unfilled are set to their default value.
+        Supports autograd with Tensors or raw operations with NumPy arrays.
+
+        centropy (Cross Entropy):
+            - epsilon (float), default = 1e-10, 0.0 < epsilon < 1e-02: Numerical stability constant.
+        ssr (Sum of the Squared Residuals):
+            - None
+        savr (Sum of the Absolute Value Residuals):
+            - None
+
+        Args:
+            method (str): Loss method.
+            hyperparameters (dict, optional): Method hyperparameters.
+            ikwiad (bool), default = False: Turns off all warning messages ("I know what I am doing" - ikwiad).
+            **kwargs: Alternate input format for method hyperparameters.
+
+        Raises:
+            TypeError: If any hyperparameters were of the wrong type.
+            ValueError: If invalid values were passed for any of the hyperparameters.
+        """
         # allowed methods
         self._possible_methods = Losses._methods
 
@@ -504,6 +576,12 @@ class Losses:
 
     @classmethod
     def methods(cls):
+        r"""
+        **Possible loss methods.**
+
+        Returns:
+            list: Possible loss methods.
+        """
         return cls._methods
 
     def _get_method(self, method: str, hyperparams: dict, **kwargs) -> Tuple[str, dict]:
@@ -512,7 +590,7 @@ class Losses:
             'centropy': Params(
                 default={'epsilon': 1e-10},
                 dtypes={'epsilon': float},
-                vtypes={'epsilon': lambda x: 0.0 < x < 1.0},
+                vtypes={'epsilon': lambda x: 0.0 < x < 1e-02},
                 ctypes={'epsilon': lambda x: x}
             ),
             'ssr': Params(
@@ -530,12 +608,10 @@ class Losses:
         }
 
         # check method
-        if not isinstance(method, str):
-            raise TypeError("'method' must be a string")
         if method not in Losses._methods:
             raise ValueError(
-                f"Invalid method: {method}\n"
-                f"Choose from: {Losses._methods}"
+                f"Attempted call to an invalid method: {method}.\n"
+                f"Choose from: {Losses._methods}."
             )
 
         # set checker
@@ -554,7 +630,7 @@ class Losses:
             h = self._hyperparams.copy()
 
         class _CrossEntropy(Tensor.PairedTensorMethod):
-            r"""Cross Entropy built-in method."""
+            # centropy
             def __init__(self):
                 super().__init__(prefix='centropy')
 
@@ -574,7 +650,7 @@ class Losses:
                     return down * up
 
         class _SumOfSquaredResiduals(Tensor.PairedTensorMethod):
-            r"""Sum of the squared residuals built-in method."""
+            # ssr
             def __init__(self):
                 super().__init__(prefix='ssr')
 
@@ -594,7 +670,7 @@ class Losses:
                     return down * up
 
         class _SumOfAbsoluteValueResiduals(Tensor.PairedTensorMethod):
-            r"""Sum of the absolute value residuals built-in method."""
+            # savr
             def __init__(self):
                 super().__init__(prefix='savr')
 
@@ -619,35 +695,77 @@ class Losses:
             'ssr': _SumOfSquaredResiduals,
             'savr': _SumOfAbsoluteValueResiduals
         }
-        op = ops[self._method]()
-
-        # set method functions
-        def loss(yhat: Union[Tensor, np.ndarray], y: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
-            if isinstance(yhat, Tensor) and yhat.type == 'mat':
-                return op.main(yhat, y)
-            elif isinstance(yhat, np.ndarray):
-                return op.forward(yhat, y)
-            else:
-                raise TypeError("'y' must be a Tensor with the matrix type or an array")
-
-        def d_loss(yhat: np.ndarray, y: np.ndarray) -> np.ndarray:
-            if not isinstance(yhat, np.ndarray):
-                raise TypeError("'yhat' must be an array")
-            if not isinstance(y, np.ndarray):
-                raise TypeError("'y' must be an array")
-            return op.backward(y, yhat)
-
-        self._op = loss
-        self._d_op = d_loss
+        # get operator
+        self._op = ops[self._method]()
 
     def __call__(self, yhat: Union[Tensor, np.ndarray], y: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
-        return self._op(yhat=yhat, y=y)
+        r"""
+        **Forward function call.**
+
+        Autograd is automatically applied if Tensors are used.
+        Otherwise, raw operation is applied without autograd.
+
+        Args:
+            yhat (Tensor | np.ndarray): Predicted output.
+            y (Tensor | np.ndarray): Expected output.
+
+        Returns:
+            Tensor | np.ndarray: Loss.
+
+        Raises:
+            TypeError: If an invalid object was passed for the operation.
+        """
+        if not isinstance(y, (Tensor, np.ndarray)):
+            # y error
+            raise TypeError("Attempted loss with an expected object that wasn't a matrix Tensor or NumPy array.")
+        if isinstance(yhat, Tensor) and yhat.type == 'mat':
+            # yhat tensor
+            return self._op.main(yhat, y)
+        elif isinstance(yhat, np.ndarray):
+            # yhat array
+            return self._op.forward(yhat, y)
+        else:
+            # yhat error
+            raise TypeError("Attempted loss with a predicted object that wasn't a matrix Tensor or NumPy array.")
 
     def derivative(self, yhat: np.ndarray, y: np.ndarray) -> np.ndarray:
-        return self._d_op(yhat=yhat, y=y)
+        r"""
+        **Backward function call.**
+
+        Automatically done with autograd for Tensors.
+        Raw derivative operation should only be done on NumPy arrays.
+
+        Args:
+            yhat (Tensor | np.ndarray): Predicted output.
+            y (Tensor | np.ndarray): Expected output.
+
+        Returns:
+            np.ndarray: Derivative activated array.
+
+        Raises:
+            TypeError: If an invalid object was passed for the operation.
+        """
+        if not isinstance(yhat, np.ndarray):
+            # yhat error
+            raise TypeError("Attempted derivative loss with a predicted object that wasn't a NumPy array.")
+        if not isinstance(y, np.ndarray):
+            # y error
+            raise TypeError("Attempted derivative loss with an expected object that wasn't a NumPy array.")
+        return self._op.backward(y, yhat)
 
 
 class Optimizers:
+    r"""
+    **Optimization algorithms for arrays.**
+
+    If used with GardenPy's Tensors, optimizers utilize ID conserving and replacement.
+    Tensors also utilize their IDs to store memory instances within the optimizer instance.
+
+    Supports:
+        - Adaptive Moment Estimation (Adam)
+        - Stochastic Gradient Descent (SGD)
+        - Root Mean Squared Propagation (RMSP)
+    """
     _methods: List[str] = [
         'adam',
         'sgd',
@@ -663,6 +781,53 @@ class Optimizers:
             ikwiad: bool = False,
             **kwargs
     ):
+        r"""
+        **Set optimizer method and hyperparameters.**
+
+        Any hyperparameters that remain unfilled are set to their default value.
+        Supports ID conservation and memory with Tensors or raw operations with NumPy arrays.
+
+        adam:
+            - alpha (float, int), default = 1e-03: Learning rate.
+            - lambda_d (float, int), default = 0.0, 0 <= lambda_d < 1.0: L2 term.
+            - beta_1 (float, int), default = 0.9, 0 < lambda_d < 1.0: First moment beta.
+            - beta_2 (float, int), default = 0.999, 0 < lambda_d < 1.0: Second moment beta.
+            - epsilon (float), default = 1e-10, 0 < epsilon <= 1e-02: Numerical stability constant.
+            - ams (bool, int), default = False: Adam AMS variant.
+        sgd:
+            - alpha (float, int), default = 1e-03: Learning rate.
+            - lambda_d (float, int), default = 0.0, 0 <= lambda_d < 1.0: L2 term.
+            - mu (float, int), default = 0.0, 0.0 <= mu < 1.0: Momentum.
+            - tau (float, int), default = 0.0, 0.0 <= tau < 1.0: Dampening.
+            - nesterov (bool, int), default = False: Nesterov variant.
+        rmsp:
+            - alpha (float, int), default = 1e-03: Learning rate.
+            - lambda_d (float, int), default = 0.0, 0 <= lambda_d < 1.0: L2 term.
+            - beta (float, int), default = 0.99, 0.0 <= beta < 1.0: First moment beta.
+            - mu (float, int), default = 0.0, 0.0 <= mu < 1.0: Momentum.
+            - epsilon (float), default = 1e-10, 0 < epsilon <= 1e-02: Numerical stability constant.
+
+        Args:
+            method (str): Optimizer method.
+            hyperparameters (dict, optional): Method hyperparameters.
+            correlator (bool), default = True: Remembers unique instances for different Tensors.
+            ikwiad (bool), default = False: Turns off all warning messages ("I know what I am doing" - ikwiad).
+            **kwargs: Alternate input format for method hyperparameters.
+
+        Raises:
+            TypeError: If any hyperparameters were of the wrong type.
+            ValueError: If invalid values were passed for any of the hyperparameters.
+
+        Note:
+            The correlator keeps track of memory for each unique Tensor.
+            It uses a Tensor's ID to reference this memory.
+            If turned off, a single memory instance will be saved throughout an instance of the class.
+
+        Note:
+            Non-Tensor objects should have correlator off.
+            If correlator is on and a non-Tensor object is passed, there will be an attempt to create new blank memory.
+            This most likely will result in errors, and should be avoided if possible.
+        """
         # internals
         self._ikwiad = bool(ikwiad)
         self._correlator = bool(correlator)
@@ -677,6 +842,12 @@ class Optimizers:
 
     @classmethod
     def methods(cls) -> list:
+        r"""
+        **Possible optimization methods.**
+
+        Returns:
+            list: Possible optimization methods.
+        """
         return cls._methods
 
     def _get_method(self, method: str, hyperparams: dict, **kwargs) -> Tuple[str, dict]:
@@ -696,7 +867,7 @@ class Optimizers:
                     'lambda_d': (float, int),
                     'beta_1': (float, int),
                     'beta_2': (float, int),
-                    'epsilon': (float, int),
+                    'epsilon': float,
                     'ams': (bool, int)
                 },
                 vtypes={
@@ -712,7 +883,7 @@ class Optimizers:
                     'lambda_d': lambda x: float(x),
                     'beta_1': lambda x: float(x),
                     'beta_2': lambda x: float(x),
-                    'epsilon': lambda x: float(x),
+                    'epsilon': lambda x: x,
                     'ams': lambda x: bool(x)
                 }
             ),
@@ -805,12 +976,10 @@ class Optimizers:
         }
 
         # check method
-        if not isinstance(method, str):
-            raise TypeError("'method' must be a string")
         if method not in Optimizers._methods:
             raise ValueError(
-                f"Invalid method: {method}\n"
-                f"Choose from: {Optimizers._methods}"
+                f"Invalid method: {method}.\n"
+                f"Choose from: {Optimizers._methods}."
             )
 
         # set checker
@@ -853,6 +1022,7 @@ class Optimizers:
             h = self._hyperparams.copy()
 
         def adam(theta: np.ndarray, nabla: np.ndarray, m: dict) -> np.ndarray:
+            # adam
             gamma = nabla + h['lambda_d'] * theta
 
             psi = h['beta_1'] * m['psi_p'] + (1.0 - h['beta_1']) * gamma
@@ -871,6 +1041,7 @@ class Optimizers:
             return theta - h['alpha'] * psi_hat / (np.sqrt(omega_hat) + h['epsilon'])
 
         def sgd(theta: np.ndarray, nabla: np.ndarray, m: dict) -> np.ndarray:
+            # sgd
             gamma = nabla + h['lambda_d'] * theta
 
             delta = h['mu'] * m['delta_p'] + (1.0 - h['tau']) * gamma
@@ -882,6 +1053,7 @@ class Optimizers:
             return theta - h['alpha'] * delta
 
         def rmsp(theta: np.ndarray, nabla: np.ndarray, m: dict) -> np.ndarray:
+            # rmsp
             gamma = nabla + h['lambda_d'] * theta
 
             omega = h['beta'] * m['omega_p'] + (1.0 - h['beta']) * gamma ** 2.0
@@ -893,6 +1065,7 @@ class Optimizers:
             return theta - h['alpha'] * delta
 
         def adag(theta: np.ndarray, nabla: np.ndarray, m: dict) -> np.ndarray:
+            # adag
             # todo: correct implementation
             gamma = nabla + h['lambda_d'] * theta
 
@@ -912,603 +1085,62 @@ class Optimizers:
             'adag': adag
         }
         # get method
-        alg = algs[self._method]
-
-        # set initialize function
-        def algorithm(theta: Union[Tensor, np.ndarray], nabla: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
-            if isinstance(nabla, Tensor):
-                nabla = nabla.array
-            elif not isinstance(nabla, np.ndarray):
-                raise TypeError("'nabla' must be a Tensor or array")
-
-            if isinstance(theta, Tensor) and self._correlator:
-                if theta.id not in self._memories.keys():
-                    self._memories.update({theta.id: self._get_memories(theta=theta.array)})
-                result = Tensor(alg(theta=theta.array, nabla=nabla, m=self._memories[theta.id]))
-                Tensor.replace(replaced=theta, replacer=result)
-                return result
-            elif isinstance(theta, Tensor):
-                if self._memories is None:
-                    self._memories = self._get_memories(theta=theta.array)
-                result = Tensor(alg(theta=theta.array, nabla=nabla, m=self._memories))
-                Tensor.replace(replaced=theta, replacer=result)
-                return result
-            elif isinstance(theta, np.ndarray) and not self._correlator:
-                if self._memories is None:
-                    self._memories = self._get_memories(theta=theta)
-                return alg(theta=theta, nabla=nabla, m=self._memories)
-            else:
-                raise ValueError("Turn off correlator if using arrays")
-
-        self._alg = algorithm
+        self._alg = algs[self._method]
 
     def __call__(self, theta: Union[Tensor, np.ndarray], nabla: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]:
-        return self._alg(theta=theta, nabla=nabla)
+        r"""
+        **Optimization.**
 
-# this is here until I write the docstrings for the new optimizers class
+        ID conserving is automatically called on all Tensors.
+        If correlator is on, memory will be saved for each Tensor instance.
+        NumPy arrays are supported, but cannot use the correlator.
+        If NumPy arrays are used with correlator on, an error will most likely occur.
 
-# class OptimizersOld:
-#     r"""
-#     **Optimization algorithms for GardenPy.**
-#
-#     These algorithms ideally support GardenPy Tensors, but are compatible with NumPy Arrays.
-#
-#     Attributes:
-#     ----------
-#     **algorithm** : (*str*)
-#         The optimization algorithm.
-#     **hyperparameters** : (*dict*)
-#         The hyperparameters for the optimization algorithm.
-#
-#     Methods:
-#     ----------
-#     **__init__(algorithm: str, *, hyperparameters: dict = None, **kwargs)** :
-#         Instantiates the object with the specified hyperparameters.
-#
-#     **optimize(thetas: Union[Tensor, np.ndarray], nablas: Union[Tensor, np.ndarray]) -> Union[Tensor, np.ndarray]** :
-#         Optimizes the thetas based on the specified gradients.
-#         The optimized thetas will retain the same datatype as the initial thetas.
-#
-#     Notes:
-#     ----------
-#     - Optimizers optimizes thetas iteratively within each call.
-#
-#     - Optimizers does not calculate gradients.
-#         - Gradients are calculated from GardenPy Tensors' automatic differentiation or by hand.
-#
-#     - Optimizers supports GardenPy Tensors; however, Optimizers also works with NumPy Arrays.
-#
-#     - Any values that must be called outside one instance of optimization are automatically saved to memory.
-#         - These values are saved within each object and called when necessary.
-#         - These values are not readily callable externally.
-#
-#     - Refer to GardenPy's repository or GardenPy's docs for more information.
-#     """
-#
-#     def __init__(self, algorithm: str, *, hyperparameters: dict = None, correlator=True, **kwargs):
-#         r"""
-#         **Optimizer initialization with defined hyperparameters.**
-#
-#         Parameters:
-#         ----------
-#         **algorithm** : (*str*) {'*adam*', '*sgd*', '*rmsp*', '*adag'}
-#             The optimization algorithm.
-#
-#             - *adam* : Adaptive Moment Estimation.
-#             - *sgd*: Stochastic Gradient Descent.
-#             - *rmsp*: Root Mean Squared Propagation.
-#             - *adag*: Adaptive Gradient Algorithm.
-#
-#         **hyperparameters** (*dict*, *optional*) :
-#             The hyperparameters for the optimization algorithm.
-#
-#             - **adam** : (*dict*) {'*alpha*', '*lambda_d*', '*beta1*', '*beta2*', '*epsilon*', '*ams*'}
-#                 - *alpha* : (float, int), default=1e-3
-#                     Learning rate.
-#                 - *lambda_d* : (float, int, 0.0 <= lambda_d), default=0.0
-#                     Strength of weight decay / L2 regularization.
-#                 - *beta1* : (float, int, 0.0 <= beta1 < 1), default=0.9
-#                     Exponential decay rate for the first moment (mean).
-#                 - *beta2* : (float, int, 0.0 <= beta2 < 1), default=0.999
-#                     Exponential decay rate for the second moment (uncentered variance).
-#                 - *epsilon* : (float, int, 0.0 < epsilon), default=1e-8
-#                     Numerical stability constant to prevent division by zero.
-#                 - *ams* : (bool), default=False
-#                     Whether to use AMSGrad.
-#
-#             - **sgd** : (*dict*) {'*alpha*', '*lambda_d*', '*mu*', '*tau*', '*nesterov*'}
-#                 - *alpha* : (float, int), default=1e-3
-#                     Learning rate.
-#                 - *lambda_d* : (float, int, 0.0 <= lambda_d), default=0.0
-#                     Strength of weight decay / L2 regularization.
-#                 - *mu* : (float, int, 0 <= mu < 1.0), default=0.0
-#                     Decay rate for the previous delta.
-#                 - *tau* : (float, int, 0.0 <= tau < 1.0), default=0.0
-#                     Dampening of the current delta.
-#                 - *nesterov* : (bool), default=False
-#                     Whether to use Nesterov momentum.
-#
-#             - **rmsp** : (*dict*) {'*alpha*', '*lambda_d*', '*beta2*', '*mu*', '*epsilon*'}
-#                 - *alpha* : (float, int), default=1e-3
-#                     Learning rate.
-#                 - *lambda_d* : (float, int, 0.0 <= lambda_d), default=0.0
-#                     Strength of weight decay / L2 regularization.
-#                 - *beta* : (float, int, 0.0 <= beta < 1), default=0.99
-#                     Exponential decay rate for the first moment (mean).
-#                 - *mu* : (float, int, 0 <= mu < 1.0), default=0.0
-#                     Decay rate for the previous delta.
-#                 - *epsilon* : (float, int, 0.0 < epsilon), default=1e-8
-#                     Numerical stability constant to prevent division by zero.
-#
-#         ****kwargs** (*any*, *optional*) :
-#             The hyperparameters for the optimization algorithm with keyword arguments if desired.
-#
-#             To set a hyperparameter, add a keyword argument that refers to one of the hyperparameters.
-#
-#         Notes:
-#         ----------
-#         - Any hyperparameters not specified will be set to their default values.
-#
-#         - Hyperparameters that are specified but not used within the specified algorithm will be discarded.
-#             - The user will receive a warning when this occurs.
-#
-#         - The internal memory will automatically be initialized when Optimizers is instantiated.
-#
-#         Example:
-#         -----
-#         >>> from gardenpy.utils.algorithms import Optimizers
-#         >>> optim = Optimizers('adam', hyperparameters={'alpha': 1e-2, 'lambda_d': 1e-3, 'ams': True})
-#         """
-#         # optimization algorithms
-#         self.algorithms = [
-#             'adam',
-#             'sgd',
-#             'rmsp'
-#         ]
-#
-#         # internal optimization algorithm parameters
-#         self._algorithm = self._check_algorithm(algorithm)
-#         self._hyps = self._get_hyperparams(hyperparameters, kwargs)
-#
-#         # optimization algorithm
-#         self._optim = self._get_optim()
-#
-#         # internal memory
-#         self._correlator = correlator
-#         if correlator:
-#             # instance memorization
-#             self._tensors = []
-#             self._full = []
-#             self._memory = None
-#         else:
-#             # set memorization
-#             self._memory = self._get_memory()
-#
-#     def _check_algorithm(self, algorithm):
-#         # checks whether the optimization algorithm is valid
-#         if algorithm in self.algorithms:
-#             # valid optimization algorithm
-#             return algorithm
-#         else:
-#             # invalid optimization algorithm
-#             raise ValueError(
-#                 f"Invalid optimization algorithm: '{algorithm}'\n"
-#                 f"Choose from: '{[alg for alg in self.algorithms]}'"
-#             )
-#
-#     def _get_hyperparams(self, hyperparams, kwargs):
-#         # defines optimization algorithm hyperparameters
-#         # default optimization algorithm hyperparameters
-#         default = {
-#             'adam': {
-#                 'alpha': 1e-3,
-#                 'lambda_d': 0.0,
-#                 'beta1': 0.9,
-#                 'beta2': 0.999,
-#                 'epsilon': 1e-8,
-#                 'ams': False
-#             },
-#             'sgd': {
-#                 'alpha': 1e-3,
-#                 'lambda_d': 0.0,
-#                 'mu': 0.0,
-#                 'tau': 0.0,
-#                 'nesterov': False
-#             },
-#             'rmsp': {
-#                 'alpha': 1e-3,
-#                 'lambda_d': 0.0,
-#                 'beta2': 0.99,
-#                 'mu': 0.0,
-#                 'epsilon': 1e-8
-#             },
-#             'adag': {
-#                 'alpha': 1e-2,
-#                 'lambda_d': 0.0,
-#                 'tau': 0.0,
-#                 'nu': 0.0,
-#                 'epsilon': 1e-8
-#             }
-#         }
-#         # default optimization algorithm hyperparameter datatypes
-#         dtypes = {
-#             'adam': {
-#                 'alpha': (float, int),
-#                 'lambda_d': (float, int),
-#                 'beta1': (float, int),
-#                 'beta2': (float, int),
-#                 'epsilon': (float, int),
-#                 'ams': (bool, int)
-#             },
-#             'sgd': {
-#                 'alpha': (float, int),
-#                 'lambda_d': (float, int),
-#                 'mu': (float, int),
-#                 'tau': (float, int),
-#                 'nesterov': (bool, int)
-#             },
-#             'rmsp': {
-#                 'alpha': (float, int),
-#                 'lambda_d': (float, int),
-#                 'beta2': (float, int),
-#                 'mu': (float, int),
-#                 'epsilon': (float, int)
-#             },
-#             'adag': {
-#                 'alpha': (float, int),
-#                 'lambda_d': (float, int),
-#                 'tau': (float, int),
-#                 'nu': (float, int),
-#                 'epsilon': (float, int)
-#             }
-#         }
-#         # default optimization algorithm hyperparameter value types
-#         vtypes = {
-#             'adam': {
-#                 'alpha': lambda x: True,
-#                 'lambda_d': lambda x: 0.0 <= x < 1.0,
-#                 'beta1': lambda x: 0.0 <= x < 1.0,
-#                 'beta2': lambda x: 0.0 <= x < 1.0,
-#                 'epsilon': lambda x: 0.0 < x <= 1e-2,
-#                 'ams': lambda x: True
-#             },
-#             'sgd': {
-#                 'alpha': lambda x: True,
-#                 'lambda_d': lambda x: 0.0 <= x < 1.0,
-#                 'mu': lambda x: 0.0 <= x < 1.0,
-#                 'tau': lambda x: 0.0 <= x < 1.0,
-#                 'nesterov': lambda x: True
-#             },
-#             'rmsp': {
-#                 'alpha': lambda x: True,
-#                 'lambda_d': lambda x: 0.0 <= x < 1.0,
-#                 'beta2': lambda x: 0.0 <= x < 1.0,
-#                 'mu': lambda x: 0.0 <= x < 1.0,
-#                 'epsilon': lambda x: 0.0 < x <= 1e-2
-#             },
-#             'adag': {
-#                 'alpha': lambda x: True,
-#                 'lambda_d': lambda x: 0.0 <= x < 1.0,
-#                 'tau': lambda x: 0.0 <= x <= 1.0,
-#                 'nu': lambda x: 0.0 <= x <= 1.0,
-#                 'epsilon': lambda x: 0.0 < x <= 1e-2
-#             }
-#         }
-#         # default optimization algorithm hyperparameter conversion types
-#         ctypes = {
-#             'adam': {
-#                 'alpha': lambda x: float(x),
-#                 'lambda_d': lambda x: float(x),
-#                 'beta1': lambda x: float(x),
-#                 'beta2': lambda x: float(x),
-#                 'epsilon': lambda x: float(x),
-#                 'ams': lambda x: bool(x)
-#             },
-#             'sgd': {
-#                 'alpha': lambda x: float(x),
-#                 'lambda_d': lambda x: float(x),
-#                 'mu': lambda x: float(x),
-#                 'tau': lambda x: float(x),
-#                 'nesterov': lambda x: bool(x)
-#             },
-#             'rmsp': {
-#                 'alpha': lambda x: float(x),
-#                 'lambda_d': lambda x: float(x),
-#                 'beta2': lambda x: float(x),
-#                 'mu': lambda x: float(x),
-#                 'epsilon': lambda x: float(x)
-#             },
-#             'adag': {
-#                 'alpha': lambda x: float(x),
-#                 'lambda_d': lambda x: float(x),
-#                 'tau': lambda x: float(x),
-#                 'nu': lambda x: float(x),
-#                 'epsilon': lambda x: float(x)
-#             }
-#         }
-#
-#         # instantiate hyperparameters dictionary
-#         hyps = default[self._algorithm]
-#
-#         # combine keyword arguments and hyperparameters
-#         if hyperparams and kwargs:
-#             hyperparams.update(kwargs)
-#         elif kwargs:
-#             hyperparams = kwargs
-#
-#         if hyperparams and (hyps is not None) and isinstance(hyps, dict):
-#             # set defined hyperparameters
-#             for hyp in hyperparams:
-#                 if hyp not in hyps:
-#                     # invalid hyperparameter
-#                     print()
-#                     warnings.warn(
-#                         f"\nInvalid hyperparameter for '{self._algorithm}': '{hyp}'\n"
-#                         f"Choose from: '{[hyp for hyp in hyps]}'",
-#                         UserWarning
-#                     )
-#                 elif hyp in hyps and not isinstance(hyperparams[hyp], dtypes[self._algorithm][hyp]):
-#                     # invalid datatype for hyperparameter
-#                     raise TypeError(
-#                         f"Invalid datatype for '{self._algorithm}': '{hyp}'\n"
-#                         f"Choose from: '{dtypes[self._algorithm][hyp]}'"
-#                     )
-#                 elif hyp in hyps and not (vtypes[self._algorithm][hyp](hyperparams[hyp])):
-#                     # invalid value for hyperparameter
-#                     raise TypeError(
-#                         f"Invalid value for '{self._algorithm}': '{hyp}'\n"
-#                         f"Conditional: '{vtypes[self._algorithm][hyp]}'"
-#                     )
-#                 else:
-#                     # valid hyperparameter
-#                     hyps[hyp] = ctypes[self._algorithm][hyp](hyperparams[hyp])
-#         elif hyperparams and isinstance(hyperparams, dict):
-#             # hyperparameters not taken
-#             print()
-#             warnings.warn(f"\n'{self._algorithm}' does not take hyperparameters", UserWarning)
-#         elif hyperparams:
-#             # invalid data type
-#             raise TypeError(
-#                 f"'hyperparameters' is not a dictionary: '{hyperparams}'\n"
-#                 f"Choose from: '{[hyp for hyp in hyps]}'"
-#             )
-#
-#         # return hyperparameters
-#         return hyps
-#
-#     def _get_memory(self):
-#         # instantiates memory dictionary
-#         # required memory components for each optimization algorithm
-#         memories = {
-#             'adam': {
-#                 'deltas_p': None,
-#                 'upsilons_p': None,
-#                 'iota': 1.0,
-#                 'upsilons_hat_mx': None
-#             },
-#             'sgd': {
-#                 'deltas_p': None
-#             },
-#             'rmsp': {
-#                 'deltas_p': None,
-#                 'upsilons_p': None
-#             },
-#             'adag': {
-#                 'iota': 1.0,
-#                 'tau': None
-#             }
-#         }
-#         # return memory dictionary
-#         return memories[self._algorithm]
-#
-#     def _get_optim(self):
-#         # defines optimization algorithm
-#         def adam(thetas, nablas):
-#             # Adaptive Moment Estimation optimization algorithm
-#             if self._hyps['lambda_d']:
-#                 # weight decay
-#                 nablas = nablas + self._hyps['lambda_d'] * thetas
-#
-#             if self._memory['deltas_p'] is not None:
-#                 # zero-biased first moment estimate
-#                 deltas = self._hyps['beta1'] * self._memory['deltas_p'] + (1.0 - self._hyps['beta1']) * nablas
-#             else:
-#                 # zero-biased initialized first moment estimate
-#                 deltas = (1.0 - self._hyps['beta1']) * nablas
-#             # zero-biased first moment memory update
-#             self._memory['deltas_p'] = deltas
-#
-#             if self._memory['upsilons_p'] is not None:
-#                 # zero-biased second raw moment estimate
-#                 upsilons = self._hyps['beta2'] * self._memory['upsilons_p'] + (
-#                             1.0 - self._hyps['beta2']) * nablas ** 2.0
-#             else:
-#                 # zero-biased initialized second raw moment estimate
-#                 upsilons = (1.0 - self._hyps['beta2']) * nablas ** 2.0
-#             # zero-biased second raw moment memory update
-#             self._memory['upsilons_p'] = upsilons
-#
-#             # zero-bias correction
-#             deltas_hat = deltas / (1.0 - self._hyps['beta1'] ** self._memory['iota'])
-#             upsilons_hat = upsilons / (1.0 - self._hyps['beta2'] ** self._memory['iota'])
-#             # zero-bias factor update
-#             self._memory['iota'] += 1.0
-#
-#             if self._hyps['ams']:
-#                 # strongly non-convex decaying learning rate variant
-#                 if self._memory['upsilons_hat_mx'] is not None:
-#                     # maximum zero-biased second raw moment estimate
-#                     upsilons_hat_mx = np.maximum(self._memory['upsilons_hat_mx'], upsilons_hat)
-#                 else:
-#                     # initial maximum zero-biased second raw moment estimate
-#                     upsilons_hat_mx = np.maximum(0.0 * upsilons_hat, upsilons_hat)
-#                 upsilons_hat = upsilons_hat_mx
-#                 # maximum zero-biased second raw moment memory update
-#                 self._memory['upsilons_hat_mx'] = upsilons_hat_mx
-#
-#             # optimization
-#             thetas -= self._hyps['alpha'] * deltas_hat / (np.sqrt(upsilons_hat) + self._hyps['epsilon'])
-#             return thetas
-#
-#         def sgd(thetas, nablas):
-#             # Stochastic Gradient Descent optimization algorithm
-#             if self._hyps['lambda_d']:
-#                 # weight decay
-#                 nablas = nablas + self._hyps['lambda_d'] * thetas
-#
-#             if self._hyps['mu'] and (self._memory['deltas_p'] is not None):
-#                 # momentum and dampening
-#                 deltas = self._hyps['mu'] * self._memory['deltas_p'] + (1.0 - self._hyps['tau']) * nablas
-#                 # delta memory update
-#                 self._memory['deltas_p'] = deltas
-#             elif self._hyps['mu']:
-#                 # dampening
-#                 deltas = (1.0 - self._hyps['tau']) * nablas
-#                 # delta memory update
-#                 self._memory['deltas_p'] = deltas
-#             else:
-#                 # dampening
-#                 deltas = (1.0 - self._hyps['tau']) * nablas
-#
-#             if self._hyps['nesterov'] and self._hyps['mu']:
-#                 # nesterov variant
-#                 deltas = nablas + self._hyps['mu'] * deltas
-#
-#             # optimization
-#             thetas -= self._hyps['alpha'] * deltas
-#             return thetas
-#
-#         def rmsp(thetas, nablas):
-#             # Root Mean Squared Propagation optimization algorithm
-#             if self._hyps['lambda_d']:
-#                 # weight decay
-#                 nablas = nablas + self._hyps['lambda_d'] * thetas
-#
-#             if self._memory['upsilons_p'] is not None:
-#                 # zero-biased second raw moment estimate
-#                 upsilons = self._hyps['beta2'] * self._memory['upsilons_p'] + (
-#                             1.0 - self._hyps['beta2']) * nablas ** 2.0
-#             else:
-#                 # zero-biased initialized second raw moment estimate
-#                 upsilons = (1.0 - self._hyps['beta2']) * nablas ** 2.0
-#             # zero-biased second raw moment memory update
-#             self._memory['upsilons_p'] = upsilons
-#
-#             # delta calculation
-#             deltas = nablas / (np.sqrt(upsilons) + self._hyps['epsilon'])
-#
-#             if self._hyps['mu'] and (self._memory['deltas_p'] is not None):
-#                 # momentum
-#                 deltas += self._hyps['mu'] * self._memory['deltas_p']
-#                 # delta memory update
-#                 self._memory['deltas_p'] = deltas
-#             elif self._hyps['mu']:
-#                 # delta memory update
-#                 self._memory['deltas_p'] = deltas
-#
-#             # optimization
-#             thetas -= self._hyps['alpha'] * deltas
-#             return thetas
-#
-#         def adag(thetas, nablas):
-#             # todo
-#             # Adaptive Gradient Algorithm optimization algorithm
-#             if self._hyps['lambda_d']:
-#                 # weight decay
-#                 nablas = nablas + self._hyps['lambda_d'] * thetas
-#
-#             # learning rate adaption
-#             alpha_hat = self._hyps['alpha'] / ((self._memory['iota'] - 1.0) * self._hyps['nu'] + 1.0)
-#             # learning rate factor update
-#             self._memory['iota'] += 1.0
-#
-#             if self._memory['tau'] is not None:
-#                 # state-sum calculation
-#                 tau = self._memory['tau'] + nablas ** 2.0
-#             else:
-#                 # state-sum initialization
-#                 tau = 0.0 * thetas + self._hyps['tau']
-#             # state-sum memory update
-#             self._memory['tau'] = tau
-#
-#             # optimization
-#             thetas -= alpha_hat * nablas / (np.sqrt(tau) + self._hyps['epsilon'])
-#             return thetas
-#
-#         # optimization algorithm dictionary
-#         optim_funcs = {
-#             'adam': adam,
-#             'sgd': sgd,
-#             'rmsp': rmsp,
-#             'adag': adag
-#         }
-#
-#         # return optimization algorithm
-#         return optim_funcs[self._algorithm]
-#
-#     def optimize(self, thetas: Union[Tensor, np.ndarray], nablas: Union[Tensor, np.ndarray]) -> Union[
-#         Tensor, np.ndarray]:
-#         r"""
-#         **Optimizes the thetas of a model based on the specified gradients.**
-#
-#         This function ideally supports GardenPy Tensors, but is compatible with NumPy Arrays.
-#
-#         Parameters:
-#         ----------
-#         - **thetas** : (*Union[Tensor, np.ndarray]*)
-#             The thetas.
-#         - **nablas** : (*Union[Tensor, np.ndarray]*)
-#             The gradients of the thetas.
-#
-#         Returns:
-#         ----------
-#         - **thetas** : (*Union[Tensor, np.ndarray]*)
-#             The optimized thetas.
-#
-#         Notes:
-#         ----------
-#         - The optimized thetas will retain the same datatype as the initial thetas.
-#         - The optimized thetas will support automatic tracking for automatic differentiation if it is a Tensor.
-#
-#         - The internal memory will be accessed automatically upon the function call.
-#
-#         Example:
-#         ----------
-#         >>> from gardenpy.utils.objects import Tensor
-#         >>> from gardenpy.utils.algorithms import Optimizers
-#         >>> optim = Optimizers('adam')
-#         >>> theta = Tensor([0, 1])
-#         >>> nabla = Tensor([0.2, 0.5])
-#         >>> theta = optim.optimize(theta, nabla)
-#         """
-#         if not isinstance(thetas, (Tensor, np.ndarray)):
-#             # invalid datatype
-#             raise TypeError(f"'thetas' is not a Tensor or NumPy Array: '{thetas}'")
-#         if not isinstance(nablas, (Tensor, np.ndarray)):
-#             # invalid datatype
-#             raise TypeError(f"'nablas' is not a Tensor or NumPy Array: '{nablas}'")
-#
-#         # return updated thetas
-#         if isinstance(nablas, Tensor):
-#             # nablas conversion
-#             nablas = nablas.to_array()
-#         if isinstance(thetas, Tensor):
-#             # Tensor
-#             if self._correlator:
-#                 if thetas.id in self._tensors:
-#                     # get memory instance
-#                     self._memory = self._full[self._tensors.index(thetas.id)]
-#                 else:
-#                     # set memory instance
-#                     self._tensors.append(thetas.id)
-#                     self._full.append(self._get_memory())
-#                     self._memory = self._full[self._tensors.index(thetas.id)]
-#             # perform optimization
-#             result = Tensor(self._optim(thetas.to_array(), nablas))
-#             # maintain id
-#             result.id = thetas.id
-#             return result
-#         else:
-#             # numpy array
-#             result = self._optim(thetas, nablas)
-#             return result
+        Args:
+            theta (Tensor | np.ndarray): Initial theta.
+            nabla (Tensor | np.ndarray): Gradient.
+
+        Returns:
+            Tensor | np.ndarray: Optimized theta.
+
+        Raises:
+            TypeError: If an invalid object was passed for the operation.
+            ValueError: If there was a failed attempt at using the correlator for NumPy arrays.
+        """
+        if isinstance(nabla, Tensor):
+            # theta tensor
+            nabla = nabla.array
+        elif not isinstance(nabla, np.ndarray):
+            # nabla error
+            raise TypeError("Attempted optimization with an object that wasn't a matrix Tensor or NumPy array.")
+
+        if isinstance(theta, Tensor) and self._correlator:
+            # theta tensor and correlator
+            if theta.id not in self._memories.keys():
+                # add memory
+                self._memories.update({theta.id: self._get_memories(theta=theta.array)})
+            # method
+            result = Tensor(self._alg(theta=theta.array, nabla=nabla, m=self._memories[theta.id]))
+            # id conserving
+            Tensor.replace(replaced=theta, replacer=result)
+            return result
+        elif isinstance(theta, Tensor):
+            # theta tensor
+            if self._memories is None:
+                # instantiate memory
+                self._memories = self._get_memories(theta=theta.array)
+            # method
+            result = Tensor(self._alg(theta=theta.array, nabla=nabla, m=self._memories))
+            # id conserving
+            Tensor.replace(replaced=theta, replacer=result)
+            return result
+        elif isinstance(theta, np.ndarray) and not self._correlator:
+            # theta array
+            if self._memories is None:
+                # instantiate memory
+                self._memories = self._get_memories(theta=theta)
+            # method
+            return self._alg(theta=theta, nabla=nabla, m=self._memories)
+        else:
+            # theta error
+            raise ValueError("Attempted correlator reference with arrays.")
