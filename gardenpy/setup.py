@@ -1,13 +1,13 @@
 r"""
-**Setup for library installation.**
+**Setup for package installation.**
 
-Run this file to install the GardenPy library.
+Run this file to install the GardenPy package.
 
-In the library root, run either:
+In the package root, run either:
     - pip install .
     - pip3 install .
 
-To install the library using editable mode, run either:
+To install the package using editable mode, run either:
     - pip install -e .
     - pip3 install -e .
 
@@ -15,7 +15,7 @@ Verify installation using either:
     - pip list
     - pip3 list
 
-If recognition failed, run either:
+If installation recognition failed outside the package root, run either:
     - mac: export PYTHONPATH=$(pwd)
     - windows: set PYTHONPATH=%cd%
 """
@@ -26,7 +26,7 @@ from pathlib import Path
 from setuptools import setup, find_packages
 
 
-def meta(key):
+def __meta(key):
     # metadata extraction
     pattern = rf"^__{key}__ = ['\"]([^'\"]*)['\"]"
     match = re.search(pattern, init, re.M)
@@ -45,14 +45,14 @@ with open('README.md', 'r') as f:
 # setup
 setup(
     name='gardenpy',
-    version=meta('version'),
-    description=meta('description'),
+    version=__meta('version'),
+    description=__meta('description'),
     long_description=long_desc,
-    author=meta('author'),
-    author_email=meta('author_email'),
-    url=meta('url'),
-    download_url=meta('download_url'),
-    license=meta('license'),
+    author=__meta('author'),
+    author_email=__meta('author_email'),
+    url=__meta('url'),
+    download_url=__meta('download_url'),
+    license=__meta('license'),
     license_file=os.path.join(os.path.dirname(__file__), 'LICENCE'),
     packages=find_packages(),
 )

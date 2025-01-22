@@ -5,5 +5,7 @@ demo/data/*/data/*
 !demo/data/*/data/data_generator.py
 demo/*/*/processed_data/*
 !demo/*/*/processed_data/process.py
-other/temporary/user_number.jpeg
+other/temporary/*
+!other/temporary/desc.txt
 *.egg-info
+__pycache__

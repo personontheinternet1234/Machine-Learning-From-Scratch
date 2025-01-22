@@ -113,7 +113,7 @@ class Initializers:
         )
 
         # return hyperparameters
-        return method, checker.check_params(params=hyperparams, **kwargs)
+        return method, checker(params=hyperparams, **kwargs)
 
     def _set_initializer(self) -> None:
         # hyperparameter reference
@@ -311,7 +311,7 @@ class Activators:
         )
 
         # return hyperparameters
-        return method, checker.check_params(params=hyperparams, **kwargs)
+        return method, checker(params=hyperparams, **kwargs)
 
     def _set_activator(self) -> None:
         # hyperparameter reference
@@ -622,7 +622,7 @@ class Losses:
         )
 
         # return hyperparameters
-        return method, checker.check_params(params=hyperparams, **kwargs)
+        return method, checker(params=hyperparams, **kwargs)
 
     def _set_loss(self) -> None:
         # hyperparameter reference
@@ -990,7 +990,7 @@ class Optimizers:
         )
 
         # return hyperparameters
-        return method, checker.check_params(params=hyperparams, **kwargs)
+        return method, checker(params=hyperparams, **kwargs)
 
     def _get_memories(self, theta: np.ndarray) -> dict:
         # instantiates memory dictionary

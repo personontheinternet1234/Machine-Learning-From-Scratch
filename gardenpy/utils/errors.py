@@ -10,7 +10,7 @@ from typing import Optional
 
 
 class MissingMethodError(Exception):
-    r"""**Error for a missing method set.**"""
+    r"""**Error for a missing method.**"""
     pass
 
 
