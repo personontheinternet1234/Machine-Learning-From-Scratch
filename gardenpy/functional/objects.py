@@ -69,7 +69,7 @@ class Tensor:
         self._id: Union[int, None] = None
         self._tensor: Union[np.ndarray, None] = obj
         self._type: str = 'mat'
-        self._tracker: Dict[Union[str, List[any], Tensor]] = {'opr': [], 'drv': [], 'chn': [], 'rlt': [], 'org': []}
+        self._tracker: Dict[str, Optional[list, Tensor, str]] = {'opr': [], 'drv': [], 'chn': [], 'rlt': [], 'org': []}
         self._tags: List[str] = []
 
         # update instances and id

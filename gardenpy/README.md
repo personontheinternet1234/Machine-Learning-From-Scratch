@@ -10,7 +10,7 @@ It utilizes similar syntax, meaning most forward pass math in NumPy is applicabl
 added benefit of automatically differentiating Tensors.
 
 There are many machine learning packages, many of which are faster and easier to use than this one.
-This package's purpose isn't to compete with the speed or ease-of-use of other packages; instead, the package's goal is
+This package's purpose isn't to compete with the speed or features of other packages; instead, the package's goal is
 to allow creation of machine learning models using syntax as close to mathematical syntax as possible, to allow the
 model's creator to truly understand the mathematics behind machine learning.
 
@@ -18,11 +18,13 @@ model's creator to truly understand the mathematics behind machine learning.
 
 ## **Mathematical Syntax**
 
-GardenPy's purpose isn't to compete with other machine learning libraries in terms of speed or ...
+GardenPy's purpose isn't to compete with other machine learning libraries in terms of speed or features.
+Rather, GardenPy's mission is to allow the creation of machine learning models using syntax as similar to mathematical
+syntax as possible.
 
 ------------------------------------------------------------------------------------------------------------------------
 
-## **Dynamically Created Graphs**
+## **Dynamic Computational Graphs**
 
 GardenPy automatically creates a computational graph to represent all calculations.
 When a line calls for gradient calculation, GardenPy uses tape-based automatic differentiation and uses a search tree to
