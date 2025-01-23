@@ -673,8 +673,9 @@ class Tensor:
         r"""
         **Calculates the gradient of two Tensors.**
 
-        Using the computational graph, the two Tensors are related using a search tree.
-        If a relationship has been found, backward and chain rule methods are called to calculate the gradient.
+        Using the computational graph, a search tree attempts to relate the two Tensors.
+        Backward and chain rule methods are called to calculate the gradient if the search tree establishes a
+        relationship.
 
         Args:
             grad (Tensor): Object of the matrix type to calculate the gradient.
@@ -726,7 +727,6 @@ class Tensor:
             # NB: This only gets origins if the item is a matrix.
             # Tracing gradients through gradients is possible, but requires a lot of modification and significantly
             # increases computational time, even if it's never used.
-            # Tensors allow operations on gradients for simplicity, but don't allow autograd with them.
             if binary and relation is None and isinstance(item, Tensor) and item._type == 'mat':
                 # get origins
                 origins = item._tracker['org']
