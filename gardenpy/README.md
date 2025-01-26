@@ -70,7 +70,7 @@ a simple checkered or non-checkered dataset.
 
 The Machine Learning from Scratch team also offers a [website](http://45.63.57.237/) with mathematics for machine
 learning, detailed documentation, diagrams, videos, and an example of a dense neural network trained on the
-[MNIST](https://en.wikipedia.org/wiki/MNIST_database) dataset.
+[MNIST](https://en.wikipedia.org/wiki/MNIST_database) dataset. The website's repository can be found [here](https://github.com/yestochickens/NeuralNetWebsite).
 
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -89,6 +89,10 @@ For questions, recommendations, or feedback on GardenPy, contact:
 - Derek Yee (dyee25@punahou.edu)
 
 Report any issues to [the issues page](https://github.com/personontheinternet1234/NeuralNet/issues).
+
+------------------------------------------------------------------------------------------------------------------------
+
+This project is a work in progress. Release versions of GardenPy can be found at [gardenpy](https://github.com/githubCHM/gardenpy)
 
 ------------------------------------------------------------------------------------------------------------------------
 
