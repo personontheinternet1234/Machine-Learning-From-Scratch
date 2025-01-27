@@ -1,4 +1,4 @@
-![GardenPy Logo](https://github.com/machine-learning-from-scratch/gardenpy/docs/gardenpy_flat_logo.png)
+![GardenPy Logo](https://github.com/machine-learning-from-scratch/gardenpy/blob/main/docs/gardenpy_flat_logo.png)
 
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -30,7 +30,7 @@ GardenPy automatically creates a computational graph to represent all calculatio
 When a line calls for gradient calculation, GardenPy uses tape-based automatic differentiation and a search tree to
 relate two Tensors.
 
-![Computational Graph](https://github.com/machine-learning-from-scratch/gardenpy/docs//computational_graph.gif)
+![Computational Graph](https://github.com/machine-learning-from-scratch/gardenpy/blob/main/docs/computational_graph.gif)
 
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -96,4 +96,4 @@ This project is a work in progress. Release versions of GardenPy can be found at
 
 ------------------------------------------------------------------------------------------------------------------------
 
-![Machine Learning from Scratch Logo](https://github.com/machine-learning-from-scratch/gardenpy/docs/machine_learning_from_scratch_flat_logo.png)
+![Machine Learning from Scratch Logo](https://github.com/machine-learning-from-scratch/gardenpy/blob/main/docs/machine_learning_from_scratch_flat_logo.png)
