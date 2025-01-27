@@ -1,4 +1,4 @@
-![GardenPy Logo](https://github.com/personontheinternet1234/Machine-Learning-From-Scratch/blob/main/gardenpy/_docs/gardenpy_flat_logo.png)
+![GardenPy Logo](https://github.com/machine-learning-from-scratch/gardenpy/_docs/gardenpy_flat_logo.png)
 
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -6,20 +6,20 @@ GardenPy is a package that integrates an automatic differentiation package with 
 machine learning from scratch.
 
 It's built on NumPy, utilizing NumPy's computation to calculate linear algebra results.
-It utilizes similar syntax, meaning most forward pass math in NumPy is applicable to GardenPy's Tensors, with the
+It utilizes similar syntax, meaning most forward-pass math in NumPy applies to GardenPy's Tensors, with the
 added benefit of automatically differentiating Tensors.
 
 There are many machine learning packages, many of which are faster and easier to use than this one.
 This package's purpose isn't to compete with the speed or features of other packages; instead, the package's goal is
-to allow creation of machine learning models using syntax as close to mathematical syntax as possible, to allow the
+to allow the creation of machine learning models using syntax as close to mathematical syntax as possible, to allow the
 model's creator to truly understand the mathematics behind machine learning.
 
 ------------------------------------------------------------------------------------------------------------------------
 
 ## **Mathematical Syntax**
 
-GardenPy's purpose isn't to compete with other machine learning libraries in terms of speed or features.
-Rather, GardenPy's mission is to allow the creation of machine learning models using syntax as similar to mathematical
+GardenPy's purpose isn't to compete with other machine learning libraries regarding speed or features.
+Rather, GardenPy's mission is to allow the creation of machine learning models using syntax that is as similar to mathematical
 syntax as possible.
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -27,7 +27,7 @@ syntax as possible.
 ## **Dynamic Computational Graphs**
 
 GardenPy automatically creates a computational graph to represent all calculations.
-When a line calls for gradient calculation, GardenPy uses tape-based automatic differentiation and uses a search tree to
+When a line calls for gradient calculation, GardenPy uses tape-based automatic differentiation and a search tree to
 relate two Tensors.
 
 ![Computational Graph](https://github.com/personontheinternet1234/Machine-Learning-From-Scratch/blob/main/gardenpy/_docs/computational_graph.gif)
@@ -44,7 +44,7 @@ GardenPy's automatic differentiation is designed to be easily expanded.
 
 ### **Prerequisites**
 
-This library tries to do as many things as it can without relying on pre-defined methods.
+This library tries to do as many things as possible without relying on pre-defined methods.
 Below are the required prerequisites and what they're used for.
 
 - Python 3.9 +
