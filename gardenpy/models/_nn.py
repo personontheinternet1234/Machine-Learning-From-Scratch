@@ -1,4 +1,9 @@
-r"""Built-in models."""
+r"""
+**GardenPy pre-built NN base classes.**
+
+Contains:
+    - :class:`Base`
+"""
 
 from ..functional.objects import Tensor
 

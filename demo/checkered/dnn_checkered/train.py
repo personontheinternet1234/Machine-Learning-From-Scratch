@@ -17,7 +17,7 @@ model = DNN(status_bars=True)
 # this includes stuff like violin plots, confusion matrices, data trimming, validation, and loading/saving data/models
 # most of this stuff should be ignored initially, but ideally at least try and have a loss_graph done and printed results
 
-# the other stuff could and should eventually be added at some point
+# the _other stuff could and should eventually be added at some point
 
 # some stuff might be new, such as violin plots and confusion matrices
 # if you don't understand what these graphs do, ignore them

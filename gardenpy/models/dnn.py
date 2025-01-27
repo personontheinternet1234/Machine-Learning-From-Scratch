@@ -1,13 +1,14 @@
-# r"""
-# 'dnn' includes a Dense Neural Network (DNN) built from GardenPy.
-#
-# 'dnn' includes:
-#     'DNN': A DNN built from GardenPy.
-#
-# Refer to 'todo' for in-depth documentation on this model.
-# """
+r"""
+**GardenPy pre-built DNN.**
 
-class DNN:
+Contains:
+    - :class:`DNN`
+"""
+
+from ._nn import Base
+
+
+class DNN(Base):
     ...
 #
 # import time
@@ -16,11 +17,11 @@ class DNN:
 #
 # import numpy as np
 #
-# from other.deprecated.operators import (
+# from _other.deprecated.operators import (
 #     nabla,
 #     chain
 # )
-# from other.deprecated.objects import Tensor
+# from _other.deprecated.objects import Tensor
 # from functional.algorithms import (
 #     Initializers,
 #     Activators,

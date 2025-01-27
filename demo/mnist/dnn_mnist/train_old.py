@@ -14,7 +14,7 @@ from gardenpy.utils import (
     helpers as hf
 )
 
-from other.deprecated.z_fnn_old import (
+from _other.deprecated.z_fnn_old import (
     FNN
 )
 

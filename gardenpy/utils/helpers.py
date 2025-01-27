@@ -129,7 +129,7 @@ def print_contributors(*, who: Optional[list] = None, cinematic: bool = False) -
     r"""
     **Prints GardenPy contributors in alphabetical order.**
 
-    The Machine Learning from Scratch team created GardenPy and our other resources with the help of many others.
+    The Machine Learning from Scratch team created GardenPy and our _other resources with the help of many others.
     In this contributor printing function, we try to give thanks to the main resources and people that aided us in the
     creation of our project.
     At the same time, this function misses many vital contributors responsible for aiding us in the creation of our

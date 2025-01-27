@@ -1,7 +1,7 @@
 import numpy as np
 
-from other.deprecated.objects import Tensor
-from other.deprecated.operators import nabla
+from _other.deprecated.objects import Tensor
+from _other.deprecated.operators import nabla
 
 x = Tensor(np.random.randn(1, 5))
 w = Tensor(np.random.randn(5, 5))

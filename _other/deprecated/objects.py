@@ -21,7 +21,7 @@ class Tensor:
     r"""
     **Matrix with automatic tracking for automatic differentiation**
 
-    This matrix is similar to a NumPy Array, but tracks operations and its relationship to other variables.
+    This matrix is similar to a NumPy Array, but tracks operations and its relationship to _other variables.
 
     Attributes:
     ----------
@@ -39,22 +39,22 @@ class Tensor:
     **__init__(obj: Union[np.ndarray, list])** :
         Instantiates the Tensor with the specified values.
 
-    **__matmul__(other)** :
+    **__matmul__(_other)** :
         Performs the cross product.
 
-    **__pow__(other)** :
+    **__pow__(_other)** :
         Performs the hadamard power.
 
-    **__mul__(other)** :
+    **__mul__(_other)** :
         Performs hadamard multiplication.
 
-    **__truediv__(other)** :
+    **__truediv__(_other)** :
         Performs hadamard division.
 
-    **__add__(other)** :
+    **__add__(_other)** :
         Performs addition.
 
-    **__sub__(other)** :
+    **__sub__(_other)** :
         Performs subtraction.
 
     **to_array()** :
@@ -62,7 +62,7 @@ class Tensor:
 
     Notes:
     ----------
-    - Tensor automatically tracks the equations done to it and its relationship to other variables.
+    - Tensor automatically tracks the equations done to it and its relationship to _other variables.
     - Use 'nablas' or 'chain' from gardenpy.utils.operators to automatically differentiate.
 
     - Refer to GardenPy's repository or GardenPy's docs for more information.
@@ -127,7 +127,7 @@ class Tensor:
         # matrix multiplication
         arr = other
         if isinstance(arr, Tensor):
-            # convert other to an array to reduce computation
+            # convert _other to an array to reduce computation
             arr = other.to_array()
         # track operation
         self.tracker['opr'].append('matmul_l')
@@ -209,7 +209,7 @@ class Tensor:
         # hadamard power
         arr = other
         if isinstance(arr, Tensor):
-            # convert other to an array to reduce computation
+            # convert _other to an array to reduce computation
             arr = other.to_array()
         # track operation
         self.tracker['opr'].append('pow_b')
@@ -254,7 +254,7 @@ class Tensor:
         # hadamard multiplication
         arr = other
         if isinstance(arr, Tensor):
-            # convert other to an array to reduce computation
+            # convert _other to an array to reduce computation
             arr = other.to_array()
         # track operation
         self.tracker['opr'].append('mul')
@@ -290,7 +290,7 @@ class Tensor:
         # hadamard division
         arr = other
         if isinstance(arr, Tensor):
-            # convert other to an array to reduce computation
+            # convert _other to an array to reduce computation
             arr = other.to_array()
         # track operation
         self.tracker['opr'].append('truediv_n')
@@ -335,7 +335,7 @@ class Tensor:
         # addition
         arr = other
         if isinstance(arr, Tensor):
-            # convert other to an array to reduce computation
+            # convert _other to an array to reduce computation
             arr = other.to_array()
         # track operation
         self.tracker['opr'].append('add')
@@ -371,7 +371,7 @@ class Tensor:
         # subtraction
         arr = other
         if isinstance(arr, Tensor):
-            # convert other to an array to reduce computation
+            # convert _other to an array to reduce computation
             arr = other.to_array()
         # track operation
         self.tracker['opr'].append('sub_m')

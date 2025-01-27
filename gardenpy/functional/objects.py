@@ -655,7 +655,7 @@ class Tensor:
                 rlt=[other, result]
             )
             if isinstance(other, Tensor):
-                # track other
+                # track _other
                 Tensor._update_track(
                     obj=other,
                     opr=f"{self._prefix}_o",

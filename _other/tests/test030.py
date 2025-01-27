@@ -1,7 +1,7 @@
 import numpy as np
 
-from other.deprecated.objects import Tensor
-from other.deprecated.operators import nabla, chain
+from _other.deprecated.objects import Tensor
+from _other.deprecated.operators import nabla, chain
 
 t1 = Tensor(np.random.randn(3, 3))
 t2 = Tensor(np.random.randn(3, 3))
